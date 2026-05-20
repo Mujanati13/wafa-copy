@@ -414,13 +414,11 @@ const CreateCategoriesForCourses = () => {
                   </SelectTrigger>
                   <SelectContent className="bg-white border-gray-200">
                     <SelectItem value="all" className="text-black">All Semesters</SelectItem>
-                    <SelectItem value="S1" className="text-black">S1</SelectItem>
-                    <SelectItem value="S2" className="text-black">S2</SelectItem>
-                    <SelectItem value="S3" className="text-black">S3</SelectItem>
-                    <SelectItem value="S4" className="text-black">S4</SelectItem>
-                    <SelectItem value="S5" className="text-black">S5</SelectItem>
-                    <SelectItem value="S6" className="text-black">S6</SelectItem>
-                    <SelectItem value="EXT" className="text-black">EXT</SelectItem>
+                    {["S1", "S2", "S3", "S4", "S5", "S6", "S7", "S8", "S9", "S10", "EXT"].map((sem) => (
+                      <SelectItem key={sem} value={sem} className="text-black">
+                        {sem}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
                 <Select value={moduleFilter} onValueChange={setModuleFilter}>

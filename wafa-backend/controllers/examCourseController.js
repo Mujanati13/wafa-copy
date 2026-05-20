@@ -44,6 +44,7 @@ export const examCourseController = {
 
         // Use lean() and only select necessary fields for better performance
         const courses = await ExamCourse.find(filter)
+            .populate("moduleId", "name semester")
             .select('name moduleId category subCategory description difficulty color imageUrl status totalQuestions')
             .lean()
             .sort({ createdAt: -1 });
