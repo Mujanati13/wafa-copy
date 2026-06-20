@@ -710,37 +710,38 @@ const ExamPage = () => {
     return () => clearTimeout(timeoutId);
   }, [examData, userProfile, examId, examType, progressRestored]);
 
-  // Get all questions - sorted by questionNumber, with displayNumber assigned
+  // Get all questions in exam/session order, sorted by questionNumber within each group
   // MOVED HERE: Must be defined before effects that use it
   const questions = useMemo(() => {
     if (!examData?.questions) return [];
     const allQuestions = [];
+
     Object.entries(examData.questions).forEach(([sessionName, sessionQuestions]) => {
-      sessionQuestions.forEach(q => {
+      // Keep each exam/session contiguous. A global questionNumber sort would
+      // interleave Q1, Q2, etc. from different exams.
+      const sortedSessionQuestions = sessionQuestions
+        .map((question, originalIndex) => ({ question, originalIndex }))
+        .sort((a, b) => {
+          const hasNumA = a.question.questionNumber != null;
+          const hasNumB = b.question.questionNumber != null;
+
+          if (hasNumA && hasNumB) {
+            return (a.question.questionNumber - b.question.questionNumber)
+              || (a.originalIndex - b.originalIndex);
+          }
+          if (hasNumA) return -1;
+          if (hasNumB) return 1;
+          return a.originalIndex - b.originalIndex;
+        })
+        .map(({ question }) => question);
+
+      sortedSessionQuestions.forEach(q => {
         allQuestions.push({ ...q, sessionLabel: sessionName });
       });
     });
 
-    // Sort questions: those with questionNumber come first (sorted numerically),
-    // then those without questionNumber come after (in original order)
-    const sorted = allQuestions.sort((a, b) => {
-      const hasNumA = a.questionNumber != null && a.questionNumber !== undefined;
-      const hasNumB = b.questionNumber != null && b.questionNumber !== undefined;
-
-      // Both have questionNumber - sort numerically
-      if (hasNumA && hasNumB) {
-        return a.questionNumber - b.questionNumber;
-      }
-      // Only A has questionNumber - A comes first
-      if (hasNumA && !hasNumB) return -1;
-      // Only B has questionNumber - B comes first
-      if (!hasNumA && hasNumB) return 1;
-      // Neither has questionNumber - keep original order
-      return 0;
-    });
-
     // Assign displayNumber to each question (1-indexed position)
-    return sorted.map((q, idx) => ({
+    return allQuestions.map((q, idx) => ({
       ...q,
       displayNumber: q.questionNumber || (idx + 1)
     }));
