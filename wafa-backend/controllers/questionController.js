@@ -90,12 +90,19 @@ export const questionController = {
 
     getByExamId: asyncHandler(async (req, res) => {
         const { examId } = req.params;
-        // Use lean() for better performance, skip populate unless needed by frontend
         const questions = await QuestionModel.find({ 
             $or: [{ examId }, { qcmBanqueId: examId }] 
         })
-            .select('text options note images sessionLabel questionNumber')
-            .lean()
+            .populate({
+                path: 'examId',
+                select: 'name year moduleId',
+                populate: { path: 'moduleId', select: 'name semester' }
+            })
+            .populate({
+                path: 'qcmBanqueId',
+                select: 'name moduleId',
+                populate: { path: 'moduleId', select: 'name semester' }
+            })
             .sort({ questionNumber: 1, createdAt: 1 });
         res.status(200).json({ success: true, data: questions });
     }),
