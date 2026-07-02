@@ -15,8 +15,6 @@ import { PageHeader } from "@/components/shared";
 import { toast } from "sonner";
 import { api } from "@/lib/utils";
 
-const yearNames = ["2021", "2022", "2023", "2024", "2025"];
-
 const AddQuestions = () => {
   const { t } = useTranslation(['admin', 'common']);
 
@@ -152,6 +150,19 @@ const AddQuestions = () => {
     return modules.filter((m) => m.semester === selectedContextSemester);
   }, [modules, selectedContextSemester]);
 
+  const availableYearOptions = useMemo(() => {
+    const years = Array.from(
+      new Set(
+        exams
+          .map((exam) => exam?.year)
+          .filter((year) => year !== undefined && year !== null && year !== "")
+          .map((year) => String(year))
+      )
+    );
+
+    return years.sort((a, b) => Number(b) - Number(a));
+  }, [exams]);
+
   // Filter questions based on search and exam filter
   const filteredQuestions = useMemo(() => {
     let result = examQuestions;
@@ -238,7 +249,7 @@ const AddQuestions = () => {
     }
 
     return {
-      type: "Non sp?cifi?",
+      type: "Non specifie",
       name: "-",
       year: "",
       module: "-",
@@ -290,7 +301,7 @@ const AddQuestions = () => {
   const hasContextSelected = (() => {
     if (!selectedModule || !examType) return false;
     if (examType === "years") return !!selectedExamNameYears;
-    if (examType === "courses") return !!(selectedCourse && selectedYearName);
+    if (examType === "courses") return !!selectedCourse;
     if (examType === "tp") return !!selectedTPName;
     if (examType === "qcm") return !!selectedQCMName;
     return false;
@@ -742,7 +753,14 @@ const AddQuestions = () => {
                   </div>
                   <div className="space-y-2">
                     <Label>{t('admin:course')}</Label>
-                    <Select value={selectedCourse} onValueChange={setSelectedCourse} disabled={!selectedModule}>
+                    <Select
+                      value={selectedCourse}
+                      onValueChange={(value) => {
+                        setSelectedCourse(value);
+                        setSelectedYearName("");
+                      }}
+                      disabled={!selectedModule}
+                    >
                       <SelectTrigger>
                         <SelectValue placeholder={t('admin:choose_course')} />
                       </SelectTrigger>
@@ -757,12 +775,17 @@ const AddQuestions = () => {
                   </div>
                   <div className="space-y-2">
                     <Label>{t('admin:year')}</Label>
-                    <Select value={selectedYearName} onValueChange={setSelectedYearName} disabled={!selectedCourse}>
+                    <Select
+                      value={selectedYearName || "all-years"}
+                      onValueChange={(value) => setSelectedYearName(value === "all-years" ? "" : value)}
+                      disabled={!selectedCourse}
+                    >
                       <SelectTrigger>
                         <SelectValue placeholder={t('admin:choose_year')} />
                       </SelectTrigger>
                       <SelectContent>
-                        {yearNames.map((y) => (
+                        <SelectItem value="all-years">Toutes les années</SelectItem>
+                        {availableYearOptions.map((y) => (
                           <SelectItem key={y} value={y}>
                             {y}
                           </SelectItem>
