@@ -374,17 +374,17 @@ const ExamParYears = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
+      <div className="min-h-screen bg-card flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="h-12 w-12 animate-spin text-blue-500 mx-auto mb-4" />
-          <p className="text-gray-600">Chargement des examens...</p>
+          <p className="text-muted-foreground">Chargement des examens...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-card">
 
 
       <div className="max-w-7xl mx-auto px-6 py-8 space-y-6">
@@ -416,7 +416,7 @@ const ExamParYears = () => {
         >
           <div>
             <h2 className="text-2xl font-bold text-black mb-1">Répertoire des Examens</h2>
-            <p className="text-gray-600">Total: <span className="font-semibold text-black">{filteredExams.length}</span> examens</p>
+            <p className="text-muted-foreground">Total: <span className="font-semibold text-black">{filteredExams.length}</span> examens</p>
           </div>
           <Button
             size="lg"
@@ -533,7 +533,7 @@ const ExamParYears = () => {
                           <Badge variant="secondary">{exam.year}</Badge>
                         </TableCell>
                         <TableCell>
-                          <div className="w-16 h-12 rounded-md overflow-hidden bg-slate-100 border">
+                          <div className="w-16 h-12 rounded-md overflow-hidden bg-muted border">
                             <img src={exam.imageUrl} alt={exam.examName} className="w-full h-full object-cover" />
                           </div>
                         </TableCell>
@@ -579,7 +579,7 @@ const ExamParYears = () => {
               </Table>
             </div>
           </CardContent>
-          <CardFooter className="flex flex-col sm:flex-row justify-between items-center gap-4 border-t bg-slate-50/50">
+          <CardFooter className="flex flex-col sm:flex-row justify-between items-center gap-4 border-t bg-background/50">
             <div className="text-sm text-muted-foreground">
               Affichage de {filteredExams.length === 0 ? 0 : startIndex + 1} à {Math.min(endIndex, filteredExams.length)} sur {filteredExams.length} résultats
             </div>
@@ -594,7 +594,7 @@ const ExamParYears = () => {
       <AnimatePresence>
         {showAddExamForm && (
           <Dialog open={showAddExamForm} onOpenChange={setShowAddExamForm}>
-            <DialogContent className="bg-white border-gray-200 text-black sm:max-w-md max-h-[80vh] overflow-y-auto">
+            <DialogContent className="bg-card border-border text-black sm:max-w-md max-h-[80vh] overflow-y-auto">
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -605,7 +605,7 @@ const ExamParYears = () => {
                   <DialogTitle className="text-black text-xl">
                     {editingExam ? "Modifier l'examen" : "Créer un nouvel examen"}
                   </DialogTitle>
-                  <DialogDescription className="text-gray-600">
+                  <DialogDescription className="text-muted-foreground">
                     Ajouter un examen avec tous les détails nécessaires
                   </DialogDescription>
                 </DialogHeader>
@@ -617,7 +617,7 @@ const ExamParYears = () => {
                       placeholder="Ex: Examen Final de Biologie"
                       value={formData.examName}
                       onChange={(e) => handleFormChange("examName", e.target.value)}
-                      className="bg-gray-50 border-gray-300 text-black placeholder:text-gray-500 focus:border-blue-500 focus:ring-blue-500"
+                      className="bg-background border-gray-300 text-black placeholder:text-muted-foreground focus:border-blue-500 focus:ring-blue-500"
                     />
                   </div>
 
@@ -634,10 +634,10 @@ const ExamParYears = () => {
                         }
                       }
                     }}>
-                      <SelectTrigger className="bg-gray-50 border-gray-300 text-black">
+                      <SelectTrigger className="bg-background border-gray-300 text-black">
                         <SelectValue placeholder="Tous les semestres" />
                       </SelectTrigger>
-                      <SelectContent className="bg-white border-gray-200">
+                      <SelectContent className="bg-card border-border">
                         <SelectItem value="all" className="text-black">Tous les semestres</SelectItem>
                         <SelectItem value="S1" className="text-black">Semestre 1</SelectItem>
                         <SelectItem value="S2" className="text-black">Semestre 2</SelectItem>
@@ -656,10 +656,10 @@ const ExamParYears = () => {
                   <div className="space-y-2">
                     <Label className="text-black font-medium">Module *</Label>
                     <Select value={formData.moduleName} onValueChange={(value) => handleFormChange("moduleName", value)}>
-                      <SelectTrigger className="bg-gray-50 border-gray-300 text-black">
+                      <SelectTrigger className="bg-background border-gray-300 text-black">
                         <SelectValue placeholder="Sélectionner un module" />
                       </SelectTrigger>
-                      <SelectContent className="bg-white border-gray-200">
+                      <SelectContent className="bg-card border-border">
                         {modules
                           .filter(mod => formSemesterFilter === "all" || mod.semester === formSemesterFilter)
                           .map((mod) => (
@@ -670,7 +670,7 @@ const ExamParYears = () => {
                       </SelectContent>
                     </Select>
                     {formSemesterFilter !== "all" && (
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-muted-foreground">
                         {modules.filter(m => m.semester === formSemesterFilter).length} module(s) dans {formSemesterFilter}
                       </p>
                     )}
@@ -684,11 +684,11 @@ const ExamParYears = () => {
                       onValueChange={(value) => handleFormChange("courseCategoryId", value === "none" ? "" : value)}
                       disabled={!formData.moduleName}
                     >
-                      <SelectTrigger className="bg-gray-50 border-gray-300 text-black">
+                      <SelectTrigger className="bg-background border-gray-300 text-black">
                         <SelectValue placeholder={formData.moduleName ? "Sélectionner une catégorie" : "Sélectionnez d'abord un module"} />
                       </SelectTrigger>
-                      <SelectContent className="bg-white border-gray-200">
-                        <SelectItem value="none" className="text-gray-500">
+                      <SelectContent className="bg-card border-border">
+                        <SelectItem value="none" className="text-muted-foreground">
                           Aucune catégorie
                         </SelectItem>
                         {formData.moduleName && (() => {
@@ -717,7 +717,7 @@ const ExamParYears = () => {
                           }).length
                         : 0;
                       return count > 0 ? (
-                        <p className="text-xs text-gray-500">
+                        <p className="text-xs text-muted-foreground">
                           {count} catégorie(s) disponible(s)
                         </p>
                       ) : (
@@ -731,10 +731,10 @@ const ExamParYears = () => {
                   <div className="space-y-2">
                     <Label className="text-black font-medium">Année *</Label>
                     <Select value={formData.year} onValueChange={(value) => handleFormChange("year", value)}>
-                      <SelectTrigger className="bg-gray-50 border-gray-300 text-black">
+                      <SelectTrigger className="bg-background border-gray-300 text-black">
                         <SelectValue placeholder="Sélectionner une année" />
                       </SelectTrigger>
-                      <SelectContent className="bg-white border-gray-200">
+                      <SelectContent className="bg-card border-border">
                         {Array.from({ length: 20 }, (_, i) => new Date().getFullYear() - i).map((year) => (
                           <SelectItem key={year} value={String(year)} className="text-black">
                             {year}
@@ -750,7 +750,7 @@ const ExamParYears = () => {
                       placeholder="https://..."
                       value={formData.imageUrl}
                       onChange={(e) => handleFormChange("imageUrl", e.target.value)}
-                      className="bg-gray-50 border-gray-300 text-black placeholder:text-gray-500 focus:border-blue-500 focus:ring-blue-500"
+                      className="bg-background border-gray-300 text-black placeholder:text-muted-foreground focus:border-blue-500 focus:ring-blue-500"
                     />
                   </div>
 
@@ -760,7 +760,7 @@ const ExamParYears = () => {
                       placeholder="Entrez une description ou des informations supplémentaires..."
                       value={formData.helpText}
                       onChange={(e) => handleFormChange("helpText", e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-black placeholder:text-gray-500 focus:border-blue-500 focus:ring-blue-500 min-h-[80px] resize-none"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md bg-background text-black placeholder:text-muted-foreground focus:border-blue-500 focus:ring-blue-500 min-h-[80px] resize-none"
                     />
                   </div>
 
@@ -768,7 +768,7 @@ const ExamParYears = () => {
                     <Button
                       type="button"
                       variant="outline"
-                      className="border-gray-300 text-black hover:bg-gray-100 hover:text-black"
+                      className="border-gray-300 text-black hover:bg-muted hover:text-black"
                       onClick={() => {
                         setShowAddExamForm(false);
                         setEditingExam(null);
@@ -808,32 +808,32 @@ const ExamParYears = () => {
               </DialogHeader>
               <div className="space-y-4 py-4">
                 <div className="space-y-2">
-                  <Label className="text-sm font-semibold text-gray-700">Nom de l'examen</Label>
-                  <p className="text-gray-900 bg-gray-50 p-2 rounded border">{viewingExam.examName}</p>
+                  <Label className="text-sm font-semibold text-foreground">Nom de l'examen</Label>
+                  <p className="text-foreground bg-background p-2 rounded border">{viewingExam.examName}</p>
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-sm font-semibold text-gray-700">Module</Label>
-                  <p className="text-gray-900 bg-gray-50 p-2 rounded border">{viewingExam.moduleName}</p>
+                  <Label className="text-sm font-semibold text-foreground">Module</Label>
+                  <p className="text-foreground bg-background p-2 rounded border">{viewingExam.moduleName}</p>
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-sm font-semibold text-gray-700">Année</Label>
-                  <p className="text-gray-900 bg-gray-50 p-2 rounded border">{viewingExam.year}</p>
+                  <Label className="text-sm font-semibold text-foreground">Année</Label>
+                  <p className="text-foreground bg-background p-2 rounded border">{viewingExam.year}</p>
                 </div>
                 {viewingExam.imageUrl && (
                   <div className="space-y-2">
-                    <Label className="text-sm font-semibold text-gray-700">Image</Label>
+                    <Label className="text-sm font-semibold text-foreground">Image</Label>
                     <img src={viewingExam.imageUrl} alt={viewingExam.examName} className="w-full h-32 object-cover rounded border" />
                   </div>
                 )}
                 {viewingExam.helpText && (
                   <div className="space-y-2">
-                    <Label className="text-sm font-semibold text-gray-700">Texte d'aide</Label>
-                    <p className="text-gray-900 bg-gray-50 p-2 rounded border">{viewingExam.helpText}</p>
+                    <Label className="text-sm font-semibold text-foreground">Texte d'aide</Label>
+                    <p className="text-foreground bg-background p-2 rounded border">{viewingExam.helpText}</p>
                   </div>
                 )}
                 <div className="space-y-2">
-                  <Label className="text-sm font-semibold text-gray-700">Total Questions</Label>
-                  <p className="text-gray-900 bg-gray-50 p-2 rounded border">{viewingExam.totalQuestions}</p>
+                  <Label className="text-sm font-semibold text-foreground">Total Questions</Label>
+                  <p className="text-foreground bg-background p-2 rounded border">{viewingExam.totalQuestions}</p>
                 </div>
               </div>
               <DialogFooter>

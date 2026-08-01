@@ -145,11 +145,15 @@ const ExamPage = () => {
   // Helper function to darken/lighten color
   const adjustColor = (color, amount) => {
     if (!color) return null;
+    
+    const isDark = document.documentElement.classList.contains('dark');
+    const finalAmount = isDark ? Math.abs(amount) * 1.5 : amount;
+
     const hex = color.replace('#', '');
     const num = parseInt(hex, 16);
-    const r = Math.max(0, Math.min(255, (num >> 16) + amount));
-    const g = Math.max(0, Math.min(255, ((num >> 8) & 0x00FF) + amount));
-    const b = Math.max(0, Math.min(255, (num & 0x0000FF) + amount));
+    const r = Math.max(0, Math.min(255, (num >> 16) + finalAmount));
+    const g = Math.max(0, Math.min(255, ((num >> 8) & 0x00FF) + finalAmount));
+    const b = Math.max(0, Math.min(255, (num & 0x0000FF) + finalAmount));
     return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, '0')}`;
   };
 
@@ -1525,7 +1529,7 @@ const ExamPage = () => {
               }}
             >
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+                <div className="w-12 h-12 bg-white dark:bg-slate-900/20 rounded-full flex items-center justify-center">
                   <AlertCircle className="h-6 w-6" />
                 </div>
                 <div>
@@ -1537,7 +1541,7 @@ const ExamPage = () => {
 
             <CardContent className="p-6 space-y-6">
               <div className="space-y-3">
-                <p className="text-gray-700 leading-relaxed">
+                <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
                   {t('dashboard:exam_not_available_msg') || "Désolé, cet examen n'est pas disponible pour le moment. Cela peut arriver pour plusieurs raisons :"}
                 </p>
                 <ul className="space-y-2 text-sm text-gray-600 ml-4">
@@ -1631,7 +1635,7 @@ const ExamPage = () => {
           <div className="px-4 py-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center">
+                <div className="w-12 h-12 rounded-full bg-white dark:bg-slate-900/20 flex items-center justify-center">
                   <Trophy className="h-6 w-6" />
                 </div>
                 <div>
@@ -1649,14 +1653,14 @@ const ExamPage = () => {
             <div className="flex gap-2 mt-3">
               <button
                 onClick={handleRetry}
-                className="flex-1 py-2 px-3 rounded-lg bg-white/20 text-white text-sm font-medium flex items-center justify-center gap-2"
+                className="flex-1 py-2 px-3 rounded-lg bg-white dark:bg-slate-900/20 text-white text-sm font-medium flex items-center justify-center gap-2"
               >
                 <RefreshCcw className="h-4 w-4" />
                 Recommencer
               </button>
               <button
                 onClick={() => navigate('/dashboard/home')}
-                className="flex-1 py-2 px-3 rounded-lg bg-white text-indigo-600 text-sm font-medium flex items-center justify-center gap-2"
+                className="flex-1 py-2 px-3 rounded-lg bg-white dark:bg-slate-900 text-indigo-600 text-sm font-medium flex items-center justify-center gap-2"
               >
                 <Home className="h-4 w-4" />
                 Accueil
@@ -1668,7 +1672,7 @@ const ExamPage = () => {
 
       {/* ============== MOBILE HEADER ============== */}
       <header className={cn(
-        "lg:hidden bg-white border-b sticky top-0 z-40 shadow-sm w-full",
+        "lg:hidden bg-white dark:bg-slate-900 border-b sticky top-0 z-40 shadow-sm w-full",
         showResults && "mt-32" // Add margin when results banner is showing
       )}>
         {/* Single compact row */}
@@ -1684,7 +1688,7 @@ const ExamPage = () => {
             </button>
             <button
               onClick={handleExitWithSave}
-              className="flex items-center gap-1 px-2 py-1 rounded-lg bg-gray-100 hover:bg-gray-200 active:bg-gray-300 transition-colors text-gray-700"
+              className="flex items-center gap-1 px-2 py-1 rounded-lg bg-gray-100 hover:bg-gray-200 active:bg-gray-300 transition-colors text-gray-700 dark:text-gray-300"
             >
               <LogOut className="h-3.5 w-3.5" />
               <span className="text-xs font-medium">Exit</span>
@@ -1738,7 +1742,7 @@ const ExamPage = () => {
       </header>
 
       {/* ============== DESKTOP HEADER ============== */}
-      <header className="hidden lg:block bg-white/80 backdrop-blur-lg border-b border-gray-200/50 sticky top-0 z-40 shadow-sm">
+      <header className="hidden lg:block bg-white dark:bg-slate-900/80 backdrop-blur-lg border-b border-gray-200 dark:border-gray-700/50 sticky top-0 z-40 shadow-sm">
         <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8">
           <div className="flex items-center justify-between h-12 sm:h-14 md:h-16">
             {/* Left Section - Menu button far left */}
@@ -1748,7 +1752,7 @@ const ExamPage = () => {
                 variant="outline"
                 size="sm"
                 onClick={handleExitWithSave}
-                className="gap-1.5 text-gray-700 hover:bg-gray-100"
+                className="gap-1.5 text-gray-700 dark:text-gray-300 hover:bg-gray-100"
               >
                 <LogOut className="h-4 w-4" />
                 <span>Exit</span>
@@ -1791,7 +1795,7 @@ const ExamPage = () => {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-7 w-7 hover:bg-white"
+                    className="h-7 w-7 hover:bg-white dark:bg-slate-900"
                     onClick={() => adjustFontSize(-2)}
                     disabled={fontSize <= 12}
                   >
@@ -1803,7 +1807,7 @@ const ExamPage = () => {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-7 w-7 hover:bg-white"
+                    className="h-7 w-7 hover:bg-white dark:bg-slate-900"
                     onClick={() => adjustFontSize(2)}
                     disabled={fontSize >= 24}
                   >
@@ -1924,7 +1928,7 @@ const ExamPage = () => {
                                 <ChevronRight className="h-4 w-4 text-gray-400" />
                               </div>
                               <Calendar className="h-4 w-4 text-gray-500" />
-                              <span className="font-medium text-sm text-gray-700">{sessionName}</span>
+                              <span className="font-medium text-sm text-gray-700 dark:text-gray-300">{sessionName}</span>
                             </div>
                             <Badge variant="outline" className="text-xs bg-gray-50">
                               {sessionQuestions.length}
@@ -1976,7 +1980,7 @@ const ExamPage = () => {
                       {/* Verified Progress Only */}
                       <div>
                         <div className="flex items-center justify-between text-sm mb-1">
-                          <span className="font-medium text-gray-700">Vérifiées</span>
+                          <span className="font-medium text-gray-700 dark:text-gray-300">Vérifiées</span>
                           <span className="text-gray-500">
                             {Object.keys(verifiedQuestions).length} / {questions.length}
                           </span>
@@ -2115,7 +2119,7 @@ const ExamPage = () => {
                           ) : null}
                         </div>
                         {/* Breadcrumb */}
-                        <div className="flex items-center gap-1.5 text-[10px] sm:text-xs text-gray-700 bg-white px-2.5 py-1.5 sm:py-2 rounded-lg flex-wrap border border-gray-200 shadow-sm">
+                        <div className="flex items-center gap-1.5 text-[10px] sm:text-xs text-gray-700 dark:text-gray-300 bg-white dark:bg-slate-900 px-2.5 py-1.5 sm:py-2 rounded-lg flex-wrap border border-gray-200 dark:border-gray-700 shadow-sm">
                           <BookOpen className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0 text-gray-500" />
                           <span className="break-words font-medium max-w-full leading-relaxed">
                             {(() => {
@@ -2395,14 +2399,14 @@ const ExamPage = () => {
                             className={cn(
                               "w-full text-left rounded-xl border-2 transition-all duration-200",
                               "focus:outline-none",
-                              !showCorrectness && !currentQuestionData.isAnnulled && "hover:shadow-md cursor-pointer active:scale-[0.98] bg-white",
+                              !showCorrectness && !currentQuestionData.isAnnulled && "hover:shadow-md cursor-pointer active:scale-[0.98] bg-white dark:bg-slate-900",
                               (showCorrectness || currentQuestionData.isAnnulled) && "cursor-default",
                               // Annulled question state
-                              currentQuestionData.isAnnulled && "border-gray-200 bg-gray-50 opacity-70",
+                              currentQuestionData.isAnnulled && "border-gray-200 dark:border-gray-700 bg-gray-50 opacity-70",
                               // Default state (not selected, not showing correctness)
-                              !currentQuestionData.isAnnulled && !isSelected && !showCorrectness && "border-gray-200 hover:border-gray-300 bg-white",
+                              !currentQuestionData.isAnnulled && !isSelected && !showCorrectness && "border-gray-200 dark:border-gray-700 hover:border-gray-300 bg-white dark:bg-slate-900",
                               // Selected but not verified yet - show module color for all
-                              !currentQuestionData.isAnnulled && isSelected && !showCorrectness && "border-2 bg-white",
+                              !currentQuestionData.isAnnulled && isSelected && !showCorrectness && "border-2 bg-white dark:bg-slate-900",
                               // After verification - correct answer that WAS selected (darker green)
                               !currentQuestionData.isAnnulled && showCorrectness && isCorrect && isSelected && "border-emerald-500 bg-emerald-100 hover:bg-emerald-200 hover:border-emerald-600",
                               // After verification - correct answer that was NOT selected (lighter green with dashed border)
@@ -2410,7 +2414,7 @@ const ExamPage = () => {
                               // After verification - wrong answer selected (light red background)
                               !currentQuestionData.isAnnulled && showCorrectness && !isCorrect && isSelected && "border-red-400 bg-red-50 hover:bg-red-100 hover:border-red-500",
                               // After verification - not selected and not correct (gray) - keep normal opacity
-                              !currentQuestionData.isAnnulled && showCorrectness && !isCorrect && !isSelected && "border-gray-200 bg-white"
+                              !currentQuestionData.isAnnulled && showCorrectness && !isCorrect && !isSelected && "border-gray-200 dark:border-gray-700 bg-white dark:bg-slate-900"
                             )}
                             style={
                               !currentQuestionData.isAnnulled && isSelected && !showCorrectness
@@ -2689,7 +2693,7 @@ const ExamPage = () => {
       {!showResults ? (
         <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 safe-area-pb">
           {/* Navigation row - White background */}
-          <div className="bg-white border-t border-gray-200 shadow-lg px-3 py-2">
+          <div className="bg-white dark:bg-slate-900 border-t border-gray-200 dark:border-gray-700 shadow-lg px-3 py-2">
             <div className="flex items-center gap-2">
               {/* Previous button */}
               <button
@@ -2704,7 +2708,7 @@ const ExamPage = () => {
                   "p-3 rounded-xl transition-all active:scale-95",
                   currentQuestion === 0
                     ? "bg-gray-100 text-gray-300 cursor-not-allowed"
-                    : "bg-gray-100 text-gray-700 cursor-pointer"
+                    : "bg-gray-100 text-gray-700 dark:text-gray-300 cursor-pointer"
                 )}
               >
                 <ChevronLeft className="h-5 w-5" />
@@ -2799,7 +2803,7 @@ const ExamPage = () => {
         </div>
       ) : (
         /* Mobile Results Bottom Bar */
-        <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-200 shadow-lg safe-area-pb">
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white dark:bg-slate-900 border-t border-gray-200 dark:border-gray-700 shadow-lg safe-area-pb">
           <div className="flex items-center gap-3 px-4 py-3">
             {/* Previous */}
             <button
@@ -2812,7 +2816,7 @@ const ExamPage = () => {
               disabled={currentQuestion === 0}
               className={cn(
                 "p-3 rounded-xl transition-all active:scale-95",
-                currentQuestion === 0 ? "bg-gray-100 text-gray-300 cursor-not-allowed" : "bg-gray-100 text-gray-700 cursor-pointer"
+                currentQuestion === 0 ? "bg-gray-100 text-gray-300 cursor-not-allowed" : "bg-gray-100 text-gray-700 dark:text-gray-300 cursor-pointer"
               )}
             >
               <ChevronLeft className="h-5 w-5" />
@@ -2841,7 +2845,7 @@ const ExamPage = () => {
               disabled={currentQuestion === questions.length - 1}
               className={cn(
                 "p-3 rounded-xl transition-all active:scale-95",
-                currentQuestion === questions.length - 1 ? "bg-gray-100 text-gray-300 cursor-not-allowed" : "bg-gray-100 text-gray-700 cursor-pointer"
+                currentQuestion === questions.length - 1 ? "bg-gray-100 text-gray-300 cursor-not-allowed" : "bg-gray-100 text-gray-700 dark:text-gray-300 cursor-pointer"
               )}
             >
               <ChevronRight className="h-5 w-5" />
@@ -2865,7 +2869,7 @@ const ExamPage = () => {
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl shadow-2xl max-h-[75vh] flex flex-col"
+              className="absolute bottom-0 left-0 right-0 bg-white dark:bg-slate-900 rounded-t-3xl shadow-2xl max-h-[75vh] flex flex-col"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Handle */}
@@ -2934,7 +2938,7 @@ const ExamPage = () => {
                           status === 'incorrect' && "bg-red-100 border-red-300 text-red-700",
                           status === 'flagged' && "bg-purple-100 border-purple-300 text-purple-700",
                           status === 'visited' && "bg-orange-100 border-orange-300 text-orange-700",
-                          status === 'unanswered' && "bg-gray-50 border-gray-200 text-gray-500"
+                          status === 'unanswered' && "bg-gray-50 border-gray-200 dark:border-gray-700 text-gray-500"
                         )}
                         style={
                           isCurrent
@@ -2954,7 +2958,7 @@ const ExamPage = () => {
 
               {/* Submit button */}
               {!showResults && (
-                <div className="p-4 border-t bg-white">
+                <div className="p-4 border-t bg-white dark:bg-slate-900">
                   <button
                     onClick={() => {
                       setShowMobileQuestionNav(false);
@@ -3003,12 +3007,12 @@ const ExamPage = () => {
               animate={{ x: 0 }}
               exit={{ x: '-100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="absolute left-0 top-0 bottom-0 w-80 max-w-[85vw] bg-white shadow-2xl"
+              className="absolute left-0 top-0 bottom-0 w-80 max-w-[85vw] bg-white dark:bg-slate-900 shadow-2xl"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Header */}
               <div className="border-b bg-gradient-to-br from-orange-50 to-orange-100/50">
-                <div className="flex items-center justify-between p-3 border-b bg-white/50">
+                <div className="flex items-center justify-between p-3 border-b bg-white dark:bg-slate-900/50">
                   <h3 className="font-semibold text-gray-900 text-sm">{t('dashboard:questions') || 'Questions'}</h3>
                   <Button variant="ghost" size="icon" onClick={() => setShowSidebar(false)} className="h-8 w-8">
                     <X className="h-5 w-5" />
@@ -3071,7 +3075,7 @@ const ExamPage = () => {
                               <ChevronRight className="h-4 w-4 text-gray-400" />
                             </div>
                             <Calendar className="h-4 w-4 text-gray-500 shrink-0" />
-                            <span className="text-sm font-medium text-gray-700 break-words line-clamp-2">{sessionName}</span>
+                            <span className="text-sm font-medium text-gray-700 dark:text-gray-300 break-words line-clamp-2">{sessionName}</span>
                           </div>
                           <Badge variant="outline" className="bg-gray-50">{sessionQuestions.length}</Badge>
                         </button>
@@ -3127,10 +3131,10 @@ const ExamPage = () => {
 
               {/* Progress Bar - Bottom */}
               {!showResults && (
-                <div className="border-t p-4 bg-white">
+                <div className="border-t p-4 bg-white dark:bg-slate-900">
                   <div className="space-y-2">
                     <div className="flex items-center justify-between text-sm">
-                      <span className="font-medium text-gray-700">Vérifiées</span>
+                      <span className="font-medium text-gray-700 dark:text-gray-300">Vérifiées</span>
                       <span className="font-semibold" style={{ color: moduleColor }}>
                         {Math.round((verifiedCount / questions.length) * 100)}%
                       </span>
@@ -3185,7 +3189,7 @@ const ExamPage = () => {
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6"
+              className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-md w-full p-6"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="text-center space-y-4">
@@ -3249,7 +3253,7 @@ const ExamPage = () => {
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6"
+              className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-md w-full p-6"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center justify-between mb-6">
@@ -3376,7 +3380,7 @@ const ExamPage = () => {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white rounded-xl shadow-2xl w-full max-w-6xl max-h-[90vh] flex flex-col"
+              className="bg-white dark:bg-slate-900 rounded-xl shadow-2xl w-full max-w-6xl max-h-[90vh] flex flex-col"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Modal Header */}
@@ -3384,11 +3388,11 @@ const ExamPage = () => {
                 <div className="flex items-center gap-2 sm:gap-3">
                   <LayoutGrid className="h-5 w-5 sm:h-6 sm:w-6" />
                   <h2 className="text-base sm:text-xl font-bold">Vue d'ensemble</h2>
-                  <Badge className="bg-white/20 text-white text-[10px] sm:text-xs">{questions.length} questions</Badge>
+                  <Badge className="bg-white dark:bg-slate-900/20 text-white text-[10px] sm:text-xs">{questions.length} questions</Badge>
                 </div>
                 <button
                   onClick={() => setShowVueEnsemble(false)}
-                  className="p-1.5 sm:p-2 rounded-full hover:bg-white/20 transition-colors"
+                  className="p-1.5 sm:p-2 rounded-full hover:bg-white dark:bg-slate-900/20 transition-colors"
                 >
                   <X className="h-4 w-4 sm:h-5 sm:w-5" />
                 </button>
@@ -3413,7 +3417,7 @@ const ExamPage = () => {
                           status === 'answered' && "border-blue-300 bg-blue-50/50",
                           status === 'visited' && "border-orange-300 bg-orange-50/50",
                           status === 'flagged' && "border-purple-300 bg-purple-50",
-                          status === 'unanswered' && "border-gray-200 bg-gray-50",
+                          status === 'unanswered' && "border-gray-200 dark:border-gray-700 bg-gray-50",
                           index === currentQuestion && "ring-2 ring-indigo-500"
                         )}
                         onClick={() => {
@@ -3423,7 +3427,7 @@ const ExamPage = () => {
                       >
                         {/* Question Header */}
                         <div className="flex items-start justify-between mb-3">
-                          <span className="font-semibold text-gray-700 text-sm">
+                          <span className="font-semibold text-gray-700 dark:text-gray-300 text-sm">
                             {index + 1}.) {q.question?.substring(0, 80)}{q.question?.length > 80 ? '...' : ''}
                           </span>
                         </div>
@@ -3440,7 +3444,7 @@ const ExamPage = () => {
                                 key={optIdx}
                                 className={cn(
                                   "flex items-center gap-2 p-2 rounded-lg border text-sm transition-colors",
-                                  !showResult && !isSelected && "border-gray-200 bg-white",
+                                  !showResult && !isSelected && "border-gray-200 dark:border-gray-700 bg-white dark:bg-slate-900",
                                   !showResult && isSelected && "border-blue-400 bg-blue-50",
                                   showResult && isCorrect && "border-emerald-400 bg-emerald-50",
                                   showResult && isSelected && !isCorrect && "border-red-400 bg-red-50"
@@ -3449,7 +3453,7 @@ const ExamPage = () => {
                                 {/* Checkbox */}
                                 <div className={cn(
                                   "w-5 h-5 rounded border-2 flex items-center justify-center shrink-0",
-                                  !showResult && !isSelected && "border-gray-300 bg-white",
+                                  !showResult && !isSelected && "border-gray-300 bg-white dark:bg-slate-900",
                                   !showResult && isSelected && "border-blue-500 bg-blue-500",
                                   showResult && isCorrect && "border-emerald-500 bg-emerald-500",
                                   showResult && isSelected && !isCorrect && "border-red-500 bg-red-500"
@@ -3535,7 +3539,7 @@ const ExamPage = () => {
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-white rounded-2xl shadow-2xl max-w-md sm:max-w-lg w-full p-4 sm:p-6"
+              className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-md sm:max-w-lg w-full p-4 sm:p-6"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="text-center space-y-4">
@@ -3600,7 +3604,7 @@ const ExamPage = () => {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] sm:max-h-[85vh] flex flex-col"
+              className="bg-white dark:bg-slate-900 rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] sm:max-h-[85vh] flex flex-col"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Header */}
@@ -3613,7 +3617,7 @@ const ExamPage = () => {
                 </div>
                 <button
                   onClick={() => setShowImageGallery(false)}
-                  className="p-1.5 sm:p-2 rounded-full hover:bg-white/20 transition-colors"
+                  className="p-1.5 sm:p-2 rounded-full hover:bg-white dark:bg-slate-900/20 transition-colors"
                 >
                   <X className="h-4 w-4 sm:h-5 sm:w-5" />
                 </button>
@@ -3668,7 +3672,7 @@ const ExamPage = () => {
                           <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-3 sm:mb-4">
                             <Image className="h-8 w-8 sm:h-10 sm:w-10 text-gray-400" />
                           </div>
-                          <h4 className="text-base sm:text-lg font-medium text-gray-700 mb-2">
+                          <h4 className="text-base sm:text-lg font-medium text-gray-700 dark:text-gray-300 mb-2">
                             Aucune image dans cet examen
                           </h4>
                           <p className="text-gray-500 text-xs sm:text-sm">
@@ -3683,7 +3687,7 @@ const ExamPage = () => {
                         {allImages.map((img, idx) => (
                           <div
                             key={idx}
-                            className="relative group cursor-pointer rounded-lg overflow-hidden border border-gray-200 hover:shadow-lg transition-all"
+                            className="relative group cursor-pointer rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-all"
                             onClick={() => {
                               goToQuestion(img.questionIndex);
                               setShowImageGallery(false);
@@ -3758,7 +3762,7 @@ const ExamPage = () => {
               />
               <button
                 onClick={() => setShowImageZoom(false)}
-                className="absolute top-4 right-4 p-2 rounded-full bg-white/90 hover:bg-white text-black transition-colors shadow-lg"
+                className="absolute top-4 right-4 p-2 rounded-full bg-white dark:bg-slate-900/90 hover:bg-white dark:bg-slate-900 text-black transition-colors shadow-lg"
               >
                 <X className="h-6 w-6" />
               </button>

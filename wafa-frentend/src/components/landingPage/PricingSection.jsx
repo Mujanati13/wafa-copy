@@ -95,11 +95,11 @@ const PricingSection = () => {
   };
 
   return (
-    <section id="plans" className="py-20 px-6 bg-white relative overflow-hidden">
+    <section id="plans" className="py-20 px-6 bg-background relative overflow-hidden">
       {/* Background decorations */}
-      <div className="absolute inset-0 bg-gradient-to-br from-blue-50/30 to-teal-50/30"></div>
-      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-100/20 rounded-full blur-3xl"></div>
-      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-teal-100/20 rounded-full blur-3xl"></div>
+      <div className="absolute inset-0 bg-gradient-to-br from-blue-50/10 to-teal-50/10"></div>
+      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-100/10 rounded-full blur-3xl"></div>
+      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-teal-100/10 rounded-full blur-3xl"></div>
       
       <div className="max-w-7xl mx-auto relative z-10">
         <motion.div 
@@ -110,18 +110,18 @@ const PricingSection = () => {
           viewport={{ once: true }}
         >
            <motion.div 
-            className="inline-flex items-center gap-2 bg-blue-50 backdrop-blur-sm rounded-full px-6 py-3 mb-6 border border-blue-200 shadow-sm"
+            className="inline-flex items-center gap-2 bg-blue-50 dark:bg-blue-950/40 backdrop-blur-sm rounded-full px-6 py-3 mb-6 border border-blue-200 dark:border-blue-800 shadow-sm"
             whileHover={{ scale: 1.05 }}
             transition={{ type: "spring", stiffness: 300 }}
           >
-            <BiSolidBadgeCheck className="text-blue-600" />
-            <span className="text-sm font-semibold text-blue-800">Tarifs</span>
+            <BiSolidBadgeCheck className="text-blue-600 dark:text-blue-400" />
+            <span className="text-sm font-semibold text-blue-800 dark:text-blue-300">Tarifs</span>
           </motion.div>
-          <h2 className="text-4xl md:text-5xl font-bold mb-6 text-gray-900">
-            Choisissez le <span className="text-blue-600">plan parfait</span><br />
+          <h2 className="text-4xl md:text-5xl font-bold mb-6 text-foreground">
+            Choisissez le <span className="text-blue-600 dark:text-blue-400">plan parfait</span><br />
             pour votre réussite
           </h2>
-          <p className="text-gray-600 text-lg max-w-2xl mx-auto">
+          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
             Débloquez votre potentiel avec nos options de tarification flexibles conçues pour chaque étudiant en médecine
           </p>
         </motion.div>
@@ -146,14 +146,14 @@ const PricingSection = () => {
                 className={`flex-1 max-w-sm mx-auto lg:mx-0 relative group`}
               >
                 <div className={`
-                  bg-white backdrop-blur-xl rounded-3xl p-8 border transition-all duration-500 shadow-lg hover:shadow-xl
+                  bg-card text-card-foreground backdrop-blur-xl rounded-3xl p-8 border transition-all duration-500 shadow-lg hover:shadow-xl
                   ${plan.highlight 
-                    ? "border-blue-300 shadow-blue-100" 
-                    : "border-gray-200 hover:border-blue-200"
+                    ? "border-blue-400 shadow-blue-500/10" 
+                    : "border-border hover:border-blue-400"
                   }
                 `}>
                   {/* Animated background overlay */}
-                  <div className={`absolute inset-0 bg-gradient-to-br ${plan.bgGradient} rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500`}></div>
+                  <div className={`absolute inset-0 bg-gradient-to-br ${plan.bgGradient} rounded-3xl opacity-0 group-hover:opacity-10 dark:group-hover:opacity-5 transition-opacity duration-500`}></div>
                   
                   <div className="relative z-10">
                     {plan.highlight && (
@@ -178,12 +178,12 @@ const PricingSection = () => {
                       >
                         <IconComponent className="text-2xl text-white" />
                       </motion.div>
-                      <h3 className="text-2xl font-bold text-gray-900">{plan.name}</h3>
+                      <h3 className="text-2xl font-bold text-foreground">{plan.name}</h3>
                     </div>
                     
                     <div className="text-center mb-8">
                       <motion.div 
-                        className={`text-4xl font-black text-gray-900 mb-2`}
+                        className={`text-4xl font-black text-foreground mb-2`}
                         whileHover={{ scale: 1.1 }}
                         transition={{ duration: 0.2 }}
                       >
@@ -191,7 +191,7 @@ const PricingSection = () => {
                       </motion.div>
                       {plan.originalPrice && (
                         <motion.div 
-                          className="text-lg text-gray-500 line-through"
+                          className="text-lg text-muted-foreground line-through"
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
                           transition={{ delay: 0.3 }}
@@ -219,7 +219,7 @@ const PricingSection = () => {
                         return (
                           <motion.li 
                             key={idx} 
-                            className="flex items-start gap-3 text-gray-700"
+                            className="flex items-start gap-3 text-foreground"
                             variants={featureVariants}
                           >
                             <motion.div
@@ -229,7 +229,7 @@ const PricingSection = () => {
                             >
                               <FiCheck className="text-white text-sm" />
                             </motion.div>
-                            <span className="group-hover:text-gray-800 transition-colors duration-300">{featureText}</span>
+                            <span className="text-foreground transition-colors duration-300">{featureText}</span>
                           </motion.li>
                         );
                       })}
@@ -239,7 +239,7 @@ const PricingSection = () => {
                       className={`w-full py-4 rounded-2xl font-bold text-lg transition-all duration-300 relative overflow-hidden group ${
                         plan.highlight 
                           ? "bg-blue-600 hover:bg-blue-700 text-white shadow-lg hover:shadow-blue-500/25" 
-                          : "bg-gray-100 hover:bg-gray-200 text-gray-900 border-2 border-gray-200 hover:border-blue-300"
+                          : "bg-muted hover:bg-accent text-foreground border-2 border-border hover:border-blue-400"
                       }`}
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
@@ -264,7 +264,7 @@ const PricingSection = () => {
         
         {/* Offer Countdown Section */}
         <motion.div 
-          className="mt-16 bg-gradient-to-r from-red-50 to-orange-50 rounded-3xl p-8 border-2 border-red-200"
+          className="mt-16 bg-card text-card-foreground rounded-3xl p-8 border-2 border-red-500/30 shadow-xl"
           initial={{ opacity: 0, scale: 0.9 }}
           whileInView={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.6, delay: 0.3 }}
@@ -272,10 +272,10 @@ const PricingSection = () => {
         >
           <div className="flex flex-col lg:flex-row items-center justify-between gap-8">
             <div className="flex-1 text-center lg:text-left">
-              <h3 className="text-3xl font-bold text-gray-900 mb-2">
+              <h3 className="text-3xl font-bold text-foreground mb-2">
                 🔥 Offre Limitée - 50% de Réduction!
               </h3>
-              <p className="text-gray-600 text-lg">
+              <p className="text-muted-foreground text-lg">
                 Ne manquez pas cette opportunité exceptionnelle. L'offre expire bientôt!
               </p>
             </div>
@@ -295,16 +295,16 @@ const PricingSection = () => {
           transition={{ duration: 0.8, delay: 0.3 }}
           viewport={{ once: true }}
         >
-          <p className="text-gray-600 mb-4">
+          <p className="text-muted-foreground mb-4">
           5 minutes pourraient vous faire économiser 50 heures d'étude. <br />
           -Pour seulement 120dh -
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <span className="text-sm text-gray-500">Paiement sécurisé avec</span>
+            <span className="text-sm text-muted-foreground">Paiement sécurisé avec</span>
             <div className="flex gap-4">
-              <div className="px-3 py-1 bg-blue-50 rounded-lg text-blue-700 font-medium text-sm">Carte bancaire</div>
-              <div className="px-3 py-1 bg-blue-50 rounded-lg text-blue-700 font-medium text-sm">PayPal</div>
-              <div className="px-3 py-1 bg-blue-50 rounded-lg text-blue-700 font-medium text-sm">Virement</div>
+              <div className="px-3 py-1 bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 rounded-lg text-blue-700 dark:text-blue-300 font-medium text-sm">Carte bancaire</div>
+              <div className="px-3 py-1 bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 rounded-lg text-blue-700 dark:text-blue-300 font-medium text-sm">PayPal</div>
+              <div className="px-3 py-1 bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 rounded-lg text-blue-700 dark:text-blue-300 font-medium text-sm">Virement</div>
             </div>
           </div>
         </motion.div>

@@ -247,13 +247,13 @@ const ImportExplications = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-card">
       <div className="max-w-7xl mx-auto px-6 py-8 space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">Import Explications</h2>
-            <p className="text-gray-600">Select module and exam context, then add question numbers, text and/or images, give it a name and submit.</p>
+            <h2 className="text-2xl font-bold text-foreground">Import Explications</h2>
+            <p className="text-muted-foreground">Select module and exam context, then add question numbers, text and/or images, give it a name and submit.</p>
           </div>
         </div>
 
@@ -267,7 +267,7 @@ const ImportExplications = () => {
           {/* Context Card */}
           <Card className="shadow-lg border-0">
             <CardHeader className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-t-lg">
-              <CardTitle className="text-xl font-bold text-gray-900">
+              <CardTitle className="text-xl font-bold text-foreground">
                 Exam Context
               </CardTitle>
               <CardDescription>
@@ -278,7 +278,7 @@ const ImportExplications = () => {
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 {/* Module Select */}
                 <div className="space-y-2">
-                  <Label className="font-semibold text-gray-700">Module *</Label>
+                  <Label className="font-semibold text-foreground">Module *</Label>
                   <Select value={selectedModule} onValueChange={(e) => {
                     setSelectedModule(e);
                     setExamType("");
@@ -304,7 +304,7 @@ const ImportExplications = () => {
 
                 {/* Exam Type Select */}
                 <div className="space-y-2">
-                  <Label className="font-semibold text-gray-700">Exam Type *</Label>
+                  <Label className="font-semibold text-foreground">Exam Type *</Label>
                   <Select value={examType} onValueChange={(e) => {
                     setExamType(e);
                     setSelectedExamNameYears("");
@@ -314,7 +314,7 @@ const ImportExplications = () => {
                     setSelectedTPName("");
                     setSelectedQCMName("");
                   }} disabled={!selectedModule}>
-                    <SelectTrigger className="border-gray-300 h-10 disabled:bg-gray-100">
+                    <SelectTrigger className="border-gray-300 h-10 disabled:bg-muted">
                       <SelectValue placeholder={selectedModule ? "Choose exam type" : "Select module first"} />
                     </SelectTrigger>
                     <SelectContent>
@@ -329,7 +329,7 @@ const ImportExplications = () => {
                 {/* Conditional renders based on exam type */}
                 {examType === "years" && (
                   <div className="space-y-2 md:col-span-2">
-                    <Label className="font-semibold text-gray-700">Exam Name *</Label>
+                    <Label className="font-semibold text-foreground">Exam Name *</Label>
                     <Select value={selectedExamNameYears} onValueChange={setSelectedExamNameYears}>
                       <SelectTrigger className="border-gray-300 h-10">
                         <SelectValue placeholder="Choose an exam name" />
@@ -350,7 +350,7 @@ const ImportExplications = () => {
                 {examType === "courses" && (
                   <>
                     <div className="space-y-2">
-                      <Label className="font-semibold text-gray-700">Category *</Label>
+                      <Label className="font-semibold text-foreground">Category *</Label>
                       <Select value={selectedCategory} onValueChange={(e) => {
                         setSelectedCategory(e);
                         setSelectedCourse("");
@@ -367,12 +367,12 @@ const ImportExplications = () => {
                       </Select>
                     </div>
                     <div className="space-y-2">
-                      <Label className="font-semibold text-gray-700">Course *</Label>
+                      <Label className="font-semibold text-foreground">Course *</Label>
                       <Select value={selectedCourse} onValueChange={(e) => {
                         setSelectedCourse(e);
                         setSelectedYearName("");
                       }} disabled={!selectedCategory}>
-                        <SelectTrigger className="border-gray-300 h-10 disabled:bg-gray-100">
+                        <SelectTrigger className="border-gray-300 h-10 disabled:bg-muted">
                           <SelectValue placeholder="Choose a course" />
                         </SelectTrigger>
                         <SelectContent>
@@ -383,9 +383,9 @@ const ImportExplications = () => {
                       </Select>
                     </div>
                     <div className="space-y-2">
-                      <Label className="font-semibold text-gray-700">Year *</Label>
+                      <Label className="font-semibold text-foreground">Year *</Label>
                       <Select value={selectedYearName} onValueChange={setSelectedYearName} disabled={!selectedCourse}>
-                        <SelectTrigger className="border-gray-300 h-10 disabled:bg-gray-100">
+                        <SelectTrigger className="border-gray-300 h-10 disabled:bg-muted">
                           <SelectValue placeholder="Choose a year" />
                         </SelectTrigger>
                         <SelectContent>
@@ -400,7 +400,7 @@ const ImportExplications = () => {
 
                 {examType === "tp" && (
                   <div className="space-y-2 md:col-span-2">
-                    <Label className="font-semibold text-gray-700">TP Name *</Label>
+                    <Label className="font-semibold text-foreground">TP Name *</Label>
                     <Select value={selectedTPName} onValueChange={setSelectedTPName}>
                       <SelectTrigger className="border-gray-300 h-10">
                         <SelectValue placeholder="Choose a TP name" />
@@ -420,7 +420,7 @@ const ImportExplications = () => {
 
                 {examType === "qcm" && (
                   <div className="space-y-2 md:col-span-2">
-                    <Label className="font-semibold text-gray-700">QCM Name *</Label>
+                    <Label className="font-semibold text-foreground">QCM Name *</Label>
                     <Select value={selectedQCMName} onValueChange={setSelectedQCMName}>
                       <SelectTrigger className="border-gray-300 h-10">
                         <SelectValue placeholder="Choose a QCM name" />
@@ -444,7 +444,7 @@ const ImportExplications = () => {
           {/* Details Card */}
           <Card className="shadow-lg border-0">
             <CardHeader className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-t-lg">
-              <CardTitle className="text-xl font-bold text-gray-900">
+              <CardTitle className="text-xl font-bold text-foreground">
                 Content Details
               </CardTitle>
               <CardDescription>
@@ -455,7 +455,7 @@ const ImportExplications = () => {
               <div className="space-y-6">
                 {/* Question Numbers */}
                 <div className="space-y-2">
-                  <Label className="font-semibold text-gray-700 flex items-center gap-2">
+                  <Label className="font-semibold text-foreground flex items-center gap-2">
                     <Type className="w-4 h-4" />
                     Question Numbers *
                   </Label>
@@ -465,17 +465,17 @@ const ImportExplications = () => {
                     onChange={(e) => setQuestionNumbers(e.target.value)}
                     className="h-10 border-gray-300"
                   />
-                  <p className="text-xs text-gray-500">Specify which questions this explanation covers</p>
+                  <p className="text-xs text-muted-foreground">Specify which questions this explanation covers</p>
                 </div>
 
                 {/* Explication Text */}
                 <div className="space-y-2">
-                  <Label className="font-semibold text-gray-700 flex items-center gap-2">
+                  <Label className="font-semibold text-foreground flex items-center gap-2">
                     <FileText className="w-4 h-4" />
                     Explanation Text (optionnel)
                   </Label>
                   <textarea
-                    className="w-full rounded-md border border-gray-300 bg-white p-3 text-sm font-mono"
+                    className="w-full rounded-md border border-gray-300 bg-card p-3 text-sm font-mono"
                     rows={5}
                     placeholder="Enter explanation text (optionnel si vous ajoutez des images ou un PDF)..."
                     value={explicationText}
@@ -485,7 +485,7 @@ const ImportExplications = () => {
 
                 {/* Image Upload */}
                 <div className="space-y-2">
-                  <Label className="font-semibold text-gray-700 flex items-center gap-2">
+                  <Label className="font-semibold text-foreground flex items-center gap-2">
                     <ImageIcon className="w-4 h-4" />
                     Upload Images (optionnel, max {MAX_IMAGES})
                   </Label>
@@ -498,8 +498,8 @@ const ImportExplications = () => {
                     <div className="flex flex-col items-center gap-3">
                       <Upload className="w-8 h-8 text-purple-600" />
                       <div className="text-center">
-                        <p className="font-semibold text-gray-800">Drop images here or click to browse</p>
-                        <p className="text-sm text-gray-600">Supports JPG, PNG, GIF, WebP (max {MAX_IMAGES} images)</p>
+                        <p className="font-semibold text-foreground">Drop images here or click to browse</p>
+                        <p className="text-sm text-muted-foreground">Supports JPG, PNG, GIF, WebP (max {MAX_IMAGES} images)</p>
                       </div>
                       <input
                         type="file"
@@ -525,7 +525,7 @@ const ImportExplications = () => {
                       />
                       <Button 
                         variant="outline" 
-                        className="bg-white hover:bg-purple-50" 
+                        className="bg-card hover:bg-purple-50" 
                         type="button"
                         disabled={imageFiles.length >= MAX_IMAGES}
                         onClick={(e) => {
@@ -552,14 +552,14 @@ const ImportExplications = () => {
                           animate={{ opacity: 1, scale: 1 }}
                           className="relative group"
                         >
-                          <div className="bg-gray-100 rounded-lg overflow-hidden aspect-square">
+                          <div className="bg-muted rounded-lg overflow-hidden aspect-square">
                             <img
                               src={URL.createObjectURL(file)}
                               alt={`Preview ${index + 1}`}
                               className="w-full h-full object-cover"
                             />
                           </div>
-                          <p className="text-xs text-gray-600 mt-1 truncate">{file.name}</p>
+                          <p className="text-xs text-muted-foreground mt-1 truncate">{file.name}</p>
                           <Button
                             variant="ghost"
                             size="sm"
@@ -582,7 +582,7 @@ const ImportExplications = () => {
 
                 {/* PDF Upload */}
                 <div className="space-y-2">
-                  <Label className="font-semibold text-gray-700 flex items-center gap-2">
+                  <Label className="font-semibold text-foreground flex items-center gap-2">
                     <FileText className="w-4 h-4" />
                     Upload PDF (optionnel, max {MAX_PDF})
                   </Label>
@@ -601,15 +601,15 @@ const ImportExplications = () => {
                       <div className="flex items-center justify-center gap-3">
                         <FileText className="w-6 h-6 text-red-500" />
                         <div>
-                          <p className="font-medium text-gray-700">Click to upload Document</p>
-                          <p className="text-sm text-gray-500">PDF, PPTX, DOC, DOCX</p>
+                          <p className="font-medium text-foreground">Click to upload Document</p>
+                          <p className="text-sm text-muted-foreground">PDF, PPTX, DOC, DOCX</p>
                         </div>
                       </div>
                     </div>
                   ) : (
                     <div className="flex items-center gap-3 p-3 bg-red-50 border border-red-200 rounded-lg">
                       <FileText className="w-6 h-6 text-red-600" />
-                      <span className="flex-1 text-sm font-medium text-gray-700 truncate">{pdfFile.name}</span>
+                      <span className="flex-1 text-sm font-medium text-foreground truncate">{pdfFile.name}</span>
                       <Button
                         variant="ghost"
                         size="sm"
@@ -624,7 +624,7 @@ const ImportExplications = () => {
 
                 {/* Explication Name */}
                 <div className="space-y-2">
-                  <Label className="font-semibold text-gray-700">Explication Name *</Label>
+                  <Label className="font-semibold text-foreground">Explication Name *</Label>
                   <Input
                     type="text"
                     placeholder="e.g. Explication - ECG Q1"
@@ -632,11 +632,11 @@ const ImportExplications = () => {
                     onChange={(e) => setExplicationName(e.target.value)}
                     className="h-10 border-gray-300"
                   />
-                  <p className="text-xs text-gray-500">This will be used to identify the imported explication</p>
+                  <p className="text-xs text-muted-foreground">This will be used to identify the imported explication</p>
                 </div>
               </div>
             </CardContent>
-            <CardFooter className="bg-gray-50 rounded-b-lg border-t flex justify-end gap-3">
+            <CardFooter className="bg-background rounded-b-lg border-t flex justify-end gap-3">
               <Button variant="outline" className="border-gray-300">
                 Cancel
               </Button>

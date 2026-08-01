@@ -400,7 +400,7 @@ const SideBarAdmin = ({ sidebarOpen = true, onToggle, isMobile = false }) => {
   };
 
   return (
-    <div className="relative flex flex-col h-full bg-gradient-to-b from-slate-50 to-white border-r border-slate-200 overflow-hidden">
+    <div className="relative flex flex-col h-full bg-card border-r border-border overflow-hidden">
       {/* Navigation */}
       <div className="flex-1 overflow-y-auto px-2 sm:px-3 py-3 sm:py-4">
         <nav className="space-y-1 sm:space-y-2">
@@ -421,25 +421,25 @@ const SideBarAdmin = ({ sidebarOpen = true, onToggle, isMobile = false }) => {
                       variant="ghost"
                       className={cn(
                         "w-full justify-start gap-3 h-auto py-2.5 px-3",
-                        "hover:bg-slate-100 transition-all duration-200",
+                        "hover:bg-accent transition-all duration-200",
                         !sidebarOpen && "justify-center px-2"
                       )}
                     >
                       <div className={cn(
                         "flex items-center justify-center w-8 h-8 rounded-lg",
-                        "bg-gradient-to-br from-slate-100 to-slate-200",
-                        "group-hover:from-blue-50 group-hover:to-blue-100"
+                        "bg-muted",
+                        "group-hover:bg-accent"
                       )}>
-                        <CategoryIcon className="h-4 w-4 text-slate-600" />
+                        <CategoryIcon className="h-4 w-4 text-muted-foreground" />
                       </div>
                       {sidebarOpen && (
                         <>
-                          <span className="flex-1 text-left text-sm font-semibold text-slate-700 uppercase tracking-wide">
+                          <span className="flex-1 text-left text-sm font-semibold text-foreground uppercase tracking-wide">
                             {category.label}
                           </span>
                           <ChevronDown
                             className={cn(
-                              "h-4 w-4 text-slate-400 transition-transform duration-200",
+                              "h-4 w-4 text-muted-foreground transition-transform duration-200",
                               isOpen && "rotate-180"
                             )}
                           />
@@ -463,12 +463,12 @@ const SideBarAdmin = ({ sidebarOpen = true, onToggle, isMobile = false }) => {
                             sidebarOpen ? "pl-6 pr-3" : "justify-center px-2",
                             isActive
                               ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 shadow-md"
-                              : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                              : "text-muted-foreground hover:bg-accent hover:text-foreground"
                           )}
                         >
                           <ItemIcon className={cn(
                             "h-4 w-4 flex-shrink-0",
-                            isActive ? "text-white" : "text-slate-500"
+                            isActive ? "text-white" : "text-muted-foreground"
                           )} />
                           {sidebarOpen && (
                             <span className="text-sm font-medium text-left flex-1">
@@ -496,10 +496,10 @@ const SideBarAdmin = ({ sidebarOpen = true, onToggle, isMobile = false }) => {
 
       {/* Footer */}
       {sidebarOpen && (
-        <div className="p-3 sm:p-4 border-t border-slate-200 flex-shrink-0">
-          <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-2 sm:p-3 border border-blue-200">
-            <p className="text-[10px] sm:text-xs font-medium text-blue-900 mb-0.5 sm:mb-1">Need help?</p>
-            <p className="text-[10px] sm:text-xs text-blue-700">Contact support</p>
+        <div className="p-3 sm:p-4 border-t border-border flex-shrink-0">
+          <div className="bg-blue-50 dark:bg-blue-950/50 rounded-lg p-2 sm:p-3 border border-blue-200 dark:border-blue-900">
+            <p className="text-[10px] sm:text-xs font-medium text-blue-900 dark:text-blue-300 mb-0.5 sm:mb-1">Need help?</p>
+            <p className="text-[10px] sm:text-xs text-blue-700 dark:text-blue-400">Contact support</p>
           </div>
         </div>
       )}

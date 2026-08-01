@@ -253,7 +253,7 @@ const AddQuestions = () => {
       name: "-",
       year: "",
       module: "-",
-      color: "bg-gray-100 text-gray-800"
+      color: "bg-muted text-foreground"
     };
   };
 
@@ -593,7 +593,7 @@ const AddQuestions = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-card">
       <div className="max-w-7xl mx-auto px-6 py-8 space-y-6">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <PageHeader title={t('admin:add_questions')} description={t('admin:select_context_add_content')} />
@@ -1218,7 +1218,7 @@ const AddQuestions = () => {
                             color: "bg-green-100 text-green-800"
                           };
                         }
-                        return { type: "Non spécifié", module: "—", color: "bg-gray-100 text-gray-800" };
+                        return { type: "Non spécifié", module: "—", color: "bg-muted text-foreground" };
                       };
                       const reference = getQuestionReference();
                       const sourceDetails = getQuestionSourceDetails(q);
@@ -1316,7 +1316,7 @@ const AddQuestions = () => {
             </div>
           </CardContent>
           {filteredQuestions.length > 0 && (
-            <CardFooter className="border-t bg-slate-50/50 flex flex-col sm:flex-row justify-between items-center gap-4 py-4">
+            <CardFooter className="border-t bg-background/50 flex flex-col sm:flex-row justify-between items-center gap-4 py-4">
               {/* Left side - Info */}
               <div className="text-sm text-muted-foreground">
                 Affichage de {startIndex + 1} à {Math.min(endIndex, filteredQuestions.length)} sur {filteredQuestions.length} questions
@@ -1422,7 +1422,7 @@ const AddQuestions = () => {
               <div className="space-y-4 py-4">
                 {/* Reference Information */}
                 <div className="space-y-2 pb-3 border-b">
-                  <Label className="text-sm font-semibold text-gray-700">Référence</Label>
+                  <Label className="text-sm font-semibold text-foreground">Référence</Label>
                   <div className="grid grid-cols-2 gap-3">
                     <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
                       <p className="text-xs text-blue-600 font-medium">N° Question</p>
@@ -1445,7 +1445,7 @@ const AddQuestions = () => {
                     </Badge>
                     {/* Module Badge */}
                     {getQuestionSourceDetails(viewingQuestion).module && getQuestionSourceDetails(viewingQuestion).module !== "-" && (
-                      <Badge variant="outline" className="text-xs bg-gray-50">
+                      <Badge variant="outline" className="text-xs bg-background">
                         Module: {getQuestionSourceDetails(viewingQuestion).module}
                       </Badge>
                     )}
@@ -1453,12 +1453,12 @@ const AddQuestions = () => {
                 </div>
                 
                 <div className="space-y-2">
-                  <Label className="text-sm font-semibold text-gray-700">Question</Label>
-                  <p className="text-gray-900 bg-gray-50 p-3 rounded border">{viewingQuestion.text}</p>
+                  <Label className="text-sm font-semibold text-foreground">Question</Label>
+                  <p className="text-foreground bg-background p-3 rounded border">{viewingQuestion.text}</p>
                 </div>
                 {viewingQuestion.images && viewingQuestion.images.length > 0 && (
                   <div className="space-y-2">
-                    <Label className="text-sm font-semibold text-gray-700">Images</Label>
+                    <Label className="text-sm font-semibold text-foreground">Images</Label>
                     <div className="grid grid-cols-2 gap-2">
                       {viewingQuestion.images.map((img, idx) => (
                         <img 
@@ -1472,10 +1472,10 @@ const AddQuestions = () => {
                   </div>
                 )}
                 <div className="space-y-2">
-                  <Label className="text-sm font-semibold text-gray-700">Options</Label>
+                  <Label className="text-sm font-semibold text-foreground">Options</Label>
                   <div className="space-y-2">
                     {viewingQuestion.options?.map((opt, idx) => (
-                      <div key={idx} className={`p-2 rounded border ${opt.isCorrect ? 'bg-green-50 border-green-300' : 'bg-gray-50'}`}>
+                      <div key={idx} className={`p-2 rounded border ${opt.isCorrect ? 'bg-green-50 border-green-300' : 'bg-background'}`}>
                         <span className="font-medium">{String.fromCharCode(65 + idx)}. </span>
                         {opt.text}
                         {opt.isCorrect && <Badge className="ml-2 bg-green-600">Correct</Badge>}
@@ -1485,9 +1485,9 @@ const AddQuestions = () => {
                 </div>
                 {viewingQuestion.note && (
                   <div className="space-y-2">
-                    <Label className="text-sm font-semibold text-gray-700">Correction / Note (Excel)</Label>
+                    <Label className="text-sm font-semibold text-foreground">Correction / Note (Excel)</Label>
                     <div className="bg-yellow-50 p-3 rounded border border-yellow-200">
-                      <p className="text-gray-900 whitespace-pre-wrap">{viewingQuestion.note}</p>
+                      <p className="text-foreground whitespace-pre-wrap">{viewingQuestion.note}</p>
                     </div>
                   </div>
                 )}
@@ -1527,7 +1527,7 @@ const AddQuestions = () => {
                     <Input
                       value={getQuestionSourceDetails(editingQuestion).name || 'Non defini'}
                       disabled
-                      className="bg-gray-50"
+                      className="bg-background"
                     />
                   </div>
                 </div>
@@ -1623,7 +1623,7 @@ const AddQuestions = () => {
                 {/* Question Reference - Read Only */}
                 <div className="space-y-2">
                   <Label>Référence de la question</Label>
-                  <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-md border">
+                  <div className="flex items-center gap-2 p-3 bg-background rounded-md border">
                     <Badge variant="secondary" className={getQuestionSourceDetails(editingQuestion).color}>
                       {getQuestionSourceDetails(editingQuestion).type}
                     </Badge>

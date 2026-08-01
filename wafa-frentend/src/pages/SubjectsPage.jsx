@@ -71,7 +71,7 @@ const ProgressCircle = ({ progress, size = 48, color }) => {
         />
       </svg>
       <div className="absolute inset-0 flex items-center justify-center">
-        <span className={`${fontSize} font-bold`} style={{ color: color || '#374151' }}>{progress}%</span>
+        <span className={`${fontSize} font-bold`} style={{ color: color || 'currentColor' }}>{progress}%</span>
       </div>
     </div>
   );
@@ -111,7 +111,7 @@ const ExamCard = ({ exam, onStart, onShowHelp, index, moduleColor, examType }) =
       className=""
     >
       <Card
-        className="py-0 gap-0 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer group active:scale-[0.98] overflow-hidden border border-gray-200 shadow-sm bg-white rounded-2xl"
+        className="py-0 gap-0 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer group active:scale-[0.98] overflow-hidden border border-gray-200 dark:border-gray-700 shadow-sm bg-white dark:bg-slate-900 rounded-2xl"
         onClick={() => onStart(exam.id, examType)}
       >
         <CardContent className="px-3 py-3 sm:px-4 sm:py-3 flex flex-col relative">
@@ -171,7 +171,7 @@ const ExamCard = ({ exam, onStart, onShowHelp, index, moduleColor, examType }) =
           <div className="w-full flex items-center justify-between pt-1">
             {/* Left: Help icon + count */}
             <div className="flex items-center gap-1.5 sm:gap-2">
-              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center bg-gray-100 border border-gray-200">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center bg-gray-100 border border-gray-200 dark:border-gray-700">
                 <img src={helpIconImg} alt="help" className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               </div>
               <div className="flex items-baseline gap-0.5 text-gray-500">
@@ -641,14 +641,14 @@ const SubjectsPage = () => {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-3 xs:p-4 sm:p-5 md:p-6 lg:p-8">
         <div className="max-w-7xl mx-auto">
-          <Card className="border-gray-200 shadow-lg">
+          <Card className="border-gray-200 dark:border-gray-700 shadow-lg">
             <CardContent className="p-12 sm:p-16 text-center">
               <div className="flex flex-col items-center gap-5">
                 <div className="h-24 w-24 sm:h-28 sm:w-28 rounded-2xl bg-gradient-to-br from-red-100 to-red-50 flex items-center justify-center shadow-md">
                   <BookOpen className="h-12 w-12 sm:h-14 sm:w-14 text-red-500" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">{t('dashboard:module_not_found')}</h3>
+                  <h3 className="text-xl font-bold text-foreground mb-2">{t('dashboard:module_not_found')}</h3>
                   <p className="text-muted-foreground">{t('dashboard:module_not_exist')}</p>
                 </div>
                 <Button onClick={() => navigate(-1)} className="gap-2 rounded-lg shadow-md hover:shadow-lg transition-all">
@@ -667,20 +667,20 @@ const SubjectsPage = () => {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-3 xs:p-4 sm:p-5 md:p-6 lg:p-8">
         <div className="max-w-7xl mx-auto">
-          <Card className="border-gray-200 shadow-lg">
+          <Card className="border-gray-200 dark:border-gray-700 shadow-lg">
             <CardContent className="p-12 sm:p-16 text-center">
               <div className="flex flex-col items-center gap-5">
                 <div className="h-24 w-24 sm:h-28 sm:w-28 rounded-2xl bg-gradient-to-br from-amber-100 to-amber-50 flex items-center justify-center shadow-md">
                   <Lock className="h-12 w-12 sm:h-14 sm:w-14 text-amber-500" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">
+                  <h3 className="text-xl font-bold text-foreground mb-2">
                     {t('dashboard:access_restricted', 'Accès Restreint')}
                   </h3>
                   <p className="text-muted-foreground mb-2">
                     {t('dashboard:module_not_in_plan', "Ce module n'est pas inclus dans votre abonnement actuel.")}
                   </p>
-                  <p className="text-sm text-gray-700 font-semibold">
+                  <p className="text-sm text-gray-700 dark:text-gray-300 font-semibold">
                     <strong>{module?.name}</strong> - {module?.semester}
                   </p>
                 </div>
@@ -731,7 +731,7 @@ const SubjectsPage = () => {
         {/* Exam Type Tabs */}
         <Tabs value={selectedExamType} onValueChange={setSelectedExamType} className="w-full">
           <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
-            <TabsList className="inline-flex w-auto min-w-full md:grid md:w-full md:grid-cols-3 h-auto p-1.5 bg-white border border-gray-200 shadow-sm rounded-xl">
+            <TabsList className="inline-flex w-auto min-w-full md:grid md:w-full md:grid-cols-3 h-auto p-1.5 bg-white dark:bg-slate-900 border border-gray-200 dark:border-gray-700 shadow-sm rounded-xl">
               <TabsTrigger
                 value="year"
                 className="flex items-center gap-2 py-3 px-4 data-[state=active]:text-white whitespace-nowrap text-sm font-medium rounded-lg transition-all"
@@ -744,7 +744,7 @@ const SubjectsPage = () => {
                 <Calendar className="h-4 w-4" />
                 <span>Par Année</span>
                 {examsParYear.length > 0 && (
-                  <Badge variant="secondary" className="ml-1 bg-white/20 text-white data-[state=inactive]:bg-blue-50 data-[state=inactive]:text-blue-700 text-xs font-semibold px-2 py-0.5">
+                  <Badge variant="secondary" className="ml-1 bg-white dark:bg-slate-900/20 text-white data-[state=inactive]:bg-blue-50 data-[state=inactive]:text-blue-700 text-xs font-semibold px-2 py-0.5">
                     {examsParYear.length}
                   </Badge>
                 )}
@@ -760,7 +760,7 @@ const SubjectsPage = () => {
                 <BookOpen className="h-4 w-4" />
                 <span>Par Cours</span>
                 {examsParCours.length > 0 && (
-                  <Badge variant="secondary" className="ml-1 bg-white/20 text-white data-[state=inactive]:bg-orange-50 data-[state=inactive]:text-orange-700 text-xs font-semibold px-2 py-0.5">
+                  <Badge variant="secondary" className="ml-1 bg-white dark:bg-slate-900/20 text-white data-[state=inactive]:bg-orange-50 data-[state=inactive]:text-orange-700 text-xs font-semibold px-2 py-0.5">
                     {examsParCours.length}
                   </Badge>
                 )}
@@ -776,7 +776,7 @@ const SubjectsPage = () => {
                 <Library className="h-4 w-4" />
                 <span>QCM Banque</span>
                 {qcmBanque.length > 0 && (
-                  <Badge variant="secondary" className="ml-1 bg-white/20 text-white data-[state=inactive]:bg-purple-50 data-[state=inactive]:text-purple-700 text-xs font-semibold px-2 py-0.5">
+                  <Badge variant="secondary" className="ml-1 bg-white dark:bg-slate-900/20 text-white data-[state=inactive]:bg-purple-50 data-[state=inactive]:text-purple-700 text-xs font-semibold px-2 py-0.5">
                     {qcmBanque.length}
                   </Badge>
                 )}
@@ -786,7 +786,7 @@ const SubjectsPage = () => {
 
           {/* Category Filter - Only for "Par Cours" */}
           {selectedExamType === "course" && categories.length > 1 && (
-            <Card className="mt-4 border-gray-200 shadow-sm">
+            <Card className="mt-4 border-gray-200 dark:border-gray-700 shadow-sm">
               <CardContent className="p-4 sm:p-5">
                 <div className="flex flex-wrap gap-2">
                   {categories.map((cat) => (
@@ -833,7 +833,7 @@ const SubjectsPage = () => {
                         <Calendar className="h-8 w-8 sm:h-10 sm:w-10 text-blue-600" />
                       </div>
                       <div>
-                        <p className="text-gray-900 font-bold text-sm sm:text-base mb-1">Aucun examen disponible</p>
+                        <p className="text-foreground font-bold text-sm sm:text-base mb-1">Aucun examen disponible</p>
                         <p className="text-xs sm:text-sm text-gray-500">Les examens par année apparaîtront ici</p>
                       </div>
                     </div>
@@ -864,7 +864,7 @@ const SubjectsPage = () => {
                         <BookOpen className="h-8 w-8 sm:h-10 sm:w-10 text-orange-600" />
                       </div>
                       <div>
-                        <p className="text-gray-900 font-bold text-sm sm:text-base mb-1">
+                        <p className="text-foreground font-bold text-sm sm:text-base mb-1">
                           {selectedCategory === "all"
                             ? "Aucun examen disponible"
                             : "Aucun examen dans cette catégorie"
@@ -905,7 +905,7 @@ const SubjectsPage = () => {
                         <Library className="h-8 w-8 sm:h-10 sm:w-10 text-purple-600" />
                       </div>
                       <div>
-                        <p className="text-gray-900 font-bold text-sm sm:text-base mb-1">Aucun QCM disponible</p>
+                        <p className="text-foreground font-bold text-sm sm:text-base mb-1">Aucun QCM disponible</p>
                         <p className="text-xs sm:text-sm text-gray-500">Les QCM de la banque apparaîtront ici</p>
                       </div>
                     </div>
@@ -932,7 +932,7 @@ const SubjectsPage = () => {
           <div className="mt-4">
             {selectedHelpExam?.helpText ? (
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <p className="text-gray-900 whitespace-pre-wrap">{selectedHelpExam.helpText}</p>
+                <p className="text-foreground whitespace-pre-wrap">{selectedHelpExam.helpText}</p>
               </div>
             ) : (
               <p className="text-gray-500 text-center py-4">Aucune information d'aide disponible pour cet examen.</p>

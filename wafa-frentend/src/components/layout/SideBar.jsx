@@ -329,7 +329,7 @@ const SideBar = ({ sidebarOpen, setSidebarOpen, isMobile }) => {
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
         className={`${isMobile ? "fixed" : "relative"} z-50 ${isMobile ? "h-[calc(100vh-4rem)]" : "h-full"
-          } flex flex-col bg-white border-r border-gray-200 shadow-xl left-0 ${isMobile ? "top-16" : "top-0"
+          } flex flex-col bg-card border-r border-border shadow-xl left-0 ${isMobile ? "top-16" : "top-0"
           } ${isMobile ? "lg:relative lg:top-0" : ""} overflow-hidden touch-pan-y`}
       >
         {/* Navigation */}
@@ -558,7 +558,7 @@ const SidebarItem = ({
       </AnimatePresence>
       {/* Premium Badge */}
       {isPremiumFeature && sidebarOpen && (
-        <Badge variant="secondary" className="bg-amber-100 text-amber-700 text-[10px] px-1.5 py-0.5 font-semibold">
+        <Badge variant="secondary" className="bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 text-[10px] px-1.5 py-0.5 font-semibold">
           <Crown className="h-2.5 w-2.5 mr-0.5" />
           Premium
         </Badge>

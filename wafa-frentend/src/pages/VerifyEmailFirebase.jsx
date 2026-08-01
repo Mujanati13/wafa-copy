@@ -164,7 +164,7 @@ const VerifyEmailFirebase = () => {
         transition={{ duration: 0.5 }}
         className="w-full max-w-md relative z-10"
       >
-        <Card className="shadow-2xl border-0 backdrop-blur-sm bg-white/90">
+        <Card className="shadow-2xl border-0 backdrop-blur-sm bg-card/90">
           {/* Logo */}
           <div className="flex justify-center pt-8 pb-2">
             <img src={logo} alt="Logo" className="h-16 w-auto" />
@@ -190,7 +190,7 @@ const VerifyEmailFirebase = () => {
               {status === 'error' && t('auth:verification_failed')}
             </CardTitle>
 
-            <CardDescription className="text-gray-600 mt-2">
+            <CardDescription className="text-muted-foreground mt-2">
               {message}
             </CardDescription>
           </CardHeader>
@@ -234,7 +234,7 @@ const VerifyEmailFirebase = () => {
 
                 {userEmail && (
                   <p className="text-sm text-gray-500 text-center">
-                    {t('auth:email_sent')}: <span className="font-medium text-gray-700">{userEmail}</span>
+                    {t('auth:email_sent')}: <span className="font-medium text-foreground">{userEmail}</span>
                   </p>
                 )}
               </>
@@ -286,7 +286,7 @@ const VerifyEmailFirebase = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
-          className="mt-6 text-center text-sm text-gray-600"
+          className="mt-6 text-center text-sm text-muted-foreground"
         >
           <p>{t('auth:cant_find_email')}</p>
           <p className="mt-1">{t('auth:check_spam_folder')}</p>

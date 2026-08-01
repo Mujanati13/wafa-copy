@@ -71,7 +71,7 @@ const ReportModal = ({ isOpen, onClose, questionId }) => {
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
-            className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6"
+            className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-md w-full p-6"
             onClick={(e) => e.stopPropagation()}
           >
             {success ? (
@@ -164,7 +164,7 @@ const ReportModal = ({ isOpen, onClose, questionId }) => {
                   initial={{ scale: 0.9, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   exit={{ scale: 0.9, opacity: 0 }}
-                  className="bg-white rounded-xl shadow-2xl max-w-sm w-full overflow-hidden"
+                  className="bg-white dark:bg-slate-900 rounded-xl shadow-2xl max-w-sm w-full overflow-hidden"
                   onClick={(e) => e.stopPropagation()}
                 >
                   {/* Red Header */}
@@ -176,7 +176,7 @@ const ReportModal = ({ isOpen, onClose, questionId }) => {
                       <FaTimes size={18} />
                     </button>
                     <div className="flex flex-col items-center text-white">
-                      <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mb-3">
+                      <div className="w-16 h-16 bg-white dark:bg-slate-900 rounded-full flex items-center justify-center mb-3">
                         <TriangleAlert className="h-10 w-10 text-red-500" />
                       </div>
                       <h3 className="text-2xl font-bold">WARNING!</h3>

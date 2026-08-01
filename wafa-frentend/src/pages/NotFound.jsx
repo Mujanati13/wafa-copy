@@ -16,7 +16,7 @@ const NotFound = () => {
         transition={{ duration: 0.5 }}
         className="w-full max-w-2xl"
       >
-        <Card className="border-0 shadow-2xl bg-white/80 backdrop-blur-sm">
+        <Card className="border-0 shadow-2xl bg-card/80 backdrop-blur-sm">
           <CardContent className="p-8 md:p-12">
             <div className="text-center space-y-6">
               {/* 404 Icon */}
@@ -54,7 +54,7 @@ const NotFound = () => {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.4 }}
-                className="bg-slate-50 rounded-lg p-4 border border-slate-200"
+                className="bg-muted rounded-lg p-4 border border-border"
               >
                 <p className="text-sm text-slate-600">
                   La page que vous essayez d'accéder a peut-être été supprimée, 

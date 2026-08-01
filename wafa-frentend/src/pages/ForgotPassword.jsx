@@ -47,7 +47,7 @@ const ForgotPassword = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-teal-50 flex items-center justify-center px-4 py-8">
+    <div className="min-h-screen bg-background flex items-center justify-center px-4 py-8">
       {/* Background Effects */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
@@ -60,7 +60,7 @@ const ForgotPassword = () => {
         transition={{ duration: 0.5 }}
         className="w-full max-w-md relative z-10"
       >
-        <Card className="shadow-2xl border-0 backdrop-blur-sm bg-white/90">
+        <Card className="shadow-2xl border-0 backdrop-blur-sm bg-card/90">
           {!isSubmitted ? (
             <>
               {/* Logo */}
@@ -85,7 +85,7 @@ const ForgotPassword = () => {
                 <CardTitle className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-teal-600 bg-clip-text text-transparent">
                   {t('auth:forgot_password')}
                 </CardTitle>
-                <CardDescription className="text-gray-600">
+                <CardDescription className="text-muted-foreground">
                   {t('auth:reset_password_instructions')}
                 </CardDescription>
               </CardHeader>
@@ -189,8 +189,8 @@ const ForgotPassword = () => {
                   <h2 className="text-2xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
                     {t('auth:email_sent_success')}
                   </h2>
-                  <p className="text-gray-600">
-                    {t('auth:reset_link_sent')} <span className="font-semibold text-gray-900">{email}</span>
+                  <p className="text-muted-foreground">
+                    {t('auth:reset_link_sent')} <span className="font-semibold text-foreground">{email}</span>
                   </p>
                 </motion.div>
 
@@ -241,7 +241,7 @@ const ForgotPassword = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
-          className="mt-6 text-center text-sm text-gray-600"
+          className="mt-6 text-center text-sm text-muted-foreground"
         >
           <p>{t('auth:need_help_contact_support')}</p>
         </motion.div>

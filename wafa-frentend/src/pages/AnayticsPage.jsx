@@ -215,9 +215,9 @@ const AnalyticsPage = () => {
       case "payment":
         return <TrendingUp className="w-4 h-4 text-orange-500" />;
       case "admin":
-        return <Plus className="w-4 h-4 text-gray-500" />;
+        return <Plus className="w-4 h-4 text-muted-foreground" />;
       default:
-        return <Activity className="w-4 h-4 text-gray-500" />;
+        return <Activity className="w-4 h-4 text-muted-foreground" />;
     }
   };
 
@@ -306,16 +306,16 @@ const AnalyticsPage = () => {
       {/* Header with Filters and Export */}
       <div className="flex flex-col gap-3 sm:gap-4">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
+          <h1 className="text-xl sm:text-2xl font-bold text-foreground">
             {t('admin:analytics_dashboard')}
           </h1>
-          <p className="text-sm sm:text-base text-gray-600">
+          <p className="text-sm sm:text-base text-muted-foreground">
             {t('admin:monitor_platform_performance')}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-          <div className="flex items-center gap-1.5 sm:gap-2 bg-white border border-gray-200 rounded-lg px-2 sm:px-3 py-1.5 sm:py-2">
-            <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-500" />
+          <div className="flex items-center gap-1.5 sm:gap-2 bg-card border border-border rounded-lg px-2 sm:px-3 py-1.5 sm:py-2">
+            <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-muted-foreground" />
             <select
               value={dateRange}
               onChange={(e) => setDateRange(e.target.value)}
@@ -368,7 +368,7 @@ const AnalyticsPage = () => {
       </div>
 
       {/* Last Refresh Indicator */}
-      <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs text-gray-500">
+      <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs text-muted-foreground">
         <Clock className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
         <span>Mise à jour: {lastRefresh.toLocaleTimeString('fr-FR')}</span>
         <span className="text-green-500 hidden sm:inline">• Auto-refresh 60s</span>
@@ -380,7 +380,7 @@ const AnalyticsPage = () => {
           Array.from({ length: 4 }).map((_, idx) => (
             <div
               key={idx}
-              className="flex flex-row justify-between items-center bg-white border border-gray-200 rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-6 shadow-sm min-h-[100px] sm:min-h-[120px] md:min-h-[140px] animate-pulse"
+              className="flex flex-row justify-between items-center bg-card border border-border rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-6 shadow-sm min-h-[100px] sm:min-h-[120px] md:min-h-[140px] animate-pulse"
             >
               <div className="flex flex-col gap-1.5 sm:gap-2 flex-1">
                 <div className="h-3 sm:h-4 bg-gray-200 rounded w-3/4"></div>
@@ -394,10 +394,10 @@ const AnalyticsPage = () => {
           stats.map((stat) => (
             <div
               key={stat.label}
-              className="flex flex-row justify-between items-center bg-white border border-gray-200 rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-6 shadow-sm hover:shadow-md transition-shadow duration-200 min-h-[100px] sm:min-h-[120px] md:min-h-[140px]"
+              className="flex flex-row justify-between items-center bg-card border border-border rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-6 shadow-sm hover:shadow-md transition-shadow duration-200 min-h-[100px] sm:min-h-[120px] md:min-h-[140px]"
             >
               <div className="flex flex-col gap-1 sm:gap-2">
-                <span className="text-xs sm:text-sm text-gray-700 font-medium">{stat.label}</span>
+                <span className="text-xs sm:text-sm text-foreground font-medium">{stat.label}</span>
                 <span className="text-lg sm:text-2xl md:text-3xl font-bold text-black">
                   {stat.value}
                 </span>
@@ -427,13 +427,13 @@ const AnalyticsPage = () => {
             <CardContent className="p-2.5 sm:p-3 md:p-4">
               <div className="flex items-center justify-between gap-2">
                 <div className="min-w-0 flex-1">
-                  <p className="text-[10px] sm:text-xs md:text-sm text-gray-600 truncate">{metric.label}</p>
+                  <p className="text-[10px] sm:text-xs md:text-sm text-muted-foreground truncate">{metric.label}</p>
                   <p className="text-base sm:text-xl md:text-2xl font-bold">{metric.value}</p>
                   <p className="text-[10px] sm:text-xs text-green-600 font-medium">
                     {metric.change}
                   </p>
                 </div>
-                <div className="p-1.5 sm:p-2 bg-gray-50 rounded-lg shrink-0 [&>svg]:w-4 [&>svg]:h-4 sm:[&>svg]:w-5 sm:[&>svg]:h-5">{metric.icon}</div>
+                <div className="p-1.5 sm:p-2 bg-background rounded-lg shrink-0 [&>svg]:w-4 [&>svg]:h-4 sm:[&>svg]:w-5 sm:[&>svg]:h-5">{metric.icon}</div>
               </div>
             </CardContent>
           </Card>
@@ -475,13 +475,13 @@ const AnalyticsPage = () => {
               {subjectPerformance.map((subject) => (
                 <div
                   key={subject.subject}
-                  className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                  className="flex items-center justify-between p-3 bg-background rounded-lg"
                 >
                   <div className="flex-1">
-                    <h4 className="font-medium text-gray-900">
+                    <h4 className="font-medium text-foreground">
                       {subject.subject}
                     </h4>
-                    <div className="flex items-center gap-4 text-sm text-gray-600">
+                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
                       <span>{t('admin:score')}: {subject.score}%</span>
                       <span>{t('admin:attempts')}: {subject.attempts}</span>
                     </div>
@@ -516,14 +516,14 @@ const AnalyticsPage = () => {
                 {recentActivity.map((activity, index) => (
                   <div
                     key={index}
-                    className="flex items-start gap-3 p-3 hover:bg-gray-50 rounded-lg transition-colors"
+                    className="flex items-start gap-3 p-3 hover:bg-background rounded-lg transition-colors"
                   >
                     <div className="mt-1">{getActivityIcon(activity.type)}</div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900">
+                      <p className="text-sm font-medium text-foreground">
                         {activity.action}
                       </p>
-                      <p className="text-xs text-gray-600">
+                      <p className="text-xs text-muted-foreground">
                         {activity.user} • {formatTimeAgo(activity.time)}
                       </p>
                     </div>
@@ -531,7 +531,7 @@ const AnalyticsPage = () => {
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-gray-500 text-center py-4">
+              <p className="text-sm text-muted-foreground text-center py-4">
                 Aucune activité récente
               </p>
             )}

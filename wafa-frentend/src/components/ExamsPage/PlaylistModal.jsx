@@ -112,7 +112,7 @@ const PlaylistModal = ({ isOpen, onClose, questionId }) => {
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
-            className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6"
+            className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-md w-full p-6"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-6">
@@ -168,7 +168,7 @@ const PlaylistModal = ({ isOpen, onClose, questionId }) => {
                           <Loader2 className="h-5 w-5 animate-spin text-purple-600" />
                         ) : (
                           <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                            contains ? "bg-purple-100" : "bg-white border border-gray-200"
+                            contains ? "bg-purple-100" : "bg-white dark:bg-slate-900 border border-gray-200"
                           }`}>
                             <Album size={18} className={contains ? "text-purple-600" : "text-gray-400"} />
                           </div>
@@ -232,7 +232,7 @@ const PlaylistModal = ({ isOpen, onClose, questionId }) => {
                       setNewPlaylistName("");
                     }}
                     disabled={loading}
-                    className="px-4 py-2.5 bg-white text-gray-700 rounded-lg hover:bg-gray-50 transition-colors border-2 border-gray-200 font-medium"
+                    className="px-4 py-2.5 bg-white dark:bg-slate-900 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors border-2 border-gray-200 font-medium"
                   >
                     Annuler
                   </button>

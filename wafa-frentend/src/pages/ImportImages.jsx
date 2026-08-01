@@ -181,13 +181,13 @@ const ImportImages = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-card">
       <div className="max-w-7xl mx-auto px-6 py-8 space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">Import Images</h2>
-            <p className="text-gray-600">Select module and exam context, specify question numbers, then upload images.</p>
+            <h2 className="text-2xl font-bold text-foreground">Import Images</h2>
+            <p className="text-muted-foreground">Select module and exam context, specify question numbers, then upload images.</p>
           </div>
         </div>
 
@@ -201,7 +201,7 @@ const ImportImages = () => {
           {/* Context Card */}
           <Card className="shadow-lg border-0">
             <CardHeader className="bg-gradient-to-r from-cyan-50 to-teal-50 rounded-t-lg">
-              <CardTitle className="text-xl font-bold text-gray-900">
+              <CardTitle className="text-xl font-bold text-foreground">
                 Exam Context
               </CardTitle>
               <CardDescription>
@@ -212,7 +212,7 @@ const ImportImages = () => {
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 {/* Module Select */}
                 <div className="space-y-2">
-                  <Label className="font-semibold text-gray-700">Module *</Label>
+                  <Label className="font-semibold text-foreground">Module *</Label>
                   <Select value={selectedModule} onValueChange={(e) => {
                     setSelectedModule(e);
                     setExamType("");
@@ -238,7 +238,7 @@ const ImportImages = () => {
 
                 {/* Exam Type Select */}
                 <div className="space-y-2">
-                  <Label className="font-semibold text-gray-700">Exam Type *</Label>
+                  <Label className="font-semibold text-foreground">Exam Type *</Label>
                   <Select value={examType} onValueChange={(e) => {
                     setExamType(e);
                     setSelectedExamNameYears("");
@@ -248,7 +248,7 @@ const ImportImages = () => {
                     setSelectedTPName("");
                     setSelectedQCMName("");
                   }} disabled={!selectedModule}>
-                    <SelectTrigger className="border-gray-300 h-10 disabled:bg-gray-100">
+                    <SelectTrigger className="border-gray-300 h-10 disabled:bg-muted">
                       <SelectValue placeholder={selectedModule ? "Choose exam type" : "Select module first"} />
                     </SelectTrigger>
                     <SelectContent>
@@ -263,7 +263,7 @@ const ImportImages = () => {
                 {/* Conditional renders based on exam type */}
                 {examType === "years" && (
                   <div className="space-y-2 md:col-span-2">
-                    <Label className="font-semibold text-gray-700">Exam Name *</Label>
+                    <Label className="font-semibold text-foreground">Exam Name *</Label>
                     <Select value={selectedExamNameYears} onValueChange={setSelectedExamNameYears}>
                       <SelectTrigger className="border-gray-300 h-10">
                         <SelectValue placeholder="Choose an exam name" />
@@ -284,7 +284,7 @@ const ImportImages = () => {
                 {examType === "courses" && (
                   <>
                     <div className="space-y-2">
-                      <Label className="font-semibold text-gray-700">Category *</Label>
+                      <Label className="font-semibold text-foreground">Category *</Label>
                       <Select value={selectedCategory} onValueChange={(e) => {
                         setSelectedCategory(e);
                         setSelectedCourse("");
@@ -301,12 +301,12 @@ const ImportImages = () => {
                       </Select>
                     </div>
                     <div className="space-y-2">
-                      <Label className="font-semibold text-gray-700">Course *</Label>
+                      <Label className="font-semibold text-foreground">Course *</Label>
                       <Select value={selectedCourse} onValueChange={(e) => {
                         setSelectedCourse(e);
                         setSelectedYearName("");
                       }} disabled={!selectedCategory}>
-                        <SelectTrigger className="border-gray-300 h-10 disabled:bg-gray-100">
+                        <SelectTrigger className="border-gray-300 h-10 disabled:bg-muted">
                           <SelectValue placeholder="Choose a course" />
                         </SelectTrigger>
                         <SelectContent>
@@ -317,9 +317,9 @@ const ImportImages = () => {
                       </Select>
                     </div>
                     <div className="space-y-2">
-                      <Label className="font-semibold text-gray-700">Year *</Label>
+                      <Label className="font-semibold text-foreground">Year *</Label>
                       <Select value={selectedYearName} onValueChange={setSelectedYearName} disabled={!selectedCourse}>
-                        <SelectTrigger className="border-gray-300 h-10 disabled:bg-gray-100">
+                        <SelectTrigger className="border-gray-300 h-10 disabled:bg-muted">
                           <SelectValue placeholder="Choose a year" />
                         </SelectTrigger>
                         <SelectContent>
@@ -334,7 +334,7 @@ const ImportImages = () => {
 
                 {examType === "tp" && (
                   <div className="space-y-2 md:col-span-2">
-                    <Label className="font-semibold text-gray-700">TP Name *</Label>
+                    <Label className="font-semibold text-foreground">TP Name *</Label>
                     <Select value={selectedTPName} onValueChange={setSelectedTPName}>
                       <SelectTrigger className="border-gray-300 h-10">
                         <SelectValue placeholder="Choose a TP name" />
@@ -354,7 +354,7 @@ const ImportImages = () => {
 
                 {examType === "qcm" && (
                   <div className="space-y-2 md:col-span-2">
-                    <Label className="font-semibold text-gray-700">QCM Name *</Label>
+                    <Label className="font-semibold text-foreground">QCM Name *</Label>
                     <Select value={selectedQCMName} onValueChange={setSelectedQCMName}>
                       <SelectTrigger className="border-gray-300 h-10">
                         <SelectValue placeholder="Choose a QCM name" />
@@ -378,7 +378,7 @@ const ImportImages = () => {
           {/* Images Card */}
           <Card className="shadow-lg border-0">
             <CardHeader className="bg-gradient-to-r from-cyan-50 to-teal-50 rounded-t-lg">
-              <CardTitle className="text-xl font-bold text-gray-900">
+              <CardTitle className="text-xl font-bold text-foreground">
                 Question Images
               </CardTitle>
               <CardDescription>
@@ -389,19 +389,19 @@ const ImportImages = () => {
               <div className="space-y-6">
                 {/* Question Numbers */}
                 <div className="space-y-2">
-                  <Label className="font-semibold text-gray-700">Question Numbers *</Label>
+                  <Label className="font-semibold text-foreground">Question Numbers *</Label>
                   <Input
                     placeholder="e.g. 1-5,7,10"
                     value={questionNumbers}
                     onChange={(e) => setQuestionNumbers(e.target.value)}
                     className="h-10 border-gray-300"
                   />
-                  <p className="text-xs text-gray-500">Specify which questions these images correspond to</p>
+                  <p className="text-xs text-muted-foreground">Specify which questions these images correspond to</p>
                 </div>
 
                 {/* Image Upload Section */}
                 <div className="space-y-2">
-                  <Label className="font-semibold text-gray-700 flex items-center gap-2">
+                  <Label className="font-semibold text-foreground flex items-center gap-2">
                     <ImageIcon className="w-4 h-4" />
                     Upload Images *
                   </Label>
@@ -414,8 +414,8 @@ const ImportImages = () => {
                     <div className="flex flex-col items-center gap-3">
                       <Upload className="w-10 h-10 text-cyan-600" />
                       <div className="text-center">
-                        <p className="font-semibold text-gray-800">Drop images here or click to browse</p>
-                        <p className="text-sm text-gray-600">Supports JPG, PNG, GIF, WebP (multiple files)</p>
+                        <p className="font-semibold text-foreground">Drop images here or click to browse</p>
+                        <p className="text-sm text-muted-foreground">Supports JPG, PNG, GIF, WebP (multiple files)</p>
                       </div>
                       <input
                         type="file"
@@ -433,7 +433,7 @@ const ImportImages = () => {
                       />
                       <Button 
                         variant="outline" 
-                        className="bg-white hover:bg-cyan-50" 
+                        className="bg-card hover:bg-cyan-50" 
                         type="button"
                         onClick={(e) => {
                           e.stopPropagation();
@@ -460,17 +460,17 @@ const ImportImages = () => {
                             animate={{ opacity: 1, scale: 1 }}
                             className="group relative"
                           >
-                            <div className="bg-gray-100 rounded-lg overflow-hidden aspect-square shadow-md hover:shadow-lg transition-shadow">
+                            <div className="bg-muted rounded-lg overflow-hidden aspect-square shadow-md hover:shadow-lg transition-shadow">
                               <img
                                 src={URL.createObjectURL(file)}
                                 alt={`Preview ${index + 1}`}
                                 className="w-full h-full object-cover"
                               />
                             </div>
-                            <p className="text-xs text-gray-600 mt-2 truncate font-medium" title={file.name}>
+                            <p className="text-xs text-muted-foreground mt-2 truncate font-medium" title={file.name}>
                               {file.name}
                             </p>
-                            <p className="text-xs text-gray-500">
+                            <p className="text-xs text-muted-foreground">
                               {(file.size / 1024 / 1024).toFixed(2)} MB
                             </p>
                             <motion.button
@@ -506,7 +506,7 @@ const ImportImages = () => {
                 </div>
               </div>
             </CardContent>
-            <CardFooter className="bg-gray-50 rounded-b-lg border-t flex justify-end gap-3">
+            <CardFooter className="bg-background rounded-b-lg border-t flex justify-end gap-3">
               <Button variant="outline" className="border-gray-300">
                 Cancel
               </Button>

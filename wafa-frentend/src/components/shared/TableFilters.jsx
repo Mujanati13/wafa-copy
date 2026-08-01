@@ -86,12 +86,12 @@ const TableFilters = ({
             placeholder={searchPlaceholder}
             value={searchValue}
             onChange={(e) => onSearchChange?.(e.target.value)}
-            className="pl-10 pr-10 h-10 border-slate-200 focus:border-blue-500 focus:ring-blue-500"
+            className="pl-10 pr-10 h-10 border-border focus:border-blue-500 focus:ring-blue-500"
           />
           {searchValue && (
             <button
               onClick={() => onSearchChange?.("")}
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600"
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-muted-foreground"
             >
               <X className="h-4 w-4" />
             </button>
@@ -105,7 +105,7 @@ const TableFilters = ({
               <Button
                 variant="outline"
                 className={cn(
-                  "h-10 px-4 gap-2 border-slate-200",
+                  "h-10 px-4 gap-2 border-border",
                   (startDate || endDate) && "border-blue-500 bg-blue-50 text-blue-700"
                 )}
               >
@@ -118,7 +118,7 @@ const TableFilters = ({
               <div className="space-y-4">
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-slate-700">Date début</label>
+                    <label className="text-sm font-medium text-muted-foreground">Date début</label>
                     <Input
                       type="date"
                       value={tempStartDate ? format(tempStartDate, "yyyy-MM-dd") : ""}
@@ -127,7 +127,7 @@ const TableFilters = ({
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-slate-700">Date fin</label>
+                    <label className="text-sm font-medium text-muted-foreground">Date fin</label>
                     <Input
                       type="date"
                       value={tempEndDate ? format(tempEndDate, "yyyy-MM-dd") : ""}
@@ -157,7 +157,7 @@ const TableFilters = ({
             onValueChange={filter.onChange}
           >
             <SelectTrigger className={cn(
-              "h-10 min-w-[140px] border-slate-200",
+              "h-10 min-w-[140px] border-border",
               filter.value && filter.value !== "all" && "border-blue-500 bg-blue-50"
             )}>
               <SelectValue placeholder={filter.label} />
@@ -179,7 +179,7 @@ const TableFilters = ({
             variant="ghost"
             size="sm"
             onClick={onClearFilters}
-            className="h-10 text-slate-500 hover:text-slate-700"
+            className="h-10 text-muted-foreground hover:text-muted-foreground"
           >
             <X className="h-4 w-4 mr-1" />
             Effacer filtres

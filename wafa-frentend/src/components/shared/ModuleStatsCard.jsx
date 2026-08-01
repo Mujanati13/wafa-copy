@@ -47,12 +47,12 @@ const ModuleStatsCard = ({
         {/* Content */}
         <div className="flex-1 min-w-0">
           {/* Module Name */}
-          <h3 className="font-semibold text-slate-800 text-sm mb-1 truncate">
+          <h3 className="font-semibold text-foreground text-sm mb-1 truncate">
             {name}
           </h3>
 
           {/* Question Count */}
-          <p className="text-xs text-slate-500 mb-2">
+          <p className="text-xs text-muted-foreground mb-2">
             {questionsAnswered} sur {totalQuestions}
           </p>
 

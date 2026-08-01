@@ -14,6 +14,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useNavigate } from "react-router-dom";
 import NotificationDropdown from "./NotificationDropdown";
+import ThemeToggle from "@/components/ui/ThemeToggle";
 import { userService } from "@/services/userService";
 import { signOut } from "@/services/authService";
 import { api } from "@/lib/utils";
@@ -118,7 +119,7 @@ const TopBar = ({ onMenuClick, sidebarOpen }) => {
   };
 
   return (
-    <div className="sticky top-0 z-40 bg-white/95 backdrop-blur-sm border-b border-slate-200 shadow-sm h-14 sm:h-16">
+    <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b border-border shadow-sm h-14 sm:h-16">
       <div className="flex items-center justify-between h-full px-3 sm:px-4 md:px-6 gap-2 sm:gap-4">
         <div className="flex items-center gap-2 sm:gap-4 min-w-0">
           {/* Menu Toggle */}
@@ -145,14 +146,16 @@ const TopBar = ({ onMenuClick, sidebarOpen }) => {
               </div>
             )}
             <div className="hidden sm:flex flex-col">
-              <span className="text-sm font-bold text-gray-900 leading-none">{landingSettings.siteName || 'WAFA'}</span>
-              <span className="text-xs text-gray-500">{landingSettings.siteVersion || 'v1.1'}</span>
+              <span className="text-sm font-bold text-foreground leading-none">{landingSettings.siteName || 'WAFA'}</span>
+              <span className="text-xs text-muted-foreground">{landingSettings.siteVersion || 'v1.1'}</span>
             </div>
           </div>
         </div>
 
         {/* Right Side Actions */}
         <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+          {/* Theme Toggle */}
+          <ThemeToggle />
           {/* Notifications */}
           <NotificationDropdown />
 
@@ -189,7 +192,7 @@ const TopBar = ({ onMenuClick, sidebarOpen }) => {
                       <span className="text-blue-500">🔵</span>
                       <span className="font-medium">{user?.bluePoints || 0}</span>
                     </div>
-                    <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-700 flex-shrink-0 ml-auto">
+                    <Badge variant="secondary" className="text-xs bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 flex-shrink-0 ml-auto">
                       {user?.totalPoints || 0} pts
                     </Badge>
                   </div>
@@ -197,12 +200,12 @@ const TopBar = ({ onMenuClick, sidebarOpen }) => {
                   {/* Level and Progress */}
                   <div className="pt-2 space-y-2">
                     <div className="flex items-center justify-between text-xs">
-                      <span className="text-slate-600 font-medium">Niveau {Math.floor((user?.totalPoints || 0) / 50)}</span>
-                      <span className="text-slate-500">{((user?.totalPoints || 0) % 50)}/50 XP</span>
+                      <span className="text-foreground font-medium">Niveau {Math.floor((user?.totalPoints || 0) / 50)}</span>
+                      <span className="text-muted-foreground">{((user?.totalPoints || 0) % 50)}/50 XP</span>
                     </div>
                     
                     {/* Detailed Progress Bar */}
-                    <div className="w-full bg-slate-200 rounded-full h-3 overflow-hidden relative">
+                    <div className="w-full bg-muted rounded-full h-3 overflow-hidden relative">
                       {(() => {
                         const totalPoints = user?.totalPoints || 0;
                         const currentLevelPoints = totalPoints % 50;
@@ -218,7 +221,7 @@ const TopBar = ({ onMenuClick, sidebarOpen }) => {
                     </div>
                     
                     {/* Legend */}
-                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-slate-500">
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-muted-foreground">
                       {(user?.normalPoints || 0) > 0 && (
                         <div className="flex items-center gap-1">
                           <div className="w-2 h-2 rounded-full bg-purple-400"></div>

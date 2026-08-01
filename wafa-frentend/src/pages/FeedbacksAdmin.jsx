@@ -255,16 +255,16 @@ const FeedbacksAdmin = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8">
+    <div className="min-h-screen bg-background p-4 sm:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
+            <h1 className="text-3xl font-bold text-foreground flex items-center gap-2">
               <MessageSquare className="h-8 w-8 text-blue-600" />
               Gestion des Témoignages
             </h1>
-            <p className="text-gray-600 mt-1">
+            <p className="text-muted-foreground mt-1">
               Gérez les témoignages affichés sur la page d'accueil
             </p>
           </div>
@@ -281,7 +281,7 @@ const FeedbacksAdmin = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-gray-600">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
                 Total
               </CardTitle>
             </CardHeader>
@@ -291,7 +291,7 @@ const FeedbacksAdmin = () => {
           </Card>
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-gray-600">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
                 Approuvés
               </CardTitle>
             </CardHeader>
@@ -303,7 +303,7 @@ const FeedbacksAdmin = () => {
           </Card>
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-gray-600">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
                 En attente
               </CardTitle>
             </CardHeader>
@@ -315,7 +315,7 @@ const FeedbacksAdmin = () => {
           </Card>
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-gray-600">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
                 En vedette
               </CardTitle>
             </CardHeader>
@@ -378,7 +378,7 @@ const FeedbacksAdmin = () => {
                             <span className="font-medium">{feedback.name}</span>
                           </div>
                         </TableCell>
-                        <TableCell className="text-sm text-gray-600">
+                        <TableCell className="text-sm text-muted-foreground">
                           {feedback.role}
                         </TableCell>
                         <TableCell className="max-w-xs truncate text-sm">
@@ -575,7 +575,7 @@ const FeedbacksAdmin = () => {
                     </button>
                   </div>
                 ) : (
-                  <div className="w-16 h-16 rounded-full bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center">
+                  <div className="w-16 h-16 rounded-full bg-muted border-2 border-dashed border-gray-300 flex items-center justify-center">
                     <User className="h-6 w-6 text-gray-400" />
                   </div>
                 )}

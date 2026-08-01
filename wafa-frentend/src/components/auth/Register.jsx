@@ -179,7 +179,7 @@ const Register = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-teal-50 flex items-center justify-center px-4 py-8">
+    <div className="min-h-screen bg-background flex items-center justify-center px-4 py-8">
       {/* Background Effects */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/4 right-1/4 w-64 h-64 bg-blue-100 rounded-full opacity-30 blur-3xl animate-pulse" />
@@ -508,7 +508,7 @@ const Register = () => {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col"
+              className="bg-card text-card-foreground rounded-2xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Header */}
@@ -527,50 +527,50 @@ const Register = () => {
 
               {/* Content */}
               <div className="flex-1 overflow-y-auto p-6">
-                <div className="prose prose-sm max-w-none text-gray-700 space-y-4">
-                  <h3 className="text-lg font-semibold text-gray-900">1. Acceptation des conditions</h3>
+                <div className="prose prose-sm max-w-none text-foreground space-y-4">
+                  <h3 className="text-lg font-semibold text-foreground">1. Acceptation des conditions</h3>
                   <p>
                     En accédant et en utilisant la plateforme WAFA, vous acceptez d'être lié par ces conditions d'utilisation. 
                     Si vous n'acceptez pas ces conditions, veuillez ne pas utiliser notre service.
                   </p>
 
-                  <h3 className="text-lg font-semibold text-gray-900">2. Description du service</h3>
+                  <h3 className="text-lg font-semibold text-foreground">2. Description du service</h3>
                   <p>
                     WAFA est une plateforme éducative destinée aux étudiants en médecine, offrant des QCM, 
                     des ressources pédagogiques et des outils de suivi de progression.
                   </p>
 
-                  <h3 className="text-lg font-semibold text-gray-900">3. Compte utilisateur</h3>
+                  <h3 className="text-lg font-semibold text-foreground">3. Compte utilisateur</h3>
                   <p>
                     Vous êtes responsable de la confidentialité de votre compte et de votre mot de passe. 
                     Vous acceptez de nous informer immédiatement de toute utilisation non autorisée de votre compte.
                   </p>
 
-                  <h3 className="text-lg font-semibold text-gray-900">4. Utilisation du contenu</h3>
+                  <h3 className="text-lg font-semibold text-foreground">4. Utilisation du contenu</h3>
                   <p>
                     Le contenu de WAFA est protégé par des droits d'auteur. Vous ne pouvez pas reproduire, 
                     distribuer ou utiliser ce contenu à des fins commerciales sans notre autorisation écrite.
                   </p>
 
-                  <h3 className="text-lg font-semibold text-gray-900">5. Abonnements et paiements</h3>
+                  <h3 className="text-lg font-semibold text-foreground">5. Abonnements et paiements</h3>
                   <p>
                     Les abonnements sont facturés selon la période choisie. Les remboursements ne sont accordés 
                     que dans des cas exceptionnels, sur décision de notre équipe.
                   </p>
 
-                  <h3 className="text-lg font-semibold text-gray-900">6. Comportement de l'utilisateur</h3>
+                  <h3 className="text-lg font-semibold text-foreground">6. Comportement de l'utilisateur</h3>
                   <p>
                     Vous vous engagez à ne pas utiliser la plateforme de manière abusive, à ne pas partager 
                     votre compte et à respecter les autres utilisateurs de la communauté.
                   </p>
 
-                  <h3 className="text-lg font-semibold text-gray-900">7. Modifications</h3>
+                  <h3 className="text-lg font-semibold text-foreground">7. Modifications</h3>
                   <p>
                     Nous nous réservons le droit de modifier ces conditions à tout moment. Les utilisateurs 
                     seront informés des changements significatifs par email ou notification sur la plateforme.
                   </p>
 
-                  <h3 className="text-lg font-semibold text-gray-900">8. Contact</h3>
+                  <h3 className="text-lg font-semibold text-foreground">8. Contact</h3>
                   <p>
                     Pour toute question concernant ces conditions, contactez-nous via WhatsApp ou par email.
                   </p>
@@ -578,7 +578,7 @@ const Register = () => {
               </div>
 
               {/* Footer */}
-              <div className="p-4 border-t bg-gray-50 rounded-b-2xl">
+              <div className="p-4 border-t bg-muted rounded-b-2xl">
                 <div className="flex gap-3">
                   <Button
                     variant="outline"
@@ -618,7 +618,7 @@ const Register = () => {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col"
+              className="bg-card text-card-foreground rounded-2xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Header */}
@@ -637,15 +637,15 @@ const Register = () => {
 
               {/* Content */}
               <div className="flex-1 overflow-y-auto p-6">
-                <div className="prose prose-sm max-w-none text-gray-700 space-y-4">
-                  <h3 className="text-lg font-semibold text-gray-900">1. Collecte des données</h3>
+                <div className="prose prose-sm max-w-none text-foreground space-y-4">
+                  <h3 className="text-lg font-semibold text-foreground">1. Collecte des données</h3>
                   <p>
                     Nous collectons les informations que vous nous fournissez lors de votre inscription : 
                     nom, prénom, adresse email. Nous collectons également des données d'utilisation pour 
                     améliorer votre expérience.
                   </p>
 
-                  <h3 className="text-lg font-semibold text-gray-900">2. Utilisation des données</h3>
+                  <h3 className="text-lg font-semibold text-foreground">2. Utilisation des données</h3>
                   <p>
                     Vos données sont utilisées pour :
                   </p>
@@ -656,27 +656,27 @@ const Register = () => {
                     <li>Améliorer nos services</li>
                   </ul>
 
-                  <h3 className="text-lg font-semibold text-gray-900">3. Protection des données</h3>
+                  <h3 className="text-lg font-semibold text-foreground">3. Protection des données</h3>
                   <p>
                     Nous mettons en œuvre des mesures de sécurité appropriées pour protéger vos données 
                     personnelles contre tout accès non autorisé, modification, divulgation ou destruction.
                   </p>
 
-                  <h3 className="text-lg font-semibold text-gray-900">4. Partage des données</h3>
+                  <h3 className="text-lg font-semibold text-foreground">4. Partage des données</h3>
                   <p>
                     Nous ne vendons pas vos données personnelles. Nous pouvons partager vos informations 
                     avec des prestataires de services tiers uniquement pour le fonctionnement de la plateforme 
                     (ex: traitement des paiements via PayPal).
                   </p>
 
-                  <h3 className="text-lg font-semibold text-gray-900">5. Cookies</h3>
+                  <h3 className="text-lg font-semibold text-foreground">5. Cookies</h3>
                   <p>
                     Nous utilisons des cookies pour améliorer votre expérience de navigation et analyser 
                     l'utilisation de notre plateforme. Vous pouvez gérer vos préférences de cookies dans 
                     les paramètres de votre navigateur.
                   </p>
 
-                  <h3 className="text-lg font-semibold text-gray-900">6. Vos droits</h3>
+                  <h3 className="text-lg font-semibold text-foreground">6. Vos droits</h3>
                   <p>
                     Vous avez le droit de :
                   </p>
@@ -687,13 +687,13 @@ const Register = () => {
                     <li>Retirer votre consentement à tout moment</li>
                   </ul>
 
-                  <h3 className="text-lg font-semibold text-gray-900">7. Conservation des données</h3>
+                  <h3 className="text-lg font-semibold text-foreground">7. Conservation des données</h3>
                   <p>
                     Vos données sont conservées aussi longtemps que votre compte est actif. En cas de 
                     suppression de compte, vos données seront supprimées dans un délai de 30 jours.
                   </p>
 
-                  <h3 className="text-lg font-semibold text-gray-900">8. Contact</h3>
+                  <h3 className="text-lg font-semibold text-foreground">8. Contact</h3>
                   <p>
                     Pour toute question concernant vos données personnelles, contactez-nous via WhatsApp 
                     ou par email.
@@ -702,7 +702,7 @@ const Register = () => {
               </div>
 
               {/* Footer */}
-              <div className="p-4 border-t bg-gray-50 rounded-b-2xl">
+              <div className="p-4 border-t bg-muted rounded-b-2xl">
                 <div className="flex gap-3">
                   <Button
                     variant="outline"
@@ -741,7 +741,7 @@ const Register = () => {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white rounded-2xl shadow-2xl w-full max-w-md"
+              className="bg-card text-card-foreground rounded-2xl shadow-2xl w-full max-w-md"
             >
               {/* Header */}
               <div className="flex items-center justify-between p-6 border-b bg-gradient-to-r from-amber-600 to-orange-600 text-white rounded-t-2xl">
@@ -757,22 +757,22 @@ const Register = () => {
                   <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto">
                     <Shield className="h-8 w-8 text-amber-600" />
                   </div>
-                  <h3 className="text-xl font-bold text-gray-900">
+                  <h3 className="text-xl font-bold text-foreground">
                     Avertissement de sécurité
                   </h3>
                   <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-                    <p className="text-gray-700 font-semibold text-lg">
+                    <p className="text-foreground font-semibold text-lg">
                       ⚠️ Vous ne devez pas partager votre compte avec d'autres personnes
                     </p>
                   </div>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-muted-foreground">
                     Votre compte est personnel et confidentiel. Le partage de compte viole nos conditions d'utilisation et peut entraîner la suspension de votre accès.
                   </p>
                 </div>
               </div>
 
               {/* Footer */}
-              <div className="p-4 border-t bg-gray-50 rounded-b-2xl">
+              <div className="p-4 border-t bg-muted rounded-b-2xl">
                 <Button
                   className="w-full bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700"
                   onClick={async () => {

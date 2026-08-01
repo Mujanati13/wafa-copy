@@ -183,7 +183,7 @@ const NewModuleForm = ({ setShowNewModuleForm, onModuleCreated }) => {
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.95, opacity: 0 }}
           transition={{ type: "spring", damping: 25, stiffness: 300 }}
-          className="w-full max-w-3xl bg-white rounded-xl shadow-2xl border border-gray-200 flex flex-col max-h-[90vh] z-[100000]"
+          className="w-full max-w-3xl bg-card text-card-foreground rounded-xl shadow-2xl border border-border flex flex-col max-h-[90vh] z-[100000]"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
@@ -214,14 +214,14 @@ const NewModuleForm = ({ setShowNewModuleForm, onModuleCreated }) => {
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 {/* Basic Info */}
                 <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-gray-900 border-b pb-2">Informations de base</h3>
+                  <h3 className="text-lg font-semibold text-foreground border-b pb-2">Informations de base</h3>
                   
                   <FormField
                     control={form.control}
                     name="name"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-sm font-semibold text-gray-900">
+                        <FormLabel className="text-sm font-semibold text-foreground">
                           {t("admin:module_name")} *
                         </FormLabel>
                         <FormControl>
@@ -237,7 +237,7 @@ const NewModuleForm = ({ setShowNewModuleForm, onModuleCreated }) => {
                     name="semester"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-sm font-semibold text-gray-900">
+                        <FormLabel className="text-sm font-semibold text-foreground">
                           {t("admin:select_semester")} {!availableInAllSemesters && '*'}
                         </FormLabel>
                         <FormControl>
@@ -273,7 +273,7 @@ const NewModuleForm = ({ setShowNewModuleForm, onModuleCreated }) => {
                           form.setValue('semester', '');
                         }
                       }}
-                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      className="rounded border-border text-blue-600 focus:ring-blue-500"
                     />
                     <label htmlFor="availableInAllSemesters" className="text-sm font-medium text-blue-900 cursor-pointer">
                       📚 Disponible pour tous les semestres
@@ -285,7 +285,7 @@ const NewModuleForm = ({ setShowNewModuleForm, onModuleCreated }) => {
                     name="infoText"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-sm font-semibold text-gray-900">
+                        <FormLabel className="text-sm font-semibold text-foreground">
                           Description courte (optionnel)
                         </FormLabel>
                         <FormControl>
@@ -299,10 +299,10 @@ const NewModuleForm = ({ setShowNewModuleForm, onModuleCreated }) => {
 
                 {/* Difficulty & Appearance */}
                 <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-gray-900 border-b pb-2">Difficulté & Apparence</h3>
+                  <h3 className="text-lg font-semibold text-foreground border-b pb-2">Difficulté & Apparence</h3>
                   
                   <div className="space-y-3">
-                    <Label className="text-sm font-semibold text-gray-900">Niveau de Difficulté</Label>
+                    <Label className="text-sm font-semibold text-foreground">Niveau de Difficulté</Label>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                       {DIFFICULTY_LEVELS.map((level) => (
                         <button
@@ -312,7 +312,7 @@ const NewModuleForm = ({ setShowNewModuleForm, onModuleCreated }) => {
                           className={`flex items-center justify-center gap-2 px-4 py-3 rounded-lg border-2 transition-all ${
                             difficulty === level.value
                               ? `${level.bgColor} ${level.borderColor} ${level.textColor} shadow-md`
-                              : "bg-white border-gray-200 text-gray-600 hover:border-gray-300"
+                              : "bg-card border-border text-muted-foreground hover:border-border"
                           }`}
                         >
                           <CircleDot className="h-4 w-4" />
@@ -325,7 +325,7 @@ const NewModuleForm = ({ setShowNewModuleForm, onModuleCreated }) => {
                   <div className="grid grid-cols-1 gap-5">
                     {/* Simple Color Picker */}
                     <div className="space-y-3">
-                      <Label className="text-sm font-semibold text-gray-900">Choisir une couleur</Label>
+                      <Label className="text-sm font-semibold text-foreground">Choisir une couleur</Label>
                       
                       <div className="flex flex-wrap gap-3">
                         {SIMPLE_COLORS.map((item) => (
@@ -341,7 +341,7 @@ const NewModuleForm = ({ setShowNewModuleForm, onModuleCreated }) => {
                               className="w-12 h-12 rounded-lg border-2 border-white shadow-md"
                               style={{ backgroundColor: item.color }}
                             />
-                            <span className="text-xs text-gray-600">{item.name}</span>
+                            <span className="text-xs text-muted-foreground">{item.name}</span>
                           </button>
                         ))}
                         
@@ -355,11 +355,11 @@ const NewModuleForm = ({ setShowNewModuleForm, onModuleCreated }) => {
                               }`}
                             >
                               <div
-                                className="w-12 h-12 rounded-lg border-2 border-dashed border-gray-400 shadow-md flex items-center justify-center bg-gradient-to-br from-red-400 via-green-400 to-blue-400"
+                                className="w-12 h-12 rounded-lg border-2 border-dashed border-border shadow-md flex items-center justify-center bg-gradient-to-br from-red-400 via-green-400 to-blue-400"
                               >
                                 <Palette className="h-5 w-5 text-white drop-shadow-md" />
                               </div>
-                              <span className="text-xs text-gray-600">Custom</span>
+                              <span className="text-xs text-muted-foreground">Custom</span>
                             </button>
                           </PopoverTrigger>
                           <PopoverContent className="w-64 p-4 z-[100001]" align="start">
@@ -370,7 +370,7 @@ const NewModuleForm = ({ setShowNewModuleForm, onModuleCreated }) => {
                                   type="color"
                                   value={selectedColor}
                                   onChange={(e) => { setSelectedColor(e.target.value); setUseGradient(false); }}
-                                  className="w-14 h-14 rounded-lg border-2 border-gray-300 cursor-pointer"
+                                  className="w-14 h-14 rounded-lg border-2 border-border cursor-pointer"
                                 />
                                 <div className="flex-1 space-y-2">
                                   <Input
@@ -397,7 +397,7 @@ const NewModuleForm = ({ setShowNewModuleForm, onModuleCreated }) => {
                       </div>
 
                       <div className="border-t pt-3 mt-3">
-                        <span className="text-xs text-gray-600 mb-2 block">Ou choisir un dégradé</span>
+                        <span className="text-xs text-muted-foreground mb-2 block">Ou choisir un dégradé</span>
                         <div className="flex flex-wrap gap-3">
                           {SIMPLE_GRADIENTS.map((gradient) => (
                             <button
@@ -435,19 +435,19 @@ const NewModuleForm = ({ setShowNewModuleForm, onModuleCreated }) => {
                               >
                                 M
                               </div>
-                              <span className="text-xs text-gray-600 font-medium">{gradient.name}</span>
+                              <span className="text-xs text-muted-foreground font-medium">{gradient.name}</span>
                             </button>
                           ))}
                         </div>
                         
                         {/* Custom Gradient */}
                         <div className="flex items-center gap-2 pt-2">
-                          <Label className="text-xs text-gray-600">Dégradé personnalisé:</Label>
+                          <Label className="text-xs text-muted-foreground">Dégradé personnalisé:</Label>
                           <input
                             type="color"
                             value={selectedColor}
                             onChange={(e) => setSelectedColor(e.target.value)}
-                            className="w-10 h-10 rounded-lg border-2 border-gray-300 cursor-pointer"
+                            className="w-10 h-10 rounded-lg border-2 border-border cursor-pointer"
                             title="Couleur de départ"
                           />
                           <span className="text-gray-400">→</span>
@@ -455,7 +455,7 @@ const NewModuleForm = ({ setShowNewModuleForm, onModuleCreated }) => {
                             type="color"
                             value={gradientColor || "#8b5cf6"}
                             onChange={(e) => { setGradientColor(e.target.value); setUseGradient(true); }}
-                            className="w-10 h-10 rounded-lg border-2 border-gray-300 cursor-pointer"
+                            className="w-10 h-10 rounded-lg border-2 border-border cursor-pointer"
                             title="Couleur de fin"
                           />
                           <Select value={gradientDirection} onValueChange={setGradientDirection}>
@@ -477,7 +477,7 @@ const NewModuleForm = ({ setShowNewModuleForm, onModuleCreated }) => {
                       </div>
                       
                       {/* Preview */}
-                      <div key={`${selectedColor}-${gradientColor}-${useGradient}-${gradientDirection}`} className="mt-4 p-3 rounded-lg bg-gray-50 flex items-center gap-3">
+                      <div key={`${selectedColor}-${gradientColor}-${useGradient}-${gradientDirection}`} className="mt-4 p-3 rounded-lg bg-muted flex items-center gap-3">
                         <div
                           className="w-14 h-14 rounded-lg flex items-center justify-center text-white font-bold text-xl shadow-md"
                           style={{
@@ -501,7 +501,7 @@ const NewModuleForm = ({ setShowNewModuleForm, onModuleCreated }) => {
                           M
                         </div>
                         <div className="text-sm">
-                          <p className="font-semibold text-gray-900">Aperçu</p>
+                          <p className="font-semibold text-foreground">Aperçu</p>
                           <p className="text-gray-500">{useGradient && gradientColor ? "Dégradé" : "Couleur unie"}</p>
                         </div>
                       </div>
@@ -509,17 +509,15 @@ const NewModuleForm = ({ setShowNewModuleForm, onModuleCreated }) => {
 
                     {/* Module Image */}
                     <div className="space-y-3">
-                      <Label className="text-sm font-semibold text-gray-900">
+                      <Label className="text-sm font-semibold text-foreground">
                         <Image className="h-4 w-4 inline mr-2" />
                         Image du Module (optionnel)
                       </Label>
-                      <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
+                      <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-input rounded-lg cursor-pointer bg-muted hover:bg-accent transition-colors">
                         {moduleImagePreview ? (
                           <img src={moduleImagePreview} alt="Preview" className="h-full w-full object-contain rounded-lg" />
                         ) : (
                           <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                            <Image className="w-8 h-8 mb-3 text-gray-400" />
-                            <p className="mb-2 text-sm text-gray-500"><span className="font-semibold">Cliquez pour uploader</span></p>
                             <p className="text-xs text-gray-500">PNG, JPG, GIF (max 10MB)</p>
                           </div>
                         )}
@@ -539,11 +537,11 @@ const NewModuleForm = ({ setShowNewModuleForm, onModuleCreated }) => {
 
                 {/* Help Section */}
                 <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-gray-900 border-b pb-2 flex items-center gap-2">
+                  <h3 className="text-lg font-semibold text-foreground border-b pb-2 flex items-center gap-2">
                     <HelpCircle className="h-5 w-5 text-blue-600" />
                     Section Aide (Button Aide)
                   </h3>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-muted-foreground">
                     Ces éléments seront affichés quand l'utilisateur clique sur le bouton d'aide. Vous pouvez ajouter du texte ET/OU une image ET/OU un PDF.
                   </p>
 
@@ -552,7 +550,7 @@ const NewModuleForm = ({ setShowNewModuleForm, onModuleCreated }) => {
                     name="helpContent"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-sm font-semibold text-gray-900">
+                        <FormLabel className="text-sm font-semibold text-foreground">
                           <FileText className="h-4 w-4 inline mr-2" />
                           Texte d'aide (optionnel)
                         </FormLabel>
@@ -567,7 +565,7 @@ const NewModuleForm = ({ setShowNewModuleForm, onModuleCreated }) => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {/* Help Image */}
                     <div className="space-y-3">
-                      <Label className="text-sm font-semibold text-gray-900">
+                      <Label className="text-sm font-semibold text-foreground">
                         <Image className="h-4 w-4 inline mr-2" />
                         Image d'aide (optionnel)
                       </Label>
@@ -594,7 +592,7 @@ const NewModuleForm = ({ setShowNewModuleForm, onModuleCreated }) => {
 
                     {/* Help PDF */}
                     <div className="space-y-3">
-                      <Label className="text-sm font-semibold text-gray-900">
+                      <Label className="text-sm font-semibold text-foreground">
                         <File className="h-4 w-4 inline mr-2" />
                         PDF d'aide (optionnel)
                       </Label>
@@ -626,13 +624,13 @@ const NewModuleForm = ({ setShowNewModuleForm, onModuleCreated }) => {
 
                 {/* Text Content */}
                 <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-gray-900 border-b pb-2">Contenu textuel (optionnel)</h3>
+                  <h3 className="text-lg font-semibold text-foreground border-b pb-2">Contenu textuel (optionnel)</h3>
                   <FormField
                     control={form.control}
                     name="textContent"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-sm font-semibold text-gray-900">
+                        <FormLabel className="text-sm font-semibold text-foreground">
                           Contenu du module en texte
                         </FormLabel>
                         <FormControl>
@@ -657,7 +655,7 @@ const NewModuleForm = ({ setShowNewModuleForm, onModuleCreated }) => {
           </div>
 
           {/* Footer */}
-          <div className="sticky bottom-0 bg-gray-50 px-6 py-4 border-t rounded-b-xl flex justify-end gap-3 z-10">
+          <div className="sticky bottom-0 bg-muted px-6 py-4 border-t rounded-b-xl flex justify-end gap-3 z-10">
             <Button
               type="button"
               variant="outline"

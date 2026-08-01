@@ -373,13 +373,13 @@ const ImportExamParCourse = () => {
   );
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-card">
       <div className="max-w-7xl mx-auto px-6 py-8 space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">Lier Questions aux Cours</h2>
-            <p className="text-gray-600">Liez les questions des examens par années aux cours thématiques</p>
+            <h2 className="text-2xl font-bold text-foreground">Lier Questions aux Cours</h2>
+            <p className="text-muted-foreground">Liez les questions des examens par années aux cours thématiques</p>
           </div>
           <Link className="w-10 h-10 text-blue-600" />
         </div>
@@ -404,7 +404,7 @@ const ImportExamParCourse = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Semester Select */}
                 <div className="space-y-2">
-                  <Label className="font-semibold text-gray-700 flex items-center gap-1">
+                  <Label className="font-semibold text-foreground flex items-center gap-1">
                     <span className="text-blue-600">●</span> Semestre
                   </Label>
                   <Select
@@ -430,7 +430,7 @@ const ImportExamParCourse = () => {
 
                 {/* Module Select */}
                 <div className="space-y-2">
-                  <Label className="font-semibold text-gray-700 flex items-center gap-1">
+                  <Label className="font-semibold text-foreground flex items-center gap-1">
                     <span className="text-rose-600">●</span> Module
                   </Label>
                   <Select
@@ -456,7 +456,7 @@ const ImportExamParCourse = () => {
               {selectedModule && (
                 <div className="mt-6 space-y-4">
                   <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
-                    <Label className="font-semibold text-gray-700 flex items-center gap-2">
+                    <Label className="font-semibold text-foreground flex items-center gap-2">
                       <Layers className="w-4 h-4 text-orange-600" />
                       Sous-modules / Cours ({filteredCourses.length})
                     </Label>
@@ -499,7 +499,7 @@ const ImportExamParCourse = () => {
                   {loadingCourses ? (
                     <div className="flex items-center justify-center py-8">
                       <Loader2 className="w-6 h-6 animate-spin text-rose-500" />
-                      <span className="ml-2 text-gray-500">Chargement des cours...</span>
+                      <span className="ml-2 text-muted-foreground">Chargement des cours...</span>
                     </div>
                   ) : filteredCourses.length === 0 ? (
                     <div className="p-4 bg-amber-50 rounded-lg border border-amber-200">
@@ -531,16 +531,16 @@ const ImportExamParCourse = () => {
                           >
                             <div className="flex items-center gap-2">
                               <ChevronDown className={cn(
-                                "w-4 h-4 text-gray-500 transition-transform",
+                                "w-4 h-4 text-muted-foreground transition-transform",
                                 !expandedCourses.has(category) && "-rotate-90"
                               )} />
                               <FileText className="w-4 h-4 text-orange-500" />
-                              <span className="font-medium text-gray-700">{category}</span>
+                              <span className="font-medium text-foreground">{category}</span>
                               <Badge variant="secondary" className="text-xs">
                                 {courses.length}
                               </Badge>
                             </div>
-                            <div className="text-xs text-gray-500">
+                            <div className="text-xs text-muted-foreground">
                               {courses.reduce((sum, c) => sum + (c.totalQuestions || 0), 0)} questions
                             </div>
                           </button>
@@ -564,7 +564,7 @@ const ImportExamParCourse = () => {
                                         "w-full flex items-center justify-between p-3 text-left transition-all",
                                         selectedCourse === course._id
                                           ? "bg-rose-50 border-l-4 border-rose-500"
-                                          : "hover:bg-gray-50 border-l-4 border-transparent"
+                                          : "hover:bg-background border-l-4 border-transparent"
                                       )}
                                     >
                                       <div className="flex items-center gap-3">
@@ -572,18 +572,18 @@ const ImportExamParCourse = () => {
                                           "w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold",
                                           selectedCourse === course._id
                                             ? "bg-rose-500 text-white"
-                                            : "bg-gray-100 text-gray-600"
+                                            : "bg-muted text-muted-foreground"
                                         )}>
                                           {course.name?.charAt(0)?.toUpperCase() || "C"}
                                         </div>
                                         <div>
                                           <p className={cn(
                                             "font-medium text-sm",
-                                            selectedCourse === course._id ? "text-rose-700" : "text-gray-700"
+                                            selectedCourse === course._id ? "text-rose-700" : "text-foreground"
                                           )}>
                                             {course.name}
                                           </p>
-                                          <p className="text-xs text-gray-500">
+                                          <p className="text-xs text-muted-foreground">
                                             {course.totalQuestions || 0} questions liées
                                           </p>
                                         </div>
@@ -644,7 +644,7 @@ const ImportExamParCourse = () => {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.2, delay: idx * 0.05 }}
-                    className="grid grid-cols-1 sm:grid-cols-6 gap-2 items-end p-3 bg-slate-50 rounded-lg border border-slate-200"
+                    className="grid grid-cols-1 sm:grid-cols-6 gap-2 items-end p-3 bg-background rounded-lg border border-border"
                   >
                     <div className="sm:col-span-2 space-y-1">
                       <Label className="text-xs font-semibold">Examen par Année</Label>
@@ -711,7 +711,7 @@ const ImportExamParCourse = () => {
                 Ajouter une Intégration
               </Button>
             </CardContent>
-            <CardFooter className="bg-gray-50 border-t flex justify-end">
+            <CardFooter className="bg-background border-t flex justify-end">
               <Button
                 className="bg-rose-600 hover:bg-rose-700 gap-2"
                 disabled={!canLink || linking}
@@ -752,7 +752,7 @@ const ImportExamParCourse = () => {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.2, delay: idx * 0.05 }}
-                    className="p-3 bg-slate-50 rounded-lg border border-slate-200"
+                    className="p-3 bg-background rounded-lg border border-border"
                   >
                     <div className="grid grid-cols-1 sm:grid-cols-5 gap-2 items-end">
                       <div className="sm:col-span-2 space-y-1">
@@ -800,13 +800,13 @@ const ImportExamParCourse = () => {
                     </div>
                     {/* Image Preview */}
                     {row.file && (
-                      <div className="mt-2 flex items-center gap-2 p-2 bg-white rounded border">
+                      <div className="mt-2 flex items-center gap-2 p-2 bg-card rounded border">
                         <img
                           src={URL.createObjectURL(row.file)}
                           alt="Preview"
                           className="w-12 h-12 object-cover rounded"
                         />
-                        <div className="text-xs text-gray-600">
+                        <div className="text-xs text-muted-foreground">
                           <p className="font-medium truncate max-w-32">{row.file.name}</p>
                           <p>{(row.file.size / 1024).toFixed(1)} KB</p>
                         </div>
@@ -861,7 +861,7 @@ const ImportExamParCourse = () => {
                   <div key={course._id} className="flex items-center justify-between">
                     <div>
                       <h3 className="font-semibold text-lg">{course.name}</h3>
-                      <p className="text-sm text-gray-600">
+                      <p className="text-sm text-muted-foreground">
                         Catégorie: {course.category} •
                         Questions liées: {course.totalQuestions || 0}
                       </p>
@@ -912,7 +912,7 @@ const ImportExamParCourse = () => {
                 </TableBody>
               </Table>
               {selectedExamQuestions.length === 0 && (
-                <div className="text-center py-8 text-gray-500">
+                <div className="text-center py-8 text-muted-foreground">
                   Aucune question trouvée pour cet examen
                 </div>
               )}

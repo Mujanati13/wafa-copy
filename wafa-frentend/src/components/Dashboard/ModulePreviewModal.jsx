@@ -30,7 +30,7 @@ const ModulePreviewModal = ({ isOpen, onClose, module }) => {
       case 'very hard':
         return { bg: 'bg-red-100', text: 'text-red-700', border: 'border-red-200', label: 'Très Difficile' };
       default:
-        return { bg: 'bg-slate-100', text: 'text-slate-700', border: 'border-slate-200', label: 'Non défini' };
+        return { bg: 'bg-muted', text: 'text-muted-foreground', border: 'border-border', label: 'Non défini' };
     }
   };
 
@@ -71,7 +71,7 @@ const ModulePreviewModal = ({ isOpen, onClose, module }) => {
               >
                 <button
                   onClick={onClose}
-                  className="absolute top-3 right-3 sm:top-4 sm:right-4 p-1.5 sm:p-2 rounded-full bg-white/20 hover:bg-white/30 transition-colors"
+                  className="absolute top-3 right-3 sm:top-4 sm:right-4 p-1.5 sm:p-2 rounded-full bg-background/20 hover:bg-background/30 transition-colors"
                 >
                   <X className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
                 </button>
@@ -83,7 +83,7 @@ const ModulePreviewModal = ({ isOpen, onClose, module }) => {
                       {difficultyStyles.label}
                     </Badge>
                     {module.semester && (
-                      <Badge variant="secondary" className="bg-white/20 text-white border-0 text-xs">
+                      <Badge variant="secondary" className="bg-background/20 text-white border-0 text-xs">
                         {module.semester}
                       </Badge>
                     )}
@@ -94,17 +94,17 @@ const ModulePreviewModal = ({ isOpen, onClose, module }) => {
               <CardContent className="p-4 sm:p-6 space-y-4">
                 {/* Stats */}
                 <div className="grid grid-cols-3 gap-2 sm:gap-4">
-                  <div className="text-center p-2 sm:p-3 bg-slate-50 rounded-lg">
+                  <div className="text-center p-2 sm:p-3 bg-card rounded-lg">
                     <BookOpen className="h-4 w-4 sm:h-5 sm:w-5 mx-auto text-blue-500 mb-1" />
                     <p className="text-base sm:text-lg font-bold">{module.examCount || module.exams?.length || 0}</p>
                     <p className="text-[10px] sm:text-xs text-muted-foreground">Examens</p>
                   </div>
-                  <div className="text-center p-2 sm:p-3 bg-slate-50 rounded-lg">
+                  <div className="text-center p-2 sm:p-3 bg-card rounded-lg">
                     <BarChart3 className="h-4 w-4 sm:h-5 sm:w-5 mx-auto text-green-500 mb-1" />
                     <p className="text-base sm:text-lg font-bold">{module.progress || 0}%</p>
                     <p className="text-[10px] sm:text-xs text-muted-foreground">Progression</p>
                   </div>
-                  <div className="text-center p-2 sm:p-3 bg-slate-50 rounded-lg">
+                  <div className="text-center p-2 sm:p-3 bg-card rounded-lg">
                     <Clock className="h-4 w-4 sm:h-5 sm:w-5 mx-auto text-purple-500 mb-1" />
                     <p className="text-base sm:text-lg font-bold">{module.duration || '30'}</p>
                     <p className="text-[10px] sm:text-xs text-muted-foreground">min/exam</p>
@@ -126,7 +126,7 @@ const ModulePreviewModal = ({ isOpen, onClose, module }) => {
 
                   <TabsContent value="image" className="mt-4">
                     {module.imageUrl || module.pdfUrl ? (
-                      <div className="relative aspect-video bg-gradient-to-br from-slate-100 to-slate-50 rounded-lg overflow-hidden border border-slate-200">
+                      <div className="relative aspect-video bg-gradient-to-br from-slate-100 to-slate-50 rounded-lg overflow-hidden border border-border">
                         {module.imageUrl && (
                           <img 
                             src={module.imageUrl} 
@@ -137,7 +137,7 @@ const ModulePreviewModal = ({ isOpen, onClose, module }) => {
                               e.target.onerror = null;
                               e.target.style.display = 'none';
                               const fallback = document.createElement('div');
-                              fallback.className = 'w-full h-full flex items-center justify-center bg-slate-50';
+                              fallback.className = 'w-full h-full flex items-center justify-center bg-card';
                               fallback.innerHTML = `
                                 <div class="text-center text-muted-foreground p-4">
                                   <svg class="h-16 w-16 mx-auto mb-3 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -153,7 +153,7 @@ const ModulePreviewModal = ({ isOpen, onClose, module }) => {
                         )}
                       </div>
                     ) : (
-                      <div className="aspect-video bg-slate-50 rounded-lg flex items-center justify-center border border-slate-200">
+                      <div className="aspect-video bg-card rounded-lg flex items-center justify-center border border-border">
                         <div className="text-center text-muted-foreground p-4">
                           <ImageIcon className="h-16 w-16 mx-auto mb-3 opacity-40" />
                           <p className="text-sm font-medium">Aucune image disponible</p>
@@ -164,9 +164,9 @@ const ModulePreviewModal = ({ isOpen, onClose, module }) => {
                   </TabsContent>
 
                   <TabsContent value="text" className="mt-4">
-                    <div className="bg-slate-50 rounded-lg p-3 sm:p-4 max-h-32 sm:max-h-40 overflow-y-auto">
+                    <div className="bg-card rounded-lg p-3 sm:p-4 max-h-32 sm:max-h-40 overflow-y-auto">
                       {module.description || module.infoText ? (
-                        <p className="text-xs sm:text-sm text-slate-700 leading-relaxed">
+                        <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
                           {module.description || module.infoText}
                         </p>
                       ) : (

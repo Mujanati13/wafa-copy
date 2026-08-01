@@ -1,53 +1,53 @@
+name: ${COMPOSE_PROJECT_NAME:-wafa-copy}
+
 services:
-  # MongoDB Database
   mongodb:
     image: mongo:7
-    container_name: wafa-mongodb
     restart: unless-stopped
     environment:
-      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USERNAME:-admin}
-      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:-changeme123}
-      MONGO_INITDB_DATABASE: wafa
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USERNAME:?Set MONGO_ROOT_USERNAME in .env}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:?Set MONGO_ROOT_PASSWORD in .env}
+      MONGO_INITDB_DATABASE: ${MONGO_DATABASE:-wafa_copy}
     volumes:
       - mongodb_data:/data/db
       - mongodb_config:/data/configdb
     networks:
-      - wafa-network
+      - app_network
     healthcheck:
-      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      test: ["CMD-SHELL", "mongosh --quiet --username \"$$MONGO_INITDB_ROOT_USERNAME\" --password \"$$MONGO_INITDB_ROOT_PASSWORD\" --authenticationDatabase admin --eval 'db.adminCommand({ ping: 1 }).ok' | grep 1"]
       interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 10
 
-  # Backend API
   backend:
     build:
       context: ./wafa-backend
       dockerfile: Dockerfile
-    container_name: wafa-backend
     restart: unless-stopped
     environment:
-      - NODE_ENV=production
-      - PORT=5010
-      - MONGO_URL=mongodb://admin:changeme123@mongodb:27017/wafa?authSource=admin
-      - SESSION_SECRET=${SESSION_SECRET:-change_this_session_secret_in_production}
-      - JWT_SECRET=${JWT_SECRET:-change_this_jwt_secret_in_production}
-      - CORS_ORIGIN=${CORS_ORIGIN:-http://localhost:5173,http://localhost:4010,http://imrs-qcm.com,https://imrs-qcm.com,http://backend.imrs-qcm.com,https://backend.imrs-qcm.com}
-      - FRONTEND_URL=${FRONTEND_URL:-https://imrs-qcm.com}
-      - EMAIL_SERVICE=${EMAIL_SERVICE:-gmail}
-      - EMAIL_USER=${EMAIL_USER:-}
-      - EMAIL_PASSWORD=${EMAIL_PASSWORD:-}
-      - ADMIN_EMAIL=${ADMIN_EMAIL:-admin@imrs-qcm.com}
-      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
-      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET:-}
-      - GOOGLE_CALLBACK_URL=https://backend.imrs-qcm.com/api/v1/auth/google/callback
-      - PAYPAL_CLIENT_ID=${PAYPAL_CLIENT_ID:-}
-      - PAYPAL_CLIENT_SECRET=${PAYPAL_CLIENT_SECRET:-}
-      - PAYPAL_MODE=${PAYPAL_MODE:-sandbox}
-      - CLOUDINARY_CLOUD_NAME=${CLOUDINARY_CLOUD_NAME:-}
-      - CLOUDINARY_API_KEY=${CLOUDINARY_API_KEY:-}
-      - CLOUDINARY_API_SECRET=${CLOUDINARY_API_SECRET:-}
-      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      NODE_ENV: production
+      PORT: 5010
+      MONGO_URL: ${MONGO_URL:?Set MONGO_URL in .env}
+      SESSION_SECRET: ${SESSION_SECRET:?Set SESSION_SECRET in .env}
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in .env}
+      CORS_ORIGIN: ${CORS_ORIGIN:?Set CORS_ORIGIN in .env}
+      FRONTEND_URL: ${FRONTEND_URL:?Set FRONTEND_URL in .env}
+      COOKIE_DOMAIN: ${COOKIE_DOMAIN:-}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      EMAIL_SERVICE: ${EMAIL_SERVICE:-gmail}
+      EMAIL_USER: ${EMAIL_USER:-}
+      EMAIL_PASSWORD: ${EMAIL_PASSWORD:-}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      GOOGLE_CALLBACK_URL: ${GOOGLE_CALLBACK_URL:-}
+      PAYPAL_CLIENT_ID: ${PAYPAL_CLIENT_ID:-}
+      PAYPAL_CLIENT_SECRET: ${PAYPAL_CLIENT_SECRET:-}
+      PAYPAL_MODE: ${PAYPAL_MODE:-sandbox}
+      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME:-}
+      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY:-}
+      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET:-}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
     volumes:
       - ./wafa-backend/uploads:/app/uploads
       - ./wafa-backend/firebase-service-account.json:/app/firebase-service-account.json:ro
@@ -55,60 +55,34 @@ services:
       mongodb:
         condition: service_healthy
     networks:
-      - wafa-network
+      - app_network
     healthcheck:
-      test: ["CMD", "node", "-e", "require('http').get('http://localhost:5010/api/v1/test', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:5010/api/v1/test', (r) => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 30s
 
-  # Frontend
   frontend:
     build:
       context: ./wafa-frentend
       dockerfile: Dockerfile
-    container_name: wafa-frontend
-    restart: unless-stopped
-    networks:
-      - wafa-network
-    depends_on:
-      - backend
-
-  # Nginx Reverse Proxy with SSL
-  nginx:
-    image: nginx:alpine
-    container_name: wafa-nginx
+      args:
+        VITE_API_URL: ${VITE_API_URL:-/api/v1}
+        VITE_BASED_URL: ${VITE_BASED_URL:-/api/v1}
     restart: unless-stopped
     ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx/nginx-http.conf:/etc/nginx/nginx.conf:ro
-      - /etc/letsencrypt:/etc/letsencrypt:ro
-      - ./certbot/www:/var/www/certbot:ro
+      - "${APP_HOST_BIND:-0.0.0.0}:${APP_PORT:-8081}:80"
     depends_on:
-      - backend
-      - frontend
+      backend:
+        condition: service_healthy
     networks:
-      - wafa-network
-    command: "/bin/sh -c 'while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g \"daemon off;\"'"
-
-  # Certbot for SSL certificates
-  certbot:
-    image: certbot/certbot
-    container_name: wafa-certbot
-    restart: unless-stopped
-    volumes:
-      - ./certbot/conf:/etc/letsencrypt
-      - ./certbot/www:/var/www/certbot
-    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+      - app_network
 
 networks:
-  wafa-network:
+  app_network:
     driver: bridge
 
 volumes:
   mongodb_data:
-    driver: local
   mongodb_config:
-    driver: local

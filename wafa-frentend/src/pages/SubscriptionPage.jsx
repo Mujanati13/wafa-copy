@@ -192,7 +192,7 @@ const SubscriptionPage = () => {
           </div>
           <Button
             onClick={openCreateModal}
-            className="bg-white hover:bg-indigo-50 text-indigo-600 shadow-lg"
+            className="bg-card hover:bg-indigo-50 text-indigo-600 shadow-lg"
           >
             <Plus className="w-4 h-4 mr-2" />
             Create Plan
@@ -208,13 +208,13 @@ const SubscriptionPage = () => {
         >
           <Card className="shadow-lg border-l-4 border-l-blue-500">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600 flex items-center gap-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                 <Users className="w-4 h-4" />
                 Total Users
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-gray-900">
+              <div className="text-2xl font-bold text-foreground">
                 {statsLoading ? '...' : subscriptionStats.total}
               </div>
             </CardContent>
@@ -222,7 +222,7 @@ const SubscriptionPage = () => {
 
           <Card className="shadow-lg border-l-4 border-l-green-500">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600 flex items-center gap-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                 <UserRoundCheck className="w-4 h-4" />
                 Premium Users
               </CardTitle>
@@ -236,13 +236,13 @@ const SubscriptionPage = () => {
 
           <Card className="shadow-lg border-l-4 border-l-gray-500">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600 flex items-center gap-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                 <Users className="w-4 h-4" />
                 Free Users
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-gray-600">
+              <div className="text-2xl font-bold text-muted-foreground">
                 {statsLoading ? '...' : subscriptionStats.free}
               </div>
             </CardContent>
@@ -250,7 +250,7 @@ const SubscriptionPage = () => {
 
           <Card className="shadow-lg border-l-4 border-l-purple-500">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600 flex items-center gap-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                 <TrendingUp className="w-4 h-4" />
                 Conversion Rate
               </CardTitle>
@@ -275,9 +275,9 @@ const SubscriptionPage = () => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs text-gray-500 font-medium uppercase">Total Plans</p>
-                  <p className="text-3xl font-bold text-gray-900 mt-2">{totalPlans}</p>
-                  <p className="text-xs text-gray-500 mt-1">Active subscription tiers</p>
+                  <p className="text-xs text-muted-foreground font-medium uppercase">Total Plans</p>
+                  <p className="text-3xl font-bold text-foreground mt-2">{totalPlans}</p>
+                  <p className="text-xs text-muted-foreground mt-1">Active subscription tiers</p>
                 </div>
                 <SquareChartGantt className="w-8 h-8 text-indigo-600" />
               </div>
@@ -289,9 +289,9 @@ const SubscriptionPage = () => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs text-gray-500 font-medium uppercase">Total Subscribers</p>
-                  <p className="text-3xl font-bold text-gray-900 mt-2">{isNaN(totalSubscribers) ? 0 : totalSubscribers.toLocaleString()}</p>
-                  <p className="text-xs text-gray-500 mt-1">Across all plans</p>
+                  <p className="text-xs text-muted-foreground font-medium uppercase">Total Subscribers</p>
+                  <p className="text-3xl font-bold text-foreground mt-2">{isNaN(totalSubscribers) ? 0 : totalSubscribers.toLocaleString()}</p>
+                  <p className="text-xs text-muted-foreground mt-1">Across all plans</p>
                 </div>
                 <UserRoundCheck className="w-8 h-8 text-green-600" />
               </div>
@@ -303,11 +303,11 @@ const SubscriptionPage = () => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs text-gray-500 font-medium uppercase">Monthly Revenue</p>
-                  <p className="text-3xl font-bold text-gray-900 mt-2">
+                  <p className="text-xs text-muted-foreground font-medium uppercase">Monthly Revenue</p>
+                  <p className="text-3xl font-bold text-foreground mt-2">
                     ${isNaN(monthlyRevenue) ? '0.00' : monthlyRevenue.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </p>
-                  <p className="text-xs text-gray-500 mt-1">Monthly recurring revenue</p>
+                  <p className="text-xs text-muted-foreground mt-1">Monthly recurring revenue</p>
                 </div>
                 <DollarSign className="w-8 h-8 text-blue-600" />
               </div>
@@ -319,9 +319,9 @@ const SubscriptionPage = () => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs text-gray-500 font-medium uppercase">Avg Revenue/User</p>
-                  <p className="text-3xl font-bold text-gray-900 mt-2">${isNaN(averageRevenuePerUser) ? '0.00' : averageRevenuePerUser.toFixed(2)}</p>
-                  <p className="text-xs text-gray-500 mt-1">Per subscription</p>
+                  <p className="text-xs text-muted-foreground font-medium uppercase">Avg Revenue/User</p>
+                  <p className="text-3xl font-bold text-foreground mt-2">${isNaN(averageRevenuePerUser) ? '0.00' : averageRevenuePerUser.toFixed(2)}</p>
+                  <p className="text-xs text-muted-foreground mt-1">Per subscription</p>
                 </div>
                 <DollarSign className="w-8 h-8 text-purple-600" />
               </div>
@@ -338,7 +338,7 @@ const SubscriptionPage = () => {
         >
           {plansLoading ? (
             Array.from({ length: 4 }).map((_, index) => (
-              <div key={index} className="bg-white rounded-lg shadow-lg p-6 animate-pulse">
+              <div key={index} className="bg-card rounded-lg shadow-lg p-6 animate-pulse">
                 <div className="h-6 bg-gray-200 rounded w-3/4 mb-4"></div>
                 <div className="h-4 bg-gray-200 rounded w-full mb-4"></div>
                 <div className="h-8 bg-gray-200 rounded w-1/2"></div>
@@ -346,7 +346,7 @@ const SubscriptionPage = () => {
             ))
           ) : subscriptionPlans.length === 0 ? (
             <div className="col-span-4 text-center py-12">
-              <p className="text-gray-500">Aucun plan disponible</p>
+              <p className="text-muted-foreground">Aucun plan disponible</p>
             </div>
           ) : (
             subscriptionPlans.map((plan, index) => (
@@ -364,8 +364,8 @@ const SubscriptionPage = () => {
                     {/* Plan Header */}
                     <div className="flex items-start justify-between">
                       <div>
-                        <h3 className="text-lg font-bold text-gray-900">{plan.name}</h3>
-                        <p className="text-sm text-gray-600 mt-1">{plan.description}</p>
+                        <h3 className="text-lg font-bold text-foreground">{plan.name}</h3>
+                        <p className="text-sm text-muted-foreground mt-1">{plan.description}</p>
                       </div>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -400,13 +400,13 @@ const SubscriptionPage = () => {
                     {/* Pricing */}
                     <div className="space-y-1">
                       <div className="flex items-baseline gap-1">
-                        <span className="text-3xl font-bold text-gray-900">
+                        <span className="text-3xl font-bold text-foreground">
                           {plan.price} MAD
                         </span>
-                        <span className="text-sm text-gray-500">/month</span>
+                        <span className="text-sm text-muted-foreground">/month</span>
                       </div>
                       {plan.oldPrice != null && plan.oldPrice > plan.price && (
-                        <p className="text-sm text-gray-500">
+                        <p className="text-sm text-muted-foreground">
                           <span className="line-through">{plan.oldPrice} MAD</span>
                           <Badge className="ml-2 bg-red-100 text-red-800">
                             Save {(plan.oldPrice - plan.price).toFixed(2)} MAD
@@ -416,20 +416,20 @@ const SubscriptionPage = () => {
                     </div>
 
                     {/* Stats */}
-                    <div className="grid grid-cols-2 gap-3 pt-2 border-t border-gray-200">
+                    <div className="grid grid-cols-2 gap-3 pt-2 border-t border-border">
                       <div className="bg-indigo-50 rounded-lg p-3">
-                        <p className="text-xs text-gray-600 uppercase font-semibold">
+                        <p className="text-xs text-muted-foreground uppercase font-semibold">
                           Subscribers
                         </p>
-                        <p className="text-lg font-bold text-gray-900 mt-1">
+                        <p className="text-lg font-bold text-foreground mt-1">
                           {(plan.subscribers || 0).toLocaleString()}
                         </p>
                       </div>
                       <div className="bg-green-50 rounded-lg p-3">
-                        <p className="text-xs text-gray-600 uppercase font-semibold">
+                        <p className="text-xs text-muted-foreground uppercase font-semibold">
                           Revenue
                         </p>
-                        <p className="text-lg font-bold text-gray-900 mt-1">
+                        <p className="text-lg font-bold text-foreground mt-1">
                           ${(plan.revenue || 0).toLocaleString("en-US", {
                             maximumFractionDigits: 0,
                           })}
@@ -438,8 +438,8 @@ const SubscriptionPage = () => {
                     </div>
 
                     {/* Features */}
-                    <div className="pt-2 border-t border-gray-200">
-                      <p className="text-xs font-semibold text-gray-600 uppercase mb-2">
+                    <div className="pt-2 border-t border-border">
+                      <p className="text-xs font-semibold text-muted-foreground uppercase mb-2">
                         Features
                       </p>
                       <div className="space-y-2">
@@ -448,19 +448,19 @@ const SubscriptionPage = () => {
                           <>
                             <div className="flex items-start gap-2">
                               <span className="text-xs">✔️</span>
-                              <span className="text-xs text-gray-700">1 module</span>
+                              <span className="text-xs text-foreground">1 module</span>
                             </div>
                             <div className="flex items-start gap-2">
                               <span className="text-xs">✔️</span>
-                              <span className="text-xs text-gray-700">Questions triées</span>
+                              <span className="text-xs text-foreground">Questions triées</span>
                             </div>
                             <div className="flex items-start gap-2">
                               <span className="text-xs">✔️</span>
-                              <span className="text-xs text-gray-700">Interface adaptée aux mobiles</span>
+                              <span className="text-xs text-foreground">Interface adaptée aux mobiles</span>
                             </div>
                             <div className="flex items-start gap-2">
                               <span className="text-xs">✔️</span>
-                              <span className="text-xs text-gray-700">Pourcentage des réponses</span>
+                              <span className="text-xs text-foreground">Pourcentage des réponses</span>
                             </div>
                             <div className="flex items-start gap-2">
                               <span className="text-xs">❌</span>
@@ -501,31 +501,31 @@ const SubscriptionPage = () => {
                           <>
                             <div className="flex items-start gap-2">
                               <span className="text-xs">✔️</span>
-                              <span className="text-xs text-gray-700">Tous les modules</span>
+                              <span className="text-xs text-foreground">Tous les modules</span>
                             </div>
                             <div className="flex items-start gap-2">
                               <span className="text-xs">✔️</span>
-                              <span className="text-xs text-gray-700">Questions triées</span>
+                              <span className="text-xs text-foreground">Questions triées</span>
                             </div>
                             <div className="flex items-start gap-2">
                               <span className="text-xs">✔️</span>
-                              <span className="text-xs text-gray-700">Interface adaptée aux mobiles</span>
+                              <span className="text-xs text-foreground">Interface adaptée aux mobiles</span>
                             </div>
                             <div className="flex items-start gap-2">
                               <span className="text-xs">✔️</span>
-                              <span className="text-xs text-gray-700">Pourcentage des réponses</span>
+                              <span className="text-xs text-foreground">Pourcentage des réponses</span>
                             </div>
                             <div className="flex items-start gap-2">
                               <span className="text-xs">✔️</span>
-                              <span className="text-xs text-gray-700">Accès aux classements</span>
+                              <span className="text-xs text-foreground">Accès aux classements</span>
                             </div>
                             <div className="flex items-start gap-2">
                               <span className="text-xs">✔️</span>
-                              <span className="text-xs text-gray-700">Accès aux statistiques</span>
+                              <span className="text-xs text-foreground">Accès aux statistiques</span>
                             </div>
                             <div className="flex items-start gap-2">
                               <span className="text-xs">✔️</span>
-                              <span className="text-xs text-gray-700">Explication des étudiants</span>
+                              <span className="text-xs text-foreground">Explication des étudiants</span>
                             </div>
                             <div className="flex items-start gap-2">
                               <span className="text-xs">❌</span>
@@ -554,51 +554,51 @@ const SubscriptionPage = () => {
                           <>
                             <div className="flex items-start gap-2">
                               <span className="text-xs">✔️</span>
-                              <span className="text-xs text-gray-700">Tous les modules</span>
+                              <span className="text-xs text-foreground">Tous les modules</span>
                             </div>
                             <div className="flex items-start gap-2">
                               <span className="text-xs">✔️</span>
-                              <span className="text-xs text-gray-700">Questions triées</span>
+                              <span className="text-xs text-foreground">Questions triées</span>
                             </div>
                             <div className="flex items-start gap-2">
                               <span className="text-xs">✔️</span>
-                              <span className="text-xs text-gray-700">Interface adaptée aux mobiles</span>
+                              <span className="text-xs text-foreground">Interface adaptée aux mobiles</span>
                             </div>
                             <div className="flex items-start gap-2">
                               <span className="text-xs">✔️</span>
-                              <span className="text-xs text-gray-700">Pourcentage des réponses</span>
+                              <span className="text-xs text-foreground">Pourcentage des réponses</span>
                             </div>
                             <div className="flex items-start gap-2">
                               <span className="text-xs">✔️</span>
-                              <span className="text-xs text-gray-700">Accès aux classements</span>
+                              <span className="text-xs text-foreground">Accès aux classements</span>
                             </div>
                             <div className="flex items-start gap-2">
                               <span className="text-xs">✔️</span>
-                              <span className="text-xs text-gray-700">Accès aux statistiques</span>
+                              <span className="text-xs text-foreground">Accès aux statistiques</span>
                             </div>
                             <div className="flex items-start gap-2">
                               <span className="text-xs">✔️</span>
-                              <span className="text-xs text-gray-700">Explication des étudiants</span>
+                              <span className="text-xs text-foreground">Explication des étudiants</span>
                             </div>
                             <div className="flex items-start gap-2">
                               <span className="text-xs">✔️</span>
-                              <span className="text-xs text-gray-700">Explication de l'IA</span>
+                              <span className="text-xs text-foreground">Explication de l'IA</span>
                             </div>
                             <div className="flex items-start gap-2">
                               <span className="text-xs">✔️</span>
-                              <span className="text-xs text-gray-700">Accès à la communauté votes</span>
+                              <span className="text-xs text-foreground">Accès à la communauté votes</span>
                             </div>
                             <div className="flex items-start gap-2">
                               <span className="text-xs">✔️</span>
-                              <span className="text-xs text-gray-700">Création de playlists</span>
+                              <span className="text-xs text-foreground">Création de playlists</span>
                             </div>
                             <div className="flex items-start gap-2">
                               <span className="text-xs">✔️</span>
-                              <span className="text-xs text-gray-700">Notes personnalisées</span>
+                              <span className="text-xs text-foreground">Notes personnalisées</span>
                             </div>
                             <div className="flex items-start gap-2">
                               <span className="text-xs">✔️</span>
-                              <span className="text-xs text-gray-700">Assistance prioritaire</span>
+                              <span className="text-xs text-foreground">Assistance prioritaire</span>
                             </div>
                           </>
                         )}
@@ -624,7 +624,7 @@ const SubscriptionPage = () => {
                     </div>
 
                     {/* Status Badge */}
-                    <div className="flex items-center gap-2 pt-2 border-t border-gray-200">
+                    <div className="flex items-center gap-2 pt-2 border-t border-border">
                       <Badge
                         className={
                           plan.status === "Active"

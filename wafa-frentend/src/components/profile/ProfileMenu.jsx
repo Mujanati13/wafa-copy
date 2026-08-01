@@ -69,7 +69,7 @@ const ProfileMenu = ({ isOpen, setIsOpen }) => {
 
             {/* Dropdown Menu */ }
             { isOpen && (
-                <div className="absolute  right-0 mt-5 w-80 bg-white rounded-xl shadow-lg border border-gray-200 py-2 ">
+                <div className="absolute  right-0 mt-5 w-80 bg-popover text-popover-foreground rounded-xl shadow-lg border border-border py-2 ">
                     {/* User Info Header */ }
                     <div className="px-4 py-3 border-b border-gray-100">
                         <div className="flex items-center space-x-3">
@@ -77,7 +77,7 @@ const ProfileMenu = ({ isOpen, setIsOpen }) => {
                                 { user.initials }
                             </div>
                             <div>
-                                <div className="font-semibold text-gray-900">{ user.name }</div>
+                                <div className="font-semibold text-foreground">{ user.name }</div>
                                 <div className="text-sm text-gray-500">{ user.email }</div>
                             </div>
                         </div>
@@ -89,7 +89,7 @@ const ProfileMenu = ({ isOpen, setIsOpen }) => {
                             <button
                                 key={ index }
                                 onClick={ item.onClick }
-                                className="w-full flex items-center space-x-3 px-4 py-3 text-left hover:bg-gray-50 transition-colors duration-200 text-gray-700 hover:text-gray-900"
+                                className="w-full flex items-center space-x-3 px-4 py-3 text-left hover:bg-accent transition-colors duration-200 text-muted-foreground hover:text-foreground"
                             >
                                 { item.icon }
                                 <span className="font-medium">{ item.label }</span>

@@ -190,7 +190,7 @@ const DemandesDePayements = () => {
         key="prev"
         onClick={() => handlePageChange(currentPage - 1)}
         disabled={currentPage === 1}
-        className="flex items-center gap-1 px-3 py-1 border rounded text-sm bg-white hover:bg-gray-100 disabled:opacity-50"
+        className="flex items-center gap-1 px-3 py-1 border rounded text-sm bg-card hover:bg-muted disabled:opacity-50"
       >
         &lt; Prev
       </button>
@@ -203,7 +203,7 @@ const DemandesDePayements = () => {
           onClick={() => handlePageChange(i)}
           className={`min-w-[40px] px-3 py-1 border rounded text-sm ${currentPage === i
             ? "bg-black text-white"
-            : "bg-white hover:bg-gray-100"
+            : "bg-card hover:bg-muted"
             }`}
         >
           {i}
@@ -216,7 +216,7 @@ const DemandesDePayements = () => {
         key="next"
         onClick={() => handlePageChange(pagination.page + 1)}
         disabled={pagination.page === totalPages}
-        className="flex items-center gap-1 px-3 py-1 border rounded text-sm bg-white hover:bg-gray-100 disabled:opacity-50"
+        className="flex items-center gap-1 px-3 py-1 border rounded text-sm bg-card hover:bg-muted disabled:opacity-50"
       >
         Next &gt;
       </button>
@@ -256,13 +256,13 @@ const DemandesDePayements = () => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs text-gray-500 font-medium uppercase">
+                  <p className="text-xs text-muted-foreground font-medium uppercase">
                     Total Demandes
                   </p>
-                  <p className="text-3xl font-bold text-gray-900 mt-2">
+                  <p className="text-3xl font-bold text-foreground mt-2">
                     {loading ? '...' : pagination.total}
                   </p>
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs text-muted-foreground mt-1">
                     Payment requests
                   </p>
                 </div>
@@ -276,13 +276,13 @@ const DemandesDePayements = () => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs text-gray-500 font-medium uppercase">
+                  <p className="text-xs text-muted-foreground font-medium uppercase">
                     En attente
                   </p>
-                  <p className="text-3xl font-bold text-gray-900 mt-2">
+                  <p className="text-3xl font-bold text-foreground mt-2">
                     {loading ? '...' : (stats.find(s => s._id === 'pending')?.count || 0)}
                   </p>
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs text-muted-foreground mt-1">
                     Awaiting approval
                   </p>
                 </div>
@@ -296,13 +296,13 @@ const DemandesDePayements = () => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs text-gray-500 font-medium uppercase">
+                  <p className="text-xs text-muted-foreground font-medium uppercase">
                     Complétés
                   </p>
-                  <p className="text-3xl font-bold text-gray-900 mt-2">
+                  <p className="text-3xl font-bold text-foreground mt-2">
                     {loading ? '...' : (stats.find(s => s._id === 'completed')?.count || 0)}
                   </p>
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs text-muted-foreground mt-1">
                     Completed payments
                   </p>
                 </div>
@@ -329,12 +329,12 @@ const DemandesDePayements = () => {
                     placeholder="Search users by name, username or email..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-10 pr-4 h-10 border border-slate-200 rounded-md focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
+                    className="w-full pl-10 pr-4 h-10 border border-border rounded-md focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none"
                   />
                   {searchTerm && (
                     <button
                       onClick={() => setSearchTerm("")}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-muted-foreground"
                     >
                       <X className="h-4 w-4" />
                     </button>
@@ -345,7 +345,7 @@ const DemandesDePayements = () => {
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
-                  className="h-10 px-3 border border-slate-200 rounded-md focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none text-sm bg-white"
+                  className="h-10 px-3 border border-border rounded-md focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none text-sm bg-card"
                 >
                   <option value="pending">En attente</option>
                   <option value="completed">Approuvés</option>
@@ -359,7 +359,7 @@ const DemandesDePayements = () => {
                       type="date"
                       value={dateFrom}
                       onChange={(e) => setDateFrom(e.target.value)}
-                      className="h-10 px-3 border border-slate-200 rounded-md focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none text-sm"
+                      className="h-10 px-3 border border-border rounded-md focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none text-sm"
                       placeholder="Date of demandes"
                     />
                   </div>
@@ -371,7 +371,7 @@ const DemandesDePayements = () => {
                       type="date"
                       value={dateTo}
                       onChange={(e) => setDateTo(e.target.value)}
-                      className="h-10 px-3 border border-slate-200 rounded-md focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none text-sm"
+                      className="h-10 px-3 border border-border rounded-md focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none text-sm"
                     />
                   )}
                 </div>
@@ -387,7 +387,7 @@ const DemandesDePayements = () => {
                       setDateTo("");
                       setStatusFilter("pending");
                     }}
-                    className="text-slate-500 hover:text-slate-700"
+                    className="text-muted-foreground hover:text-foreground"
                   >
                     <X className="h-4 w-4 mr-1" />
                     Reset
@@ -406,43 +406,43 @@ const DemandesDePayements = () => {
         >
           <Card className="shadow-lg border-0">
             <CardHeader className="bg-gradient-to-r from-amber-50 to-orange-50 border-b">
-              <CardTitle className="text-2xl font-bold text-gray-900">
+              <CardTitle className="text-2xl font-bold text-foreground">
                 Liste des Demandes
               </CardTitle>
-              <CardDescription className="text-gray-600">
+              <CardDescription className="text-muted-foreground">
                 Tableau des demandes de paiement des utilisateurs
               </CardDescription>
             </CardHeader>
             <CardContent className="p-0">
               <div className="overflow-x-auto">
                 <table className="w-full">
-                  <thead className="bg-gray-50 border-b border-gray-200">
+                  <thead className="bg-background border-b border-border">
                     <tr>
-                      <th className="text-left py-4 px-6 font-semibold text-gray-700">
+                      <th className="text-left py-4 px-6 font-semibold text-foreground">
                         ID
                       </th>
-                      <th className="text-left py-4 px-6 font-semibold text-gray-700">
+                      <th className="text-left py-4 px-6 font-semibold text-foreground">
                         Utilisateur
                       </th>
-                      <th className="text-left py-4 px-6 font-semibold text-gray-700">
+                      <th className="text-left py-4 px-6 font-semibold text-foreground">
                         Email
                       </th>
-                      <th className="text-center py-4 px-6 font-semibold text-gray-700">
+                      <th className="text-center py-4 px-6 font-semibold text-foreground">
                         Date de Demande
                       </th>
-                      <th className="text-center py-4 px-6 font-semibold text-gray-700">
+                      <th className="text-center py-4 px-6 font-semibold text-foreground">
                         Date d'Inscription
                       </th>
-                      <th className="text-center py-4 px-6 font-semibold text-gray-700">
+                      <th className="text-center py-4 px-6 font-semibold text-foreground">
                         Mode de Paiement
                       </th>
-                      <th className="text-center py-4 px-6 font-semibold text-gray-700">
+                      <th className="text-center py-4 px-6 font-semibold text-foreground">
                         Semestres Demandés
                       </th>
-                      <th className="text-center py-4 px-6 font-semibold text-gray-700">
+                      <th className="text-center py-4 px-6 font-semibold text-foreground">
                         Montant
                       </th>
-                      <th className="text-right py-4 px-6 font-semibold text-gray-700">
+                      <th className="text-right py-4 px-6 font-semibold text-foreground">
                         Actions
                       </th>
                     </tr>
@@ -464,7 +464,7 @@ const DemandesDePayements = () => {
                       ))
                     ) : filteredTransactions.length === 0 ? (
                       <tr>
-                        <td colSpan={9} className="text-center py-8 text-gray-500">
+                        <td colSpan={9} className="text-center py-8 text-muted-foreground">
                           Aucune transaction trouvée
                         </td>
                       </tr>
@@ -477,7 +477,7 @@ const DemandesDePayements = () => {
                           transition={{ duration: 0.3, delay: index * 0.05 }}
                           className="border-b border-gray-100 hover:bg-amber-50/50 transition-colors"
                         >
-                          <td className="py-4 px-6 text-gray-500 text-sm font-mono">
+                          <td className="py-4 px-6 text-muted-foreground text-sm font-mono">
                             {t._id.slice(-8).toUpperCase()}
                           </td>
                           <td className="py-4 px-6">
@@ -491,16 +491,16 @@ const DemandesDePayements = () => {
                                     .join("") || "U"}
                                 </AvatarFallback>
                               </Avatar>
-                              <p className="font-semibold text-gray-900">
+                              <p className="font-semibold text-foreground">
                                 {t.user?.name || "Unknown"}
                               </p>
                             </div>
                           </td>
-                          <td className="py-4 px-6 text-gray-600">{t.user?.email || "N/A"}</td>
-                          <td className="py-4 px-6 text-center text-gray-600 text-sm">
+                          <td className="py-4 px-6 text-muted-foreground">{t.user?.email || "N/A"}</td>
+                          <td className="py-4 px-6 text-center text-muted-foreground text-sm">
                             {new Date(t.createdAt).toLocaleDateString('fr-FR')}
                           </td>
-                          <td className="py-4 px-6 text-center text-gray-600 text-sm">
+                          <td className="py-4 px-6 text-center text-muted-foreground text-sm">
                             {t.user?.createdAt ? new Date(t.user.createdAt).toLocaleDateString('fr-FR') : 'N/A'}
                           </td>
                           <td className="py-4 px-6 text-center">
@@ -508,7 +508,7 @@ const DemandesDePayements = () => {
                               className={`border-0 ${t.paymentMethod === 'Contact' ? 'bg-blue-100 text-blue-800' :
                                 t.paymentMethod === 'PayPal' ? 'bg-indigo-100 text-indigo-800' :
                                   t.paymentMethod === 'Bank Transfer' ? 'bg-emerald-100 text-emerald-800' :
-                                    'bg-gray-100 text-gray-800'
+                                    'bg-muted text-foreground'
                                 }`}
                             >
                               <MessageCircle className="h-3 w-3 mr-1" />
@@ -570,7 +570,7 @@ const DemandesDePayements = () => {
                                 <Badge className={
                                   t.status === 'completed' ? 'bg-green-100 text-green-700' :
                                     t.status === 'cancelled' ? 'bg-red-100 text-red-700' :
-                                      'bg-gray-100 text-gray-700'
+                                      'bg-muted text-foreground'
                                 }>
                                   {t.status === 'completed' ? 'Approuvé' :
                                     t.status === 'cancelled' ? 'Rejeté' : t.status}
@@ -588,7 +588,7 @@ const DemandesDePayements = () => {
             {/* Pagination Footer */}
             {pagination.pages > 1 && (
               <CardFooter className="flex flex-col sm:flex-row justify-between items-center gap-4 border-t bg-gradient-to-r from-amber-50 to-orange-50 py-4">
-                <div className="text-sm text-gray-600 font-medium">
+                <div className="text-sm text-muted-foreground font-medium">
                   Page {pagination.page} sur {pagination.pages} ({pagination.total} résultats)
                 </div>
                 <div className="flex items-center gap-1">

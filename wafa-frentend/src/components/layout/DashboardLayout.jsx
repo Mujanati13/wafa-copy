@@ -26,7 +26,7 @@ const DashBoardLayout = () => {
 
   return (
     <SemesterProvider>
-      <div className="flex flex-col h-screen bg-gradient-to-br from-blue-50 to-white">
+      <div className="flex flex-col h-screen bg-background">
         <TopBar
           onMenuClick={() => setSidebarOpen(!sidebarOpen)}
           sidebarOpen={sidebarOpen}

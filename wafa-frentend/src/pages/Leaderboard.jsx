@@ -185,13 +185,13 @@ const Leaderboard = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-background p-6">
       <div className="w-full space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">{t('dashboard:leaderboard')}</h1>
-            <p className="text-gray-600 mt-1">
+            <h1 className="text-3xl font-bold text-foreground">{t('dashboard:leaderboard')}</h1>
+            <p className="text-muted-foreground mt-1">
               {t('dashboard:view_top_students')}
             </p>
           </div>
@@ -221,28 +221,28 @@ const Leaderboard = () => {
 
         {/* Analytics Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div className="shadow-sm bg-white rounded-lg p-6 flex items-center justify-between">
+          <div className="shadow-sm bg-card rounded-lg p-6 flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">{t('dashboard:total_users')}</p>
-              <p className="text-2xl font-bold text-gray-900">{loading ? '...' : stats.totalUsers}</p>
+              <p className="text-sm font-medium text-muted-foreground">{t('dashboard:total_users')}</p>
+              <p className="text-2xl font-bold text-foreground">{loading ? '...' : stats.totalUsers}</p>
             </div>
             <div className="p-3 bg-blue-100 rounded-lg">
               <Users className="w-6 h-6 text-blue-600" />
             </div>
           </div>
-          <div className="shadow-sm bg-white rounded-lg p-6 flex items-center justify-between">
+          <div className="shadow-sm bg-card rounded-lg p-6 flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">{t('dashboard:top_points')}</p>
-              <p className="text-2xl font-bold text-gray-900">{loading ? '...' : stats.topPoints}</p>
+              <p className="text-sm font-medium text-muted-foreground">{t('dashboard:top_points')}</p>
+              <p className="text-2xl font-bold text-foreground">{loading ? '...' : stats.topPoints}</p>
             </div>
             <div className="p-3 bg-green-100 rounded-lg">
               <Award className="w-6 h-6 text-green-600" />
             </div>
           </div>
-          <div className="shadow-sm bg-white rounded-lg p-6 flex items-center justify-between">
+          <div className="shadow-sm bg-card rounded-lg p-6 flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">{t('dashboard:avg_points')}</p>
-              <p className="text-2xl font-bold text-gray-900">{loading ? '...' : stats.avgPoints}</p>
+              <p className="text-sm font-medium text-muted-foreground">{t('dashboard:avg_points')}</p>
+              <p className="text-2xl font-bold text-foreground">{loading ? '...' : stats.avgPoints}</p>
             </div>
             <div className="p-3 bg-yellow-100 rounded-lg">
               <TrendingUp className="w-6 h-6 text-yellow-600" />
@@ -251,10 +251,10 @@ const Leaderboard = () => {
         </div>
 
         {/* Search & Filter Section */}
-        <div className="bg-white rounded-lg shadow-sm p-6 space-y-4">
+        <div className="bg-card rounded-lg shadow-sm p-6 space-y-4">
           {/* Point Type Selector */}
           <div className="flex flex-col gap-2">
-            <label className="text-sm font-medium text-gray-700">Type de points:</label>
+            <label className="text-sm font-medium text-foreground">Type de points:</label>
             <div className="flex flex-wrap gap-2">
               <Button
                 variant={pointType === "normal" ? "default" : "outline"}
@@ -359,7 +359,7 @@ const Leaderboard = () => {
                   </div>
                 ))
               ) : paginatedData.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
+                <div className="text-center py-8 text-muted-foreground">
                   {t('dashboard:no_data_found')}
                 </div>
               ) : (
@@ -383,8 +383,8 @@ const Leaderboard = () => {
                   return (
                     <div
                       key={user._id || user.rank}
-                      className={`p-3 lg:p-0 rounded-lg lg:rounded-none bg-white lg:bg-transparent border lg:border-0 ${
-                        rank === 1 ? "lg:bg-yellow-50/50" : rank === 2 ? "lg:bg-slate-50/50" : rank === 3 ? "lg:bg-orange-50/50" : ""
+                      className={`p-3 lg:p-0 rounded-lg lg:rounded-none bg-card lg:bg-transparent border lg:border-0 ${
+                        rank === 1 ? "lg:bg-yellow-50/50" : rank === 2 ? "lg:bg-background/50" : rank === 3 ? "lg:bg-orange-50/50" : ""
                       }`}
                     >
                       {/* Mobile Layout */}
@@ -395,7 +395,7 @@ const Leaderboard = () => {
                               rank === 1
                                 ? "text-amber-700 border-amber-300 bg-amber-50"
                                 : rank === 2
-                                ? "text-slate-700 border-slate-300 bg-slate-50"
+                                ? "text-foreground border-slate-300 bg-background"
                                 : rank === 3
                                 ? "text-amber-800 border-amber-200 bg-orange-50"
                                 : "text-foreground/70 border-muted"
@@ -417,7 +417,7 @@ const Leaderboard = () => {
                               rank === 1
                                 ? "bg-amber-100 text-amber-800"
                                 : rank === 2
-                                ? "bg-slate-100 text-slate-700"
+                                ? "bg-muted text-foreground"
                                 : rank === 3
                                 ? "bg-orange-100 text-orange-800"
                                 : "bg-muted text-foreground/80"
@@ -450,7 +450,7 @@ const Leaderboard = () => {
                               rank === 1
                                 ? "text-amber-700 border-amber-300"
                                 : rank === 2
-                                ? "text-slate-700 border-slate-300"
+                                ? "text-foreground border-slate-300"
                                 : rank === 3
                                 ? "text-amber-800 border-amber-200"
                                 : "text-foreground/70 border-muted"
@@ -472,7 +472,7 @@ const Leaderboard = () => {
                               rank === 1
                                 ? "bg-amber-100 text-amber-800"
                                 : rank === 2
-                                ? "bg-slate-100 text-slate-700"
+                                ? "bg-muted text-foreground"
                                 : rank === 3
                                 ? "bg-orange-100 text-orange-800"
                                 : "bg-muted text-foreground/80"
@@ -484,7 +484,7 @@ const Leaderboard = () => {
                             <p className="font-medium truncate">
                               {user.name || user.username}
                             </p>
-                            <p className="text-xs text-gray-500 truncate">
+                            <p className="text-xs text-muted-foreground truncate">
                               @{user.username}
                             </p>
                           </div>
@@ -492,7 +492,7 @@ const Leaderboard = () => {
 
                         {/* Year */}
                         <div className="flex justify-center">
-                          <span className="text-sm text-gray-700">
+                          <span className="text-sm text-foreground">
                             {user.currentYear ? `${user.currentYear}ème` : '-'}
                           </span>
                         </div>
@@ -532,7 +532,7 @@ const Leaderboard = () => {
             {/* Pagination */}
             {totalPages > 1 && (
               <div className="flex items-center justify-between px-4 py-3 border-t">
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-muted-foreground">
                   Affichage {(currentPage - 1) * ITEMS_PER_PAGE + 1}–{Math.min(currentPage * ITEMS_PER_PAGE, filteredData.length)} sur {filteredData.length} résultats
                 </p>
                 <div className="flex items-center gap-1">

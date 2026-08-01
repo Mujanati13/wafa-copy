@@ -92,10 +92,10 @@ const SolutionsSection = () => {
   };
   
   return (
-    <section id="features" className="py-24 px-6 bg-gradient-to-br from-gray-50 to-white relative overflow-hidden">
+    <section id="features" className="py-24 px-6 bg-background relative overflow-hidden">
       {/* Background decoration */}
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-blue-50/30 to-transparent"></div>
-      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-blue-100/20 rounded-full blur-3xl"></div>
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-blue-50/10 to-transparent"></div>
+      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-blue-100/10 rounded-full blur-3xl"></div>
       
       <div className="max-w-7xl mx-auto relative z-10">
         <motion.div 
@@ -106,18 +106,18 @@ const SolutionsSection = () => {
           variants={titleVariants}
         >
           <motion.div 
-            className="inline-flex items-center gap-2 bg-blue-50 backdrop-blur-sm rounded-full px-6 py-3 mb-6 border border-blue-200 shadow-sm"
+            className="inline-flex items-center gap-2 bg-blue-50 dark:bg-blue-950/40 backdrop-blur-sm rounded-full px-6 py-3 mb-6 border border-blue-200 dark:border-blue-800 shadow-sm"
             whileHover={{ scale: 1.05 }}
             transition={{ type: "spring", stiffness: 300 }}
           >
-            <BiSolidBadgeCheck className="text-blue-600" />
-            <span className="text-sm font-semibold text-blue-800">A propos</span>
+            <BiSolidBadgeCheck className="text-blue-600 dark:text-blue-400" />
+            <span className="text-sm font-semibold text-blue-800 dark:text-blue-300">A propos</span>
           </motion.div>
           
-          <h2 className="text-5xl md:text-6xl font-bold mb-6 text-gray-900">
-            Formation Médicale <span className="text-blue-600">Complète</span>
+          <h2 className="text-5xl md:text-6xl font-bold mb-6 text-foreground">
+            Formation Médicale <span className="text-blue-600 dark:text-blue-400">Complète</span>
           </h2>
-          <p className="text-xl text-gray-600 max-w-4xl mx-auto leading-relaxed">
+          <p className="text-xl text-muted-foreground max-w-4xl mx-auto leading-relaxed">
             Perfectionnez votre formation médicale avec des outils de pointe 
             conçus pour la préparation des examens
           </p>
@@ -138,9 +138,9 @@ const SolutionsSection = () => {
                 key={i}
                 className="group relative"
               >
-                <div className={`relative bg-white backdrop-blur-xl rounded-3xl p-8 border border-gray-200 hover:border-blue-300 transition-all duration-500 h-full shadow-lg hover:shadow-xl`}>
+                <div className={`relative bg-card text-card-foreground backdrop-blur-xl rounded-3xl p-8 border border-border hover:border-blue-400 transition-all duration-500 h-full shadow-lg hover:shadow-xl`}>
                   {/* Gradient background overlay on hover */}
-                  <div className={`absolute inset-0 bg-gradient-to-br ${feature.bgGradient} rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500`}></div>
+                  <div className={`absolute inset-0 bg-gradient-to-br ${feature.bgGradient} rounded-3xl opacity-0 group-hover:opacity-10 dark:group-hover:opacity-5 transition-opacity duration-500`}></div>
                   
                   {/* Content */}
                   <div className="relative z-10">
@@ -150,16 +150,16 @@ const SolutionsSection = () => {
                       <IconComponent className="text-2xl text-white" />
                     </div>
                     
-                    <h3 className="text-2xl font-bold mb-4 text-gray-900 group-hover:text-gray-800 transition-colors duration-300">
+                    <h3 className="text-2xl font-bold mb-4 text-foreground transition-colors duration-300">
                       {feature.title}
                     </h3>
                     
-                    <p className="text-gray-600 leading-relaxed mb-6 group-hover:text-gray-700 transition-colors duration-300">
+                    <p className="text-muted-foreground leading-relaxed mb-6 transition-colors duration-300">
                       {feature.desc}
                     </p>
                     
                     <div 
-                      className="inline-flex items-center gap-2 text-blue-600 font-medium group-hover:text-blue-700 transition-colors duration-300"
+                      className="inline-flex items-center gap-2 text-blue-600 dark:text-blue-400 font-medium group-hover:text-blue-500 transition-colors duration-300"
                     >
                       <span>En savoir plus</span>
                       <FaArrowRight className="text-sm" />

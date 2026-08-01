@@ -25,7 +25,7 @@ const AdminLayout = () => {
   }, []);
 
   return (
-    <div className="flex flex-col h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-white">
+    <div className="flex flex-col h-screen bg-background">
       {/* Top Bar */}
       <TopBar 
         onMenuClick={() => setSidebarOpen(!sidebarOpen)}
@@ -61,7 +61,7 @@ const AdminLayout = () => {
             damping: 30,
           }}
           className={cn(
-            "h-full bg-white border-r border-slate-200 shadow-lg",
+            "h-full bg-card border-r border-border shadow-lg",
             isMobile && "fixed left-0 top-16 z-50 h-[calc(100vh-4rem)]"
           )}
         >

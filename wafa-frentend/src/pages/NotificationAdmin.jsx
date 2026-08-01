@@ -235,11 +235,11 @@ const NotificationAdmin = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="flex-1">
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center gap-2">
+          <h1 className="text-xl sm:text-2xl font-bold text-foreground flex items-center gap-2">
             <Bell className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0" />
             <span className="truncate">Gestion des Notifications</span>
           </h1>
-          <p className="text-xs sm:text-sm text-gray-600 mt-1 line-clamp-2">
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1 line-clamp-2">
             Envoyez des notifications à tous les utilisateurs ou individuellement
           </p>
         </div>
@@ -251,7 +251,7 @@ const NotificationAdmin = () => {
           <CardContent className="pt-4 sm:pt-6">
             <div className="flex items-center justify-between gap-3">
               <div className="min-w-0">
-                <p className="text-xs sm:text-sm text-gray-600 truncate">Utilisateurs Total</p>
+                <p className="text-xs sm:text-sm text-muted-foreground truncate">Utilisateurs Total</p>
                 <p className="text-xl sm:text-2xl font-bold">{users.length || '...'}</p>
               </div>
               <div className="p-2 sm:p-3 bg-blue-100 rounded-lg flex-shrink-0">
@@ -264,7 +264,7 @@ const NotificationAdmin = () => {
           <CardContent className="pt-4 sm:pt-6">
             <div className="flex items-center justify-between gap-3">
               <div className="min-w-0">
-                <p className="text-xs sm:text-sm text-gray-600 truncate">Sélectionnés</p>
+                <p className="text-xs sm:text-sm text-muted-foreground truncate">Sélectionnés</p>
                 <p className="text-xl sm:text-2xl font-bold">{selectedUsers.length}</p>
               </div>
               <div className="p-2 sm:p-3 bg-green-100 rounded-lg flex-shrink-0">
@@ -277,7 +277,7 @@ const NotificationAdmin = () => {
           <CardContent className="pt-4 sm:pt-6">
             <div className="flex items-center justify-between gap-3">
               <div className="min-w-0">
-                <p className="text-xs sm:text-sm text-gray-600 truncate">Envoyées (30j)</p>
+                <p className="text-xs sm:text-sm text-muted-foreground truncate">Envoyées (30j)</p>
                 <p className="text-xl sm:text-2xl font-bold">{notificationHistory.length || '...'}</p>
               </div>
               <div className="p-2 sm:p-3 bg-purple-100 rounded-lg flex-shrink-0">
@@ -437,7 +437,7 @@ const NotificationAdmin = () => {
                 </div>
 
                 {/* Select All / Clear Selection */}
-                <div className="flex items-center justify-between bg-gray-50 p-2 rounded-lg flex-shrink-0 text-xs sm:text-sm">
+                <div className="flex items-center justify-between bg-background p-2 rounded-lg flex-shrink-0 text-xs sm:text-sm">
                   <div className="flex items-center gap-2 min-w-0">
                     <input
                       type="checkbox"
@@ -491,7 +491,7 @@ const NotificationAdmin = () => {
                       <Loader2 className="w-6 h-6 sm:w-8 sm:h-8 animate-spin text-gray-400" />
                     </div>
                   ) : filteredUsers.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center h-full text-gray-500 py-8 px-4">
+                    <div className="flex flex-col items-center justify-center h-full text-muted-foreground py-8 px-4">
                       <Users className="w-8 h-8 sm:w-10 sm:h-10 mb-2" />
                       <p className="text-xs sm:text-sm text-center">Aucun utilisateur trouvé</p>
                     </div>
@@ -506,7 +506,7 @@ const NotificationAdmin = () => {
                             className={`w-full flex items-center gap-2 p-2 rounded-lg text-left transition-colors text-xs sm:text-sm ${
                               isSelected
                                 ? 'bg-blue-100 border-blue-300'
-                                : 'hover:bg-gray-100'
+                                : 'hover:bg-muted'
                             }`}
                           >
                             <input
@@ -522,7 +522,7 @@ const NotificationAdmin = () => {
                             </div>
                             <div className="flex-1 min-w-0">
                               <p className="font-medium truncate">{user.name || 'Sans nom'}</p>
-                              <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                              <p className="text-xs text-muted-foreground truncate">{user.email}</p>
                             </div>
                             {isSelected && (
                               <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500 flex-shrink-0" />
@@ -652,7 +652,7 @@ const NotificationAdmin = () => {
                   <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
                 </div>
               ) : notificationHistory.length === 0 ? (
-                <div className="text-center py-12 text-gray-500">
+                <div className="text-center py-12 text-muted-foreground">
                   <Bell className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-4 opacity-50" />
                   <p className="text-xs sm:text-sm">Aucune notification</p>
                 </div>
@@ -665,7 +665,7 @@ const NotificationAdmin = () => {
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: index * 0.05 }}
-                        className="p-3 sm:p-4 border rounded-lg hover:bg-gray-50 text-xs sm:text-sm"
+                        className="p-3 sm:p-4 border rounded-lg hover:bg-background text-xs sm:text-sm"
                       >
                         <div className="flex items-start justify-between gap-2">
                           <div className="flex-1 min-w-0">
@@ -678,10 +678,10 @@ const NotificationAdmin = () => {
                                 </Badge>
                               )}
                             </div>
-                            <p className="text-xs sm:text-sm text-gray-600 line-clamp-2">
+                            <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2">
                               {notif.message}
                             </p>
-                            <div className="flex items-center gap-2 sm:gap-4 mt-2 text-xs text-gray-500 gap-2 flex-wrap">
+                            <div className="flex items-center gap-2 sm:gap-4 mt-2 text-xs text-muted-foreground gap-2 flex-wrap">
                               <span className="flex items-center gap-1 whitespace-nowrap">
                                 <Clock className="w-3 h-3" />
                                 <span className="truncate">{formatDate(notif.createdAt)}</span>

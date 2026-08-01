@@ -387,12 +387,12 @@ const StatisticsPage = () => {
           {/* Content */}
           <div className="flex-1 min-w-0">
             {/* Module Name */}
-            <h3 className="font-semibold text-slate-800 text-sm mb-1 truncate">
+            <h3 className="font-semibold text-foreground text-sm mb-1 truncate">
               {module.name}
             </h3>
 
             {/* Question Count */}
-            <p className="text-xs text-slate-500 mb-2">
+            <p className="text-xs text-muted-foreground mb-2">
               {module.questionsAnswered} sur {module.totalQuestions}
             </p>
 
@@ -457,7 +457,7 @@ const StatisticsPage = () => {
     return (
       <motion.div
         whileHover={{ scale: 1.01, x: 4 }}
-        className="bg-white rounded-xl p-3 md:p-4 border border-slate-200 hover:border-blue-300 hover:shadow-md transition-all cursor-pointer"
+        className="bg-background rounded-xl p-3 md:p-4 border border-border hover:border-blue-300 hover:shadow-md transition-all cursor-pointer"
         onClick={() => navigate(getExamRoute())}
       >
         {/* Mobile Layout */}
@@ -471,8 +471,8 @@ const StatisticsPage = () => {
                 {type === "qcm-banque" && <Database className="h-4 w-4 text-blue-600" />}
               </div>
               <div className="flex-1 min-w-0">
-                <h4 className="font-semibold text-slate-800 text-sm truncate">{getExamTitle()}</h4>
-                <p className="text-xs text-slate-500">
+                <h4 className="font-semibold text-foreground text-sm truncate">{getExamTitle()}</h4>
+                <p className="text-xs text-muted-foreground">
                   {questionCount} question{questionCount !== 1 ? 's' : ''}
                 </p>
               </div>
@@ -493,8 +493,8 @@ const StatisticsPage = () => {
           {questionsAnswered > 0 && (
             <div>
               <div className="flex items-center justify-between text-xs mb-1">
-                <span className="text-slate-600">Progression: {percentage}%</span>
-                <span className="text-slate-500">{questionsAnswered}/{questionCount}</span>
+                <span className="text-muted-foreground">Progression: {percentage}%</span>
+                <span className="text-muted-foreground">{questionsAnswered}/{questionCount}</span>
               </div>
               <div className="h-2 bg-gray-200 rounded-full overflow-hidden flex">
                 {correctPercent > 0 && (
@@ -535,8 +535,8 @@ const StatisticsPage = () => {
               {type === "qcm-banque" && <Database className="h-5 w-5 text-blue-600" />}
             </div>
             <div className="flex-1 min-w-0">
-              <h4 className="font-semibold text-slate-800">{getExamTitle()}</h4>
-              <p className="text-sm text-slate-500">
+              <h4 className="font-semibold text-foreground">{getExamTitle()}</h4>
+              <p className="text-sm text-muted-foreground">
                 {questionCount} question{questionCount !== 1 ? 's' : ''}
               </p>
               
@@ -544,8 +544,8 @@ const StatisticsPage = () => {
               {questionsAnswered > 0 && (
                 <div className="mt-2 max-w-xs">
                   <div className="flex items-center justify-between text-xs mb-1">
-                    <span className="text-slate-600">Progression: {percentage}%</span>
-                    <span className="text-slate-500">{questionsAnswered}/{questionCount}</span>
+                    <span className="text-muted-foreground">Progression: {percentage}%</span>
+                    <span className="text-muted-foreground">{questionsAnswered}/{questionCount}</span>
                   </div>
                   <div className="h-2 bg-gray-200 rounded-full overflow-hidden flex">
                     {correctPercent > 0 && (
@@ -608,8 +608,8 @@ const StatisticsPage = () => {
     };
 
     return (
-      <div className="text-center py-8 text-slate-500">
-        <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-100 flex items-center justify-center">
+      <div className="text-center py-8 text-muted-foreground">
+        <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
           {type === "exam-years" && <Calendar className="h-8 w-8 text-slate-400" />}
           {type === "par-cours" && <FileText className="h-8 w-8 text-slate-400" />}
           {type === "qcm-banque" && <Database className="h-8 w-8 text-slate-400" />}
@@ -622,7 +622,7 @@ const StatisticsPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100 p-6">
+      <div className="min-h-screen bg-gradient-to-br from-background via-muted to-card p-6">
         <div className="max-w-7xl mx-auto space-y-6">
           <Skeleton className="h-12 w-64" />
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -636,7 +636,7 @@ const StatisticsPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100 p-4 md:p-6">
+    <div className="min-h-screen bg-gradient-to-br from-background via-muted to-card p-4 md:p-6">
       <motion.div 
         className="max-w-7xl mx-auto space-y-6"
         variants={containerVariants}
@@ -658,7 +658,7 @@ const StatisticsPage = () => {
                   </p>
                 </div>
                 <div className="hidden md:flex items-center gap-2">
-                  <Badge className="bg-white/20 text-white border-white/30">
+                  <Badge className="bg-background/20 text-white border-white/30">
                     {userProfile?.plan === 'Premium Annuel' ? 'Premium Pro' : (userProfile?.plan || 'Gratuit')}
                   </Badge>
                 </div>
@@ -672,7 +672,7 @@ const StatisticsPage = () => {
           variants={itemVariants}
         >
           <div className="mb-4">
-            <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+            <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
               <BarChart3 className="h-5 w-5 text-blue-600" />
               Mes Statistiques
             </h2>
@@ -726,7 +726,7 @@ const StatisticsPage = () => {
         {/* Statistics Charts Section */}
         <motion.div variants={itemVariants}>
           <div className="mb-4">
-            <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+            <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
               <Activity className="h-5 w-5 text-purple-600" />
               Analyse de Performance
             </h2>
@@ -742,7 +742,7 @@ const StatisticsPage = () => {
             <TabsContent value="overview" className="space-y-4 sm:space-y-6">
               <div className="grid gap-4 sm:gap-6 grid-cols-1 lg:grid-cols-2">
                 {/* Module Progress Chart */}
-                <Card className="border-blue-100 bg-white shadow-lg hover:shadow-xl transition-shadow">
+                <Card className="border-blue-100 bg-background shadow-lg hover:shadow-xl transition-shadow">
                   <CardHeader className="pb-3">
                     <CardTitle className="flex items-center gap-2 text-lg">
                       <BarChart3 className="h-5 w-5 text-blue-600" />
@@ -755,11 +755,11 @@ const StatisticsPage = () => {
                       <div className="w-full h-[280px]">
                         <ResponsiveContainer width="100%" height="100%">
                           <BarChart data={moduleProgressChart} margin={{ top: 10, right: 20, left: 0, bottom: 50 }}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                            <XAxis dataKey="name" fontSize={11} angle={-45} textAnchor="end" height={70} />
-                            <YAxis fontSize={11} />
+                            <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                            <XAxis dataKey="name" fontSize={11} angle={-45} textAnchor="end" height={70} stroke="var(--border)" tick={{ fill: 'var(--muted-foreground)' }} />
+                            <YAxis fontSize={11} stroke="var(--border)" tick={{ fill: 'var(--muted-foreground)' }} />
                             <Tooltip
-                              contentStyle={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}
+                              contentStyle={{ backgroundColor: 'var(--card)', borderColor: 'var(--border)', color: 'var(--card-foreground)', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}
                               cursor={{ fill: 'rgba(59, 130, 246, 0.1)' }}
                             />
                             <Legend wrapperStyle={{ paddingTop: '10px' }} />
@@ -777,7 +777,7 @@ const StatisticsPage = () => {
                 </Card>
 
                 {/* Performance Trend Chart */}
-                <Card className="border-green-100 bg-white shadow-lg hover:shadow-xl transition-shadow">
+                <Card className="border-green-100 bg-background shadow-lg hover:shadow-xl transition-shadow">
                   <CardHeader className="pb-3">
                     <CardTitle className="flex items-center gap-2 text-lg">
                       <LineChartIcon className="h-5 w-5 text-green-600" />
@@ -793,11 +793,11 @@ const StatisticsPage = () => {
                             data={performanceTrend}
                             margin={{ top: 10, right: 20, left: 0, bottom: 10 }}
                           >
-                            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                            <XAxis dataKey="month" fontSize={11} />
-                            <YAxis fontSize={11} domain={[0, 100]} />
+                            <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                            <XAxis dataKey="month" fontSize={11} stroke="var(--border)" tick={{ fill: 'var(--muted-foreground)' }} />
+                            <YAxis fontSize={11} domain={[0, 100]} stroke="var(--border)" tick={{ fill: 'var(--muted-foreground)' }} />
                             <Tooltip
-                              contentStyle={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}
+                              contentStyle={{ backgroundColor: 'var(--card)', borderColor: 'var(--border)', color: 'var(--card-foreground)', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}
                               cursor={{ stroke: '#10b981', strokeWidth: 2 }}
                             />
                             <Legend wrapperStyle={{ paddingTop: '10px' }} />
@@ -826,7 +826,7 @@ const StatisticsPage = () => {
             <TabsContent value="detailed" className="space-y-4 sm:space-y-6">
               <div className="grid gap-4 sm:gap-6 grid-cols-1 lg:grid-cols-2">
                 {/* Completion Rate Pie Chart */}
-                <Card className="border-purple-100 bg-white shadow-lg hover:shadow-xl transition-shadow">
+                <Card className="border-purple-100 bg-background shadow-lg hover:shadow-xl transition-shadow">
                   <CardHeader className="pb-3">
                     <CardTitle className="flex items-center gap-2 text-lg">
                       <Activity className="h-5 w-5 text-purple-600" />
@@ -853,7 +853,7 @@ const StatisticsPage = () => {
                                 <Cell key={`cell-${index}`} fill={entry.fill} />
                               ))}
                             </Pie>
-                            <Tooltip />
+                            <Tooltip contentStyle={{ backgroundColor: 'var(--card)', borderColor: 'var(--border)', color: 'var(--card-foreground)' }} />
                             <Legend />
                           </PieChart>
                         </ResponsiveContainer>
@@ -867,7 +867,7 @@ const StatisticsPage = () => {
                 </Card>
 
                 {/* Study Time Distribution */}
-                <Card className="border-amber-100 bg-white shadow-lg hover:shadow-xl transition-shadow">
+                <Card className="border-amber-100 bg-background shadow-lg hover:shadow-xl transition-shadow">
                   <CardHeader className="pb-3">
                     <CardTitle className="flex items-center gap-2 text-lg">
                       <Clock className="h-5 w-5 text-amber-600" />
@@ -883,11 +883,11 @@ const StatisticsPage = () => {
                             data={weeklyActivity}
                             margin={{ top: 10, right: 20, left: 0, bottom: 10 }}
                           >
-                            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                            <XAxis dataKey="day" fontSize={11} />
-                            <YAxis fontSize={11} />
+                            <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                            <XAxis dataKey="day" fontSize={11} stroke="var(--border)" tick={{ fill: 'var(--muted-foreground)' }} />
+                            <YAxis fontSize={11} stroke="var(--border)" tick={{ fill: 'var(--muted-foreground)' }} />
                             <Tooltip
-                              contentStyle={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}
+                              contentStyle={{ backgroundColor: 'var(--card)', borderColor: 'var(--border)', color: 'var(--card-foreground)', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}
                               formatter={(value) => `${value}h`}
                               cursor={{ fill: 'rgba(245, 158, 11, 0.1)' }}
                             />
@@ -920,7 +920,7 @@ const StatisticsPage = () => {
                 <CardContent className="p-4 md:p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-xs md:text-sm text-slate-600 mb-1">Total Questions</p>
+                      <p className="text-xs md:text-sm text-muted-foreground mb-1">Total Questions</p>
                       <p className="text-xl md:text-3xl font-bold text-blue-600">{overallStats.totalQuestions}</p>
                     </div>
                     <BookOpen className="h-8 w-8 md:h-12 md:w-12 text-blue-200" />
@@ -934,7 +934,7 @@ const StatisticsPage = () => {
                 <CardContent className="p-4 md:p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-xs md:text-sm text-slate-600 mb-1">Correctes</p>
+                      <p className="text-xs md:text-sm text-muted-foreground mb-1">Correctes</p>
                       <p className="text-xl md:text-3xl font-bold text-green-600">{overallStats.totalCorrect}</p>
                     </div>
                     <Award className="h-8 w-8 md:h-12 md:w-12 text-green-200" />
@@ -951,7 +951,7 @@ const StatisticsPage = () => {
                 <CardContent className="p-4 md:p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-xs md:text-sm text-slate-600 mb-1">Incorrectes</p>
+                      <p className="text-xs md:text-sm text-muted-foreground mb-1">Incorrectes</p>
                       <p className="text-xl md:text-3xl font-bold text-red-600">{overallStats.totalIncorrect}</p>
                     </div>
                     <TrendingUp className="h-8 w-8 md:h-12 md:w-12 text-red-200" />
@@ -965,7 +965,7 @@ const StatisticsPage = () => {
                 <CardContent className="p-4 md:p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-xs md:text-sm text-slate-600 mb-1">Taux Réussite</p>
+                      <p className="text-xs md:text-sm text-muted-foreground mb-1">Taux Réussite</p>
                       <p className="text-xl md:text-3xl font-bold text-purple-600">{overallStats.avgSuccess}%</p>
                     </div>
                     <Award className="h-8 w-8 md:h-12 md:w-12 text-purple-200" />
@@ -980,7 +980,7 @@ const StatisticsPage = () => {
         <motion.div variants={itemVariants}>
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0 pb-2 md:pb-0">
-              <TabsList className="inline-flex w-auto min-w-full sm:min-w-0 sm:w-auto lg:inline-flex bg-white border shadow-sm">
+              <TabsList className="inline-flex w-auto min-w-full sm:min-w-0 sm:w-auto lg:inline-flex bg-background border shadow-sm">
                 <TabsTrigger 
                   value="modules" 
                   className="flex-1 sm:flex-initial text-xs sm:text-sm px-3 sm:px-4 data-[state=active]:bg-blue-600 data-[state=active]:text-white whitespace-nowrap"
@@ -994,7 +994,7 @@ const StatisticsPage = () => {
             {/* Modules Tab Content */}
             <TabsContent value="modules" className="mt-6">
               {!contextSemester ? (
-                <div className="text-center py-12 text-slate-500">
+                <div className="text-center py-12 text-muted-foreground">
                   <BookOpen className="h-12 w-12 mx-auto mb-4 opacity-50" />
                   <p className="font-medium">Aucun semestre sélectionné</p>
                   <p className="text-sm mt-2">
@@ -1014,7 +1014,7 @@ const StatisticsPage = () => {
                         <Badge className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-base py-2 px-4">
                           {semester}
                         </Badge>
-                        <p className="text-slate-600">
+                        <p className="text-muted-foreground">
                           {filteredAndGroupedModules[semester].length} module{filteredAndGroupedModules[semester].length !== 1 ? 's' : ''}
                         </p>
                       </motion.div>
@@ -1053,7 +1053,7 @@ const StatisticsPage = () => {
                                   <div className="flex items-center gap-3">
                                     <button
                                       onClick={handleCloseModuleDetail}
-                                      className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+                                      className="p-2 hover:bg-background/20 rounded-lg transition-colors"
                                     >
                                       <ChevronLeft className="h-5 w-5" />
                                     </button>
@@ -1066,7 +1066,7 @@ const StatisticsPage = () => {
                                   </div>
                                   <button
                                     onClick={handleCloseModuleDetail}
-                                    className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+                                    className="p-2 hover:bg-background/20 rounded-lg transition-colors"
                                   >
                                     <X className="h-5 w-5" />
                                   </button>
@@ -1075,7 +1075,7 @@ const StatisticsPage = () => {
                               <CardContent className="p-4">
                                 {/* Exam Type Tabs */}
                                 <Tabs value={moduleExamTab} onValueChange={setModuleExamTab} className="w-full">
-                                  <TabsList className="w-full grid grid-cols-3 bg-slate-100">
+                                  <TabsList className="w-full grid grid-cols-3 bg-muted">
                                     <TabsTrigger 
                                       value="exam-years"
                                       className="flex items-center gap-2 data-[state=active]:bg-blue-600 data-[state=active]:text-white text-xs sm:text-sm"
@@ -1175,7 +1175,7 @@ const StatisticsPage = () => {
                     </div>
                   ))
               ) : (
-                <div className="text-center py-12 text-slate-500">
+                <div className="text-center py-12 text-muted-foreground">
                   <BookOpen className="h-12 w-12 mx-auto mb-4 opacity-50" />
                   <p className="font-medium">Aucun module disponible</p>
                   <p className="text-sm mt-2">
@@ -1214,7 +1214,7 @@ const StatisticsPage = () => {
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95, y: 20 }}
                   onClick={(e) => e.stopPropagation()}
-                  className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-y-auto"
+                  className="bg-background rounded-xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-y-auto"
                 >
                   <div className="sticky top-0 bg-gradient-to-r from-red-600 to-rose-600 text-white p-6 rounded-t-xl">
                     <div className="flex items-center justify-between">
@@ -1229,7 +1229,7 @@ const StatisticsPage = () => {
                       </div>
                       <button
                         onClick={() => setShowIncorrectPopup(false)}
-                        className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+                        className="p-2 hover:bg-background/20 rounded-lg transition-colors"
                       >
                         <X className="h-6 w-6" />
                       </button>
@@ -1241,11 +1241,11 @@ const StatisticsPage = () => {
                     <div className="mb-6 p-4 bg-red-50 rounded-lg border border-red-200">
                       <div className="flex items-center justify-between">
                         <div>
-                          <p className="text-sm text-slate-600">Total d'erreurs</p>
+                          <p className="text-sm text-muted-foreground">Total d'erreurs</p>
                           <p className="text-3xl font-bold text-red-600">{overallStats.totalIncorrect}</p>
                         </div>
                         <div className="text-right">
-                          <p className="text-sm text-slate-600">Taux d'erreur</p>
+                          <p className="text-sm text-muted-foreground">Taux d'erreur</p>
                           <p className="text-2xl font-bold text-red-600">
                             {overallStats.totalQuestions > 0 
                               ? Math.round((overallStats.totalIncorrect / overallStats.totalQuestions) * 100)
@@ -1269,12 +1269,12 @@ const StatisticsPage = () => {
                           return (
                             <div 
                               key={module._id || index}
-                              className="p-4 bg-white border border-slate-200 rounded-lg hover:shadow-md transition-shadow"
+                              className="p-4 bg-background border border-border rounded-lg hover:shadow-md transition-shadow"
                             >
                               <div className="flex items-center justify-between mb-3">
                                 <div className="flex-1">
-                                  <h3 className="font-semibold text-slate-800">{module.name}</h3>
-                                  <p className="text-xs text-slate-500 mt-1">{module.semester}</p>
+                                  <h3 className="font-semibold text-foreground">{module.name}</h3>
+                                  <p className="text-xs text-muted-foreground mt-1">{module.semester}</p>
                                 </div>
                                 <Badge className="bg-red-100 text-red-700 border-red-200">
                                   {module.incorrectAnswers} erreurs
@@ -1283,7 +1283,7 @@ const StatisticsPage = () => {
                               
                               {/* Progress bar */}
                               <div className="space-y-2">
-                                <div className="flex justify-between text-xs text-slate-600">
+                                <div className="flex justify-between text-xs text-muted-foreground">
                                   <span>{module.correctAnswers} correctes</span>
                                   <span>{errorRate}% d'erreurs</span>
                                 </div>
@@ -1311,7 +1311,7 @@ const StatisticsPage = () => {
                         })}
                       
                       {Object.values(filteredAndGroupedModules).flat().filter(m => m.incorrectAnswers > 0).length === 0 && (
-                        <div className="text-center py-8 text-slate-500">
+                        <div className="text-center py-8 text-muted-foreground">
                           <Award className="h-12 w-12 mx-auto mb-4 text-emerald-400" />
                           <p className="font-medium">Aucune erreur trouvée!</p>
                           <p className="text-sm mt-2">Vous n'avez pas encore de réponses incorrectes</p>

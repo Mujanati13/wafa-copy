@@ -64,7 +64,7 @@ const OfferCountdown = ({
         >
           {({ remainingTime }) => (
             <div className="flex flex-col items-center">
-              <div className="text-2xl font-bold text-gray-800">
+              <div className="text-2xl font-bold text-foreground">
                 {formatTime(remainingTime)}
               </div>
             </div>
@@ -73,7 +73,7 @@ const OfferCountdown = ({
       </div>
       
       <div className="text-center">
-        <div className="text-sm text-gray-600 font-medium">
+        <div className="text-sm text-muted-foreground font-medium">
           Offre limitée
         </div>
         <div className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">

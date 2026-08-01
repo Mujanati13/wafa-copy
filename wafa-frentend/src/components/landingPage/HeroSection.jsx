@@ -2,25 +2,25 @@ import React from "react";
 
 const HeroSection = () => {
   return (
-    <section className="bg-gradient-to-br from-blue-50 to-white min-h-screen relative overflow-hidden">
+    <section className="bg-background min-h-screen relative overflow-hidden">
       {/* Background decorative elements */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-0 left-0 w-96 h-96 bg-blue-100 rounded-full opacity-20 -translate-x-1/2 -translate-y-1/2"></div>
-        <div className="absolute bottom-0 right-0 w-80 h-80 bg-teal-100 rounded-full opacity-30 translate-x-1/3 translate-y-1/3"></div>
+        <div className="absolute top-0 left-0 w-96 h-96 bg-blue-100/10 rounded-full opacity-20 -translate-x-1/2 -translate-y-1/2"></div>
+        <div className="absolute bottom-0 right-0 w-80 h-80 bg-teal-100/10 rounded-full opacity-30 translate-x-1/3 translate-y-1/3"></div>
       </div>
 
       <div className="relative z-10 max-w-7xl mx-auto px-6 py-20 md:py-32">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           {/* Left Column - Content */}
           <div className="text-left">
-            <h1 className="text-4xl md:text-6xl font-bold mb-8 leading-tight">
+            <h1 className="text-4xl md:text-6xl font-bold mb-8 leading-tight text-foreground">
               Exceller dans vos examens
               <br />
               avec{" "}
-              <span className="text-blue-600">Qcmology</span>
+              <span className="text-blue-600 dark:text-blue-400">Qcmology</span>
             </h1>
 
-            <p className="text-lg md:text-xl text-gray-600 mb-12 leading-relaxed max-w-xl">
+            <p className="text-lg md:text-xl text-muted-foreground mb-12 leading-relaxed max-w-xl">
              
 Préparez-vous efficacement pour les examens -sans stress- 
 avec notre plateforme d'exam par annees et par cours , conçue pour les étudiants en médecine marrakech. 
@@ -43,7 +43,7 @@ Une préparation efficace = plus de temps libre + meilleures notes.
               {/* Educational illustration placeholder - you can replace with actual SVG/image */}
               <div className="relative">
                 {/* Main illustration container */}
-                <div className="w-96 h-96 bg-gradient-to-br from-blue-100 to-teal-100 rounded-3xl flex items-center justify-center relative overflow-hidden">
+                <div className="w-96 h-96 bg-gradient-to-br from-blue-100/30 to-teal-100/30 rounded-3xl flex items-center justify-center relative overflow-hidden border border-border">
                   {/* Books stack */}
                   <div className="absolute bottom-20 left-16 w-16 h-20 bg-red-400 rounded transform -rotate-12 shadow-lg"></div>
                   <div className="absolute bottom-24 left-20 w-16 h-20 bg-yellow-400 rounded transform -rotate-6 shadow-lg"></div>
@@ -59,7 +59,7 @@ Une préparation efficace = plus de temps libre + meilleures notes.
                   
                   {/* Computer/tablet */}
                   <div className="absolute center w-32 h-20 bg-gray-700 rounded-lg shadow-xl">
-                    <div className="w-28 h-16 bg-blue-200 rounded m-2 flex items-center justify-center">
+                    <div className="w-28 h-16 bg-blue-200/50 rounded m-2 flex items-center justify-center">
                       <div className="w-6 h-6 bg-blue-600 rounded-full"></div>
                     </div>
                   </div>
@@ -71,13 +71,13 @@ Une préparation efficace = plus de temps libre + meilleures notes.
                 </div>
                 
                 {/* Floating academic elements */}
-                <div className="absolute -top-4 -right-4 w-12 h-12 bg-white rounded-full shadow-lg flex items-center justify-center">
-                  <span className="text-blue-600 font-bold">Q</span>
+                <div className="absolute -top-4 -right-4 w-12 h-12 bg-card text-card-foreground border border-border rounded-full shadow-lg flex items-center justify-center">
+                  <span className="text-blue-600 dark:text-blue-400 font-bold">Q</span>
                 </div>
-                <div className="absolute -bottom-4 -left-4 w-10 h-10 bg-white rounded-full shadow-lg flex items-center justify-center">
-                  <span className="text-blue-600">✓</span>
+                <div className="absolute -bottom-4 -left-4 w-10 h-10 bg-card text-card-foreground border border-border rounded-full shadow-lg flex items-center justify-center">
+                  <span className="text-blue-600 dark:text-blue-400">✓</span>
                 </div>
-                <div className="absolute top-1/2 -right-8 w-8 h-8 bg-white rounded-full shadow-lg flex items-center justify-center">
+                <div className="absolute top-1/2 -right-8 w-8 h-8 bg-card text-card-foreground border border-border rounded-full shadow-lg flex items-center justify-center">
                   <span className="text-yellow-600">💡</span>
                 </div>
               </div>

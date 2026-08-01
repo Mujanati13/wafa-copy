@@ -67,7 +67,7 @@ const ModulePopup = ({
       default:
         return {
           label: t('common:medium', 'Moyen'),
-          className: 'bg-gray-100 text-gray-700 border-gray-300',
+          className: 'bg-muted text-muted-foreground border-gray-300',
           icon: <Star className="h-3 w-3 text-gray-500" />,
         };
     }

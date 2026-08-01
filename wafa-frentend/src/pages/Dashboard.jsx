@@ -466,7 +466,7 @@ ${selectedModule.exams?.length ? `\n📋 Examens disponibles:\n${selectedModule.
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-slate-100 p-4 md:p-6">
+    <div className="min-h-screen bg-gradient-to-br from-background via-muted to-card p-4 md:p-6">
       {/* Background Effects */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-blue-100/30 rounded-full opacity-20 blur-3xl animate-pulse" />
@@ -497,7 +497,7 @@ ${selectedModule.exams?.length ? `\n📋 Examens disponibles:\n${selectedModule.
                     <motion.div
                       animate={{ rotate: [0, 10, -10, 0] }}
                       transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
-                      className="p-2 sm:p-2.5 bg-white/20 backdrop-blur-sm rounded-xl sm:rounded-2xl shadow-lg flex-shrink-0"
+                      className="p-2 sm:p-2.5 bg-background/20 backdrop-blur-sm rounded-xl sm:rounded-2xl shadow-lg flex-shrink-0"
                     >
                       <Sparkles className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 text-yellow-300" />
                     </motion.div>
@@ -535,7 +535,7 @@ ${selectedModule.exams?.length ? `\n📋 Examens disponibles:\n${selectedModule.
                     className="relative overflow-hidden bg-gradient-to-br from-yellow-400 to-orange-500 rounded-xl sm:rounded-2xl p-4 sm:p-5 shadow-xl cursor-pointer group h-full"
                     onClick={() => navigate('/dashboard/subscription')}
                   >
-                    <div className="absolute top-0 right-0 w-24 h-24 sm:w-32 sm:h-32 bg-white/10 rounded-full -mr-12 sm:-mr-16 -mt-12 sm:-mt-16" />
+                    <div className="absolute top-0 right-0 w-24 h-24 sm:w-32 sm:h-32 bg-background/10 rounded-full -mr-12 sm:-mr-16 -mt-12 sm:-mt-16" />
                     <div className="relative flex items-center justify-between gap-3">
                       <div className="text-white min-w-0 flex-1">
                         <p className="text-xs sm:text-sm font-medium opacity-90">Mon Abonnement</p>
@@ -546,16 +546,16 @@ ${selectedModule.exams?.length ? `\n📋 Examens disponibles:\n${selectedModule.
                           {isFreeUser ? 'Voir les options de paiement →' : 'Voir les details →'}
                         </p>
                       </div>
-                      <div className="bg-white/20 p-2 sm:p-3 rounded-lg sm:rounded-xl backdrop-blur-sm flex-shrink-0">
+                      <div className="bg-background/20 p-2 sm:p-3 rounded-lg sm:rounded-xl backdrop-blur-sm flex-shrink-0">
                         <Award className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
                       </div>
                     </div>
                   </motion.div>
 
                   {/* Semester Selector Card */}
-                  <div className="bg-white/95 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 sm:p-5 shadow-lg border border-white/50 h-full">
+                  <div className="bg-background/95 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 sm:p-5 shadow-lg border border-white/50 h-full">
                     <div className="flex items-center justify-between mb-3 sm:mb-4">
-                      <p className="text-sm sm:text-base font-bold text-slate-800">Mes Semestres</p>
+                      <p className="text-sm sm:text-base font-bold text-foreground">Mes Semestres</p>
                       <Badge variant="secondary" className="bg-blue-100 text-blue-700 text-[10px] xs:text-xs">
                         {userSemesters.length} actif{userSemesters.length > 1 ? 's' : ''}
                       </Badge>
@@ -565,11 +565,11 @@ ${selectedModule.exams?.length ? `\n📋 Examens disponibles:\n${selectedModule.
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-7 w-7 sm:h-8 sm:w-8 flex-shrink-0 hover:bg-slate-100"
+                        className="h-7 w-7 sm:h-8 sm:w-8 flex-shrink-0 hover:bg-muted"
                         onClick={() => setSemesterPage(p => Math.max(0, p - 1))}
                         disabled={semesterPage === 0}
                       >
-                        <ChevronLeft className="h-3 w-3 sm:h-4 sm:w-4 text-slate-600" />
+                        <ChevronLeft className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
                       </Button>
                       
                       <div className="flex gap-1 sm:gap-2 flex-1 justify-center">
@@ -584,29 +584,29 @@ ${selectedModule.exams?.length ? `\n📋 Examens disponibles:\n${selectedModule.
                               className={`min-w-[50px] xs:min-w-[58px] sm:min-w-[65px] text-xs sm:text-sm font-semibold transition-all ${
                                 isSelected
                                   ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-md scale-105'
-                                  : 'hover:bg-blue-50 hover:border-blue-300 text-slate-700'
+                                  : 'hover:bg-blue-50 hover:border-blue-300 text-muted-foreground'
                               }`}
                             >
                               {sem}
                             </Button>
                           );
                         }) : (
-                          <p className="text-xs text-slate-500 py-2">Aucun semestre souscrit</p>
+                          <p className="text-xs text-muted-foreground py-2">Aucun semestre souscrit</p>
                         )}
                       </div>
                       
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-7 w-7 sm:h-8 sm:w-8 flex-shrink-0 hover:bg-slate-100"
+                        className="h-7 w-7 sm:h-8 sm:w-8 flex-shrink-0 hover:bg-muted"
                         onClick={() => setSemesterPage(p => Math.min(totalSemesterPages - 1, p + 1))}
                         disabled={semesterPage >= totalSemesterPages - 1}
                       >
-                        <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4 text-slate-600" />
+                        <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
                       </Button>
                     </div>
                     
-                    <p className="text-[10px] xs:text-xs text-center text-slate-500 mt-3">
+                    <p className="text-[10px] xs:text-xs text-center text-muted-foreground mt-3">
                       Page {semesterPage + 1} sur {totalSemesterPages}
                     </p>
                   </div>
@@ -654,7 +654,7 @@ ${selectedModule.exams?.length ? `\n📋 Examens disponibles:\n${selectedModule.
         >
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+              <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
                 <GraduationCap className="h-6 w-6 text-teal-600" />
                 {t('dashboard:modules')}
                 <Badge variant="outline" className="ml-2 bg-teal-50 text-teal-700 border-teal-200">
@@ -700,23 +700,23 @@ ${selectedModule.exams?.length ? `\n📋 Examens disponibles:\n${selectedModule.
                 ))
               ) : (
                 <div className="col-span-full">
-                  <Card className="border-2 border-dashed border-slate-200 bg-slate-50/50">
+                  <Card className="border-2 border-dashed border-border bg-card/50">
                     <CardContent className="text-center py-16">
                       <div className="max-w-md mx-auto space-y-4">
-                        <div className="w-16 h-16 mx-auto bg-slate-100 rounded-full flex items-center justify-center">
+                        <div className="w-16 h-16 mx-auto bg-muted rounded-full flex items-center justify-center">
                           {userSemesters.length === 0 ? (
                             <Lock className="h-8 w-8 text-slate-400" />
                           ) : (
                             <Book className="h-8 w-8 text-blue-400" />
                           )}
                         </div>
-                        <h3 className="text-xl font-semibold text-slate-700">
+                        <h3 className="text-xl font-semibold text-muted-foreground">
                           {userSemesters.length === 0
                             ? "Aucun semestre souscrit"
                             : `Aucun module pour ${semester}`
                           }
                         </h3>
-                        <p className="text-slate-500">
+                        <p className="text-muted-foreground">
                           {userSemesters.length === 0
                             ? "Abonnez-vous pour accéder aux modules et commencer votre apprentissage"
                             : userSemesters.length > 1 

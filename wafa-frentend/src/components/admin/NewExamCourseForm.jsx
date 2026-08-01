@@ -75,12 +75,12 @@ const NewExamCourseForm = ({
 
   return (
     <div className="flex justify-center items-center min-h-screen bg-black/50 p-4 z-[99999999999] absolute top-0 left-0 w-full h-full">
-      <div className="w-full max-w-md bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+      <div className="w-full max-w-md bg-card text-card-foreground rounded-lg shadow-sm border border-border p-6">
         <div className="mb-6">
-          <h1 className="text-xl font-semibold text-gray-900 mb-1">
+          <h1 className="text-xl font-semibold text-foreground mb-1">
             Create Exam Course
           </h1>
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-muted-foreground">
             Add a new exam course to the system
           </p>
         </div>
@@ -92,13 +92,13 @@ const NewExamCourseForm = ({
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-sm font-medium text-gray-700">
+                  <FormLabel className="text-sm font-medium text-foreground">
                     Name
                   </FormLabel>
                   <FormControl>
                     <Input
                       placeholder="e.g. Système cardiovasculaire - Anatomie 1"
-                      className="border-gray-300 focus:border-gray-400 focus:ring-gray-400"
+                      className="border-border focus:border-gray-400 focus:ring-gray-400"
                       {...field}
                     />
                   </FormControl>
@@ -112,12 +112,12 @@ const NewExamCourseForm = ({
               name="moduleName"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-sm font-medium text-gray-700">
+                  <FormLabel className="text-sm font-medium text-foreground">
                     Select Module
                   </FormLabel>
                   <FormControl>
                     <Select onValueChange={field.onChange} value={field.value}>
-                      <SelectTrigger className="border-gray-300 focus:border-gray-400 focus:ring-gray-400">
+                      <SelectTrigger className="border-border focus:border-gray-400 focus:ring-gray-400">
                         <SelectValue placeholder="Choose a module" />
                       </SelectTrigger>
                       <SelectContent>
@@ -139,12 +139,12 @@ const NewExamCourseForm = ({
               name="category"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-sm font-medium text-gray-700">
+                  <FormLabel className="text-sm font-medium text-foreground">
                     Select Category
                   </FormLabel>
                   <FormControl>
                     <Select onValueChange={field.onChange} value={field.value}>
-                      <SelectTrigger className="border-gray-300 focus:border-gray-400 focus:ring-gray-400">
+                      <SelectTrigger className="border-border focus:border-gray-400 focus:ring-gray-400">
                         <SelectValue placeholder="Choose a category" />
                       </SelectTrigger>
                       <SelectContent>
@@ -166,14 +166,14 @@ const NewExamCourseForm = ({
               name="totalQuestions"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-sm font-medium text-gray-700">
+                  <FormLabel className="text-sm font-medium text-foreground">
                     Total Questions
                   </FormLabel>
                   <FormControl>
                     <Input
                       type="number"
                       placeholder="e.g. 50"
-                      className="border-gray-300 focus:border-gray-400 focus:ring-gray-400"
+                      className="border-border focus:border-gray-400 focus:ring-gray-400"
                       {...field}
                     />
                   </FormControl>
@@ -187,13 +187,13 @@ const NewExamCourseForm = ({
               name="imageUrl"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-sm font-medium text-gray-700">
+                  <FormLabel className="text-sm font-medium text-foreground">
                     Image URL (optional)
                   </FormLabel>
                   <FormControl>
                     <Input
                       placeholder="https://..."
-                      className="border-gray-300 focus:border-gray-400 focus:ring-gray-400"
+                      className="border-border focus:border-gray-400 focus:ring-gray-400"
                       {...field}
                     />
                   </FormControl>
@@ -207,13 +207,13 @@ const NewExamCourseForm = ({
               name="helpText"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-sm font-medium text-gray-700">
+                  <FormLabel className="text-sm font-medium text-foreground">
                     Text Info "?" (Optional)
                   </FormLabel>
                   <FormControl>
                     <textarea
                       placeholder="Additional information or help text"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       rows={3}
                       {...field}
                     />
@@ -227,7 +227,7 @@ const NewExamCourseForm = ({
               <Button
                 type="button"
                 variant="ghost"
-                className="text-gray-700 hover:text-gray-900"
+                className="text-foreground hover:bg-accent"
                 onClick={() => {
                   form.reset();
                   setShowNewExamCourseForm(false);

@@ -88,11 +88,11 @@ const PaymentMethodsSection = () => {
   };
 
   return (
-    <section id="payment-methods" className="py-20 px-6 bg-gradient-to-br from-gray-50 to-white relative overflow-hidden">
+    <section id="payment-methods" className="py-20 px-6 bg-background relative overflow-hidden">
       {/* Background decorations */}
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-blue-50/20 to-transparent"></div>
-      <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-purple-100/20 rounded-full blur-3xl"></div>
-      <div className="absolute bottom-1/4 left-1/4 w-96 h-96 bg-green-100/20 rounded-full blur-3xl"></div>
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-blue-50/10 to-transparent"></div>
+      <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-purple-100/10 rounded-full blur-3xl"></div>
+      <div className="absolute bottom-1/4 left-1/4 w-96 h-96 bg-green-100/10 rounded-full blur-3xl"></div>
       
       <div className="max-w-7xl mx-auto relative z-10">
         <motion.div 
@@ -103,18 +103,18 @@ const PaymentMethodsSection = () => {
           viewport={{ once: true }}
         >
           <motion.div 
-            className="inline-flex items-center gap-2 bg-blue-50 backdrop-blur-sm rounded-full px-6 py-3 mb-6 border border-blue-200 shadow-sm"
+            className="inline-flex items-center gap-2 bg-blue-50 dark:bg-blue-950/40 backdrop-blur-sm rounded-full px-6 py-3 mb-6 border border-blue-200 dark:border-blue-800 shadow-sm"
             whileHover={{ scale: 1.05 }}
             transition={{ type: "spring", stiffness: 300 }}
           >
-            <BiSolidBadgeCheck className="text-blue-600" />
-            <span className="text-sm font-semibold text-blue-800">Modes de Paiement</span>
+            <BiSolidBadgeCheck className="text-blue-600 dark:text-blue-400" />
+            <span className="text-sm font-semibold text-blue-800 dark:text-blue-300">Modes de Paiement</span>
           </motion.div>
-          <h2 className="text-4xl md:text-5xl font-bold mb-6 text-gray-900">
-            Choisissez votre <span className="text-blue-600">mode de paiement</span><br />
+          <h2 className="text-4xl md:text-5xl font-bold mb-6 text-foreground">
+            Choisissez votre <span className="text-blue-600 dark:text-blue-400">mode de paiement</span><br />
             préféré
           </h2>
-          <p className="text-gray-600 text-lg max-w-2xl mx-auto">
+          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
             Nous proposons plusieurs options de paiement flexibles pour répondre à tous vos besoins
           </p>
         </motion.div>
@@ -139,14 +139,14 @@ const PaymentMethodsSection = () => {
                 className="group relative"
               >
                 <div className={`
-                  bg-white backdrop-blur-xl rounded-3xl p-8 border transition-all duration-500 shadow-lg hover:shadow-xl h-full
+                  bg-card text-card-foreground backdrop-blur-xl rounded-3xl p-8 border transition-all duration-500 shadow-lg hover:shadow-xl h-full
                   ${method.highlight 
-                    ? "border-blue-300 shadow-blue-100" 
-                    : "border-gray-200 hover:border-blue-200"
+                    ? "border-blue-400 shadow-blue-500/10" 
+                    : "border-border hover:border-blue-400"
                   }
                 `}>
                   {/* Animated background overlay */}
-                  <div className={`absolute inset-0 bg-gradient-to-br ${method.bgGradient} rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500`}></div>
+                  <div className={`absolute inset-0 bg-gradient-to-br ${method.bgGradient} rounded-3xl opacity-0 group-hover:opacity-10 dark:group-hover:opacity-5 transition-opacity duration-500`}></div>
                   
                   <div className="relative z-10">
                     {method.highlight && (
@@ -171,10 +171,10 @@ const PaymentMethodsSection = () => {
                       >
                         <IconComponent className="text-2xl text-white" />
                       </motion.div>
-                      <h3 className="text-xl font-bold text-gray-900 flex-1">{method.title}</h3>
+                      <h3 className="text-xl font-bold text-foreground flex-1">{method.title}</h3>
                     </div>
                     
-                    <p className="text-gray-600 mb-6 leading-relaxed">
+                    <p className="text-muted-foreground mb-6 leading-relaxed">
                       {method.description}
                     </p>
                     
@@ -182,7 +182,7 @@ const PaymentMethodsSection = () => {
                       {method.details.map((detail, idx) => (
                         <motion.li 
                           key={idx} 
-                          className="flex items-start gap-3 text-gray-700"
+                          className="flex items-start gap-3 text-foreground"
                           initial={{ opacity: 0, x: -20 }}
                           whileInView={{ opacity: 1, x: 0 }}
                           transition={{ delay: idx * 0.1 }}
@@ -195,7 +195,7 @@ const PaymentMethodsSection = () => {
                           >
                             <div className="w-2 h-2 bg-white rounded-full"></div>
                           </motion.div>
-                          <span className="text-sm group-hover:text-gray-800 transition-colors duration-300">
+                          <span className="text-sm text-foreground transition-colors duration-300">
                             {detail}
                           </span>
                         </motion.li>
@@ -203,27 +203,27 @@ const PaymentMethodsSection = () => {
                     </ul>
                     
                     {/* Special icons for specific payment methods */}
-                    <div className="flex items-center gap-2 mt-6 pt-4 border-t border-gray-100">
+                    <div className="flex items-center gap-2 mt-6 pt-4 border-t border-border">
                       {method.title.includes("Transfert") && (
-                        <div className="flex items-center gap-1 text-xs text-gray-500">
+                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
                           <FaClock className="text-blue-500" />
                           <span>24-48H</span>
                         </div>
                       )}
                       {method.title.includes("Cash") && (
-                        <div className="flex items-center gap-1 text-xs text-gray-500">
+                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
                           <FaIdCard className="text-emerald-500" />
                           <span>Carte étudiant requise</span>
                         </div>
                       )}
                       {method.title.includes("WhatsApp") && (
-                        <div className="flex items-center gap-1 text-xs text-gray-500">
+                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
                           <FaWhatsapp className="text-green-500" />
                           <span>Contact WhatsApp</span>
                         </div>
                       )}
                       {method.title.includes("Carte") && (
-                        <div className="flex items-center gap-1 text-xs text-gray-500">
+                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
                           <FaUserCheck className="text-purple-500" />
                           <span>Activation instantanée</span>
                         </div>
@@ -243,11 +243,11 @@ const PaymentMethodsSection = () => {
           transition={{ duration: 0.8, delay: 0.3 }}
           viewport={{ once: true }}
         >
-          <div className="bg-blue-50 rounded-2xl p-6 border border-blue-200">
-            <h4 className="text-lg font-bold text-blue-900 mb-2">
+          <div className="bg-blue-50 dark:bg-blue-950/40 rounded-2xl p-6 border border-blue-200 dark:border-blue-800">
+            <h4 className="text-lg font-bold text-blue-900 dark:text-blue-200 mb-2">
               Information Importante
             </h4>
-            <p className="text-blue-700 text-sm">
+            <p className="text-blue-700 dark:text-blue-300 text-sm">
               Pour toute question concernant les modes de paiement, n'hésitez pas à nous contacter. 
               Nous sommes là pour vous accompagner dans votre processus d'achat.
             </p>

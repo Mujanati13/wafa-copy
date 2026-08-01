@@ -354,8 +354,8 @@ const NotesPage = () => {
               <NotebookPen className="h-6 w-6 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-slate-900">Vos notes</h1>
-              <p className="text-sm text-slate-500">Sélectionnez une note pour l'éditer</p>
+              <h1 className="text-2xl font-bold text-foreground">Vos notes</h1>
+              <p className="text-sm text-muted-foreground">Sélectionnez une note pour l'éditer</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -370,7 +370,7 @@ const NotesPage = () => {
         </div>
 
         {/* Filters Section */}
-        <Card className="border-slate-200">
+        <Card className="border-border">
           <CardContent className="p-4">
             <div className="space-y-4">
               {/* Search */}
@@ -381,14 +381,14 @@ const NotesPage = () => {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Rechercher une note..."
-                  className="pl-10 bg-white"
+                  className="pl-10 bg-background"
                 />
               </div>
 
               {/* Filter Row */}
               <div className="flex flex-wrap items-center gap-3">
                 {/* Filter Type Tabs */}
-                <div className="flex items-center gap-1 bg-slate-100 rounded-lg p-1">
+                <div className="flex items-center gap-1 bg-muted rounded-lg p-1">
                   <button
                     onClick={() => {
                       setFilterType("recent");
@@ -399,8 +399,8 @@ const NotesPage = () => {
                     className={cn(
                       "px-3 py-1.5 text-sm font-medium rounded-md transition-all",
                       filterType === "recent" 
-                        ? "bg-white text-blue-600 shadow-sm" 
-                        : "text-slate-600 hover:text-slate-900"
+                        ? "bg-background text-blue-600 shadow-sm" 
+                        : "text-muted-foreground hover:text-foreground"
                     )}
                   >
                     Récent
@@ -410,8 +410,8 @@ const NotesPage = () => {
                     className={cn(
                       "px-3 py-1.5 text-sm font-medium rounded-md transition-all",
                       filterType === "module" 
-                        ? "bg-white text-blue-600 shadow-sm" 
-                        : "text-slate-600 hover:text-slate-900"
+                        ? "bg-background text-blue-600 shadow-sm" 
+                        : "text-muted-foreground hover:text-foreground"
                     )}
                   >
                     Module
@@ -426,8 +426,8 @@ const NotesPage = () => {
                     className={cn(
                       "px-3 py-1.5 text-sm font-medium rounded-md transition-all flex items-center gap-1",
                       filterType === "date" 
-                        ? "bg-white text-blue-600 shadow-sm" 
-                        : "text-slate-600 hover:text-slate-900"
+                        ? "bg-background text-blue-600 shadow-sm" 
+                        : "text-muted-foreground hover:text-foreground"
                     )}
                   >
                     <Calendar className="h-3.5 w-3.5" />
@@ -439,7 +439,7 @@ const NotesPage = () => {
                 <div className="h-8 w-px bg-slate-200" />
 
                 {/* Filter Button */}
-                <Badge variant="outline" className="text-slate-600 h-8 px-3">
+                <Badge variant="outline" className="text-muted-foreground h-8 px-3">
                   <Filter className="h-3 w-3 mr-1" />
                   Filter
                 </Badge>
@@ -452,7 +452,7 @@ const NotesPage = () => {
                   value={selectedModule} 
                   onValueChange={setSelectedModule}
                 >
-                  <SelectTrigger className="w-[180px] bg-white">
+                  <SelectTrigger className="w-[180px] bg-background">
                     <SelectValue placeholder="Module" />
                   </SelectTrigger>
                   <SelectContent>
@@ -470,7 +470,7 @@ const NotesPage = () => {
                   value={selectedExamName} 
                   onValueChange={setSelectedExamName}
                 >
-                  <SelectTrigger className="w-[160px] bg-white">
+                  <SelectTrigger className="w-[160px] bg-background">
                     <SelectValue placeholder="Exam Name" />
                   </SelectTrigger>
                   <SelectContent>
@@ -485,7 +485,7 @@ const NotesPage = () => {
 
                 {/* Number of Question Filter */}
                 <Select value={selectedQuestionNumber} onValueChange={setSelectedQuestionNumber}>
-                  <SelectTrigger className="w-[180px] bg-white">
+                  <SelectTrigger className="w-[180px] bg-background">
                     <SelectValue placeholder="Number of Question" />
                   </SelectTrigger>
                   <SelectContent>
@@ -504,13 +504,13 @@ const NotesPage = () => {
                     type="date"
                     value={dateFilter}
                     onChange={(e) => setDateFilter(e.target.value)}
-                    className="w-[160px] bg-white"
+                    className="w-[160px] bg-background"
                   />
                 )}
 
                 {/* Filter indicator */}
                 <div className="ml-auto">
-                  <Badge variant="outline" className="text-slate-600">
+                  <Badge variant="outline" className="text-muted-foreground">
                     {sortedNotes.length} résultat{sortedNotes.length !== 1 ? 's' : ''}
                   </Badge>
                 </div>
@@ -528,19 +528,19 @@ const NotesPage = () => {
               ))}
             </div>
           ) : sortedNotes.length === 0 ? (
-            <Card className="border-slate-200">
+            <Card className="border-border">
               <CardContent className="p-12 text-center">
                 <div className="space-y-3">
                   <div className="flex justify-center">
-                    <div className="p-4 bg-slate-100 rounded-full">
+                    <div className="p-4 bg-muted rounded-full">
                       <FileText className="h-10 w-10 text-slate-400" />
                     </div>
                   </div>
                   <div>
-                    <p className="text-lg font-semibold text-slate-600">
+                    <p className="text-lg font-semibold text-muted-foreground">
                       {searchQuery ? "Aucune note trouvée" : "Aucune note"}
                     </p>
-                    <p className="text-sm text-slate-500 mt-2">
+                    <p className="text-sm text-muted-foreground mt-2">
                       {searchQuery ? "Essayez avec d'autres mots-clés" : "Créez votre première note"}
                     </p>
                   </div>
@@ -554,7 +554,7 @@ const NotesPage = () => {
                 <div>
                   <div className="flex items-center gap-2 mb-4">
                     <Pin className="h-4 w-4 text-yellow-500 fill-yellow-500" />
-                    <h3 className="text-sm font-bold text-slate-700 uppercase tracking-wider">
+                    <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-wider">
                       Épinglées ({pinnedNotes.length})
                     </h3>
                   </div>
@@ -576,7 +576,7 @@ const NotesPage = () => {
               {/* Unpinned Notes */}
               <div>
                 {pinnedNotes.length > 0 && (
-                  <h3 className="text-sm font-bold text-slate-700 uppercase tracking-wider mb-4">
+                  <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-wider mb-4">
                     Autres ({unpinnedNotes.length})
                   </h3>
                 )}
@@ -609,15 +609,15 @@ const NotesPage = () => {
             {questionPreview && (
               <div className="space-y-4">
                 {/* Question Text */}
-                <div className="p-4 bg-slate-50 rounded-lg">
-                  <p className="font-medium text-slate-800">
+                <div className="p-4 bg-card rounded-lg">
+                  <p className="font-medium text-foreground">
                     {questionPreview.question?.text || "Question non disponible"}
                   </p>
                 </div>
 
                 {/* Options */}
                 <div className="space-y-2">
-                  <p className="text-sm font-medium text-slate-600">Choix:</p>
+                  <p className="text-sm font-medium text-muted-foreground">Choix:</p>
                   {questionPreview.question?.options?.map((option, idx) => (
                     <div
                       key={idx}
@@ -625,7 +625,7 @@ const NotesPage = () => {
                         "p-3 rounded-lg border-2 transition-all",
                         option.isCorrect
                           ? "bg-emerald-50 border-emerald-400 text-emerald-800"
-                          : "bg-white border-slate-200 text-slate-700"
+                          : "bg-background border-border text-muted-foreground"
                       )}
                     >
                       <div className="flex items-center gap-2">
@@ -665,7 +665,7 @@ const NotesPage = () => {
             {editingNote && (
               <div className="space-y-4">
                 <div>
-                  <label className="text-sm font-medium text-slate-700 mb-1 block">
+                  <label className="text-sm font-medium text-muted-foreground mb-1 block">
                     Titre
                   </label>
                   <Input
@@ -675,7 +675,7 @@ const NotesPage = () => {
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-slate-700 mb-1 block">
+                  <label className="text-sm font-medium text-muted-foreground mb-1 block">
                     Contenu
                   </label>
                   <Textarea
@@ -734,11 +734,11 @@ const NoteCard = ({ note, onDelete, onViewQuestion, onEdit, onTogglePin }) => {
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white rounded-xl border-2 border-slate-200 hover:border-blue-300 transition-all shadow-sm hover:shadow-md overflow-hidden flex flex-col h-full"
+      className="bg-background rounded-xl border-2 border-border hover:border-blue-300 transition-all shadow-sm hover:shadow-md overflow-hidden flex flex-col h-full"
     >
       {/* Date Header */}
-      <div className="px-4 py-2 bg-slate-50 border-b border-slate-200 flex items-center justify-between flex-shrink-0">
-        <div className="flex items-center gap-2 text-xs text-slate-500">
+      <div className="px-4 py-2 bg-card border-b border-border flex items-center justify-between flex-shrink-0">
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <Calendar className="h-3.5 w-3.5" />
           <span>{new Date(note.createdAt).toLocaleDateString('fr-FR', {
             day: 'numeric',
@@ -797,16 +797,16 @@ const NoteCard = ({ note, onDelete, onViewQuestion, onEdit, onTogglePin }) => {
 
       {/* Note Content */}
       <div className="p-4 flex-1 overflow-hidden">
-        <h3 className="font-bold text-base text-slate-900 mb-3 line-clamp-2">
+        <h3 className="font-bold text-base text-foreground mb-3 line-clamp-2">
           {note.title || "Sans titre"}
         </h3>
-        <p className="text-sm text-slate-700 line-clamp-4 min-h-[4rem] leading-relaxed">
+        <p className="text-sm text-muted-foreground line-clamp-4 min-h-[4rem] leading-relaxed">
           {note.content || "Aucun contenu"}
         </p>
       </div>
 
       {/* Action Buttons */}
-      <div className="px-4 pb-3 flex flex-col gap-2 border-t border-slate-100 pt-3 flex-shrink-0">
+      <div className="px-4 pb-3 flex flex-col gap-2 border-t border-border pt-3 flex-shrink-0">
         {/* View Question Button */}
         <Button
           variant="outline"

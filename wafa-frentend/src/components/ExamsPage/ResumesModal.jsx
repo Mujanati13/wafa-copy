@@ -96,14 +96,14 @@ const ResumesModal = ({ isOpen, onClose, examData }) => {
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.95, opacity: 0 }}
           transition={{ duration: 0.2 }}
-          className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[80vh] overflow-hidden"
+          className="bg-white dark:bg-slate-900 rounded-xl shadow-2xl w-full max-w-2xl max-h-[80vh] overflow-hidden"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
           <div className="bg-gradient-to-r from-purple-600 to-indigo-600 p-5 text-white">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="bg-white/20 p-2 rounded-lg">
+                <div className="bg-white dark:bg-slate-900/20 p-2 rounded-lg">
                   <BookOpen className="h-5 w-5" />
                 </div>
                 <div>
@@ -119,7 +119,7 @@ const ResumesModal = ({ isOpen, onClose, examData }) => {
                 variant="ghost"
                 size="icon"
                 onClick={onClose}
-                className="text-white hover:bg-white/20 rounded-full"
+                className="text-white hover:bg-white dark:bg-slate-900/20 rounded-full"
               >
                 <X className="h-5 w-5" />
               </Button>
@@ -177,7 +177,7 @@ const ResumesModal = ({ isOpen, onClose, examData }) => {
                             className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border hover:bg-purple-50 hover:border-purple-200 transition-colors group"
                           >
                             <div className="flex items-center gap-3">
-                              <div className="p-2 bg-white rounded-lg border group-hover:bg-purple-100 transition-colors">
+                              <div className="p-2 bg-white dark:bg-slate-900 rounded-lg border group-hover:bg-purple-100 transition-colors">
                                 {getFileIcon(fileType)}
                               </div>
                               <div>

@@ -550,8 +550,8 @@ const Explications = () => {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div className="space-y-2">
-          <h1 className="text-4xl font-bold text-slate-900">Explications Management</h1>
-          <p className="text-slate-500">Manage user-submitted explanation questions and verify content</p>
+          <h1 className="text-4xl font-bold text-foreground">Explications Management</h1>
+          <p className="text-muted-foreground">Manage user-submitted explanation questions and verify content</p>
         </div>
         <Button 
           className="gap-2" 
@@ -650,8 +650,8 @@ const Explications = () => {
       )}
 
       {/* Main Table Card */}
-      <Card className="shadow-lg border-slate-200">
-        <CardHeader className="bg-gradient-to-r from-slate-50 to-slate-100 border-b border-slate-200">
+      <Card className="shadow-lg border-border">
+        <CardHeader className="bg-gradient-to-r from-slate-50 to-slate-100 border-b border-border">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div>
               <CardTitle>All Explanations</CardTitle>
@@ -671,7 +671,7 @@ const Explications = () => {
           </div>
           
           {/* Expanded Filters Section */}
-          <div id="filters-section" className="pt-4 border-t border-slate-200 space-y-4">
+          <div id="filters-section" className="pt-4 border-t border-border space-y-4">
             {/* Row 1: Search and Status */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
               {/* Search Input */}
@@ -754,7 +754,7 @@ const Explications = () => {
 
               {/* Date From */}
               <div className="space-y-1">
-                <Label className="text-xs text-slate-500">Date début</Label>
+                <Label className="text-xs text-muted-foreground">Date début</Label>
                 <Input
                   type="date"
                   value={dateFrom}
@@ -765,7 +765,7 @@ const Explications = () => {
 
               {/* Date To */}
               <div className="space-y-1">
-                <Label className="text-xs text-slate-500">Date fin</Label>
+                <Label className="text-xs text-muted-foreground">Date fin</Label>
                 <Input
                   type="date"
                   value={dateTo}
@@ -779,7 +779,7 @@ const Explications = () => {
             <div className="flex flex-wrap items-center gap-2">
               {(searchQuery || statusFilter !== "all" || moduleFilter !== "all" || examTypeFilter !== "all" || userFilter !== "all" || explanationTypeFilter !== "all" || dateFrom || dateTo) && (
                 <>
-                  <span className="text-sm text-slate-500">Filtres actifs:</span>
+                  <span className="text-sm text-muted-foreground">Filtres actifs:</span>
                   {searchQuery && (
                     <Badge variant="secondary" className="gap-1">
                       Recherche: {searchQuery}
@@ -841,7 +841,7 @@ const Explications = () => {
             <div className="flex items-center justify-center py-12">
               <div className="text-center">
                 <Loader2 className="h-8 w-8 animate-spin text-blue-500 mx-auto mb-3" />
-                <p className="text-slate-600">Loading explanations...</p>
+                <p className="text-muted-foreground">Loading explanations...</p>
               </div>
             </div>
           )}
@@ -859,7 +859,7 @@ const Explications = () => {
           {!loading && !error && filteredExplanations.length === 0 && (
             <div className="flex flex-col items-center justify-center py-12">
               <FileQuestion className="h-12 w-12 text-slate-300 mb-3" />
-              <p className="text-slate-500 font-medium">
+              <p className="text-muted-foreground font-medium">
                 {explanations.length === 0 ? "No explanations found" : "Aucun résultat pour cette recherche"}
               </p>
               {explanations.length > 0 && (
@@ -879,24 +879,24 @@ const Explications = () => {
               <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
-                    <TableRow className="bg-slate-50 hover:bg-slate-50 border-slate-200">
-                      <TableHead className="w-12 font-semibold text-slate-700">
+                    <TableRow className="bg-background hover:bg-background border-border">
+                      <TableHead className="w-12 font-semibold text-foreground">
                         <Checkbox
                           checked={currentReports.length > 0 && selectedItems.size === currentReports.length}
                           onCheckedChange={handleSelectAll}
                         />
                       </TableHead>
-                      <TableHead className="font-semibold text-slate-700">User</TableHead>
-                      <TableHead className="font-semibold text-slate-700">Module</TableHead>
-                      <TableHead className="font-semibold text-slate-700">Type d'Examen</TableHead>
-                      <TableHead className="font-semibold text-slate-700">Examen / Cours</TableHead>
-                      <TableHead className="font-semibold text-slate-700">N° Question</TableHead>
-                      <TableHead className="font-semibold text-slate-700">Question</TableHead>
-                      <TableHead className="font-semibold text-slate-700">Contenu</TableHead>
-                      <TableHead className="font-semibold text-slate-700">Media</TableHead>
-                      <TableHead className="font-semibold text-slate-700">Status</TableHead>
-                      <TableHead className="font-semibold text-slate-700">Date</TableHead>
-                      <TableHead className="text-right font-semibold text-slate-700">Actions</TableHead>
+                      <TableHead className="font-semibold text-foreground">User</TableHead>
+                      <TableHead className="font-semibold text-foreground">Module</TableHead>
+                      <TableHead className="font-semibold text-foreground">Type d'Examen</TableHead>
+                      <TableHead className="font-semibold text-foreground">Examen / Cours</TableHead>
+                      <TableHead className="font-semibold text-foreground">N° Question</TableHead>
+                      <TableHead className="font-semibold text-foreground">Question</TableHead>
+                      <TableHead className="font-semibold text-foreground">Contenu</TableHead>
+                      <TableHead className="font-semibold text-foreground">Media</TableHead>
+                      <TableHead className="font-semibold text-foreground">Status</TableHead>
+                      <TableHead className="font-semibold text-foreground">Date</TableHead>
+                      <TableHead className="text-right font-semibold text-foreground">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -906,7 +906,7 @@ const Explications = () => {
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.2, delay: idx * 0.05 }}
-                        className="border-b border-slate-200 hover:bg-slate-50/50 transition-colors"
+                        className="border-b border-border hover:bg-background/50 transition-colors"
                       >
                         <TableCell className="w-12">
                           <Checkbox
@@ -917,12 +917,12 @@ const Explications = () => {
                         </TableCell>
                         <TableCell className="py-3">
                           <div className="flex flex-col">
-                            <p className="font-medium text-slate-900">{report.name}</p>
-                            <p className="text-xs text-slate-500">{report.username}</p>
+                            <p className="font-medium text-foreground">{report.name}</p>
+                            <p className="text-xs text-muted-foreground">{report.username}</p>
                           </div>
                         </TableCell>
                         <TableCell>
-                          <span className="font-medium text-slate-700">{report.moduleName}</span>
+                          <span className="font-medium text-foreground">{report.moduleName}</span>
                         </TableCell>
                         <TableCell>
                           <Badge variant={
@@ -939,14 +939,14 @@ const Explications = () => {
                             <div className="text-sm">
                               <span className="font-medium">{report.examName}</span>
                               {report.examYear && report.examYear !== "—" && (
-                                <span className="text-slate-500 ml-1">({report.examYear})</span>
+                                <span className="text-muted-foreground ml-1">({report.examYear})</span>
                               )}
                             </div>
                           )}
                           {report.moduleCategory === "Exam par courses" && (
                             <div className="text-sm">
                               {report.courseCategory && report.courseCategory !== "—" && (
-                                <span className="text-slate-500">{report.courseCategory} → </span>
+                                <span className="text-muted-foreground">{report.courseCategory} → </span>
                               )}
                               <span className="font-medium">{report.courseName || report.examName}</span>
                             </div>
@@ -981,10 +981,10 @@ const Explications = () => {
                         <TableCell className="max-w-xs">
                           {report.text ? (
                             <div className="space-y-1">
-                              <p className="text-xs font-medium text-slate-700 truncate max-w-[200px]" title={report.explicationTitle}>
+                              <p className="text-xs font-medium text-foreground truncate max-w-[200px]" title={report.explicationTitle}>
                                 {report.explicationTitle !== "—" ? report.explicationTitle : "Explication"}
                               </p>
-                              <p className="text-xs text-slate-500 truncate max-w-[200px]" title={report.text}>
+                              <p className="text-xs text-muted-foreground truncate max-w-[200px]" title={report.text}>
                                 {report.text.length > 50 ? report.text.substring(0, 50) + "..." : report.text}
                               </p>
                             </div>
@@ -1025,7 +1025,7 @@ const Explications = () => {
                              report.status === 'rejected' ? 'Rejeté' : report.status}
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-sm text-slate-600">{report.date}</TableCell>
+                        <TableCell className="text-sm text-muted-foreground">{report.date}</TableCell>
                         <TableCell className="text-right">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -1076,8 +1076,8 @@ const Explications = () => {
 
               {/* Pagination */}
               {totalPages > 1 && (
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-6 py-4 border-t border-slate-200">
-                  <p className="text-sm text-slate-600">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-6 py-4 border-t border-border">
+                  <p className="text-sm text-muted-foreground">
                     Showing <span className="font-semibold">{startIndex + 1}</span> to{" "}
                     <span className="font-semibold">{Math.min(endIndex, filteredExplanations.length)}</span> of{" "}
                     <span className="font-semibold">{filteredExplanations.length}</span> results
@@ -1109,7 +1109,7 @@ const Explications = () => {
           <div className="mt-4">
             <Card className="bg-blue-50 border-blue-200">
               <CardContent className="p-6">
-                <p className="text-base leading-relaxed text-slate-800 whitespace-pre-wrap break-words">
+                <p className="text-base leading-relaxed text-foreground whitespace-pre-wrap break-words">
                   {questionPopup.text || '—'}
                 </p>
               </CardContent>
@@ -1139,19 +1139,19 @@ const Explications = () => {
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm text-gray-500">Utilisateur</p>
+                  <p className="text-sm text-muted-foreground">Utilisateur</p>
                   <p className="font-medium">{selectedExplanation.name}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Email</p>
+                  <p className="text-sm text-muted-foreground">Email</p>
                   <p className="font-medium">{selectedExplanation.username}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Module</p>
+                  <p className="text-sm text-muted-foreground">Module</p>
                   <p className="font-medium">{selectedExplanation.moduleName}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">N° Question</p>
+                  <p className="text-sm text-muted-foreground">N° Question</p>
                   <p className="font-medium">
                     {selectedExplanation.questionNumber ? (
                       <Badge className="bg-indigo-100 text-indigo-700 font-bold">
@@ -1161,11 +1161,11 @@ const Explications = () => {
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Date</p>
+                  <p className="text-sm text-muted-foreground">Date</p>
                   <p className="font-medium">{selectedExplanation.date}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Statut</p>
+                  <p className="text-sm text-muted-foreground">Statut</p>
                   <Badge className={cn(
                     selectedExplanation.status === 'approved' ? 'bg-green-100 text-green-700' : 
                     selectedExplanation.status === 'rejected' ? 'bg-red-100 text-red-700' : 
@@ -1178,7 +1178,7 @@ const Explications = () => {
                 </div>
               </div>
               <div>
-                <p className="text-sm text-gray-500">Question</p>
+                <p className="text-sm text-muted-foreground">Question</p>
                 <Card className="mt-1 bg-blue-50 border-blue-200">
                   <CardContent className="p-3">
                     <p className="text-sm whitespace-pre-wrap">{selectedExplanation.question}</p>
@@ -1186,12 +1186,12 @@ const Explications = () => {
                 </Card>
               </div>
               <div>
-                <p className="text-sm text-gray-500">Titre</p>
+                <p className="text-sm text-muted-foreground">Titre</p>
                 <p className="font-medium mt-1">{selectedExplanation.explicationTitle}</p>
               </div>
               {selectedExplanation.text ? (
                 <div>
-                  <p className="text-sm text-gray-500">Contenu de l'explication</p>
+                  <p className="text-sm text-muted-foreground">Contenu de l'explication</p>
                   <Card className="mt-1 bg-green-50 border-green-200">
                     <CardContent className="p-3">
                       <p className="text-sm whitespace-pre-wrap">{selectedExplanation.text}</p>
@@ -1200,14 +1200,14 @@ const Explications = () => {
                 </div>
               ) : (
                 <div>
-                  <p className="text-sm text-gray-500">Contenu</p>
+                  <p className="text-sm text-muted-foreground">Contenu</p>
                   <p className="text-sm text-slate-400 mt-1 italic">Aucun texte fourni</p>
                 </div>
               )}
               {/* Display Images */}
               {selectedExplanation.images?.length > 0 && (
                 <div>
-                  <p className="text-sm text-gray-500 mb-2">Images ({selectedExplanation.images.length})</p>
+                  <p className="text-sm text-muted-foreground mb-2">Images ({selectedExplanation.images.length})</p>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                     {selectedExplanation.images.map((imgUrl, idx) => {
                       const fullImgUrl = imgUrl.startsWith('http') ? imgUrl : `${import.meta.env.VITE_API_URL?.replace('/api/v1', '') || ''}${imgUrl}`;
@@ -1217,7 +1217,7 @@ const Explications = () => {
                         href={fullImgUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="block aspect-video overflow-hidden rounded-lg border border-gray-200 hover:border-blue-400 transition-colors"
+                        className="block aspect-video overflow-hidden rounded-lg border border-border hover:border-blue-400 transition-colors"
                       >
                         <img
                           src={fullImgUrl}
@@ -1225,7 +1225,7 @@ const Explications = () => {
                           className="w-full h-full object-cover"
                           onError={(e) => {
                             e.target.style.display = 'none';
-                            e.target.parentElement.innerHTML = '<div class="flex items-center justify-center h-full bg-gray-100 text-gray-400 text-xs">Image non disponible</div>';
+                            e.target.parentElement.innerHTML = '<div class="flex items-center justify-center h-full bg-muted text-gray-400 text-xs">Image non disponible</div>';
                           }}
                         />
                       </a>
@@ -1237,7 +1237,7 @@ const Explications = () => {
               {/* Display PDF */}
               {selectedExplanation.pdfUrl && (
                 <div>
-                  <p className="text-sm text-gray-500 mb-2">Document PDF</p>
+                  <p className="text-sm text-muted-foreground mb-2">Document PDF</p>
                   <a
                     href={selectedExplanation.pdfUrl.startsWith('http') ? selectedExplanation.pdfUrl : `${import.meta.env.VITE_API_URL?.replace('/api/v1', '') || ''}${selectedExplanation.pdfUrl}`}
                     target="_blank"
@@ -1345,7 +1345,7 @@ const Explications = () => {
                 value={formData.questionNumbers}
                 onChange={(e) => setFormData(prev => ({ ...prev, questionNumbers: e.target.value }))}
               />
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-muted-foreground">
                 Utilisez des virgules et des tirets pour spécifier plusieurs questions (ex: 1-5, 7, 10)
               </p>
             </div>
@@ -1431,7 +1431,7 @@ const Explications = () => {
                   {pdfFile ? "Changer le PDF" : "Ajouter un PDF"}
                 </Button>
                 {pdfFile && (
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <span>{pdfFile.name}</span>
                     <button
                       type="button"

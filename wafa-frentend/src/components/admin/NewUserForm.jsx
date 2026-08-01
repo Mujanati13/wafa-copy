@@ -198,20 +198,20 @@ const NewUserForm = ({ setShowNewUserForm, onUserCreated }) => {
       
       {/* Modal Container */}
       <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 pointer-events-none">
-        <div className="pointer-events-auto w-full max-w-2xl max-h-[90vh] bg-white rounded-lg shadow-xl border border-gray-200 overflow-hidden flex flex-col">
+        <div className="pointer-events-auto w-full max-w-2xl max-h-[90vh] bg-card text-card-foreground rounded-lg shadow-xl border border-border overflow-hidden flex flex-col">
           {/* Header */}
-          <div className="sticky top-0 bg-white border-b border-gray-200 p-4 sm:p-6 flex items-center justify-between">
+          <div className="sticky top-0 bg-card border-b border-border p-4 sm:p-6 flex items-center justify-between">
             <div>
-              <h1 className="text-lg sm:text-xl font-semibold text-gray-900">
+              <h1 className="text-lg sm:text-xl font-semibold text-foreground">
                 Ajouter un nouvel utilisateur
               </h1>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-muted-foreground">
                 Créez un compte utilisateur avec Firebase
               </p>
             </div>
             <button
               onClick={handleClose}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
+              className="text-muted-foreground hover:text-foreground transition-colors"
             >
               <X className="w-5 h-5" />
             </button>
@@ -369,13 +369,13 @@ const NewUserForm = ({ setShowNewUserForm, onUserCreated }) => {
                     name="currentYear"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-sm font-medium text-gray-700">
+                        <FormLabel className="text-sm font-medium text-foreground">
                           Année d'étude
                         </FormLabel>
                         <FormControl>
                           <select
                             {...field}
-                            className="w-full p-2 border border-gray-300 rounded-md bg-white focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
+                            className="w-full p-2 border border-border rounded-md bg-background text-foreground focus:border-blue-400"
                           >
                             <option value="">Sélectionner l'année...</option>
                             {studentYears.map((year) => (
@@ -393,33 +393,33 @@ const NewUserForm = ({ setShowNewUserForm, onUserCreated }) => {
                   {/* Semesters */}
                   <div>
                     <div className="flex items-center justify-between mb-2">
-                      <Label className="text-sm font-medium text-gray-700">Semestres</Label>
+                      <Label className="text-sm font-medium text-foreground">Semestres</Label>
                       <div className="flex gap-2">
                         <button
                           type="button"
                           onClick={selectAllSemesters}
-                          className="text-xs text-blue-600 hover:underline"
+                          className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
                         >
                           Tout sélectionner
                         </button>
-                        <span className="text-gray-300">|</span>
+                        <span className="text-muted-foreground">|</span>
                         <button
                           type="button"
                           onClick={clearAllSemesters}
-                          className="text-xs text-gray-500 hover:underline"
+                          className="text-xs text-muted-foreground hover:underline"
                         >
                           Effacer
                         </button>
                       </div>
                     </div>
-                    <div className="grid grid-cols-5 gap-2 p-3 border border-gray-200 rounded-md bg-gray-50">
+                    <div className="grid grid-cols-5 gap-2 p-3 border border-border rounded-md bg-muted">
                       {semesterOptions.map((sem) => (
                         <label 
                           key={sem.value} 
                           className={`flex items-center justify-center gap-1.5 p-2 rounded cursor-pointer transition-colors ${
                             selectedSemesters.includes(sem.value) 
-                              ? 'bg-blue-100 border-blue-300 border text-blue-700' 
-                              : 'bg-white border border-gray-200 hover:bg-gray-100'
+                              ? 'bg-blue-100 dark:bg-blue-900/40 border-blue-300 dark:border-blue-700 border text-blue-700 dark:text-blue-300' 
+                              : 'bg-card border border-border hover:bg-accent'
                           }`}
                         >
                           <input
@@ -428,21 +428,16 @@ const NewUserForm = ({ setShowNewUserForm, onUserCreated }) => {
                             onChange={() => toggleSemester(sem.value)}
                             className="sr-only"
                           />
-                          <span className="text-sm font-medium">{sem.label}</span>
+                          <span className="text-xs font-medium">{sem.label}</span>
                         </label>
                       ))}
                     </div>
-                    {selectedSemesters.length > 0 && (
-                      <p className="text-xs text-gray-500 mt-1">
-                        {selectedSemesters.length} semestre(s) sélectionné(s): {selectedSemesters.join(", ")}
-                      </p>
-                    )}
                   </div>
                 </div>
 
                 {/* Section: Abonnement */}
-                <div className="space-y-4 pt-4 border-t">
-                  <div className="flex items-center gap-2 text-gray-700">
+                <div className="space-y-4 pt-4 border-t border-border">
+                  <div className="flex items-center gap-2 text-foreground">
                     <CreditCard className="w-4 h-4" />
                     <h3 className="font-medium">Abonnement</h3>
                   </div>
@@ -453,7 +448,7 @@ const NewUserForm = ({ setShowNewUserForm, onUserCreated }) => {
                     name="plan"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-sm font-medium text-gray-700">
+                        <FormLabel className="text-sm font-medium text-foreground">
                           Plan d'abonnement
                         </FormLabel>
                         <FormControl>
@@ -463,8 +458,8 @@ const NewUserForm = ({ setShowNewUserForm, onUserCreated }) => {
                                 key={plan.value}
                                 className={`relative flex flex-col p-3 rounded-lg border-2 cursor-pointer transition-all ${
                                   field.value === plan.value
-                                    ? 'border-blue-500 bg-blue-50'
-                                    : 'border-gray-200 hover:border-gray-300'
+                                    ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/10'
+                                    : 'border-border hover:bg-accent'
                                 }`}
                               >
                                 <input
@@ -474,8 +469,8 @@ const NewUserForm = ({ setShowNewUserForm, onUserCreated }) => {
                                   checked={field.value === plan.value}
                                   className="sr-only"
                                 />
-                                <span className="font-medium text-sm">{plan.label}</span>
-                                <span className="text-xs text-gray-500">{plan.description}</span>
+                                <span className="font-medium text-sm text-foreground">{plan.label}</span>
+                                <span className="text-xs text-muted-foreground">{plan.description}</span>
                                 {field.value === plan.value && (
                                   <div className="absolute top-2 right-2 w-2 h-2 bg-blue-500 rounded-full" />
                                 )}
@@ -490,18 +485,18 @@ const NewUserForm = ({ setShowNewUserForm, onUserCreated }) => {
 
                   {/* Payment Status - Only for non-free plans */}
                   {watchPlan !== "Free" && (
-                    <div className="space-y-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                    <div className="space-y-4 p-4 bg-muted rounded-lg border border-border">
                       <div className="flex items-center gap-3">
                         <input
                           type="checkbox"
                           id="isPaid"
                           checked={isPaid}
                           onChange={(e) => setIsPaid(e.target.checked)}
-                          className="rounded border-gray-300"
+                          className="rounded border-border"
                         />
                         <Label htmlFor="isPaid" className="cursor-pointer">
-                          <span className="font-medium">Marquer comme payé</span>
-                          <p className="text-xs text-gray-500">L'abonnement sera activé immédiatement</p>
+                          <span className="font-medium text-foreground">Marquer comme payé</span>
+                          <p className="text-xs text-muted-foreground">L'abonnement sera activé immédiatement</p>
                         </Label>
                       </div>
 
@@ -511,13 +506,13 @@ const NewUserForm = ({ setShowNewUserForm, onUserCreated }) => {
                           name="paymentMode"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel className="text-sm font-medium text-gray-700">
+                              <FormLabel className="text-sm font-medium text-foreground">
                                 Mode de paiement
                               </FormLabel>
                               <FormControl>
                                 <select
                                   {...field}
-                                  className="w-full p-2 border border-gray-300 rounded-md bg-white focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
+                                  className="w-full p-2 border border-border rounded-md bg-background text-foreground focus:border-blue-400"
                                 >
                                   <option value="">Sélectionner...</option>
                                   {paymentModeOptions.map((mode) => (
@@ -537,11 +532,11 @@ const NewUserForm = ({ setShowNewUserForm, onUserCreated }) => {
                 </div>
 
                 {/* Submit Button */}
-                <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+                <div className="flex justify-end space-x-3 pt-4 border-t border-border">
                   <Button
                     type="button"
                     variant="outline"
-                    className="text-gray-700 hover:text-gray-900"
+                    className="text-foreground hover:bg-accent"
                     onClick={handleClose}
                   >
                     Annuler

@@ -233,13 +233,13 @@ const ImportExamParYears = () => {
     : [];
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-card">
       <div className="max-w-7xl mx-auto px-6 py-8 space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">Importer Examens par Années</h2>
-            <p className="text-gray-600">Importez les questions depuis un fichier Excel</p>
+            <h2 className="text-2xl font-bold text-foreground">Importer Examens par Années</h2>
+            <p className="text-muted-foreground">Importez les questions depuis un fichier Excel</p>
           </div>
           <Calendar className="w-10 h-10 text-blue-600" />
         </div>
@@ -277,7 +277,7 @@ const ImportExamParYears = () => {
                   transition={{ duration: 0.3, delay: 0.1 }}
                   className="space-y-2"
                 >
-                  <Label className="font-semibold text-gray-700">Semestre</Label>
+                  <Label className="font-semibold text-foreground">Semestre</Label>
                   <Select
                     value={selectedSemester}
                     onValueChange={(value) => {
@@ -305,7 +305,7 @@ const ImportExamParYears = () => {
                   transition={{ duration: 0.3, delay: 0.15 }}
                   className="space-y-2"
                 >
-                  <Label className="font-semibold text-gray-700">Module</Label>
+                  <Label className="font-semibold text-foreground">Module</Label>
                   <Select
                     value={selectedModule}
                     onValueChange={(value) => {
@@ -333,7 +333,7 @@ const ImportExamParYears = () => {
                   transition={{ duration: 0.3, delay: 0.2 }}
                   className="space-y-2"
                 >
-                  <Label className="font-semibold text-gray-700">Examen par Année</Label>
+                  <Label className="font-semibold text-foreground">Examen par Année</Label>
                   <Select
                     value={selectedExam}
                     onValueChange={setSelectedExam}
@@ -358,7 +358,7 @@ const ImportExamParYears = () => {
                   transition={{ duration: 0.3, delay: 0.25 }}
                   className="space-y-2"
                 >
-                  <Label className="font-semibold text-gray-700">Fichier Excel</Label>
+                  <Label className="font-semibold text-foreground">Fichier Excel</Label>
                   <div className="relative">
                     <Input
                       type="file"
@@ -383,7 +383,7 @@ const ImportExamParYears = () => {
                 transition={{ duration: 0.3, delay: 0.3 }}
                 className="mt-4 space-y-2"
               >
-                <Label className="font-semibold text-gray-700">
+                <Label className="font-semibold text-foreground">
                   Nom de la session (optionnel)
                 </Label>
                 <Input
@@ -394,13 +394,13 @@ const ImportExamParYears = () => {
                   className="border-indigo-200"
                   disabled={!selectedExam}
                 />
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-muted-foreground">
                   Si spécifié, toutes les questions importées seront groupées sous ce nom de session. 
                   Sinon, elles seront groupées sous le nom de l'examen par défaut.
                 </p>
               </motion.div>
             </CardContent>
-            <CardFooter className="bg-gray-50 border-t flex justify-end">
+            <CardFooter className="bg-background border-t flex justify-end">
               <Button
                 className="bg-indigo-600 hover:bg-indigo-700 gap-2"
                 disabled={!canImportExcel || importingExcel}
@@ -439,7 +439,7 @@ const ImportExamParYears = () => {
                 <div className="space-y-4">
                   <div className="flex items-center gap-2 p-3 bg-purple-50 rounded-lg">
                     <Plus className="w-5 h-5 text-purple-600" />
-                    <h3 className="font-semibold text-gray-900">Ajouter des Images</h3>
+                    <h3 className="font-semibold text-foreground">Ajouter des Images</h3>
                   </div>
 
                   <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
@@ -449,7 +449,7 @@ const ImportExamParYears = () => {
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.2, delay: idx * 0.05 }}
-                        className="p-3 bg-slate-50 rounded-lg border border-slate-200"
+                        className="p-3 bg-background rounded-lg border border-border"
                       >
                         <div className="grid grid-cols-1 sm:grid-cols-5 gap-2 items-end">
                           <div className="sm:col-span-2 space-y-1">
@@ -497,13 +497,13 @@ const ImportExamParYears = () => {
                         </div>
                         {/* Image Preview */}
                         {row.file && (
-                          <div className="mt-2 flex items-center gap-2 p-2 bg-white rounded border">
+                          <div className="mt-2 flex items-center gap-2 p-2 bg-card rounded border">
                             <img
                               src={URL.createObjectURL(row.file)}
                               alt="Preview"
                               className="w-12 h-12 object-cover rounded"
                             />
-                            <div className="text-xs text-gray-600">
+                            <div className="text-xs text-muted-foreground">
                               <p className="font-medium truncate max-w-32">{row.file.name}</p>
                               <p>{(row.file.size / 1024).toFixed(1)} KB</p>
                             </div>
@@ -541,7 +541,7 @@ const ImportExamParYears = () => {
                 <div className="space-y-4">
                   <div className="flex items-center gap-2 p-3 bg-pink-50 rounded-lg">
                     <Plus className="w-5 h-5 text-pink-600" />
-                    <h3 className="font-semibold text-gray-900">Intégrer dans Sous-modules</h3>
+                    <h3 className="font-semibold text-foreground">Intégrer dans Sous-modules</h3>
                   </div>
 
                   <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
@@ -551,7 +551,7 @@ const ImportExamParYears = () => {
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.2, delay: idx * 0.05 }}
-                        className="grid grid-cols-1 sm:grid-cols-5 gap-2 items-end p-3 bg-slate-50 rounded-lg border border-slate-200"
+                        className="grid grid-cols-1 sm:grid-cols-5 gap-2 items-end p-3 bg-background rounded-lg border border-border"
                       >
                         <div className="sm:col-span-2 space-y-1">
                           <Label className="text-xs font-semibold">Nom du Sous-module</Label>

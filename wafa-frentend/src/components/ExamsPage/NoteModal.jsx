@@ -109,7 +109,7 @@ const NoteModal = ({ isOpen, onClose, questionId, moduleId, examData }) => {
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
-            className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-6"
+            className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-2xl w-full p-6"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-6">

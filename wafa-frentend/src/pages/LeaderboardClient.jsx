@@ -40,8 +40,8 @@ function getPodiumStyles(rank) {
   }
   if (rank === 2) {
     return {
-      wrapper: "bg-gradient-to-b from-slate-50 to-slate-100 border-slate-200",
-      accent: "text-slate-600",
+      wrapper: "bg-gradient-to-b from-slate-50 to-slate-100 border-border",
+      accent: "text-muted-foreground",
       ring: "ring-slate-300",
       icon: <Medal className="h-5 w-5" />,
     };
@@ -210,7 +210,7 @@ const LeaderboardClient = () => {
               <CardHeader className="flex-row items-center justify-between">
                 <CardTitle className="flex items-center gap-2 text-lg">
                   <span
-                    className={`inline-flex h-8 w-8 items-center justify-center rounded-md border ${styles.ring} bg-white font-semibold`}
+                    className={`inline-flex h-8 w-8 items-center justify-center rounded-md border ${styles.ring} bg-background font-semibold`}
                   >
                     #{rank}
                   </span>
@@ -241,7 +241,7 @@ const LeaderboardClient = () => {
                       } 
                       alt={user.name} 
                     />
-                    <AvatarFallback delayMs={0} className="text-lg font-semibold bg-white">
+                    <AvatarFallback delayMs={0} className="text-lg font-semibold bg-background">
                       {getInitials(user.name)}
                     </AvatarFallback>
                   </Avatar>
@@ -275,40 +275,40 @@ const LeaderboardClient = () => {
       </div>
 
       {/* All Users List */}
-      <div className="bg-white rounded-lg shadow-sm p-6">
-        <h2 className="text-xl font-bold text-gray-900 mb-4">Classement Complet</h2>
+      <div className="bg-background rounded-lg shadow-sm p-6">
+        <h2 className="text-xl font-bold text-foreground mb-4">Classement Complet</h2>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[1000px]">
             <thead>
-              <tr className="border-b border-gray-200">
-                <th className="text-left py-3 px-4 font-medium text-gray-700 w-16">
+              <tr className="border-b border-border">
+                <th className="text-left py-3 px-4 font-medium text-muted-foreground w-16">
                   Rang
                 </th>
-                <th className="text-left py-3 px-4 font-medium text-gray-700 min-w-[300px]">
+                <th className="text-left py-3 px-4 font-medium text-muted-foreground min-w-[300px]">
                   Étudiant
                 </th>
-                <th className="text-center py-3 px-4 font-medium text-gray-700">
+                <th className="text-center py-3 px-4 font-medium text-muted-foreground">
                   Points
                 </th>
-                <th className="text-center py-3 px-4 font-medium text-gray-700">
+                <th className="text-center py-3 px-4 font-medium text-muted-foreground">
                   <div className="flex items-center justify-center gap-1">
                     <div className="w-3 h-3 rounded-full bg-blue-500"></div>
                     Bleus
                   </div>
                 </th>
-                <th className="text-center py-3 px-4 font-medium text-gray-700">
+                <th className="text-center py-3 px-4 font-medium text-muted-foreground">
                   <div className="flex items-center justify-center gap-1">
                     <div className="w-3 h-3 rounded-full bg-green-500"></div>
                     Verts
                   </div>
                 </th>
-                <th className="text-center py-3 px-4 font-medium text-gray-700">
+                <th className="text-center py-3 px-4 font-medium text-muted-foreground">
                   Niveau
                 </th>
-                <th className="text-center py-3 px-4 font-medium text-gray-700">
+                <th className="text-center py-3 px-4 font-medium text-muted-foreground">
                   %
                 </th>
-                <th className="text-left py-3 px-4 font-medium text-gray-700 min-w-[150px]">
+                <th className="text-left py-3 px-4 font-medium text-muted-foreground min-w-[150px]">
                   Progression
                 </th>
               </tr>
@@ -325,9 +325,9 @@ const LeaderboardClient = () => {
                 return (
                   <tr
                     key={userData._id || userData.odUserId || idx}
-                    className={`border-b border-gray-100 hover:bg-gray-50 transition-colors align-middle ${
+                    className={`border-b border-gray-100 hover:bg-card transition-colors align-middle ${
                       isCurrentUser ? "bg-blue-50" : ""
-                    } ${rank === 1 ? "bg-yellow-50" : rank === 2 ? "bg-slate-50" : rank === 3 ? "bg-orange-50" : ""}`}
+                    } ${rank === 1 ? "bg-yellow-50" : rank === 2 ? "bg-card" : rank === 3 ? "bg-orange-50" : ""}`}
                   >
                     <td className="py-4 px-4">
                       <div className="flex items-center gap-2">
@@ -338,7 +338,7 @@ const LeaderboardClient = () => {
                             <Trophy className="w-4 h-4 text-white" />
                           </div>
                         ) : (
-                          <span className="w-8 h-8 flex items-center justify-center font-bold text-gray-600">
+                          <span className="w-8 h-8 flex items-center justify-center font-bold text-muted-foreground">
                             {rank}
                           </span>
                         )}
@@ -361,7 +361,7 @@ const LeaderboardClient = () => {
                           </AvatarFallback>
                         </Avatar>
                         <div className="flex flex-col min-w-0">
-                          <span className={`font-semibold truncate ${isCurrentUser ? "text-blue-700" : "text-gray-900"}`} title={userData.name}>
+                          <span className={`font-semibold truncate ${isCurrentUser ? "text-blue-700" : "text-foreground"}`} title={userData.name}>
                             {userData.name}
                             {isCurrentUser && <span className="ml-1 text-xs font-normal text-blue-600">(vous)</span>}
                           </span>
@@ -420,7 +420,7 @@ const LeaderboardClient = () => {
                           <div className="w-full border-t-2 border-dashed border-gray-300"></div>
                         </div>
                         <div className="relative flex justify-center">
-                          <span className="bg-white px-3 text-sm font-medium text-gray-500">
+                          <span className="bg-background px-3 text-sm font-medium text-gray-500">
                             Votre Position
                           </span>
                         </div>

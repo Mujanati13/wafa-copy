@@ -52,6 +52,7 @@ import {
 } from "@/components/ui/accordion";
 import { toast } from "sonner";
 import Header from "./landingPage/Header";
+import ThemeToggle from "@/components/ui/ThemeToggle";
 import { subscriptionPlanService } from "@/services/subscriptionPlanService";
 import axios from "axios";
 
@@ -121,21 +122,21 @@ const CountdownTimer = ({ settings }) => {
             <span className="font-semibold text-sm sm:text-base md:text-lg text-center">{settings.timerTitle || "Offre se termine dans"}</span>
           </div>
           <div className="flex gap-2 sm:gap-3 md:gap-4">
-            <div className="flex flex-col items-center bg-white/90 backdrop-blur-sm rounded-lg px-2 sm:px-3 md:px-4 py-2 sm:py-3 min-w-[50px] sm:min-w-[60px] md:min-w-[70px]">
-              <span className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-gray-900">{String(timeLeft.days).padStart(2, '0')}</span>
-              <span className="text-[10px] sm:text-xs uppercase text-gray-600 font-medium">Jours</span>
+            <div className="flex flex-col items-center bg-card text-card-foreground backdrop-blur-sm rounded-lg px-2 sm:px-3 md:px-4 py-2 sm:py-3 min-w-[50px] sm:min-w-[60px] md:min-w-[70px] border border-border">
+              <span className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-foreground">{String(timeLeft.days).padStart(2, '0')}</span>
+              <span className="text-[10px] sm:text-xs uppercase text-muted-foreground font-medium">Jours</span>
             </div>
-            <div className="flex flex-col items-center bg-white/90 backdrop-blur-sm rounded-lg px-2 sm:px-3 md:px-4 py-2 sm:py-3 min-w-[50px] sm:min-w-[60px] md:min-w-[70px]">
-              <span className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-gray-900">{String(timeLeft.hours).padStart(2, '0')}</span>
-              <span className="text-[10px] sm:text-xs uppercase text-gray-600 font-medium">Heures</span>
+            <div className="flex flex-col items-center bg-card text-card-foreground backdrop-blur-sm rounded-lg px-2 sm:px-3 md:px-4 py-2 sm:py-3 min-w-[50px] sm:min-w-[60px] md:min-w-[70px] border border-border">
+              <span className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-foreground">{String(timeLeft.hours).padStart(2, '0')}</span>
+              <span className="text-[10px] sm:text-xs uppercase text-muted-foreground font-medium">Heures</span>
             </div>
-            <div className="flex flex-col items-center bg-white/90 backdrop-blur-sm rounded-lg px-2 sm:px-3 md:px-4 py-2 sm:py-3 min-w-[50px] sm:min-w-[60px] md:min-w-[70px]">
-              <span className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-gray-900">{String(timeLeft.minutes).padStart(2, '0')}</span>
-              <span className="text-[10px] sm:text-xs uppercase text-gray-600 font-medium">Min</span>
+            <div className="flex flex-col items-center bg-card text-card-foreground backdrop-blur-sm rounded-lg px-2 sm:px-3 md:px-4 py-2 sm:py-3 min-w-[50px] sm:min-w-[60px] md:min-w-[70px] border border-border">
+              <span className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-foreground">{String(timeLeft.minutes).padStart(2, '0')}</span>
+              <span className="text-[10px] sm:text-xs uppercase text-muted-foreground font-medium">Min</span>
             </div>
-            <div className="flex flex-col items-center bg-white/90 backdrop-blur-sm rounded-lg px-2 sm:px-3 md:px-4 py-2 sm:py-3 min-w-[50px] sm:min-w-[60px] md:min-w-[70px]">
-              <span className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-gray-900">{String(timeLeft.seconds).padStart(2, '0')}</span>
-              <span className="text-[10px] sm:text-xs uppercase text-gray-600 font-medium">Sec</span>
+            <div className="flex flex-col items-center bg-card text-card-foreground backdrop-blur-sm rounded-lg px-2 sm:px-3 md:px-4 py-2 sm:py-3 min-w-[50px] sm:min-w-[60px] md:min-w-[70px] border border-border">
+              <span className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-foreground">{String(timeLeft.seconds).padStart(2, '0')}</span>
+              <span className="text-[10px] sm:text-xs uppercase text-muted-foreground font-medium">Sec</span>
             </div>
           </div>
         </div>
@@ -166,14 +167,17 @@ const LandingPage = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50">
+      <div className="relative flex items-center justify-center min-h-screen bg-background">
+        <div className="absolute top-4 right-4 z-50">
+          <ThemeToggle />
+        </div>
         <Loader className="h-8 w-8 animate-spin text-blue-600" />
       </div>
     );
   }
 
   return (
-    <div className="bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50 min-h-screen" role="main">
+    <div className="bg-background min-h-screen" role="main">
       <Header settings={landingSettings} />
       <HeroSection settings={landingSettings} />
       <FeaturesSection />
@@ -257,7 +261,7 @@ const HeroSection = ({ settings }) => {
   };
 
   return (
-    <section id="accueil" className="relative h-screen flex items-center overflow-hidden bg-gradient-to-br from-blue-50/50 via-white to-purple-50/30" aria-label={t("hero_badge")}>
+    <section id="accueil" className="relative h-screen flex items-center overflow-hidden bg-background" aria-label={t("hero_badge")}>
       {/* Background decorations */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute top-0 left-0 w-72 h-72 md:w-96 md:h-96 bg-blue-400/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2"></div>
@@ -278,7 +282,7 @@ const HeroSection = ({ settings }) => {
               {settings?.heroSubtitle || t("hero_badge")}
             </Badge>
 
-            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold leading-tight text-slate-900 tracking-tight">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold leading-tight text-foreground tracking-tight">
               {settings?.heroTitle || (
                 <>
                   {t("hero_title_part1")}{" "}
@@ -291,7 +295,7 @@ const HeroSection = ({ settings }) => {
               )}
             </h1>
 
-            <p className="text-sm md:text-base lg:text-lg text-slate-600 max-w-xl leading-relaxed">
+            <p className="text-sm md:text-base lg:text-lg text-muted-foreground max-w-xl leading-relaxed">
               {settings?.heroDescription || t("hero_description")}
             </p>
 
@@ -301,7 +305,7 @@ const HeroSection = ({ settings }) => {
                   <Button
                     size="lg"
                     onClick={handleGetStarted}
-                    className="gap-2 text-sm xs:text-base md:text-lg px-4 xs:px-6 md:px-8 py-4 xs:py-5 md:py-6 bg-blue-600 hover:bg-blue-700 w-full xs:w-auto"
+                    className="gap-2 text-sm xs:text-base md:text-lg px-4 xs:px-6 md:px-8 py-4 xs:py-5 md:py-6 bg-blue-600 hover:bg-blue-700 w-full xs:w-auto text-white"
                   >
                     <ArrowRight className="h-4 w-4 md:h-5 md:w-5" />
                     Dashboard
@@ -320,7 +324,7 @@ const HeroSection = ({ settings }) => {
                   <Button
                     size="lg"
                     onClick={handleGetStarted}
-                    className="gap-2 text-sm xs:text-base md:text-lg px-4 xs:px-6 md:px-8 py-4 xs:py-5 md:py-6 bg-blue-600 hover:bg-blue-700 w-full xs:w-auto"
+                    className="gap-2 text-sm xs:text-base md:text-lg px-4 xs:px-6 md:px-8 py-4 xs:py-5 md:py-6 bg-blue-600 hover:bg-blue-700 w-full xs:w-auto text-white"
                   >
                     <Sparkles className="h-4 w-4 md:h-5 md:w-5" />
                     Commencer maintenant
@@ -363,15 +367,15 @@ const HeroSection = ({ settings }) => {
               </div>
               {/* Statistics Card with Graph - Only visible when logged in */}
               {isLoggedIn ? (
-                <div className="bg-white rounded-3xl shadow-2xl p-5 md:p-6 transform hover:scale-105 transition-transform duration-300">
+                <div className="bg-card text-card-foreground border border-border rounded-3xl shadow-2xl p-5 md:p-6 transform hover:scale-105 transition-transform duration-300">
                   {/* Header */}
                   <div className="flex items-center justify-between mb-4">
                     <div>
-                      <h3 className="text-base md:text-lg font-bold text-gray-900">Performance des Étudiants</h3>
-                      <p className="text-xs text-gray-500 mt-1">Progression mensuelle</p>
+                      <h3 className="text-base md:text-lg font-bold text-foreground">Performance des Étudiants</h3>
+                      <p className="text-xs text-muted-foreground mt-1">Progression mensuelle</p>
                     </div>
-                    <div className="bg-green-100 p-2 rounded-lg">
-                      <TrendingUp className="w-4 h-4 md:w-5 md:h-5 text-green-600" />
+                    <div className="bg-green-100 dark:bg-green-950/40 p-2 rounded-lg">
+                      <TrendingUp className="w-4 h-4 md:w-5 md:h-5 text-green-600 dark:text-green-400" />
                     </div>
                   </div>
 
@@ -391,22 +395,22 @@ const HeroSection = ({ settings }) => {
                           transition={{ duration: 0.8, ease: "easeInOut" }}
                           style={{ minHeight: '8px' }}
                         />
-                        <span className="text-xs text-gray-600 mt-1.5 font-medium">{bar.month}</span>
+                        <span className="text-xs text-muted-foreground mt-1.5 font-medium">{bar.month}</span>
                       </motion.div>
                     ))}
                   </div>
 
                   {/* Stats Grid */}
-                  <div className="grid grid-cols-3 gap-3 pt-3 md:pt-4 border-t border-gray-100">
+                  <div className="grid grid-cols-3 gap-3 pt-3 md:pt-4 border-t border-border">
                     <motion.div
                       className="text-center"
                       key="avg"
                       animate={{ scale: [1, 1.05, 1] }}
                       transition={{ duration: 0.6, ease: "easeInOut" }}
                     >
-                      <p className="text-xs text-gray-500 mb-0.5">Moyenne</p>
+                      <p className="text-xs text-muted-foreground mb-0.5">Moyenne</p>
                       <motion.p
-                        className="text-base md:text-lg font-bold text-gray-900"
+                        className="text-base md:text-lg font-bold text-foreground"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                       >
@@ -419,9 +423,9 @@ const HeroSection = ({ settings }) => {
                       animate={{ scale: [1, 1.05, 1] }}
                       transition={{ duration: 0.6, ease: "easeInOut" }}
                     >
-                      <p className="text-xs text-gray-500 mb-0.5">Progression</p>
+                      <p className="text-xs text-muted-foreground mb-0.5">Progression</p>
                       <motion.p
-                        className="text-base md:text-lg font-bold text-green-600"
+                        className="text-base md:text-lg font-bold text-green-600 dark:text-green-400"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                       >
@@ -434,9 +438,9 @@ const HeroSection = ({ settings }) => {
                       animate={{ scale: [1, 1.05, 1] }}
                       transition={{ duration: 0.6, ease: "easeInOut" }}
                     >
-                      <p className="text-xs text-gray-500 mb-0.5">Classement</p>
+                      <p className="text-xs text-muted-foreground mb-0.5">Classement</p>
                       <motion.p
-                        className="text-base md:text-lg font-bold text-blue-600"
+                        className="text-base md:text-lg font-bold text-blue-600 dark:text-blue-400"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                       >
@@ -449,25 +453,25 @@ const HeroSection = ({ settings }) => {
                 </div>
               ) : (
                 /* Welcome Card for visitors */
-                <div className="bg-white rounded-3xl shadow-2xl p-5 md:p-6 transform hover:scale-105 transition-transform duration-300">
+                <div className="bg-card text-card-foreground border border-border rounded-3xl shadow-2xl p-5 md:p-6 transform hover:scale-105 transition-transform duration-300">
                   <div className="text-center space-y-4">
                     <div className="w-20 h-20 mx-auto bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center">
                       <GraduationCap className="w-10 h-10 text-white" />
                     </div>
-                    <h3 className="text-xl font-bold text-gray-900">Préparez vos examens</h3>
-                    <p className="text-gray-600 text-sm">
+                    <h3 className="text-xl font-bold text-foreground">Préparez vos examens</h3>
+                    <p className="text-muted-foreground text-sm">
                       Accédez à des milliers de QCM médicaux, suivez votre progression et réussissez vos examens.
                     </p>
                     <div className="flex flex-col gap-2 pt-2">
-                      <div className="flex items-center gap-2 text-sm text-gray-700">
+                      <div className="flex items-center gap-2 text-sm text-foreground">
                         <CheckCircle2 className="w-4 h-4 text-green-500" />
                         <span>QCM par module et semestre</span>
                       </div>
-                      <div className="flex items-center gap-2 text-sm text-gray-700">
+                      <div className="flex items-center gap-2 text-sm text-foreground">
                         <CheckCircle2 className="w-4 h-4 text-green-500" />
                         <span>Statistiques détaillées</span>
                       </div>
-                      <div className="flex items-center gap-2 text-sm text-gray-700">
+                      <div className="flex items-center gap-2 text-sm text-foreground">
                         <CheckCircle2 className="w-4 h-4 text-green-500" />
                         <span>Classement et progression</span>
                       </div>
@@ -668,7 +672,7 @@ const PricingSection = ({ settings }) => {
   }, [settings]);
 
   return (
-    <section id="pricing" className="py-16 md:py-20 lg:py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-white to-slate-50" aria-label={t("pricing_title")}>
+    <section id="pricing" className="py-16 md:py-20 lg:py-24 px-4 sm:px-6 lg:px-8 bg-background" aria-label={t("pricing_title")}>
       <div className="max-w-7xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -704,24 +708,24 @@ const PricingSection = ({ settings }) => {
                 <div className="bg-gradient-to-r from-red-500 to-orange-500 text-white rounded-xl sm:rounded-2xl px-3 sm:px-6 md:px-8 py-3 sm:py-4 md:py-6 shadow-lg w-full max-w-xl">
                   <p className="text-center text-xs sm:text-sm md:text-base font-semibold mb-2 sm:mb-3 text-white">⏰ {settings?.timerTitle || "Offre limitée - Ne manquez pas cette opportunité !"}</p>
                   <div className="flex gap-1.5 xs:gap-2 sm:gap-3 md:gap-4 justify-center items-center">
-                    <div className="text-center bg-white bg-opacity-95 rounded-md sm:rounded-lg px-2 xs:px-2.5 sm:px-3 md:px-4 py-1.5 sm:py-2 flex-1 max-w-[60px] xs:max-w-[70px] sm:max-w-none">
-                      <div className="text-base xs:text-lg sm:text-2xl md:text-3xl font-bold text-black">{String(timeLeft.days).padStart(2, '0')}</div>
-                      <div className="text-[9px] xs:text-[10px] sm:text-xs md:text-sm mt-0.5 sm:mt-1 text-black font-semibold">Jours</div>
+                    <div className="text-center bg-card text-card-foreground border border-border rounded-md sm:rounded-lg px-2 xs:px-2.5 sm:px-3 md:px-4 py-1.5 sm:py-2 flex-1 max-w-[60px] xs:max-w-[70px] sm:max-w-none">
+                      <div className="text-base xs:text-lg sm:text-2xl md:text-3xl font-bold text-foreground">{String(timeLeft.days).padStart(2, '0')}</div>
+                      <div className="text-[9px] xs:text-[10px] sm:text-xs md:text-sm mt-0.5 sm:mt-1 text-muted-foreground font-semibold">Jours</div>
                     </div>
                     <div className="text-base xs:text-lg sm:text-2xl md:text-3xl font-bold text-white">:</div>
-                    <div className="text-center bg-white bg-opacity-95 rounded-md sm:rounded-lg px-2 xs:px-2.5 sm:px-3 md:px-4 py-1.5 sm:py-2 flex-1 max-w-[60px] xs:max-w-[70px] sm:max-w-none">
-                      <div className="text-base xs:text-lg sm:text-2xl md:text-3xl font-bold text-black">{String(timeLeft.hours).padStart(2, '0')}</div>
-                      <div className="text-[9px] xs:text-[10px] sm:text-xs md:text-sm mt-0.5 sm:mt-1 text-black font-semibold">Heures</div>
+                    <div className="text-center bg-card text-card-foreground border border-border rounded-md sm:rounded-lg px-2 xs:px-2.5 sm:px-3 md:px-4 py-1.5 sm:py-2 flex-1 max-w-[60px] xs:max-w-[70px] sm:max-w-none">
+                      <div className="text-base xs:text-lg sm:text-2xl md:text-3xl font-bold text-foreground">{String(timeLeft.hours).padStart(2, '0')}</div>
+                      <div className="text-[9px] xs:text-[10px] sm:text-xs md:text-sm mt-0.5 sm:mt-1 text-muted-foreground font-semibold">Heures</div>
                     </div>
                     <div className="text-base xs:text-lg sm:text-2xl md:text-3xl font-bold text-white">:</div>
-                    <div className="text-center bg-white bg-opacity-95 rounded-md sm:rounded-lg px-2 xs:px-2.5 sm:px-3 md:px-4 py-1.5 sm:py-2 flex-1 max-w-[60px] xs:max-w-[70px] sm:max-w-none">
-                      <div className="text-base xs:text-lg sm:text-2xl md:text-3xl font-bold text-black">{String(timeLeft.minutes).padStart(2, '0')}</div>
-                      <div className="text-[9px] xs:text-[10px] sm:text-xs md:text-sm mt-0.5 sm:mt-1 text-black font-semibold">Min</div>
+                    <div className="text-center bg-card text-card-foreground border border-border rounded-md sm:rounded-lg px-2 xs:px-2.5 sm:px-3 md:px-4 py-1.5 sm:py-2 flex-1 max-w-[60px] xs:max-w-[70px] sm:max-w-none">
+                      <div className="text-base xs:text-lg sm:text-2xl md:text-3xl font-bold text-foreground">{String(timeLeft.minutes).padStart(2, '0')}</div>
+                      <div className="text-[9px] xs:text-[10px] sm:text-xs md:text-sm mt-0.5 sm:mt-1 text-muted-foreground font-semibold">Min</div>
                     </div>
                     <div className="text-base xs:text-lg sm:text-2xl md:text-3xl font-bold text-white">:</div>
-                    <div className="text-center bg-white bg-opacity-95 rounded-md sm:rounded-lg px-2 xs:px-2.5 sm:px-3 md:px-4 py-1.5 sm:py-2 flex-1 max-w-[60px] xs:max-w-[70px] sm:max-w-none">
-                      <div className="text-base xs:text-lg sm:text-2xl md:text-3xl font-bold text-black">{String(timeLeft.seconds).padStart(2, '0')}</div>
-                      <div className="text-[9px] xs:text-[10px] sm:text-xs md:text-sm mt-0.5 sm:mt-1 text-black font-semibold">Sec</div>
+                    <div className="text-center bg-card text-card-foreground border border-border rounded-md sm:rounded-lg px-2 xs:px-2.5 sm:px-3 md:px-4 py-1.5 sm:py-2 flex-1 max-w-[60px] xs:max-w-[70px] sm:max-w-none">
+                      <div className="text-base xs:text-lg sm:text-2xl md:text-3xl font-bold text-foreground">{String(timeLeft.seconds).padStart(2, '0')}</div>
+                      <div className="text-[9px] xs:text-[10px] sm:text-xs md:text-sm mt-0.5 sm:mt-1 text-muted-foreground font-semibold">Sec</div>
                     </div>
                   </div>
                 </div>
@@ -747,13 +751,13 @@ const PricingSection = ({ settings }) => {
                         </Badge>
                       </div>
                     )}
-                    <Card className={`h-full flex flex-col transition-all duration-300 transform hover:shadow-xl rounded-2xl ${isPopular ? 'border-blue-500 border-2 shadow-lg' : 'border-2 border-blue-200'}`}>
+                    <Card className={`h-full flex flex-col transition-all duration-300 transform hover:shadow-xl rounded-2xl ${isPopular ? 'border-blue-500 border-2 shadow-lg' : 'border-2 border-border'}`}>
                       <CardHeader className="text-center pb-4 pt-8">
                         {/* Icon */}
                         <div className="flex justify-center mb-4">
-                          <div className={`h-12 w-12 rounded-xl flex items-center justify-center ${plan.price === 0 ? 'bg-slate-100' : 'bg-gradient-to-br from-blue-500 to-indigo-600'}`}>
+                          <div className={`h-12 w-12 rounded-xl flex items-center justify-center ${plan.price === 0 ? 'bg-muted' : 'bg-gradient-to-br from-blue-500 to-indigo-600'}`}>
                             {plan.price === 0 ? (
-                              <Star className="h-6 w-6 text-slate-400" />
+                              <Star className="h-6 w-6 text-muted-foreground" />
                             ) : (
                               <Zap className="h-6 w-6 text-white" />
                             )}
@@ -762,7 +766,7 @@ const PricingSection = ({ settings }) => {
                         <CardTitle className="text-xl md:text-2xl font-bold">{plan.name}</CardTitle>
                         <div className="pt-3 sm:pt-4">
                           <div className="flex items-baseline justify-center gap-1 flex-wrap">
-                            <span className="text-3xl xs:text-4xl sm:text-5xl md:text-6xl font-bold text-blue-600">{plan.price} dh</span>
+                            <span className="text-3xl xs:text-4xl sm:text-5xl md:text-6xl font-bold text-blue-600 dark:text-blue-400">{plan.price} dh</span>
                             {plan.oldPrice && (
                               <span className="text-base sm:text-lg md:text-xl text-muted-foreground line-through ml-1 sm:ml-2">{plan.oldPrice} dh</span>
                             )}
@@ -777,47 +781,47 @@ const PricingSection = ({ settings }) => {
                             <>
                               <div className="flex items-start gap-3">
                                 <span className="text-green-500 flex-shrink-0 mt-0.5">✔️</span>
-                                <span className="text-sm text-slate-700">1 module</span>
+                                <span className="text-sm text-foreground">1 module</span>
                               </div>
                               <div className="flex items-start gap-3">
                                 <span className="text-green-500 flex-shrink-0 mt-0.5">✔️</span>
-                                <span className="text-sm text-slate-700">Questions triées (question par question, toutes les questions)</span>
+                                <span className="text-sm text-foreground">Questions triées (question par question, toutes les questions)</span>
                               </div>
                               <div className="flex items-start gap-3">
                                 <span className="text-green-500 flex-shrink-0 mt-0.5">✔️</span>
-                                <span className="text-sm text-slate-700">Interface adaptée aux mobiles</span>
+                                <span className="text-sm text-foreground">Interface adaptée aux mobiles</span>
                               </div>
                               <div className="flex items-start gap-3 opacity-50">
                                 <span className="text-red-500 flex-shrink-0 mt-0.5">❌</span>
-                                <span className="text-sm text-slate-400 line-through">Accès aux classements</span>
+                                <span className="text-sm text-muted-foreground line-through">Accès aux classements</span>
                               </div>
                               <div className="flex items-start gap-3 opacity-50">
                                 <span className="text-red-500 flex-shrink-0 mt-0.5">❌</span>
-                                <span className="text-sm text-slate-400 line-through">Accès aux statistiques</span>
+                                <span className="text-sm text-muted-foreground line-through">Accès aux statistiques</span>
                               </div>
                               <div className="flex items-start gap-3 opacity-50">
                                 <span className="text-red-500 flex-shrink-0 mt-0.5">❌</span>
-                                <span className="text-sm text-slate-400 line-through">Explication des étudiants</span>
+                                <span className="text-sm text-muted-foreground line-through">Explication des étudiants</span>
                               </div>
                               <div className="flex items-start gap-3 opacity-50">
                                 <span className="text-red-500 flex-shrink-0 mt-0.5">❌</span>
-                                <span className="text-sm text-slate-400 line-through">Explication de l'IA</span>
+                                <span className="text-sm text-muted-foreground line-through">Explication de l'IA</span>
                               </div>
                               <div className="flex items-start gap-3 opacity-50">
                                 <span className="text-red-500 flex-shrink-0 mt-0.5">❌</span>
-                                <span className="text-sm text-slate-400 line-through">Accès à la communauté votes</span>
+                                <span className="text-sm text-muted-foreground line-through">Accès à la communauté votes</span>
                               </div>
                               <div className="flex items-start gap-3 opacity-50">
                                 <span className="text-red-500 flex-shrink-0 mt-0.5">❌</span>
-                                <span className="text-sm text-slate-400 line-through">Création de playlists</span>
+                                <span className="text-sm text-muted-foreground line-through">Création de playlists</span>
                               </div>
                               <div className="flex items-start gap-3 opacity-50">
                                 <span className="text-red-500 flex-shrink-0 mt-0.5">❌</span>
-                                <span className="text-sm text-slate-400 line-through">Notes personnalisées</span>
+                                <span className="text-sm text-muted-foreground line-through">Notes personnalisées</span>
                               </div>
                               <div className="flex items-start gap-3 opacity-50">
                                 <span className="text-red-500 flex-shrink-0 mt-0.5">❌</span>
-                                <span className="text-sm text-slate-400 line-through">Assistance prioritaire</span>
+                                <span className="text-sm text-muted-foreground line-through">Assistance prioritaire</span>
                               </div>
                             </>
                           )}
@@ -826,47 +830,47 @@ const PricingSection = ({ settings }) => {
                             <>
                               <div className="flex items-start gap-3">
                                 <span className="text-green-500 flex-shrink-0 mt-0.5">✔️</span>
-                                <span className="text-sm text-slate-700">Tous les modules</span>
+                                <span className="text-sm text-foreground">Tous les modules</span>
                               </div>
                               <div className="flex items-start gap-3">
                                 <span className="text-green-500 flex-shrink-0 mt-0.5">✔️</span>
-                                <span className="text-sm text-slate-700">Questions triées (question par question, toutes les questions)</span>
+                                <span className="text-sm text-foreground">Questions triées (question par question, toutes les questions)</span>
                               </div>
                               <div className="flex items-start gap-3">
                                 <span className="text-green-500 flex-shrink-0 mt-0.5">✔️</span>
-                                <span className="text-sm text-slate-700">Interface adaptée aux mobiles</span>
+                                <span className="text-sm text-foreground">Interface adaptée aux mobiles</span>
                               </div>
                               <div className="flex items-start gap-3">
                                 <span className="text-green-500 flex-shrink-0 mt-0.5">✔️</span>
-                                <span className="text-sm text-slate-700">Accès aux classements</span>
+                                <span className="text-sm text-foreground">Accès aux classements</span>
                               </div>
                               <div className="flex items-start gap-3">
                                 <span className="text-green-500 flex-shrink-0 mt-0.5">✔️</span>
-                                <span className="text-sm text-slate-700">Accès aux statistiques</span>
+                                <span className="text-sm text-foreground">Accès aux statistiques</span>
                               </div>
                               <div className="flex items-start gap-3">
                                 <span className="text-green-500 flex-shrink-0 mt-0.5">✔️</span>
-                                <span className="text-sm text-slate-700">Explication des étudiants</span>
+                                <span className="text-sm text-foreground">Explication des étudiants</span>
                               </div>
                               <div className="flex items-start gap-3 opacity-50">
                                 <span className="text-red-500 flex-shrink-0 mt-0.5">❌</span>
-                                <span className="text-sm text-slate-400 line-through">Explication de l'IA</span>
+                                <span className="text-sm text-muted-foreground line-through">Explication de l'IA</span>
                               </div>
                               <div className="flex items-start gap-3 opacity-50">
                                 <span className="text-red-500 flex-shrink-0 mt-0.5">❌</span>
-                                <span className="text-sm text-slate-400 line-through">Accès à la communauté votes</span>
+                                <span className="text-sm text-muted-foreground line-through">Accès à la communauté votes</span>
                               </div>
                               <div className="flex items-start gap-3 opacity-50">
                                 <span className="text-red-500 flex-shrink-0 mt-0.5">❌</span>
-                                <span className="text-sm text-slate-400 line-through">Création de playlists</span>
+                                <span className="text-sm text-muted-foreground line-through">Création de playlists</span>
                               </div>
                               <div className="flex items-start gap-3 opacity-50">
                                 <span className="text-red-500 flex-shrink-0 mt-0.5">❌</span>
-                                <span className="text-sm text-slate-400 line-through">Notes personnalisées</span>
+                                <span className="text-sm text-muted-foreground line-through">Notes personnalisées</span>
                               </div>
                               <div className="flex items-start gap-3 opacity-50">
                                 <span className="text-red-500 flex-shrink-0 mt-0.5">❌</span>
-                                <span className="text-sm text-slate-400 line-through">Assistance prioritaire</span>
+                                <span className="text-sm text-muted-foreground line-through">Assistance prioritaire</span>
                               </div>
                             </>
                           )}
@@ -875,47 +879,47 @@ const PricingSection = ({ settings }) => {
                             <>
                               <div className="flex items-start gap-3">
                                 <span className="text-green-500 flex-shrink-0 mt-0.5">✔️</span>
-                                <span className="text-sm text-slate-700">Tous les modules</span>
+                                <span className="text-sm text-foreground">Tous les modules</span>
                               </div>
                               <div className="flex items-start gap-3">
                                 <span className="text-green-500 flex-shrink-0 mt-0.5">✔️</span>
-                                <span className="text-sm text-slate-700">Questions triées (question par question, toutes les questions)</span>
+                                <span className="text-sm text-foreground">Questions triées (question par question, toutes les questions)</span>
                               </div>
                               <div className="flex items-start gap-3">
                                 <span className="text-green-500 flex-shrink-0 mt-0.5">✔️</span>
-                                <span className="text-sm text-slate-700">Interface adaptée aux mobiles</span>
+                                <span className="text-sm text-foreground">Interface adaptée aux mobiles</span>
                               </div>
                               <div className="flex items-start gap-3">
                                 <span className="text-green-500 flex-shrink-0 mt-0.5">✔️</span>
-                                <span className="text-sm text-slate-700">Accès aux classements</span>
+                                <span className="text-sm text-foreground">Accès aux classements</span>
                               </div>
                               <div className="flex items-start gap-3">
                                 <span className="text-green-500 flex-shrink-0 mt-0.5">✔️</span>
-                                <span className="text-sm text-slate-700">Accès aux statistiques</span>
+                                <span className="text-sm text-foreground">Accès aux statistiques</span>
                               </div>
                               <div className="flex items-start gap-3">
                                 <span className="text-green-500 flex-shrink-0 mt-0.5">✔️</span>
-                                <span className="text-sm text-slate-700">Explication des étudiants</span>
+                                <span className="text-sm text-foreground">Explication des étudiants</span>
                               </div>
                               <div className="flex items-start gap-3">
                                 <span className="text-green-500 flex-shrink-0 mt-0.5">✔️</span>
-                                <span className="text-sm text-slate-700">Explication de l'IA</span>
+                                <span className="text-sm text-foreground">Explication de l'IA</span>
                               </div>
                               <div className="flex items-start gap-3">
                                 <span className="text-green-500 flex-shrink-0 mt-0.5">✔️</span>
-                                <span className="text-sm text-slate-700">Accès à la communauté votes</span>
+                                <span className="text-sm text-foreground">Accès à la communauté votes</span>
                               </div>
                               <div className="flex items-start gap-3">
                                 <span className="text-green-500 flex-shrink-0 mt-0.5">✔️</span>
-                                <span className="text-sm text-slate-700">Création de playlists</span>
+                                <span className="text-sm text-foreground">Création de playlists</span>
                               </div>
                               <div className="flex items-start gap-3">
                                 <span className="text-green-500 flex-shrink-0 mt-0.5">✔️</span>
-                                <span className="text-sm text-slate-700">Notes personnalisées</span>
+                                <span className="text-sm text-foreground">Notes personnalisées</span>
                               </div>
                               <div className="flex items-start gap-3">
                                 <span className="text-green-500 flex-shrink-0 mt-0.5">✔️</span>
-                                <span className="text-sm text-slate-700">Assistance prioritaire</span>
+                                <span className="text-sm text-foreground">Assistance prioritaire</span>
                               </div>
                             </>
                           )}
@@ -930,7 +934,7 @@ const PricingSection = ({ settings }) => {
                                 <span className={`flex-shrink-0 mt-0.5 ${isIncluded ? 'text-green-500' : 'text-red-500'}`}>
                                   {isIncluded ? '✔️' : '❌'}
                                 </span>
-                                <span className={`text-sm ${isIncluded ? 'text-slate-700' : 'text-slate-400 line-through'}`}>{featureText}</span>
+                                <span className={`text-sm ${isIncluded ? 'text-foreground' : 'text-muted-foreground line-through'}`}>{featureText}</span>
                               </div>
                             );
                           })}
@@ -939,7 +943,7 @@ const PricingSection = ({ settings }) => {
                           onClick={() => handleSubscribe(plan)}
                           className={`w-full mt-6 text-base font-semibold py-6 ${isPopular
                             ? 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white'
-                            : 'bg-slate-200 hover:bg-slate-300 text-slate-900'
+                            : 'bg-muted hover:bg-accent text-foreground'
                             }`}
                         >
                           {plan.price === 0 ? 'Commencer gratuitement' : 'Commencer maintenant'}
@@ -1043,7 +1047,7 @@ const TestimonialsSection = () => {
   }
 
   return (
-    <section className="py-16 md:py-20 lg:py-24 px-4 sm:px-6 lg:px-8 bg-slate-50" aria-label="Témoignages">
+    <section className="py-16 md:py-20 lg:py-24 px-4 sm:px-6 lg:px-8 bg-background" aria-label="Témoignages">
       <div className="max-w-7xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -1057,7 +1061,7 @@ const TestimonialsSection = () => {
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-3 md:mb-4">
             Ce que disent nos étudiants
           </h2>
-          <p className="text-base md:text-lg text-slate-600 max-w-2xl mx-auto">
+          <p className="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto">
             Rejoignez des centaines d'étudiants qui ont réussi leurs examens avec notre plateforme
           </p>
         </motion.div>
@@ -1151,16 +1155,16 @@ const FAQSection = ({ settings }) => {
   const faqTitle = settings?.faqTitle || "Réponses aux questions fréquentes";
 
   const iconColors = [
-    { bg: "bg-blue-100", hover: "bg-blue-200", icon: "text-blue-600" },
-    { bg: "bg-green-100", hover: "bg-green-200", icon: "text-green-600" },
-    { bg: "bg-purple-100", hover: "bg-purple-200", icon: "text-purple-600" },
-    { bg: "bg-teal-100", hover: "bg-teal-200", icon: "text-teal-600" },
-    { bg: "bg-orange-100", hover: "bg-orange-200", icon: "text-orange-600" },
-    { bg: "bg-indigo-100", hover: "bg-indigo-200", icon: "text-indigo-600" },
+    { bg: "bg-blue-100 dark:bg-blue-950/40", hover: "bg-blue-200 dark:bg-blue-900/60", icon: "text-blue-600 dark:text-blue-400" },
+    { bg: "bg-green-100 dark:bg-green-950/40", hover: "bg-green-200 dark:bg-green-900/60", icon: "text-green-600 dark:text-green-400" },
+    { bg: "bg-purple-100 dark:bg-purple-950/40", hover: "bg-purple-200 dark:bg-purple-900/60", icon: "text-purple-600 dark:text-purple-400" },
+    { bg: "bg-teal-100 dark:bg-teal-950/40", hover: "bg-teal-200 dark:bg-teal-900/60", icon: "text-teal-600 dark:text-teal-400" },
+    { bg: "bg-orange-100 dark:bg-orange-950/40", hover: "bg-orange-200 dark:bg-orange-900/60", icon: "text-orange-600 dark:text-orange-400" },
+    { bg: "bg-indigo-100 dark:bg-indigo-950/40", hover: "bg-indigo-200 dark:bg-indigo-900/60", icon: "text-indigo-600 dark:text-indigo-400" },
   ];
 
   return (
-    <section id="faq" className="py-16 md:py-20 lg:py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-blue-50 to-white" aria-label={t("faq_title")}>
+    <section id="faq" className="py-16 md:py-20 lg:py-24 px-4 sm:px-6 lg:px-8 bg-background" aria-label={t("faq_title")}>
       <div className="max-w-4xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -1174,7 +1178,7 @@ const FAQSection = ({ settings }) => {
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-3 md:mb-4">
             {faqTitle}
           </h2>
-          <p className="text-base md:text-lg text-slate-600">
+          <p className="text-base md:text-lg text-muted-foreground">
             Trouvez les réponses à vos questions les plus courantes
           </p>
         </motion.div>
@@ -1184,22 +1188,22 @@ const FAQSection = ({ settings }) => {
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
           transition={{ delay: 0.2 }}
-          className="bg-white rounded-2xl border-2 border-blue-100 shadow-lg overflow-hidden"
+          className="bg-card text-card-foreground rounded-2xl border-2 border-border shadow-lg overflow-hidden"
         >
           <Accordion type="single" collapsible className="w-full">
             {faqItems.map((item, index) => {
               const colorScheme = iconColors[index % iconColors.length];
               return (
-                <AccordionItem key={index} value={`item-${index}`} className="border-b border-blue-100 last:border-0">
+                <AccordionItem key={index} value={`item-${index}`} className="border-b border-border last:border-0">
                   <AccordionTrigger className="hover:no-underline py-4 sm:py-6 px-4 sm:px-6 md:px-8 group">
                     <div className="flex items-center gap-2 sm:gap-4 text-left flex-1">
                       <div className={`p-1.5 sm:p-2 ${colorScheme.bg} rounded-lg group-hover:${colorScheme.hover} transition-colors flex-shrink-0`}>
                         <HelpCircle className={`h-4 w-4 sm:h-5 sm:w-5 ${colorScheme.icon}`} />
                       </div>
-                      <span className="font-semibold text-slate-900 text-sm sm:text-base">{item.question}</span>
+                      <span className="font-semibold text-foreground text-sm sm:text-base">{item.question}</span>
                     </div>
                   </AccordionTrigger>
-                  <AccordionContent className="text-slate-600 pb-4 sm:pb-6 px-4 sm:px-6 md:px-8 pl-10 sm:pl-16 text-sm sm:text-base">
+                  <AccordionContent className="text-muted-foreground pb-4 sm:pb-6 px-4 sm:px-6 md:px-8 pl-10 sm:pl-16 text-sm sm:text-base">
                     {item.answer}
                   </AccordionContent>
                 </AccordionItem>
@@ -1219,15 +1223,15 @@ const QuickContact = ({ settings }) => {
   const whatsappUrl = `https://wa.me/${whatsappNumber.replace(/[^0-9]/g, '')}`;
 
   return (
-    <section className="relative py-6 md:py-8 px-4 sm:px-6 lg:px-8 border-y border-blue-100 bg-gradient-to-r from-slate-50 via-blue-50 to-indigo-50">
+    <section className="relative py-6 md:py-8 px-4 sm:px-6 lg:px-8 border-y border-border bg-muted/30">
       <div className="max-w-7xl mx-auto">
-        <div className="rounded-2xl border border-blue-100/80 bg-white/80 backdrop-blur-sm shadow-sm px-4 sm:px-6 py-4 md:py-5">
+        <div className="rounded-2xl border border-border bg-card text-card-foreground backdrop-blur-sm shadow-sm px-4 sm:px-6 py-4 md:py-5">
           <div className="flex flex-col md:flex-row items-center justify-center gap-3 sm:gap-4 md:gap-6 text-sm md:text-base">
             <a
               href={`tel:${contactPhone}`}
-              className="group w-full md:w-auto flex items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-800 hover:border-blue-300 hover:bg-blue-50/80 transition-all"
+              className="group w-full md:w-auto flex items-center justify-center gap-3 rounded-xl border border-border bg-card px-4 py-3 text-foreground hover:border-blue-500 hover:bg-accent transition-all"
             >
-              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-100 text-blue-700 group-hover:bg-blue-200 transition-colors">
+              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 group-hover:bg-blue-200 transition-colors">
                 <Phone className="h-4 w-4" />
               </span>
               <span className="font-semibold tracking-wide">{contactPhone}</span>
@@ -1235,14 +1239,14 @@ const QuickContact = ({ settings }) => {
 
             {whatsappNumber && (
               <>
-                <div className="hidden md:flex items-center justify-center h-8 w-8 rounded-full bg-slate-100 text-slate-400 text-lg">•</div>
+                <div className="hidden md:flex items-center justify-center h-8 w-8 rounded-full bg-muted text-muted-foreground text-lg">•</div>
                 <a
                   href={whatsappUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="group w-full md:w-auto flex items-center justify-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50/70 px-4 py-3 text-emerald-700 hover:border-emerald-300 hover:bg-emerald-100/70 transition-all"
+                  className="group w-full md:w-auto flex items-center justify-center gap-3 rounded-xl border border-emerald-500/30 bg-emerald-50/20 dark:bg-emerald-950/20 px-4 py-3 text-emerald-700 dark:text-emerald-300 hover:border-emerald-500 transition-all"
                 >
-                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 group-hover:bg-emerald-200 transition-colors">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-300 transition-colors">
                     <MessageCircle className="h-4 w-4" />
                   </span>
                   <span className="font-semibold tracking-wide">WhatsApp</span>
@@ -1266,7 +1270,7 @@ const ContactSection = () => {
   };
 
   return (
-    <section className="py-16 md:py-20 lg:py-24 px-4 sm:px-6 lg:px-8 bg-slate-50" aria-label={t("contact_title")}>
+    <section className="py-16 md:py-20 lg:py-24 px-4 sm:px-6 lg:px-8 bg-background" aria-label={t("contact_title")}>
       <div className="max-w-7xl mx-auto">
         <div className="grid lg:grid-cols-2 gap-8 md:gap-10 lg:gap-12">
           <motion.div
@@ -1324,7 +1328,7 @@ const ContactSection = () => {
             viewport={{ once: true }}
             className="mt-8 lg:mt-0"
           >
-            <Card className="border-2">
+            <Card className="border-2 border-border">
               <CardHeader className="space-y-3 pb-4">
                 <CardTitle className="text-xl md:text-2xl">{t("contact_form_title")}</CardTitle>
                 <CardDescription className="text-sm md:text-base">
@@ -1336,16 +1340,16 @@ const ContactSection = () => {
                   <div className="grid sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <label className="text-xs md:text-sm font-medium">{t("contact_form_name")}</label>
-                      <Input placeholder={t("contact_form_name_placeholder")} required className="text-sm" />
+                      <Input placeholder={t("contact_form_name_placeholder")} required className="text-sm border-border bg-background" />
                     </div>
                     <div className="space-y-2">
                       <label className="text-xs md:text-sm font-medium">{t("contact_form_email")}</label>
-                      <Input type="email" placeholder={t("contact_form_email_placeholder")} required className="text-sm" />
+                      <Input type="email" placeholder={t("contact_form_email_placeholder")} required className="text-sm border-border bg-background" />
                     </div>
                   </div>
                   <div className="space-y-2">
                     <label className="text-xs md:text-sm font-medium">{t("contact_form_subject")}</label>
-                    <Input placeholder={t("contact_form_subject_placeholder")} required className="text-sm" />
+                    <Input placeholder={t("contact_form_subject_placeholder")} required className="text-sm border-border bg-background" />
                   </div>
                   <div className="space-y-2">
                     <label className="text-xs md:text-sm font-medium">{t("contact_form_message")}</label>
@@ -1353,10 +1357,10 @@ const ContactSection = () => {
                       placeholder={t("contact_form_message_placeholder")}
                       rows={4}
                       required
-                      className="text-sm resize-none"
+                      className="text-sm resize-none border-border bg-background"
                     />
                   </div>
-                  <Button type="submit" className="w-full" size="lg">
+                  <Button type="submit" className="w-full text-white" size="lg">
                     {t("contact_form_submit")}
                   </Button>
                 </form>
@@ -1425,7 +1429,7 @@ const FeedbackSection = ({ settings }) => {
   };
 
   return (
-    <section id="contact" className="py-16 md:py-20 lg:py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-blue-50 via-indigo-50 to-blue-50">
+    <section id="contact" className="py-16 md:py-20 lg:py-24 px-4 sm:px-6 lg:px-8 bg-background border-t border-border">
       <div className="max-w-4xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -1440,10 +1444,10 @@ const FeedbackSection = ({ settings }) => {
           </div>
 
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-            Nous voulons vos <span className="text-blue-600">retours</span>
+            Nous voulons vos <span className="text-blue-600 dark:text-blue-400">retours</span>
           </h2>
 
-          <p className="text-base md:text-lg text-slate-600 max-w-2xl mx-auto">
+          <p className="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto">
             Aidez-nous à améliorer Imrs-Qcma en partageant vos pensées et suggestions.
             Votre contribution alimente notre innovation.
           </p>
@@ -1475,7 +1479,7 @@ const FeedbackSection = ({ settings }) => {
           viewport={{ once: true }}
           transition={{ delay: 0.2 }}
         >
-          <Card className="border-2 border-blue-200 shadow-xl overflow-hidden">
+          <Card className="border-2 border-border shadow-xl overflow-hidden bg-card text-card-foreground">
             <CardContent className="p-4 sm:p-6 md:p-8">
               {feedbackSubmitted ? (
                 <motion.div
@@ -1483,17 +1487,17 @@ const FeedbackSection = ({ settings }) => {
                   animate={{ opacity: 1, scale: 1 }}
                   className="text-center py-12"
                 >
-                  <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <CheckCircle2 className="w-8 h-8 text-green-600" />
+                  <div className="w-16 h-16 bg-green-100 dark:bg-green-950/40 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <CheckCircle2 className="w-8 h-8 text-green-600 dark:text-green-400" />
                   </div>
-                  <h3 className="text-2xl font-bold text-slate-900 mb-2">Merci pour votre retour!</h3>
-                  <p className="text-slate-600">Votre message a été envoyé avec succès.</p>
+                  <h3 className="text-2xl font-bold text-foreground mb-2">Merci pour votre retour!</h3>
+                  <p className="text-muted-foreground">Votre message a été envoyé avec succès.</p>
                 </motion.div>
               ) : (
                 <form onSubmit={handleSubmitFeedback} className="space-y-4 sm:space-y-6">
                   <div className="grid sm:grid-cols-2 gap-4 sm:gap-6">
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-slate-700">Nom complet</label>
+                      <label className="text-sm font-medium text-foreground">Nom complet</label>
                       <Input
                         type="text"
                         name="name"
@@ -1501,12 +1505,12 @@ const FeedbackSection = ({ settings }) => {
                         onChange={handleInputChange}
                         placeholder="Votre nom"
                         required
-                        className="border-slate-300 focus:border-blue-500 focus:ring-blue-500"
+                        className="border-border bg-background text-foreground focus:border-blue-500"
                         disabled={isLoading}
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-slate-700">Email</label>
+                      <label className="text-sm font-medium text-foreground">Email</label>
                       <Input
                         type="email"
                         name="email"
@@ -1514,14 +1518,14 @@ const FeedbackSection = ({ settings }) => {
                         onChange={handleInputChange}
                         placeholder="votre.email@exemple.com"
                         required
-                        className="border-slate-300 focus:border-blue-500 focus:ring-blue-500"
+                        className="border-border bg-background text-foreground focus:border-blue-500"
                         disabled={isLoading}
                       />
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-slate-700">Sujet</label>
+                    <label className="text-sm font-medium text-foreground">Sujet</label>
                     <Input
                       type="text"
                       name="subject"
@@ -1529,13 +1533,13 @@ const FeedbackSection = ({ settings }) => {
                       onChange={handleInputChange}
                       placeholder="De quoi voulez-vous parler?"
                       required
-                      className="border-slate-300 focus:border-blue-500 focus:ring-blue-500"
+                      className="border-border bg-background text-foreground focus:border-blue-500"
                       disabled={isLoading}
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-slate-700">Message</label>
+                    <label className="text-sm font-medium text-foreground">Message</label>
                     <Textarea
                       name="message"
                       value={formData.message}
@@ -1543,18 +1547,18 @@ const FeedbackSection = ({ settings }) => {
                       placeholder="Partagez vos pensées, suggestions ou rapports de bugs..."
                       rows={6}
                       required
-                      className="border-slate-300 focus:border-blue-500 focus:ring-blue-500 resize-none"
+                      className="border-border bg-background text-foreground focus:border-blue-500 resize-none"
                       disabled={isLoading}
                     />
                   </div>
 
                   {/* Warning Alert */}
-                  <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                  <div className="p-4 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/50 rounded-lg">
                     <div className="flex gap-3">
-                      <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                      <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
                       <div>
-                        <h4 className="font-semibold text-amber-900 mb-1">Important</h4>
-                        <p className="text-sm text-amber-800">
+                        <h4 className="font-semibold text-amber-900 dark:text-amber-300 mb-1">Important</h4>
+                        <p className="text-sm text-amber-800 dark:text-amber-400">
                           Veuillez envoyer un message clair et approprié. Les messages contenant du contenu offensant, des insultes ou du spam seront rejetés et votre compte pourrait être suspendu.
                         </p>
                       </div>
@@ -1584,17 +1588,17 @@ const FeedbackSection = ({ settings }) => {
           transition={{ delay: 0.4 }}
           className="mt-8 text-center"
         >
-          <div className="flex flex-wrap justify-center gap-3 sm:gap-6 text-xs sm:text-sm text-slate-600">
+          <div className="flex flex-wrap justify-center gap-3 sm:gap-6 text-xs sm:text-sm text-muted-foreground">
             <div className="flex items-center gap-1.5 sm:gap-2">
-              <Shield className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
+              <Shield className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 dark:text-blue-400" />
               <span>Réponse sous 24h</span>
             </div>
             <div className="flex items-center gap-1.5 sm:gap-2">
-              <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
+              <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 dark:text-blue-400" />
               <span>Confidentiel et sécurisé</span>
             </div>
             <div className="flex items-center gap-1.5 sm:gap-2">
-              <Users className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
+              <Users className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 dark:text-blue-400" />
               <span>Communauté de 500+ étudiants</span>
             </div>
           </div>
@@ -1617,7 +1621,7 @@ const Footer = ({ settings }) => {
   const youtubeUrl = settings?.youtubeUrl || "#";
 
   return (
-    <footer className="bg-slate-900 text-white py-10 sm:py-12 md:py-16 px-4 sm:px-6 lg:px-8" role="contentinfo">
+    <footer className="bg-slate-900 dark:bg-slate-950 text-white py-10 sm:py-12 md:py-16 px-4 sm:px-6 lg:px-8 border-t border-border" role="contentinfo">
       <div className="max-w-7xl mx-auto">
         <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-4 gap-8 md:gap-12 mb-8">
           <div className="col-span-2 sm:col-span-1">

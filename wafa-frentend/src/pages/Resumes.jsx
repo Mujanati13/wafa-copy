@@ -160,7 +160,7 @@ const Resumes = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center space-y-4">
           <Loader2 className="h-12 w-12 animate-spin text-blue-600 mx-auto" />
           <p className="text-muted-foreground">Chargement des résumés...</p>
@@ -170,13 +170,13 @@ const Resumes = () => {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-background">
       <div className="max-w-7xl mx-auto px-6 py-8 space-y-6">
         {/* Header with Import Button */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">Résumés et Cours</h2>
-            <p className="text-gray-600">Consultez les résumés disponibles par module</p>
+            <h2 className="text-2xl font-bold text-foreground">Résumés et Cours</h2>
+            <p className="text-muted-foreground">Consultez les résumés disponibles par module</p>
           </div>
 
           <Dialog open={importOpen} onOpenChange={setImportOpen}>
@@ -233,7 +233,7 @@ const Resumes = () => {
                   onDrop={handleDrop}
                 >
                   <Upload className="w-8 h-8 text-blue-500 mx-auto mb-2" />
-                  <p className="text-sm font-medium text-gray-700">
+                  <p className="text-sm font-medium text-foreground">
                     Drop your file here or click to browse
                   </p>
                   <p className="text-xs text-gray-500 mt-1">
@@ -315,11 +315,11 @@ const Resumes = () => {
                   <AccordionItem
                     key={moduleId}
                     value={moduleId}
-                    className="border rounded-lg px-4 bg-white"
+                    className="border rounded-lg px-4 bg-card"
                   >
                     <AccordionTrigger className="hover:no-underline py-4">
                       <div className="flex items-center gap-3">
-                        <span className="font-semibold text-gray-900">
+                        <span className="font-semibold text-foreground">
                           {moduleData.name}
                         </span>
                       </div>
@@ -328,7 +328,7 @@ const Resumes = () => {
                       <div className="space-y-2 pl-2">
                         {Object.entries(moduleData.courses).map(([courseName, coursePdfs]) => (
                           <div key={courseName} className="flex flex-wrap items-center gap-2 py-1">
-                            <span className="text-sm text-gray-600 min-w-[120px]">
+                            <span className="text-sm text-muted-foreground min-w-[120px]">
                               - {courseName} :
                             </span>
                             {coursePdfs.map((pdf, idx) => (

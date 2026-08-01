@@ -269,23 +269,23 @@ const Semesters = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
+      <div className="min-h-screen bg-card flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="w-12 h-12 animate-spin text-blue-600 mx-auto mb-4" />
-          <p className="text-gray-600 font-medium">{t('admin:loading_modules')}</p>
+          <p className="text-muted-foreground font-medium">{t('admin:loading_modules')}</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-card">
       <div className="max-w-7xl mx-auto px-6 py-8 space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">{t('admin:semesters')}</h2>
-            <p className="text-gray-600">{t('admin:organize_modules_drag_drop')}</p>
+            <h2 className="text-2xl font-bold text-foreground">{t('admin:semesters')}</h2>
+            <p className="text-muted-foreground">{t('admin:organize_modules_drag_drop')}</p>
             {totalModules > 0 && (
               <Badge className="mt-2 bg-blue-100 text-blue-700">
                 {totalModules} {t('admin:modules_count')}
@@ -357,7 +357,7 @@ const Semesters = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
-          className="bg-white/80 backdrop-blur-sm rounded-xl border border-blue-100 shadow-lg p-4"
+          className="bg-card/80 backdrop-blur-sm rounded-xl border border-blue-100 shadow-lg p-4"
         >
           <div className="overflow-x-auto pb-4">
             <div className="flex gap-4 min-w-max">
@@ -380,7 +380,7 @@ const Semesters = () => {
                           <Badge className="bg-blue-600 text-white font-bold">
                             {columnId}
                           </Badge>
-                          <span className="text-sm text-gray-600">
+                          <span className="text-sm text-muted-foreground">
                             {items.length} module{items.length !== 1 ? 's' : ''}
                           </span>
                         </div>
@@ -405,15 +405,15 @@ const Semesters = () => {
                           onDragOver={handleDragOver}
                           onDrop={(e) => handleDropReorder(e, columnId, item.id)}
                           className={cn(
-                            "bg-white border border-blue-200 rounded-lg px-3 py-2 shadow-sm hover:shadow-md hover:border-blue-300 cursor-grab active:cursor-grabbing transition-all group",
+                            "bg-card border border-blue-200 rounded-lg px-3 py-2 shadow-sm hover:shadow-md hover:border-blue-300 cursor-grab active:cursor-grabbing transition-all group",
                             draggedItem?.itemId === item.id && "opacity-50"
                           )}
                         >
-                          <h4 className="text-sm font-semibold text-gray-800 group-hover:text-blue-600 transition-colors truncate">
+                          <h4 className="text-sm font-semibold text-foreground group-hover:text-blue-600 transition-colors truncate">
                             {item.title}
                           </h4>
                           {item.totalQuestions > 0 && (
-                            <p className="text-xs text-gray-500 mt-1">
+                            <p className="text-xs text-muted-foreground mt-1">
                               {item.totalQuestions} questions
                             </p>
                           )}

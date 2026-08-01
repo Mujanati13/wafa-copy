@@ -188,7 +188,7 @@ const NotificationDropdown = () => {
         <div className="flex items-center justify-between p-4 border-b">
           <div>
             <h3 className="font-semibold text-base">Notifications</h3>
-            <p className="text-xs text-slate-500 mt-0.5">
+            <p className="text-xs text-muted-foreground mt-0.5">
               {unreadCount > 0 ? `${unreadCount} non lue${unreadCount > 1 ? "s" : ""}` : "Tout est à jour"}
             </p>
           </div>
@@ -210,13 +210,13 @@ const NotificationDropdown = () => {
           {loading ? (
             <div className="p-8 text-center">
               <div className="animate-spin rounded-full h-8 w-8 border-2 border-blue-500 border-t-transparent mx-auto" />
-              <p className="text-sm text-slate-500 mt-2">Chargement...</p>
+              <p className="text-sm text-muted-foreground mt-2">Chargement...</p>
             </div>
           ) : notifications.length === 0 ? (
             <div className="p-8 text-center">
-              <Bell className="h-12 w-12 text-slate-300 mx-auto mb-3" />
-              <p className="text-sm font-medium text-slate-900">Aucune notification</p>
-              <p className="text-xs text-slate-500 mt-1">Vous êtes à jour !</p>
+              <Bell className="h-12 w-12 text-muted-foreground/30 mx-auto mb-3" />
+              <p className="text-sm font-medium text-foreground">Aucune notification</p>
+              <p className="text-xs text-muted-foreground mt-1">Vous êtes à jour !</p>
             </div>
           ) : (
             <div className="py-2">
@@ -236,7 +236,7 @@ const NotificationDropdown = () => {
                       <button
                         onClick={() => handleNotificationClick(notification)}
                         className={cn(
-                          "w-full px-4 py-3 flex items-start gap-3 hover:bg-slate-50 transition-colors text-left",
+                          "w-full px-4 py-3 flex items-start gap-3 hover:bg-accent transition-colors text-left",
                           !notification.read && "bg-blue-50/50"
                         )}
                       >
@@ -245,19 +245,19 @@ const NotificationDropdown = () => {
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between gap-2 mb-1">
-                            <p className={cn("text-sm font-medium", !notification.read && "text-slate-900")}>
+                            <p className={cn("text-sm font-medium", !notification.read && "text-foreground")}>
                               {notification.title}
                             </p>
                             {!notification.read && (
                               <div className="w-2 h-2 rounded-full bg-blue-500 flex-shrink-0 mt-1" />
                             )}
                           </div>
-                          <p className="text-xs text-slate-600 line-clamp-2">{notification.message}</p>
-                          <p className="text-xs text-slate-400 mt-1">{getRelativeTime(notification.createdAt)}</p>
+                          <p className="text-xs text-muted-foreground line-clamp-2">{notification.message}</p>
+                          <p className="text-xs text-muted-foreground/70 mt-1">{getRelativeTime(notification.createdAt)}</p>
                         </div>
                         <button
                           onClick={(e) => handleDelete(e, notification._id)}
-                          className="p-1 hover:bg-slate-200 rounded text-slate-400 hover:text-destructive transition-colors flex-shrink-0"
+                          className="p-1 hover:bg-accent rounded text-muted-foreground hover:text-destructive transition-colors flex-shrink-0"
                         >
                           <Trash2 className="h-3 w-3" />
                         </button>

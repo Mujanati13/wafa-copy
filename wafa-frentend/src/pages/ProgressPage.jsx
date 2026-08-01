@@ -175,7 +175,7 @@ const ProgressPage = () => {
                       {day.day}
                     </div>
                     <div className="flex-1">
-                      <div className="h-10 bg-gray-100 rounded-lg overflow-hidden">
+                      <div className="h-10 bg-muted rounded-lg overflow-hidden">
                         <motion.div
                           initial={{ width: 0 }}
                           animate={{ width: `${(day.hours / maxHours) * 100}%` }}
@@ -215,7 +215,7 @@ const ProgressPage = () => {
                       relative p-4 rounded-lg border-2 transition-all
                       ${achievement.unlocked 
                         ? 'bg-gradient-to-br ' + achievement.color + ' border-transparent shadow-lg' 
-                        : 'bg-gray-50 border-gray-200 opacity-60'
+                        : 'bg-muted border-border opacity-60'
                       }
                     `}
                   >
@@ -226,11 +226,11 @@ const ProgressPage = () => {
                     )}
                     <div className={`
                       flex items-center justify-center h-12 w-12 rounded-full mb-3
-                      ${achievement.unlocked ? 'bg-white/20' : 'bg-white'}
+                      ${achievement.unlocked ? 'bg-white dark:bg-slate-900/20' : 'bg-white dark:bg-slate-900'}
                     `}>
                       {achievement.icon}
                     </div>
-                    <h4 className={`font-semibold text-sm mb-1 ${achievement.unlocked ? 'text-white' : 'text-gray-700'}`}>
+                    <h4 className={`font-semibold text-sm mb-1 ${achievement.unlocked ? 'text-white' : 'text-muted-foreground'}`}>
                       {achievement.title}
                     </h4>
                     <p className={`text-xs ${achievement.unlocked ? 'text-white/90' : 'text-gray-500'}`}>

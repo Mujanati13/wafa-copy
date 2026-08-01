@@ -264,7 +264,7 @@ const SettingsPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4 md:p-6">
+    <div className="min-h-screen bg-gradient-to-br from-background to-muted p-4 md:p-6">
       <div className="max-w-5xl mx-auto space-y-6">
         <PageHeader
           title={t('common:settings')}
@@ -342,7 +342,7 @@ const SettingsPage = () => {
                     type="email"
                     value={settings.email}
                     disabled={true}
-                    className="bg-slate-100"
+                    className="bg-muted"
                   />
                   <p className="text-xs text-muted-foreground">L'email ne peut pas être modifié</p>
                 </div>
@@ -417,7 +417,7 @@ const SettingsPage = () => {
                     id="currentYear"
                     value={settings.currentYear}
                     disabled
-                    className="bg-slate-100 cursor-not-allowed"
+                    className="bg-muted cursor-not-allowed"
                   />
                   <p className="text-xs text-muted-foreground">
                     L'année est déterminée automatiquement selon votre abonnement

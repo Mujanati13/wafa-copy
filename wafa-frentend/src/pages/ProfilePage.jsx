@@ -385,17 +385,17 @@ const ProfilePage = () => {
 
   if (loading && !user) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4 md:p-6 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-background to-muted p-4 md:p-6 flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="h-12 w-12 animate-spin text-blue-600 mx-auto mb-4" />
-          <p className="text-slate-600">{t('dashboard:loading_profile')}</p>
+          <p className="text-muted-foreground">{t('dashboard:loading_profile')}</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4 md:p-6">
+    <div className="min-h-screen bg-gradient-to-br from-background to-muted p-4 md:p-6">
       <div className="max-w-7xl mx-auto space-y-6">
         <PageHeader
           title={t('dashboard:my_profile')}
@@ -496,7 +496,7 @@ const ProfilePage = () => {
                         type="email"
                         value={profileData.email}
                         disabled={true}
-                        className="bg-slate-100"
+                        className="bg-muted"
                       />
                       <p className="text-xs text-muted-foreground">L'email ne peut pas être modifié</p>
                     </div>
@@ -600,7 +600,7 @@ const ProfilePage = () => {
                         id="year"
                         value={profileData.year}
                         disabled={true}
-                        className="bg-slate-100"
+                        className="bg-muted"
                       />
                       <p className="text-xs text-muted-foreground">
                         L'année est déterminée automatiquement selon votre abonnement
@@ -652,7 +652,7 @@ const ProfilePage = () => {
                 ) : (
                   <div className="text-center py-8">
                     <Trophy className="h-12 w-12 text-slate-300 mx-auto mb-3" />
-                    <p className="text-slate-500">{t('dashboard:no_achievements_yet')}</p>
+                    <p className="text-muted-foreground">{t('dashboard:no_achievements_yet')}</p>
                     <p className="text-sm text-slate-400 mt-1">{t('dashboard:keep_studying_unlock_badges')}</p>
                   </div>
                 )}

@@ -32,11 +32,15 @@ const CommunityModal = ({
   // Helper function to darken/lighten color
   const adjustColor = (color, amount) => {
     if (!color) return '#6366f1';
+    
+    const isDark = document.documentElement.classList.contains('dark');
+    const finalAmount = isDark ? Math.abs(amount) * 1.5 : amount;
+
     const hex = color.replace('#', '');
     const num = parseInt(hex, 16);
-    const r = Math.max(0, Math.min(255, (num >> 16) + amount));
-    const g = Math.max(0, Math.min(255, ((num >> 8) & 0x00FF) + amount));
-    const b = Math.max(0, Math.min(255, (num & 0x0000FF) + amount));
+    const r = Math.max(0, Math.min(255, (num >> 16) + finalAmount));
+    const g = Math.max(0, Math.min(255, ((num >> 8) & 0x00FF) + finalAmount));
+    const b = Math.max(0, Math.min(255, (num & 0x0000FF) + finalAmount));
     return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, '0')}`;
   };
 
@@ -153,7 +157,7 @@ const CommunityModal = ({
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
-            className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden max-h-[90vh] flex flex-col"
+            className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden max-h-[90vh] flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header with module color */}
@@ -165,7 +169,7 @@ const CommunityModal = ({
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+                  <div className="w-10 h-10 bg-white dark:bg-slate-900/20 rounded-full flex items-center justify-center">
                     <Users className="h-5 w-5" />
                   </div>
                   <div>

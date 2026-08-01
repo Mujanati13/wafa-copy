@@ -386,7 +386,7 @@ const ExplicationModel = ({ question, setShowExplanation, userPlan = "Free" }) =
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <div className="bg-white border border-gray-200 rounded-2xl shadow-xl max-w-3xl w-full max-h-[85vh] overflow-hidden relative flex flex-col">
+      <div className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-xl max-w-3xl w-full max-h-[85vh] overflow-hidden relative flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b bg-gradient-to-r from-blue-50 to-indigo-50">
           <div className="flex items-center gap-3">
@@ -407,12 +407,12 @@ const ExplicationModel = ({ question, setShowExplanation, userPlan = "Free" }) =
         </div>
 
         {/* Main Tabs */}
-        <div className="flex border-b border-gray-200 bg-gray-50">
+        <div className="flex border-b border-gray-200 dark:border-gray-700 bg-gray-50">
           <button
             onClick={() => hasPremiumProAccess && setActiveTab("ai")}
             disabled={!hasPremiumProAccess}
             className={`flex items-center gap-2 px-6 py-3 font-medium transition-all relative ${activeTab === "ai"
-              ? "border-b-2 border-blue-600 text-blue-700 bg-white"
+              ? "border-b-2 border-blue-600 text-blue-700 bg-white dark:bg-slate-900"
               : "text-gray-600 hover:bg-gray-100"
               } ${!hasPremiumProAccess ? "opacity-50 cursor-not-allowed" : ""}`}
             title={!hasPremiumProAccess ? "Explication IA disponible uniquement pour Premium Pro" : ""}
@@ -432,7 +432,7 @@ const ExplicationModel = ({ question, setShowExplanation, userPlan = "Free" }) =
             onClick={() => setActiveTab("user")}
             disabled={!hasPremiumAccess}
             className={`flex items-center gap-2 px-6 py-3 font-medium transition-all ${activeTab === "user"
-              ? "border-b-2 border-purple-600 text-purple-700 bg-white"
+              ? "border-b-2 border-purple-600 text-purple-700 bg-white dark:bg-slate-900"
               : "text-gray-600 hover:bg-gray-100"
               } ${!hasPremiumAccess ? "opacity-50 cursor-not-allowed" : ""}`}
             title={!hasPremiumAccess ? "Explications disponibles à partir de Premium" : ""}
@@ -545,7 +545,7 @@ const ExplicationModel = ({ question, setShowExplanation, userPlan = "Free" }) =
                           <button
                             key={`${src}-${idx}`}
                             type="button"
-                            className="group relative aspect-video w-full overflow-hidden rounded-xl border-2 border-gray-200 bg-gray-50 hover:border-blue-400 transition-all shadow-sm hover:shadow-md"
+                            className="group relative aspect-video w-full overflow-hidden rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-gray-50 hover:border-blue-400 transition-all shadow-sm hover:shadow-md"
                             onClick={() => window.open(fullImgUrl, "_blank", "noopener,noreferrer")}
                             title="Lors de la click d'image : agrandir"
                           >
@@ -612,7 +612,7 @@ const ExplicationModel = ({ question, setShowExplanation, userPlan = "Free" }) =
                       onClick={() => setActiveExplanationIndex(idx)}
                       className={`px-4 py-1.5 rounded-full font-medium transition-all ${activeExplanationIndex === idx
                         ? "bg-purple-100 text-purple-700 border-2 border-purple-300"
-                        : "bg-gray-100 text-gray-600 border border-gray-200 hover:bg-gray-200"
+                        : "bg-gray-100 text-gray-600 border border-gray-200 dark:border-gray-700 hover:bg-gray-200"
                         }`}
                     >
                       <User className="inline h-3 w-3 mr-1" />
@@ -725,7 +725,7 @@ const ExplicationModel = ({ question, setShowExplanation, userPlan = "Free" }) =
                           <button
                             key={idx}
                             type="button"
-                            className="group relative aspect-video w-full overflow-hidden rounded-xl border-2 border-gray-200 bg-gray-50 hover:border-purple-400 transition-all shadow-sm hover:shadow-md"
+                            className="group relative aspect-video w-full overflow-hidden rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-gray-50 hover:border-purple-400 transition-all shadow-sm hover:shadow-md"
                             onClick={() => window.open(fullImgUrl, "_blank", "noopener,noreferrer")}
                             title="Lors de la click d'image : agrandir"
                           >
@@ -856,7 +856,7 @@ const ExplicationModel = ({ question, setShowExplanation, userPlan = "Free" }) =
                       {uploadedImages.length > 0 && (
                         <div className="grid grid-cols-5 gap-2">
                           {uploadedImages.map((img, idx) => (
-                            <div key={idx} className="relative aspect-square rounded-lg overflow-hidden border border-purple-200 bg-white">
+                            <div key={idx} className="relative aspect-square rounded-lg overflow-hidden border border-purple-200 bg-white dark:bg-slate-900">
                               <img
                                 src={URL.createObjectURL(img)}
                                 alt={`Upload ${idx + 1}`}
@@ -894,7 +894,7 @@ const ExplicationModel = ({ question, setShowExplanation, userPlan = "Free" }) =
                         )}
                       </div>
                       {uploadedPdf && (
-                        <div className="flex items-center gap-2 p-2 bg-white rounded-lg border border-purple-200">
+                        <div className="flex items-center gap-2 p-2 bg-white dark:bg-slate-900 rounded-lg border border-purple-200">
                           <FileText className="h-5 w-5 text-purple-600" />
                           <span className="flex-1 text-sm text-gray-700 truncate">{uploadedPdf.name}</span>
                           <Button
@@ -958,7 +958,7 @@ const ExplicationModel = ({ question, setShowExplanation, userPlan = "Free" }) =
         {showWarning && (
           <div className="fixed inset-0 bg-black/60 z-[70] flex items-center justify-center p-4">
             <div
-              className="bg-white rounded-xl shadow-2xl max-w-sm w-full overflow-hidden"
+              className="bg-white dark:bg-slate-900 rounded-xl shadow-2xl max-w-sm w-full overflow-hidden"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Red Header */}
@@ -970,7 +970,7 @@ const ExplicationModel = ({ question, setShowExplanation, userPlan = "Free" }) =
                   <X className="h-5 w-5" />
                 </button>
                 <div className="flex flex-col items-center text-white">
-                  <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mb-3">
+                  <div className="w-16 h-16 bg-white dark:bg-slate-900 rounded-full flex items-center justify-center mb-3">
                     <TriangleAlert className="h-10 w-10 text-red-500" />
                   </div>
                   <h3 className="text-2xl font-bold">WARNING!</h3>

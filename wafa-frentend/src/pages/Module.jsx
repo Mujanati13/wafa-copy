@@ -246,19 +246,19 @@ const Module = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
+      <div className="min-h-screen bg-card flex items-center justify-center">
         <Loader2 className="h-12 w-12 animate-spin text-blue-600" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-card">
       <div className="max-w-7xl mx-auto px-6 py-8 space-y-6">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">{t('admin:modules')}</h2>
-            <p className="text-gray-600">{t('admin:manage_modules_by_semester')}</p>
+            <h2 className="text-2xl font-bold text-foreground">{t('admin:modules')}</h2>
+            <p className="text-muted-foreground">{t('admin:manage_modules_by_semester')}</p>
           </div>
 
           <div className="flex items-center gap-2">
@@ -374,7 +374,7 @@ const Module = () => {
                         </TableCell>
                         <TableCell className="font-medium">{m.name}</TableCell>
                         <TableCell>
-                          <div className="w-12 h-12 rounded-md overflow-hidden bg-slate-100 border relative group">
+                          <div className="w-12 h-12 rounded-md overflow-hidden bg-muted border relative group">
                             <img
                               src={m.imageUrl}
                               alt={m.name}
@@ -384,7 +384,7 @@ const Module = () => {
                         </TableCell>
                         <TableCell>
                           <div
-                            className="w-6 h-6 rounded-full border border-gray-200 shadow-sm"
+                            className="w-6 h-6 rounded-full border border-border shadow-sm"
                             style={{ backgroundColor: m.color }}
                             title={m.color}
                           />
@@ -444,7 +444,7 @@ const Module = () => {
               </Table>
             </div>
           </CardContent>
-          <CardFooter className="flex flex-col sm:flex-row justify-between items-center gap-4 border-t bg-slate-50/50">
+          <CardFooter className="flex flex-col sm:flex-row justify-between items-center gap-4 border-t bg-background/50">
             <div className="text-sm text-muted-foreground">
               {t('admin:showing_results', {
                 start: filteredModules.length === 0 ? 0 : startIndex + 1,

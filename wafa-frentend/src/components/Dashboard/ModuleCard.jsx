@@ -89,7 +89,7 @@ const ModuleCard = ({ course, handleCourseClick, index }) => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: index * 0.1 }}
         whileHover={{ scale: 1.03, y: -5 }}
-        className={`relative bg-white backdrop-blur-sm rounded-2xl border-2 ${colorScheme.border} shadow-lg p-3 sm:p-4 md:p-5 cursor-pointer hover:shadow-2xl hover:ring-2 ${colorScheme.ring} transition-all duration-300 overflow-hidden group w-full`}
+        className={`relative bg-background backdrop-blur-sm rounded-2xl border-2 ${colorScheme.border} shadow-lg p-3 sm:p-4 md:p-5 cursor-pointer hover:shadow-2xl hover:ring-2 ${colorScheme.ring} transition-all duration-300 overflow-hidden group w-full`}
         onClick={() => handleCourseClick(course._id)}
       >
         {/* Animated background gradient */}
@@ -99,7 +99,7 @@ const ModuleCard = ({ course, handleCourseClick, index }) => {
         <motion.button
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="absolute top-2 left-2 z-20 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white shadow-lg flex items-center justify-center text-blue-600 hover:text-blue-700 hover:bg-blue-50 hover:shadow-xl transition-all border-2 border-blue-100"
+          className="absolute top-2 left-2 z-20 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-background shadow-lg flex items-center justify-center text-blue-600 hover:text-blue-700 hover:bg-blue-50 hover:shadow-xl transition-all border-2 border-blue-100"
           onClick={(e) => {
             e.stopPropagation();
             setShowHelpModal(true);
@@ -151,7 +151,7 @@ const ModuleCard = ({ course, handleCourseClick, index }) => {
           {/* Progress badge on image */}
           <div className="absolute top-1.5 sm:top-2 right-1.5 sm:right-2 z-10">
             <motion.div
-              className="bg-white/90 backdrop-blur-sm rounded-full px-2 sm:px-3 py-0.5 sm:py-1 shadow-lg"
+              className="bg-background/90 backdrop-blur-sm rounded-full px-2 sm:px-3 py-0.5 sm:py-1 shadow-lg"
               whileHover={{ scale: 1.1 }}
             >
               <span
@@ -165,12 +165,12 @@ const ModuleCard = ({ course, handleCourseClick, index }) => {
         </div>
 
         {/* Course Title */}
-        <h3 className="relative text-sm sm:text-base md:text-lg font-bold text-gray-900 mb-2 sm:mb-3 line-clamp-2 min-h-[2rem] sm:min-h-[2.5rem] group-hover:text-gray-700 transition-colors">
+        <h3 className="relative text-sm sm:text-base md:text-lg font-bold text-foreground mb-2 sm:mb-3 line-clamp-2 min-h-[2rem] sm:min-h-[2.5rem] group-hover:text-muted-foreground transition-colors">
           {course.name}
         </h3>
 
         {/* Course Stats */}
-        <div className="relative flex flex-col items-stretch justify-between pt-2 sm:pt-3 border-t border-gray-200 gap-2">
+        <div className="relative flex flex-col items-stretch justify-between pt-2 sm:pt-3 border-t border-border gap-2">
           <motion.button
             className={`flex-1 px-3 py-1.5 rounded-md text-white text-xs font-semibold shadow-md hover:shadow-lg transition-all whitespace-nowrap ${!customStyle ? `bg-gradient-to-r ${colorScheme.gradient}` : ''}`}
             style={customStyle || undefined}
@@ -292,12 +292,12 @@ const ModuleCard = ({ course, handleCourseClick, index }) => {
 
             {/* Short Description (priority 3) */}
             {course.infoText && (
-              <div className="p-4 bg-gray-50 border-2 border-gray-200 rounded-xl">
-                <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+              <div className="p-4 bg-card border-2 border-border rounded-xl">
+                <h4 className="font-semibold text-foreground mb-3 flex items-center gap-2">
                   <Info className="w-5 h-5" />
                   En bref
                 </h4>
-                <p className="text-sm text-gray-700 leading-relaxed overflow-y-auto" style={{ maxHeight: '200px' }}>
+                <p className="text-sm text-muted-foreground leading-relaxed overflow-y-auto" style={{ maxHeight: '200px' }}>
                   {course.infoText}
                 </p>
               </div>
@@ -347,7 +347,7 @@ const ModuleCard = ({ course, handleCourseClick, index }) => {
 
             {/* No content fallback */}
             {!course.infoText && !course.helpContent && !course.imageUrl && !course.textContent && !course.helpImage && !course.helpPdf && (
-              <div className="rounded-xl border-2 border-dashed border-gray-200 bg-gray-50 min-h-[120px] flex items-center justify-center">
+              <div className="rounded-xl border-2 border-dashed border-border bg-card min-h-[120px] flex items-center justify-center">
                 <div className="text-center p-4 text-gray-500">
                   <HelpCircle className="w-12 h-12 mx-auto mb-3 opacity-30" />
                   <p>Aucune information d'aide disponible pour ce module.</p>
@@ -394,7 +394,7 @@ const ModuleCard = ({ course, handleCourseClick, index }) => {
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.9, opacity: 0 }}
-                className="relative w-full max-w-6xl max-h-[95vh] bg-white rounded-xl shadow-2xl overflow-hidden z-[10000]"
+                className="relative w-full max-w-6xl max-h-[95vh] bg-background rounded-xl shadow-2xl overflow-hidden z-[10000]"
                 onClick={(e) => e.stopPropagation()}
               >
                 {/* Header */}
@@ -411,7 +411,7 @@ const ModuleCard = ({ course, handleCourseClick, index }) => {
                   </button>
                 </div>
                 {/* Scrollable Image Container */}
-                <div className="overflow-auto p-6 flex items-center justify-center bg-gray-50" style={{ maxHeight: 'calc(95vh - 80px)' }}>
+                <div className="overflow-auto p-6 flex items-center justify-center bg-card" style={{ maxHeight: 'calc(95vh - 80px)' }}>
                   <img
                     src={(() => {
                       const imageUrl = course.helpImage || course.imageUrl;
@@ -443,7 +443,7 @@ const ModuleCard = ({ course, handleCourseClick, index }) => {
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.9, opacity: 0 }}
-                className="relative w-full max-w-6xl h-[95vh] bg-white rounded-xl shadow-2xl overflow-hidden z-[10000]"
+                className="relative w-full max-w-6xl h-[95vh] bg-background rounded-xl shadow-2xl overflow-hidden z-[10000]"
                 onClick={(e) => e.stopPropagation()}
               >
                 <div className="flex items-center justify-between p-4 border-b bg-gradient-to-r from-purple-50 to-violet-50">

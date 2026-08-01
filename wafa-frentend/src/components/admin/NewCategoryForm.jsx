@@ -92,15 +92,15 @@ const NewCategoryForm = ({ setShowNewCategoryForm, onModuleCreated }) => {
           animate={{ scale: 1, opacity: 1, y: 0 }}
           exit={{ scale: 0.9, opacity: 0, y: 20 }}
           transition={{ type: "spring", duration: 0.5 }}
-          className="w-full max-w-lg bg-gradient-to-br from-white to-gray-50 rounded-2xl shadow-2xl border border-gray-200 p-8 relative"
+          className="w-full max-w-lg bg-card text-card-foreground rounded-2xl shadow-2xl border border-border p-8 relative"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Close Button */}
           <button
             onClick={() => setShowNewCategoryForm(false)}
-            className="absolute top-4 right-4 p-2 rounded-full hover:bg-gray-100 transition-colors group"
+            className="absolute top-4 right-4 p-2 rounded-full hover:bg-accent transition-colors group"
           >
-            <X className="w-5 h-5 text-gray-500 group-hover:text-gray-700" />
+            <X className="w-5 h-5 text-muted-foreground group-hover:text-foreground" />
           </button>
 
           {/* Header with Icon */}
@@ -109,11 +109,11 @@ const NewCategoryForm = ({ setShowNewCategoryForm, onModuleCreated }) => {
               <div className="p-3 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl shadow-lg">
                 <FolderPlus className="w-6 h-6 text-white" />
               </div>
-              <h1 className="text-2xl font-bold text-gray-900">
+              <h1 className="text-2xl font-bold text-foreground">
                 Ajouter un Module
               </h1>
             </div>
-            <p className="text-sm text-gray-600 ml-1">
+            <p className="text-sm text-muted-foreground ml-1">
               Le module aura automatiquement les 3 catégories par défaut : Exam par years, Exam par courses, QCM banque
             </p>
           </div>
@@ -125,14 +125,14 @@ const NewCategoryForm = ({ setShowNewCategoryForm, onModuleCreated }) => {
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-sm font-semibold text-gray-800 flex items-center gap-2">
-                      <BookOpen className="w-4 h-4 text-blue-600" />
+                    <FormLabel className="text-sm font-semibold text-foreground flex items-center gap-2">
+                      <BookOpen className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                       Nom du Module
                     </FormLabel>
                     <FormControl>
                       <Input
                         placeholder="Ex: Anatomie, Physiologie..."
-                        className="border-gray-300 focus:border-blue-500 focus:ring-blue-500 h-11 rounded-lg transition-all"
+                        className="border-border bg-background text-foreground focus:border-blue-500 h-11 rounded-lg transition-all"
                         {...field}
                       />
                     </FormControl>
@@ -146,14 +146,14 @@ const NewCategoryForm = ({ setShowNewCategoryForm, onModuleCreated }) => {
                 name="semester"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-sm font-semibold text-gray-800 flex items-center gap-2">
-                      <GraduationCap className="w-4 h-4 text-indigo-600" />
+                    <FormLabel className="text-sm font-semibold text-foreground flex items-center gap-2">
+                      <GraduationCap className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
                       Semestre
                     </FormLabel>
                     <FormControl>
                       <select
                         {...field}
-                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-500 transition-all bg-white text-gray-900 font-medium appearance-none cursor-pointer"
+                        className="w-full px-4 py-2.5 border border-border rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-500 transition-all bg-background text-foreground font-medium appearance-none cursor-pointer"
                       >
                         <option value="" disabled hidden>
                           Choisir un semestre
@@ -170,11 +170,11 @@ const NewCategoryForm = ({ setShowNewCategoryForm, onModuleCreated }) => {
                 )}
               />
 
-              <div className="flex justify-end gap-3 pt-6 border-t border-gray-200 mt-8">
+              <div className="flex justify-end gap-3 pt-6 border-t border-border mt-8">
                 <Button
                   type="button"
                   variant="outline"
-                  className="px-6 h-11 rounded-lg border-gray-300 text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-all"
+                  className="px-6 h-11 rounded-lg border-border text-foreground hover:bg-accent transition-all"
                   onClick={() => {
                     form.reset();
                     setShowNewCategoryForm(false);

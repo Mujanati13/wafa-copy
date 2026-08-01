@@ -74,11 +74,11 @@ const titleVariants = {
 };
 
   return (
-   <section className="py-24 px-6 bg-gradient-to-br from-blue-50 to-white relative overflow-hidden">
+   <section className="py-24 px-6 bg-background relative overflow-hidden">
      {/* Background decoration */}
-     <div className="absolute inset-0 bg-gradient-to-r from-blue-100/20 to-teal-100/20"></div>
-     <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-100/30 rounded-full blur-3xl"></div>
-     <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-teal-100/30 rounded-full blur-3xl"></div>
+     <div className="absolute inset-0 bg-gradient-to-r from-blue-100/10 to-teal-100/10"></div>
+     <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-100/10 rounded-full blur-3xl"></div>
+     <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-teal-100/10 rounded-full blur-3xl"></div>
      
      <div className="max-w-7xl mx-auto relative z-10">
        <motion.div
@@ -89,10 +89,10 @@ const titleVariants = {
          className="text-center mb-20"
        >
        
-         <h2 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6">
-           Ce que disent nos <span className="text-blue-600">étudiants</span>
+         <h2 className="text-5xl md:text-6xl font-bold text-foreground mb-6">
+           Ce que disent nos <span className="text-blue-600 dark:text-blue-400">étudiants</span>
          </h2>
-         <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+         <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
            Découvrez comment WAFA transforme l'expérience d'apprentissage de milliers d'étudiants en médecine
          </p>
        </motion.div>
@@ -120,22 +120,22 @@ const titleVariants = {
                {/* Card glow effect */}
                <div className={`absolute -inset-1 bg-gradient-to-r ${testimonial.color} rounded-3xl blur opacity-10 group-hover:opacity-25 transition duration-1000 group-hover:duration-200`}></div>
                
-               <div className="relative bg-white backdrop-blur-xl rounded-3xl p-8 border border-gray-200 group-hover:border-blue-300 transition-all duration-500 h-full shadow-lg hover:shadow-xl">
+               <div className="relative bg-card text-card-foreground backdrop-blur-xl rounded-3xl p-8 border border-border group-hover:border-blue-400 transition-all duration-500 h-full shadow-lg hover:shadow-xl">
                  {/* Quote icon */}
                  <div className="absolute top-6 right-6">
-                   <FaQuoteLeft className="text-3xl text-blue-200" />
+                   <FaQuoteLeft className="text-3xl text-blue-200/40" />
                  </div>
 
                  {/* Icon and user info */}
                  <div className="flex items-center mb-8">
                    <div className={`w-16 h-16 rounded-2xl bg-gradient-to-r ${testimonial.color} p-0.5 mr-5`}>
-                     <div className="w-full h-full bg-white rounded-2xl flex items-center justify-center">
-                       <IconComponent className="text-2xl text-blue-600" />
+                     <div className="w-full h-full bg-card rounded-2xl flex items-center justify-center">
+                       <IconComponent className="text-2xl text-blue-600 dark:text-blue-400" />
                      </div>
                    </div>
                    <div>
-                     <div className="font-bold text-xl text-gray-900 mb-1">{testimonial.name}</div>
-                     <div className="text-sm text-blue-600 font-medium">{testimonial.role}</div>
+                     <div className="font-bold text-xl text-foreground mb-1">{testimonial.name}</div>
+                     <div className="text-sm text-blue-600 dark:text-blue-400 font-medium">{testimonial.role}</div>
                    </div>
                  </div>
 
@@ -155,7 +155,7 @@ const titleVariants = {
                  </div>
 
                  {/* Testimonial text */}
-                 <p className="text-gray-700 leading-relaxed text-lg font-medium">
+                 <p className="text-muted-foreground leading-relaxed text-lg font-medium">
                    "{testimonial.text}"
                  </p>
 

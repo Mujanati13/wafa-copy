@@ -76,12 +76,12 @@ const NewExamForm = ({ setShowNewExamForm, modules, years }) => {
 
   return (
     <div className="flex justify-center items-center min-h-screen bg-black/50 p-4 z-[99999999999] absolute top-0 left-0 w-full h-full">
-      <div className="w-full max-w-md bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+      <div className="w-full max-w-md bg-card text-card-foreground rounded-lg shadow-sm border border-border p-6">
         <div className="mb-6">
-          <h1 className="text-xl font-semibold text-gray-900 mb-1">
+          <h1 className="text-xl font-semibold text-foreground mb-1">
             {t("admin:create_exam_par_years")}
           </h1>
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-muted-foreground">
             {t("admin:add_new_exam_year")}
           </p>
         </div>
@@ -93,13 +93,13 @@ const NewExamForm = ({ setShowNewExamForm, modules, years }) => {
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-sm font-medium text-gray-700">
+                  <FormLabel className="text-sm font-medium text-foreground">
                     {t("admin:exam_name")}
                   </FormLabel>
                   <FormControl>
                     <Input
                       placeholder={t("admin:exam_name_placeholder")}
-                      className="border-gray-300 focus:border-gray-400 focus:ring-gray-400"
+                      className="border-border focus:border-gray-400 focus:ring-gray-400"
                       {...field}
                     />
                   </FormControl>
@@ -113,13 +113,13 @@ const NewExamForm = ({ setShowNewExamForm, modules, years }) => {
               name="moduleName"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-sm font-medium text-gray-700">
+                  <FormLabel className="text-sm font-medium text-foreground">
                     {t("admin:select_module")}
                   </FormLabel>
                   <FormControl>
                     <Select
                       {...field}
-                      className="border-gray-300 focus:border-gray-400 focus:ring-gray-400"
+                      className="border-border focus:border-gray-400 focus:ring-gray-400"
                     >
                       <option value="" disabled>
                         {t("admin:choose_module")}
@@ -141,13 +141,13 @@ const NewExamForm = ({ setShowNewExamForm, modules, years }) => {
               name="year"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-sm font-medium text-gray-700">
+                  <FormLabel className="text-sm font-medium text-foreground">
                     {t("admin:select_year")}
                   </FormLabel>
                   <FormControl>
                     <Select
                       {...field}
-                      className="border-gray-300 focus:border-gray-400 focus:ring-gray-400"
+                      className="border-border focus:border-gray-400 focus:ring-gray-400"
                     >
                       <option value="" disabled>
                         {t("admin:choose_year")}
@@ -169,13 +169,13 @@ const NewExamForm = ({ setShowNewExamForm, modules, years }) => {
               name="imageUrl"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-sm font-medium text-gray-700">
+                  <FormLabel className="text-sm font-medium text-foreground">
                     {t("admin:image_url_optional")}
                   </FormLabel>
                   <FormControl>
                     <Input
                       placeholder={t("admin:image_url_placeholder")}
-                      className="border-gray-300 focus:border-gray-400 focus:ring-gray-400"
+                      className="border-border focus:border-gray-400 focus:ring-gray-400"
                       {...field}
                     />
                   </FormControl>
@@ -189,13 +189,13 @@ const NewExamForm = ({ setShowNewExamForm, modules, years }) => {
               name="helpText"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-sm font-medium text-gray-700">
+                  <FormLabel className="text-sm font-medium text-foreground">
                     {t("admin:help_text_tooltip")}
                   </FormLabel>
                   <FormControl>
                     <Input
                       placeholder={t("admin:help_text_tooltip_placeholder")}
-                      className="border-gray-300 focus:border-gray-400 focus:ring-gray-400"
+                      className="border-border focus:border-gray-400 focus:ring-gray-400"
                       {...field}
                     />
                   </FormControl>
@@ -208,7 +208,7 @@ const NewExamForm = ({ setShowNewExamForm, modules, years }) => {
               <Button
                 type="button"
                 variant="ghost"
-                className="text-gray-700 hover:text-gray-900"
+                className="text-foreground hover:bg-accent"
                 onClick={() => {
                   form.reset();
                   setShowNewExamForm(false);

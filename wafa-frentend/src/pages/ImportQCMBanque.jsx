@@ -222,13 +222,13 @@ const ImportQCMBanque = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-card">
       <div className="max-w-7xl mx-auto px-6 py-8 space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">Importer QCM Banque</h2>
-            <p className="text-gray-600">Importez des questions pour la banque de QCM depuis un fichier Excel</p>
+            <h2 className="text-2xl font-bold text-foreground">Importer QCM Banque</h2>
+            <p className="text-muted-foreground">Importez des questions pour la banque de QCM depuis un fichier Excel</p>
           </div>
           <Database className="w-10 h-10 text-blue-600" />
         </div>
@@ -266,7 +266,7 @@ const ImportQCMBanque = () => {
                   transition={{ duration: 0.3, delay: 0.1 }}
                   className="space-y-2"
                 >
-                  <Label className="font-semibold text-gray-700">Semestre</Label>
+                  <Label className="font-semibold text-foreground">Semestre</Label>
                   <Select
                     value={selectedSemester}
                     onValueChange={(value) => {
@@ -295,7 +295,7 @@ const ImportQCMBanque = () => {
                   transition={{ duration: 0.3, delay: 0.15 }}
                   className="space-y-2"
                 >
-                  <Label className="font-semibold text-gray-700">Module</Label>
+                  <Label className="font-semibold text-foreground">Module</Label>
                   <Select
                     value={selectedModule}
                     onValueChange={setSelectedModule}
@@ -327,7 +327,7 @@ const ImportQCMBanque = () => {
                   transition={{ duration: 0.3, delay: 0.2 }}
                   className="space-y-2"
                 >
-                  <Label className="font-semibold text-gray-700">QCM Banque</Label>
+                  <Label className="font-semibold text-foreground">QCM Banque</Label>
                   <Select
                     value={selectedQCMBanque}
                     onValueChange={setSelectedQCMBanque}
@@ -359,7 +359,7 @@ const ImportQCMBanque = () => {
                   transition={{ duration: 0.3, delay: 0.25 }}
                   className="space-y-2"
                 >
-                  <Label className="font-semibold text-gray-700">Fichier Excel</Label>
+                  <Label className="font-semibold text-foreground">Fichier Excel</Label>
                   <div className="relative">
                     <Input
                       type="file"
@@ -377,7 +377,7 @@ const ImportQCMBanque = () => {
                 </motion.div>
               </div>
             </CardContent>
-            <CardFooter className="bg-gray-50 border-t flex justify-end">
+            <CardFooter className="bg-background border-t flex justify-end">
               <Button
                 className="bg-emerald-600 hover:bg-emerald-700 gap-2"
                 disabled={!canImportExcel || importingExcel}
@@ -416,7 +416,7 @@ const ImportQCMBanque = () => {
                 <div className="space-y-4">
                   <div className="flex items-center gap-2 p-3 bg-teal-50 rounded-lg">
                     <Plus className="w-5 h-5 text-teal-600" />
-                    <h3 className="font-semibold text-gray-900">Ajouter des Images</h3>
+                    <h3 className="font-semibold text-foreground">Ajouter des Images</h3>
                   </div>
 
                   <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
@@ -426,7 +426,7 @@ const ImportQCMBanque = () => {
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.2, delay: idx * 0.05 }}
-                        className="grid grid-cols-1 sm:grid-cols-5 gap-2 items-end p-3 bg-slate-50 rounded-lg border border-slate-200"
+                        className="grid grid-cols-1 sm:grid-cols-5 gap-2 items-end p-3 bg-background rounded-lg border border-border"
                       >
                         <div className="sm:col-span-2 space-y-1">
                           <Label className="text-xs font-semibold">Image</Label>
@@ -488,7 +488,7 @@ const ImportQCMBanque = () => {
                 <div className="space-y-4">
                   <div className="flex items-center gap-2 p-3 bg-cyan-50 rounded-lg">
                     <FolderOpen className="w-5 h-5 text-cyan-600" />
-                    <h3 className="font-semibold text-gray-900">Organiser par Catégorie</h3>
+                    <h3 className="font-semibold text-foreground">Organiser par Catégorie</h3>
                   </div>
 
                   <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
@@ -498,7 +498,7 @@ const ImportQCMBanque = () => {
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.2, delay: idx * 0.05 }}
-                        className="grid grid-cols-1 sm:grid-cols-5 gap-2 items-end p-3 bg-slate-50 rounded-lg border border-slate-200"
+                        className="grid grid-cols-1 sm:grid-cols-5 gap-2 items-end p-3 bg-background rounded-lg border border-border"
                       >
                         <div className="sm:col-span-2 space-y-1">
                           <Label className="text-xs font-semibold">Catégorie</Label>
@@ -556,7 +556,7 @@ const ImportQCMBanque = () => {
                 </div>
               </div>
             </CardContent>
-            <CardFooter className="bg-gray-50 border-t flex justify-end gap-3">
+            <CardFooter className="bg-background border-t flex justify-end gap-3">
               <Button
                 variant="outline"
                 className="gap-2 border-teal-200 text-teal-600 hover:bg-teal-50"

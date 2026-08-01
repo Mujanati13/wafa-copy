@@ -345,17 +345,17 @@ const QCMBanque = () => {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-white flex items-center justify-center">
+            <div className="min-h-screen bg-card flex items-center justify-center">
                 <div className="text-center">
                     <Loader2 className="h-12 w-12 animate-spin text-green-500 mx-auto mb-4" />
-                    <p className="text-gray-600">Chargement des QCM Banque...</p>
+                    <p className="text-muted-foreground">Chargement des QCM Banque...</p>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-white">
+        <div className="min-h-screen bg-card">
             <div className="max-w-7xl mx-auto px-6 py-8 space-y-6">
                 {/* Bulk Delete Toolbar */}
                 {selectedItems.size > 0 && (
@@ -385,7 +385,7 @@ const QCMBanque = () => {
                 >
                     <div>
                         <h2 className="text-2xl font-bold text-black mb-1">QCM Banque</h2>
-                        <p className="text-gray-600">Total: <span className="font-semibold text-black">{filteredQCMs.length}</span> QCM Banque</p>
+                        <p className="text-muted-foreground">Total: <span className="font-semibold text-black">{filteredQCMs.length}</span> QCM Banque</p>
                     </div>
                     <Button
                         size="lg"
@@ -486,7 +486,7 @@ const QCMBanque = () => {
                                                 <TableCell className="font-medium">{qcm.moduleName}</TableCell>
                                                 <TableCell className="font-medium">{qcm.name}</TableCell>
                                                 <TableCell>
-                                                    <div className="w-16 h-12 rounded-md overflow-hidden bg-slate-100 border">
+                                                    <div className="w-16 h-12 rounded-md overflow-hidden bg-muted border">
                                                         <img src={qcm.imageUrl} alt={qcm.name} className="w-full h-full object-cover" />
                                                     </div>
                                                 </TableCell>
@@ -534,7 +534,7 @@ const QCMBanque = () => {
                             </Table>
                         </div>
                     </CardContent>
-                    <CardFooter className="flex flex-col sm:flex-row justify-between items-center gap-4 border-t bg-slate-50/50">
+                    <CardFooter className="flex flex-col sm:flex-row justify-between items-center gap-4 border-t bg-background/50">
                         <div className="text-sm text-muted-foreground">
                             Affichage de {filteredQCMs.length === 0 ? 0 : startIndex + 1} à {Math.min(endIndex, filteredQCMs.length)} sur {filteredQCMs.length} résultats
                         </div>
@@ -547,7 +547,7 @@ const QCMBanque = () => {
             <AnimatePresence>
                 {showAddQCMForm && (
                     <Dialog open={showAddQCMForm} onOpenChange={(open) => { if (!open) resetForm(); }}>
-                        <DialogContent className="bg-white border-gray-200 text-black sm:max-w-lg max-h-[90vh] overflow-y-auto">
+                        <DialogContent className="bg-card border-border text-black sm:max-w-lg max-h-[90vh] overflow-y-auto">
                             <motion.div
                                 initial={{ opacity: 0, scale: 0.95 }}
                                 animate={{ opacity: 1, scale: 1 }}
@@ -558,7 +558,7 @@ const QCMBanque = () => {
                                     <DialogTitle className="text-black text-xl">
                                         {editingQCM ? "Modifier le QCM Banque" : "Créer un QCM Banque"}
                                     </DialogTitle>
-                                    <DialogDescription className="text-gray-600">
+                                    <DialogDescription className="text-muted-foreground">
                                         Ajouter un nouveau QCM Banque avec les détails nécessaires
                                     </DialogDescription>
                                 </DialogHeader>
@@ -570,7 +570,7 @@ const QCMBanque = () => {
                                             placeholder="Ex: Banque QCM Anatomie"
                                             value={formData.name}
                                             onChange={(e) => handleFormChange("name", e.target.value)}
-                                            className="bg-gray-50 border-gray-300 text-black placeholder:text-gray-500 focus:border-green-500 focus:ring-green-500"
+                                            className="bg-background border-gray-300 text-black placeholder:text-muted-foreground focus:border-green-500 focus:ring-green-500"
                                         />
                                     </div>
 
@@ -587,10 +587,10 @@ const QCMBanque = () => {
                                                 }
                                             }
                                         }}>
-                                            <SelectTrigger className="bg-gray-50 border-gray-300 text-black">
+                                            <SelectTrigger className="bg-background border-gray-300 text-black">
                                                 <SelectValue placeholder="Tous les semestres" />
                                             </SelectTrigger>
-                                            <SelectContent className="bg-white border-gray-200">
+                                            <SelectContent className="bg-card border-border">
                                                 <SelectItem value="all" className="text-black">Tous les semestres</SelectItem>
                                                 <SelectItem value="S1" className="text-black">Semestre 1</SelectItem>
                                                 <SelectItem value="S2" className="text-black">Semestre 2</SelectItem>
@@ -609,10 +609,10 @@ const QCMBanque = () => {
                                     <div className="space-y-2">
                                         <Label className="text-black font-medium">Module *</Label>
                                         <Select value={formData.moduleId} onValueChange={(value) => handleFormChange("moduleId", value)}>
-                                            <SelectTrigger className="bg-gray-50 border-gray-300 text-black">
+                                            <SelectTrigger className="bg-background border-gray-300 text-black">
                                                 <SelectValue placeholder="Sélectionner un module" />
                                             </SelectTrigger>
-                                            <SelectContent className="bg-white border-gray-200">
+                                            <SelectContent className="bg-card border-border">
                                                 {modules
                                                     .filter(m => formSemesterFilter === "all" || m.semester === formSemesterFilter)
                                                     .map((m) => (
@@ -623,7 +623,7 @@ const QCMBanque = () => {
                                             </SelectContent>
                                         </Select>
                                         {formSemesterFilter !== "all" && (
-                                            <p className="text-xs text-gray-500">
+                                            <p className="text-xs text-muted-foreground">
                                                 {modules.filter(m => m.semester === formSemesterFilter).length} module(s) dans {formSemesterFilter}
                                             </p>
                                         )}
@@ -635,7 +635,7 @@ const QCMBanque = () => {
                                         <div className="space-y-3">
                                             {/* Image preview */}
                                             {imagePreview && (
-                                                <div className="relative w-full h-32 rounded-lg overflow-hidden border border-gray-200">
+                                                <div className="relative w-full h-32 rounded-lg overflow-hidden border border-border">
                                                     <img 
                                                         src={imagePreview} 
                                                         alt="Aperçu" 
@@ -670,10 +670,10 @@ const QCMBanque = () => {
                                                     {imagePreview ? "Changer l'image" : "Télécharger une image"}
                                                 </Button>
                                                 {imageFile && (
-                                                    <span className="text-xs text-gray-500">{imageFile.name}</span>
+                                                    <span className="text-xs text-muted-foreground">{imageFile.name}</span>
                                                 )}
                                             </div>
-                                            <p className="text-xs text-gray-500">Formats acceptés: JPG, PNG, GIF. Max 5MB.</p>
+                                            <p className="text-xs text-muted-foreground">Formats acceptés: JPG, PNG, GIF. Max 5MB.</p>
                                         </div>
                                     </div>
 
@@ -683,7 +683,7 @@ const QCMBanque = () => {
                                             placeholder="Entrez une description ou des informations supplémentaires..."
                                             value={formData.infoText}
                                             onChange={(e) => handleFormChange("infoText", e.target.value)}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-black placeholder:text-gray-500 focus:border-green-500 focus:ring-green-500 min-h-[80px] resize-none"
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-md bg-background text-black placeholder:text-muted-foreground focus:border-green-500 focus:ring-green-500 min-h-[80px] resize-none"
                                         />
                                     </div>
 
@@ -691,7 +691,7 @@ const QCMBanque = () => {
                                         <Button
                                             type="button"
                                             variant="outline"
-                                            className="border-gray-300 text-black hover:bg-gray-100 hover:text-black"
+                                            className="border-gray-300 text-black hover:bg-muted hover:text-black"
                                             onClick={resetForm}
                                         >
                                             Annuler
@@ -724,28 +724,28 @@ const QCMBanque = () => {
                             </DialogHeader>
                             <div className="space-y-4 py-4">
                                 <div className="space-y-2">
-                                    <Label className="text-sm font-semibold text-gray-700">Nom du QCM</Label>
-                                    <p className="text-gray-900 bg-gray-50 p-2 rounded border">{viewingQCM.name}</p>
+                                    <Label className="text-sm font-semibold text-foreground">Nom du QCM</Label>
+                                    <p className="text-foreground bg-background p-2 rounded border">{viewingQCM.name}</p>
                                 </div>
                                 <div className="space-y-2">
-                                    <Label className="text-sm font-semibold text-gray-700">Module</Label>
-                                    <p className="text-gray-900 bg-gray-50 p-2 rounded border">{viewingQCM.moduleName}</p>
+                                    <Label className="text-sm font-semibold text-foreground">Module</Label>
+                                    <p className="text-foreground bg-background p-2 rounded border">{viewingQCM.moduleName}</p>
                                 </div>
                                 {viewingQCM.imageUrl && (
                                     <div className="space-y-2">
-                                        <Label className="text-sm font-semibold text-gray-700">Image</Label>
+                                        <Label className="text-sm font-semibold text-foreground">Image</Label>
                                         <img src={viewingQCM.imageUrl} alt={viewingQCM.name} className="w-full h-32 object-cover rounded border" />
                                     </div>
                                 )}
                                 {viewingQCM.helpText && (
                                     <div className="space-y-2">
-                                        <Label className="text-sm font-semibold text-gray-700">Texte d'aide</Label>
-                                        <p className="text-gray-900 bg-gray-50 p-2 rounded border">{viewingQCM.helpText}</p>
+                                        <Label className="text-sm font-semibold text-foreground">Texte d'aide</Label>
+                                        <p className="text-foreground bg-background p-2 rounded border">{viewingQCM.helpText}</p>
                                     </div>
                                 )}
                                 <div className="space-y-2">
-                                    <Label className="text-sm font-semibold text-gray-700">Total Questions</Label>
-                                    <p className="text-gray-900 bg-gray-50 p-2 rounded border">{viewingQCM.totalQuestions}</p>
+                                    <Label className="text-sm font-semibold text-foreground">Total Questions</Label>
+                                    <p className="text-foreground bg-background p-2 rounded border">{viewingQCM.totalQuestions}</p>
                                 </div>
                             </div>
                             <DialogFooter>

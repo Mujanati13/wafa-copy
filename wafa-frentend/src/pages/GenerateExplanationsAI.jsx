@@ -442,7 +442,7 @@ const GenerateExplanationsAI = () => {
                 Génération AI d'Explications
               </h1>
             </div>
-            <p className="text-gray-600 mt-2">Utilisez Google Gemini pour générer automatiquement des explications pour vos questions</p>
+            <p className="text-muted-foreground mt-2">Utilisez Google Gemini pour générer automatiquement des explications pour vos questions</p>
           </div>
           
           <Button
@@ -492,7 +492,7 @@ const GenerateExplanationsAI = () => {
             <CardContent className="pt-6 space-y-6">
               {/* Mode Selection */}
               <div className="space-y-2">
-                <Label className="font-semibold text-gray-700">Mode de génération</Label>
+                <Label className="font-semibold text-foreground">Mode de génération</Label>
                 <Select value={mode} onValueChange={setMode}>
                   <SelectTrigger>
                     <SelectValue />
@@ -512,7 +512,7 @@ const GenerateExplanationsAI = () => {
                     </SelectItem>
                   </SelectContent>
                 </Select>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-muted-foreground">
                   {mode === "single" 
                     ? "Génère une explication pour la première question spécifiée"
                     : "Génère des explications pour plusieurs questions (ex: 1-5,10,15)"}
@@ -522,7 +522,7 @@ const GenerateExplanationsAI = () => {
               {/* Module Selection */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label className="font-semibold text-gray-700">Module *</Label>
+                  <Label className="font-semibold text-foreground">Module *</Label>
                   <Select 
                     value={selectedModule} 
                     onValueChange={(val) => {
@@ -544,13 +544,13 @@ const GenerateExplanationsAI = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="font-semibold text-gray-700">Examen(s)</Label>
+                  <Label className="font-semibold text-foreground">Examen(s)</Label>
                   <Select 
                     value={selectedExam} 
                     onValueChange={setSelectedExam}
                     disabled={!selectedModule}
                   >
-                    <SelectTrigger className="disabled:bg-gray-100">
+                    <SelectTrigger className="disabled:bg-muted">
                       <SelectValue placeholder={selectedModule ? "Tous les examens du module" : "Sélectionner un module d'abord"} />
                     </SelectTrigger>
                     <SelectContent>
@@ -565,7 +565,7 @@ const GenerateExplanationsAI = () => {
                       ))}
                     </SelectContent>
                   </Select>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-muted-foreground">
                     ✓ Tous les examens du module sont sélectionnés par défaut
                   </p>
                 </div>
@@ -573,14 +573,14 @@ const GenerateExplanationsAI = () => {
 
               {/* Question Numbers */}
               <div className="space-y-2">
-                <Label className="font-semibold text-gray-700">Numéros de questions *</Label>
+                <Label className="font-semibold text-foreground">Numéros de questions *</Label>
                 <Input
                   placeholder={mode === "single" ? "ex: 1" : "ex: 1-5,7,10-15"}
                   value={questionNumbers}
                   onChange={(e) => setQuestionNumbers(e.target.value)}
                   className="h-10"
                 />
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-muted-foreground">
                   {mode === "single" 
                     ? "Spécifier le numéro d'une question"
                     : "Utilisez des virgules et des tirets pour spécifier plusieurs questions"}
@@ -589,7 +589,7 @@ const GenerateExplanationsAI = () => {
 
               {/* Language Selection */}
               <div className="space-y-2">
-                <Label className="font-semibold text-gray-700">Langue</Label>
+                <Label className="font-semibold text-foreground">Langue</Label>
                 <Select value={language} onValueChange={setLanguage}>
                   <SelectTrigger>
                     <SelectValue />
@@ -603,7 +603,7 @@ const GenerateExplanationsAI = () => {
 
               {/* Divider */}
               <div className="border-t pt-4">
-                <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
                   <Sparkles className="w-4 h-4 text-purple-600" />
                   Options avancées (optionnel)
                 </h3>
@@ -614,7 +614,7 @@ const GenerateExplanationsAI = () => {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <FileText className="w-5 h-5 text-purple-600" />
-                        <h4 className="font-semibold text-gray-800">
+                        <h4 className="font-semibold text-foreground">
                           Fichiers de contexte du module ({moduleContextFiles.length})
                         </h4>
                       </div>
@@ -628,7 +628,7 @@ const GenerateExplanationsAI = () => {
                       </Button>
                     </div>
 
-                    <p className="text-xs text-gray-600">
+                    <p className="text-xs text-muted-foreground">
                       📚 Ces fichiers sont sauvegardés dans le module et seront automatiquement utilisés pour toutes les générations futures
                     </p>
 
@@ -681,13 +681,13 @@ const GenerateExplanationsAI = () => {
                               {moduleContextFiles.map((file, idx) => (
                                 <div
                                   key={file._id || idx}
-                                  className="flex items-center justify-between bg-white border border-purple-200 rounded-lg px-3 py-2"
+                                  className="flex items-center justify-between bg-card border border-purple-200 rounded-lg px-3 py-2"
                                 >
                                   <div className="flex items-center gap-2 flex-1 min-w-0">
                                     <FileText className="w-4 h-4 text-purple-600 flex-shrink-0" />
                                     <div className="flex-1 min-w-0">
-                                      <p className="text-sm text-gray-700 truncate">{file.filename}</p>
-                                      <p className="text-xs text-gray-500">
+                                      <p className="text-sm text-foreground truncate">{file.filename}</p>
+                                      <p className="text-xs text-muted-foreground">
                                         {(file.size / 1024 / 1024).toFixed(2)} MB
                                         {file.uploadedAt && ` • ${new Date(file.uploadedAt).toLocaleDateString('fr-FR')}`}
                                       </p>
@@ -705,7 +705,7 @@ const GenerateExplanationsAI = () => {
                               ))}
                             </div>
                           ) : (
-                            <p className="text-sm text-gray-500 text-center py-3">
+                            <p className="text-sm text-muted-foreground text-center py-3">
                               Aucun fichier de contexte. Ajoutez des PDFs pour améliorer les explications IA.
                             </p>
                           )}
@@ -718,7 +718,7 @@ const GenerateExplanationsAI = () => {
                 {/* Custom Prompt */}
                 <div className="space-y-2 mb-4">
                   <div className="flex items-center justify-between">
-                    <Label className="font-semibold text-gray-700">Prompt personnalisé pour ce module</Label>
+                    <Label className="font-semibold text-foreground">Prompt personnalisé pour ce module</Label>
                     <div className="flex gap-2">
                       <Button
                         size="sm"
@@ -775,7 +775,7 @@ Donne une explication directe SANS introduction. Explique pourquoi les réponses
 
                 {/* PDF Context Upload */}
                 <div className="space-y-2">
-                  <Label className="font-semibold text-gray-700">Contexte PDF temporaire</Label>
+                  <Label className="font-semibold text-foreground">Contexte PDF temporaire</Label>
                   <div className="flex items-center gap-2">
                     <input
                       type="file"
@@ -820,14 +820,14 @@ Donne une explication directe SANS introduction. Explique pourquoi les réponses
                       </div>
                     )}
                   </div>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-muted-foreground">
                     📄 Contexte temporaire pour cette génération uniquement (non sauvegardé dans le module)
                   </p>
                 </div>
               </div>
             </CardContent>
 
-            <CardFooter className="bg-gray-50 border-t flex justify-end gap-3">
+            <CardFooter className="bg-background border-t flex justify-end gap-3">
               <Button
                 variant="outline"
                 onClick={() => {
@@ -896,9 +896,9 @@ Donne une explication directe SANS introduction. Explique pourquoi les réponses
                       <CheckCircle className="w-5 h-5" />
                       <span className="font-medium">Explication créée avec succès</span>
                     </div>
-                    <div className="bg-gray-50 rounded-lg p-4 border">
+                    <div className="bg-background rounded-lg p-4 border">
                       <h3 className="font-semibold mb-2">{results.explanation.title}</h3>
-                      <div className="text-sm text-gray-700 whitespace-pre-wrap">
+                      <div className="text-sm text-foreground whitespace-pre-wrap">
                         {results.explanation.contentText}
                       </div>
                       <div className="mt-3 flex gap-2">
@@ -919,15 +919,15 @@ Donne une explication directe SANS introduction. Explique pourquoi les réponses
                     <div className="grid grid-cols-3 gap-4">
                       <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
                         <div className="text-2xl font-bold text-blue-600">{results.saved + (results.failed || 0)}</div>
-                        <div className="text-sm text-gray-600">Total traité</div>
+                        <div className="text-sm text-muted-foreground">Total traité</div>
                       </div>
                       <div className="bg-green-50 rounded-lg p-4 border border-green-200">
                         <div className="text-2xl font-bold text-green-600">{results.saved}</div>
-                        <div className="text-sm text-gray-600">Réussi</div>
+                        <div className="text-sm text-muted-foreground">Réussi</div>
                       </div>
                       <div className="bg-red-50 rounded-lg p-4 border border-red-200">
                         <div className="text-2xl font-bold text-red-600">{results.failed || 0}</div>
-                        <div className="text-sm text-gray-600">Échoué</div>
+                        <div className="text-sm text-muted-foreground">Échoué</div>
                       </div>
                     </div>
 
@@ -960,7 +960,7 @@ Donne une explication directe SANS introduction. Explique pourquoi les réponses
                     {/* Detailed Results */}
                     {results.explanations && results.explanations.length > 0 && (
                       <div className="space-y-3">
-                        <h4 className="font-semibold text-gray-800 flex items-center gap-2">
+                        <h4 className="font-semibold text-foreground flex items-center gap-2">
                           <Zap className="w-4 h-4 text-yellow-500" />
                           Explications générées
                         </h4>
@@ -976,7 +976,7 @@ Donne une explication directe SANS introduction. Explique pourquoi les réponses
                                 className={`rounded-lg border-2 transition-all cursor-pointer ${
                                   expandedResults.has(idx)
                                     ? 'border-purple-400 bg-purple-50'
-                                    : 'border-gray-200 bg-white hover:border-purple-300'
+                                    : 'border-border bg-card hover:border-purple-300'
                                 }`}
                               >
                                 {/* Result Header */}
@@ -989,10 +989,10 @@ Donne une explication directe SANS introduction. Explique pourquoi les réponses
                                       {idx + 1}
                                     </div>
                                     <div className="flex-1">
-                                      <h3 className="font-semibold text-gray-800">
+                                      <h3 className="font-semibold text-foreground">
                                         Question {explanation.questionNumber || `${idx + 1}`}
                                       </h3>
-                                      <p className="text-sm text-gray-600 line-clamp-1">
+                                      <p className="text-sm text-muted-foreground line-clamp-1">
                                         {explanation.title || explanation.contentText?.substring(0, 80) + '...'}
                                       </p>
                                     </div>
@@ -1022,9 +1022,9 @@ Donne une explication directe SANS introduction. Explique pourquoi les réponses
                                       <CardContent className="pt-4 space-y-4">
                                         {/* Explanation Content */}
                                         <div>
-                                          <h4 className="font-medium text-gray-800 mb-2">Explication générée</h4>
-                                          <div className="bg-white rounded border border-purple-100 p-4">
-                                            <div className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
+                                          <h4 className="font-medium text-foreground mb-2">Explication générée</h4>
+                                          <div className="bg-card rounded border border-purple-100 p-4">
+                                            <div className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
                                               {explanation.contentText || explanation.title}
                                             </div>
                                           </div>
@@ -1090,7 +1090,7 @@ Donne une explication directe SANS introduction. Explique pourquoi les réponses
                     {/* Error Details */}
                     {results.errors && results.errors.length > 0 && (
                       <div className="space-y-2">
-                        <h4 className="font-semibold text-gray-700 flex items-center gap-2">
+                        <h4 className="font-semibold text-foreground flex items-center gap-2">
                           <AlertCircle className="w-4 h-4 text-orange-500" />
                           Erreurs détaillées ({results.errors.length})
                         </h4>

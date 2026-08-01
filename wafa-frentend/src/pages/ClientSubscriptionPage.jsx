@@ -246,8 +246,8 @@ const ClientSubscriptionPage = () => {
           transition={{ duration: 0.5 }}
           className="text-center space-y-4"
         >
-          <h1 className="text-4xl font-bold text-slate-900">Mes Abonnements</h1>
-          <p className="text-slate-600 max-w-2xl mx-auto">
+          <h1 className="text-4xl font-bold text-foreground">Mes Abonnements</h1>
+          <p className="text-muted-foreground max-w-2xl mx-auto">
             Gérez votre plan d'abonnement et accédez à toutes les fonctionnalités premium
           </p>
         </motion.div>
@@ -281,7 +281,7 @@ const ClientSubscriptionPage = () => {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
-                    <p className="text-sm text-slate-600 mb-2">Plan d'abonnement</p>
+                    <p className="text-sm text-muted-foreground mb-2">Plan d'abonnement</p>
                     <Badge className="text-lg px-4 py-2" variant={userSubscription?.plan === 'Premium' ? 'default' : 'secondary'}>
                       {userSubscription?.plan === 'Premium Annuel' ? 'Premium Pro' : (userSubscription?.plan || 'Plan Gratuit')}
                     </Badge>
@@ -289,13 +289,13 @@ const ClientSubscriptionPage = () => {
                   {userSubscription?.subscription && (
                     <>
                       <div>
-                        <p className="text-sm text-slate-600">Date d'expiration</p>
+                        <p className="text-sm text-muted-foreground">Date d'expiration</p>
                         <p className="font-semibold">
                           {new Date(userSubscription.subscription.expiryDate).toLocaleDateString('fr-FR')}
                         </p>
                       </div>
                       <div>
-                        <p className="text-sm text-slate-600">Statut</p>
+                        <p className="text-sm text-muted-foreground">Statut</p>
                         <Badge variant="outline" className="gap-1">
                           <div className="w-2 h-2 bg-green-500 rounded-full" />
                           Actif
@@ -342,16 +342,16 @@ const ClientSubscriptionPage = () => {
                           <CardTitle className="text-2xl">{plan.name === 'Premium Annuel' ? 'Premium Pro' : plan.name}</CardTitle>
                           <CardDescription>{plan.description}</CardDescription>
                           <div className="mt-4">
-                            <span className="text-3xl font-bold text-slate-900">
+                            <span className="text-3xl font-bold text-foreground">
                               {plan.price === 0 ? 'Gratuit' : `${plan.price} MAD`}
                             </span>
                             {plan.oldPrice && (
-                              <span className="text-sm text-slate-500 line-through ml-2">
+                              <span className="text-sm text-muted-foreground line-through ml-2">
                                 {plan.oldPrice} MAD
                               </span>
                             )}
                             {plan.duration && !isFree && (
-                              <span className="text-sm text-slate-500 ml-2">
+                              <span className="text-sm text-muted-foreground ml-2">
                                 / {plan.duration}
                               </span>
                             )}
@@ -365,15 +365,15 @@ const ClientSubscriptionPage = () => {
                               <>
                                 <div className="flex items-start gap-3">
                                   <span className="text-green-500 flex-shrink-0 mt-0.5">✔️</span>
-                                  <span className="text-sm text-slate-700">1 module</span>
+                                  <span className="text-sm text-muted-foreground">1 module</span>
                                 </div>
                                 <div className="flex items-start gap-3">
                                   <span className="text-green-500 flex-shrink-0 mt-0.5">✔️</span>
-                                  <span className="text-sm text-slate-700">Questions triées (question par question, toutes les questions)</span>
+                                  <span className="text-sm text-muted-foreground">Questions triées (question par question, toutes les questions)</span>
                                 </div>
                                 <div className="flex items-start gap-3">
                                   <span className="text-green-500 flex-shrink-0 mt-0.5">✔️</span>
-                                  <span className="text-sm text-slate-700">Interface adaptée aux mobiles</span>
+                                  <span className="text-sm text-muted-foreground">Interface adaptée aux mobiles</span>
                                 </div>
                                 <div className="flex items-start gap-3 opacity-50">
                                   <span className="text-red-500 flex-shrink-0 mt-0.5">❌</span>
@@ -414,27 +414,27 @@ const ClientSubscriptionPage = () => {
                               <>
                                 <div className="flex items-start gap-3">
                                   <span className="text-green-500 flex-shrink-0 mt-0.5">✔️</span>
-                                  <span className="text-sm text-slate-700">Tous les modules</span>
+                                  <span className="text-sm text-muted-foreground">Tous les modules</span>
                                 </div>
                                 <div className="flex items-start gap-3">
                                   <span className="text-green-500 flex-shrink-0 mt-0.5">✔️</span>
-                                  <span className="text-sm text-slate-700">Questions triées (question par question, toutes les questions)</span>
+                                  <span className="text-sm text-muted-foreground">Questions triées (question par question, toutes les questions)</span>
                                 </div>
                                 <div className="flex items-start gap-3">
                                   <span className="text-green-500 flex-shrink-0 mt-0.5">✔️</span>
-                                  <span className="text-sm text-slate-700">Interface adaptée aux mobiles</span>
+                                  <span className="text-sm text-muted-foreground">Interface adaptée aux mobiles</span>
                                 </div>
                                 <div className="flex items-start gap-3">
                                   <span className="text-green-500 flex-shrink-0 mt-0.5">✔️</span>
-                                  <span className="text-sm text-slate-700">Accès aux classements</span>
+                                  <span className="text-sm text-muted-foreground">Accès aux classements</span>
                                 </div>
                                 <div className="flex items-start gap-3">
                                   <span className="text-green-500 flex-shrink-0 mt-0.5">✔️</span>
-                                  <span className="text-sm text-slate-700">Accès aux statistiques</span>
+                                  <span className="text-sm text-muted-foreground">Accès aux statistiques</span>
                                 </div>
                                 <div className="flex items-start gap-3">
                                   <span className="text-green-500 flex-shrink-0 mt-0.5">✔️</span>
-                                  <span className="text-sm text-slate-700">Explication des étudiants</span>
+                                  <span className="text-sm text-muted-foreground">Explication des étudiants</span>
                                 </div>
                                 <div className="flex items-start gap-3 opacity-50">
                                   <span className="text-red-500 flex-shrink-0 mt-0.5">❌</span>
@@ -463,51 +463,51 @@ const ClientSubscriptionPage = () => {
                               <>
                                 <div className="flex items-start gap-3">
                                   <span className="text-green-500 flex-shrink-0 mt-0.5">✔️</span>
-                                  <span className="text-sm text-slate-700">Tous les modules</span>
+                                  <span className="text-sm text-muted-foreground">Tous les modules</span>
                                 </div>
                                 <div className="flex items-start gap-3">
                                   <span className="text-green-500 flex-shrink-0 mt-0.5">✔️</span>
-                                  <span className="text-sm text-slate-700">Questions triées (question par question, toutes les questions)</span>
+                                  <span className="text-sm text-muted-foreground">Questions triées (question par question, toutes les questions)</span>
                                 </div>
                                 <div className="flex items-start gap-3">
                                   <span className="text-green-500 flex-shrink-0 mt-0.5">✔️</span>
-                                  <span className="text-sm text-slate-700">Interface adaptée aux mobiles</span>
+                                  <span className="text-sm text-muted-foreground">Interface adaptée aux mobiles</span>
                                 </div>
                                 <div className="flex items-start gap-3">
                                   <span className="text-green-500 flex-shrink-0 mt-0.5">✔️</span>
-                                  <span className="text-sm text-slate-700">Pourcentage des réponses</span>
+                                  <span className="text-sm text-muted-foreground">Pourcentage des réponses</span>
                                 </div>
                                 <div className="flex items-start gap-3">
                                   <span className="text-green-500 flex-shrink-0 mt-0.5">✔️</span>
-                                  <span className="text-sm text-slate-700">Accès aux classements</span>
+                                  <span className="text-sm text-muted-foreground">Accès aux classements</span>
                                 </div>
                                 <div className="flex items-start gap-3">
                                   <span className="text-green-500 flex-shrink-0 mt-0.5">✔️</span>
-                                  <span className="text-sm text-slate-700">Accès aux statistiques</span>
+                                  <span className="text-sm text-muted-foreground">Accès aux statistiques</span>
                                 </div>
                                 <div className="flex items-start gap-3">
                                   <span className="text-green-500 flex-shrink-0 mt-0.5">✔️</span>
-                                  <span className="text-sm text-slate-700">Explication des étudiants</span>
+                                  <span className="text-sm text-muted-foreground">Explication des étudiants</span>
                                 </div>
                                 <div className="flex items-start gap-3">
                                   <span className="text-green-500 flex-shrink-0 mt-0.5">✔️</span>
-                                  <span className="text-sm text-slate-700">Explication de l'IA</span>
+                                  <span className="text-sm text-muted-foreground">Explication de l'IA</span>
                                 </div>
                                 <div className="flex items-start gap-3">
                                   <span className="text-green-500 flex-shrink-0 mt-0.5">✔️</span>
-                                  <span className="text-sm text-slate-700">Accès à la communauté votes</span>
+                                  <span className="text-sm text-muted-foreground">Accès à la communauté votes</span>
                                 </div>
                                 <div className="flex items-start gap-3">
                                   <span className="text-green-500 flex-shrink-0 mt-0.5">✔️</span>
-                                  <span className="text-sm text-slate-700">Création de playlists</span>
+                                  <span className="text-sm text-muted-foreground">Création de playlists</span>
                                 </div>
                                 <div className="flex items-start gap-3">
                                   <span className="text-green-500 flex-shrink-0 mt-0.5">✔️</span>
-                                  <span className="text-sm text-slate-700">Notes personnalisées</span>
+                                  <span className="text-sm text-muted-foreground">Notes personnalisées</span>
                                 </div>
                                 <div className="flex items-start gap-3">
                                   <span className="text-green-500 flex-shrink-0 mt-0.5">✔️</span>
-                                  <span className="text-sm text-slate-700">Assistance prioritaire</span>
+                                  <span className="text-sm text-muted-foreground">Assistance prioritaire</span>
                                 </div>
                               </>
                             )}
@@ -520,7 +520,7 @@ const ClientSubscriptionPage = () => {
                               return (
                                 <div key={idx} className={`flex items-start gap-3 ${!isIncluded ? 'opacity-50' : ''}`}>
                                   <Check className={`w-5 h-5 flex-shrink-0 mt-0.5 ${isIncluded ? 'text-green-500' : 'text-slate-400'}`} />
-                                  <span className={`text-sm ${isIncluded ? 'text-slate-700' : 'text-slate-400 line-through'}`}>{featureText}</span>
+                                  <span className={`text-sm ${isIncluded ? 'text-muted-foreground' : 'text-slate-400 line-through'}`}>{featureText}</span>
                                 </div>
                               );
                             })}
@@ -580,13 +580,13 @@ const ClientSubscriptionPage = () => {
           {selectedPlan && (
             <div className="space-y-6 py-4">
               {/* Plan Summary */}
-              <div className="p-4 bg-slate-50 rounded-lg border">
+              <div className="p-4 bg-card rounded-lg border">
                 <div className="flex justify-between items-center mb-2">
                   <span className="font-medium">{selectedPlan.name}</span>
                   <span className="font-bold text-lg">{selectedPlan.price} MAD</span>
                 </div>
                 {selectedPlan.period && (
-                  <p className="text-sm text-slate-600">
+                  <p className="text-sm text-muted-foreground">
                     Durée: {selectedPlan.period === "Annee" ? "1 Année" : "1 Semestre"}
                   </p>
                 )}
@@ -594,20 +594,20 @@ const ClientSubscriptionPage = () => {
 
               {/* Semester Selection */}
               <div className="space-y-3">
-                <div className="flex items-center gap-2 text-slate-700">
+                <div className="flex items-center gap-2 text-muted-foreground">
                   <BookOpen className="w-5 h-5 text-blue-600" />
                   <h3 className="font-semibold">
                     Sélectionnez {getMaxSemesters(selectedPlan)} semestre{getMaxSemesters(selectedPlan) > 1 ? 's' : ''}
                   </h3>
                 </div>
-                <p className="text-sm text-slate-500">
+                <p className="text-sm text-muted-foreground">
                   Choisissez les semestres auxquels vous souhaitez accéder avec votre abonnement
                 </p>
 
                 <div className="space-y-4 mt-3">
                   {/* Year 1 - S1, S2 */}
                   <div className="space-y-2">
-                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">1ère Année</p>
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">1ère Année</p>
                     <div className="grid grid-cols-2 gap-3">
                       {["S1", "S2"].map((semester) => {
                         const isSelected = selectedSemesters.includes(semester);
@@ -621,8 +621,8 @@ const ClientSubscriptionPage = () => {
                               ${isSelected
                                 ? 'border-blue-500 bg-blue-50 text-blue-700'
                                 : isDisabled
-                                  ? 'border-slate-200 bg-slate-100 text-slate-400 cursor-not-allowed opacity-50'
-                                  : 'border-slate-200 hover:border-blue-300 hover:bg-blue-50'
+                                  ? 'border-border bg-muted text-slate-400 cursor-not-allowed opacity-50'
+                                  : 'border-border hover:border-blue-300 hover:bg-blue-50'
                               }
                             `}
                             onClick={() => !isDisabled && handleSemesterChange(semester, !isSelected)}
@@ -650,7 +650,7 @@ const ClientSubscriptionPage = () => {
 
                   {/* Year 2 - S3, S4 */}
                   <div className="space-y-2">
-                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">2ème Année</p>
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">2ème Année</p>
                     <div className="grid grid-cols-2 gap-3">
                       {["S3", "S4"].map((semester) => {
                         const isSelected = selectedSemesters.includes(semester);
@@ -664,8 +664,8 @@ const ClientSubscriptionPage = () => {
                               ${isSelected
                                 ? 'border-blue-500 bg-blue-50 text-blue-700'
                                 : isDisabled
-                                  ? 'border-slate-200 bg-slate-100 text-slate-400 cursor-not-allowed opacity-50'
-                                  : 'border-slate-200 hover:border-blue-300 hover:bg-blue-50'
+                                  ? 'border-border bg-muted text-slate-400 cursor-not-allowed opacity-50'
+                                  : 'border-border hover:border-blue-300 hover:bg-blue-50'
                               }
                             `}
                             onClick={() => !isDisabled && handleSemesterChange(semester, !isSelected)}
@@ -693,7 +693,7 @@ const ClientSubscriptionPage = () => {
 
                   {/* Year 3 - S5, S6 */}
                   <div className="space-y-2">
-                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">3ème Année</p>
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">3ème Année</p>
                     <div className="grid grid-cols-2 gap-3">
                       {["S5", "S6"].map((semester) => {
                         const isSelected = selectedSemesters.includes(semester);
@@ -707,8 +707,8 @@ const ClientSubscriptionPage = () => {
                               ${isSelected
                                 ? 'border-blue-500 bg-blue-50 text-blue-700'
                                 : isDisabled
-                                  ? 'border-slate-200 bg-slate-100 text-slate-400 cursor-not-allowed opacity-50'
-                                  : 'border-slate-200 hover:border-blue-300 hover:bg-blue-50'
+                                  ? 'border-border bg-muted text-slate-400 cursor-not-allowed opacity-50'
+                                  : 'border-border hover:border-blue-300 hover:bg-blue-50'
                               }
                             `}
                             onClick={() => !isDisabled && handleSemesterChange(semester, !isSelected)}
@@ -736,7 +736,7 @@ const ClientSubscriptionPage = () => {
 
                   {/* Year 4 - S7, S8 */}
                   <div className="space-y-2">
-                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">4ème Année</p>
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">4ème Année</p>
                     <div className="grid grid-cols-2 gap-3">
                       {["S7", "S8"].map((semester) => {
                         const isSelected = selectedSemesters.includes(semester);
@@ -750,8 +750,8 @@ const ClientSubscriptionPage = () => {
                               ${isSelected
                                 ? 'border-blue-500 bg-blue-50 text-blue-700'
                                 : isDisabled
-                                  ? 'border-slate-200 bg-slate-100 text-slate-400 cursor-not-allowed opacity-50'
-                                  : 'border-slate-200 hover:border-blue-300 hover:bg-blue-50'
+                                  ? 'border-border bg-muted text-slate-400 cursor-not-allowed opacity-50'
+                                  : 'border-border hover:border-blue-300 hover:bg-blue-50'
                               }
                             `}
                             onClick={() => !isDisabled && handleSemesterChange(semester, !isSelected)}
@@ -779,7 +779,7 @@ const ClientSubscriptionPage = () => {
 
                   {/* Year 5 - S9, S10 */}
                   <div className="space-y-2">
-                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">5ème Année</p>
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">5ème Année</p>
                     <div className="grid grid-cols-2 gap-3">
                       {["S9", "S10"].map((semester) => {
                         const isSelected = selectedSemesters.includes(semester);
@@ -793,8 +793,8 @@ const ClientSubscriptionPage = () => {
                               ${isSelected
                                 ? 'border-blue-500 bg-blue-50 text-blue-700'
                                 : isDisabled
-                                  ? 'border-slate-200 bg-slate-100 text-slate-400 cursor-not-allowed opacity-50'
-                                  : 'border-slate-200 hover:border-blue-300 hover:bg-blue-50'
+                                  ? 'border-border bg-muted text-slate-400 cursor-not-allowed opacity-50'
+                                  : 'border-border hover:border-blue-300 hover:bg-blue-50'
                               }
                             `}
                             onClick={() => !isDisabled && handleSemesterChange(semester, !isSelected)}
@@ -843,7 +843,7 @@ const ClientSubscriptionPage = () => {
                     relative p-5 rounded-xl border-2 cursor-pointer transition-all
                     ${paymentMethod === 'transfer'
                       ? 'border-blue-500 bg-blue-50 shadow-lg'
-                      : 'border-slate-200 hover:border-blue-300 hover:bg-blue-50/50'
+                      : 'border-border hover:border-blue-300 hover:bg-blue-50/50'
                     }
                   `}
                 >
@@ -859,30 +859,30 @@ const ClientSubscriptionPage = () => {
                     <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
                       <Building2 className="w-6 h-6 text-white" />
                     </div>
-                    <h4 className="font-bold text-lg text-slate-900">Contact puis Transfert</h4>
+                    <h4 className="font-bold text-lg text-foreground">Contact puis Transfert</h4>
                   </div>
 
-                  <p className="text-sm text-slate-600 mb-2">
+                  <p className="text-sm text-muted-foreground mb-2">
                     Contactez-nous sur WhatsApp pour finaliser votre commande et obtenir tous les détails
                   </p>
                   <p className="text-xl font-bold text-blue-600 mb-4">{WHATSAPP_NUMBER}</p>
 
                   <ul className="space-y-2">
-                    <li className="flex items-center gap-2 text-sm text-slate-700">
+                    <li className="flex items-center gap-2 text-sm text-muted-foreground">
                       <div className="w-2 h-2 rounded-full bg-green-500"></div>
                       Contactez-nous sur WhatsApp pour finaliser votre commande
                     </li>
-                    <li className="flex items-center gap-2 text-sm text-slate-700">
+                    <li className="flex items-center gap-2 text-sm text-muted-foreground">
                       <div className="w-2 h-2 rounded-full bg-green-500"></div>
                       Procédez au paiement pour valider et expédier votre commande
                     </li>
-                    <li className="flex items-center gap-2 text-sm text-slate-700">
+                    <li className="flex items-center gap-2 text-sm text-muted-foreground">
                       <div className="w-2 h-2 rounded-full bg-green-500"></div>
                       Activation sous 24H Inchallah (délai étendu à 48H lors des fortes sollicitations)
                     </li>
                   </ul>
 
-                  <div className="mt-4 flex items-center gap-2 text-slate-500">
+                  <div className="mt-4 flex items-center gap-2 text-muted-foreground">
                     <Clock className="w-4 h-4" />
                     <span className="text-sm font-medium">24-48H</span>
                   </div>
@@ -918,7 +918,7 @@ const ClientSubscriptionPage = () => {
             {!paymentMethod && (
               <Button
                 disabled
-                className="bg-slate-300 text-slate-500 cursor-not-allowed"
+                className="bg-slate-300 text-muted-foreground cursor-not-allowed"
               >
                 Sélectionnez un mode de paiement
               </Button>
@@ -931,29 +931,29 @@ const ClientSubscriptionPage = () => {
       <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-xl font-bold text-slate-900">
+            <DialogTitle className="text-xl font-bold text-foreground">
               Confirmer la demande de transfert bancaire
             </DialogTitle>
-            <DialogDescription className="text-slate-600">
+            <DialogDescription className="text-muted-foreground">
               Êtes-vous sûr de vouloir continuer avec le transfert bancaire ?
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-4">
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <h4 className="font-semibold text-slate-900 mb-2">Détails de votre commande</h4>
+              <h4 className="font-semibold text-foreground mb-2">Détails de votre commande</h4>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-slate-600">Plan:</span>
-                  <span className="font-medium text-slate-900">{selectedPlan?.name}</span>
+                  <span className="text-muted-foreground">Plan:</span>
+                  <span className="font-medium text-foreground">{selectedPlan?.name}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-600">Prix:</span>
-                  <span className="font-medium text-slate-900">{selectedPlan?.price} MAD</span>
+                  <span className="text-muted-foreground">Prix:</span>
+                  <span className="font-medium text-foreground">{selectedPlan?.price} MAD</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-600">Semestres:</span>
-                  <span className="font-medium text-slate-900">{selectedSemesters.join(', ')}</span>
+                  <span className="text-muted-foreground">Semestres:</span>
+                  <span className="font-medium text-foreground">{selectedSemesters.join(', ')}</span>
                 </div>
               </div>
             </div>

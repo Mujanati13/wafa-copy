@@ -330,7 +330,7 @@ const SubAdminPage = () => {
       case "editor":
         return "bg-green-100 text-green-800 border-green-200";
       default:
-        return "bg-gray-100 text-gray-800 border-gray-200";
+        return "bg-muted text-foreground border-border";
     }
   };
 
@@ -360,13 +360,13 @@ const SubAdminPage = () => {
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
+            <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
               <div className="p-2 bg-gradient-to-r from-purple-500 to-indigo-600 rounded-xl text-white">
                 <UserCog className="w-7 h-7" />
               </div>
               Gestion des Sous-Administrateurs
             </h1>
-            <p className="text-gray-600 mt-2">
+            <p className="text-muted-foreground mt-2">
               Gérez les rôles et permissions des administrateurs
             </p>
           </div>
@@ -427,7 +427,7 @@ const SubAdminPage = () => {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-gray-500 text-sm">Éditeurs</p>
+                    <p className="text-muted-foreground text-sm">Éditeurs</p>
                     <p className="text-3xl font-bold text-green-600">
                       {
                         admins.filter(
@@ -451,7 +451,7 @@ const SubAdminPage = () => {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-gray-500 text-sm">Modérateurs</p>
+                    <p className="text-muted-foreground text-sm">Modérateurs</p>
                     <p className="text-3xl font-bold text-blue-600">
                       {admins.filter((a) => a.adminRole === "moderator").length}
                     </p>
@@ -471,8 +471,8 @@ const SubAdminPage = () => {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-gray-500 text-sm">Utilisateurs</p>
-                    <p className="text-3xl font-bold text-gray-600">
+                    <p className="text-muted-foreground text-sm">Utilisateurs</p>
+                    <p className="text-3xl font-bold text-muted-foreground">
                       {allUsers.length}
                     </p>
                   </div>
@@ -493,7 +493,7 @@ const SubAdminPage = () => {
                 placeholder="Rechercher un administrateur..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 border-gray-200 focus:border-purple-500 focus:ring-purple-500"
+                className="pl-10 border-border focus:border-purple-500 focus:ring-purple-500"
               />
             </div>
           </CardContent>
@@ -518,10 +518,10 @@ const SubAdminPage = () => {
             ) : filteredAdmins.length === 0 ? (
               <div className="text-center py-12">
                 <ShieldAlert className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                <h3 className="text-lg font-medium text-foreground mb-2">
                   Aucun administrateur trouvé
                 </h3>
-                <p className="text-gray-500">
+                <p className="text-muted-foreground">
                   Ajoutez un nouvel administrateur pour commencer
                 </p>
               </div>
@@ -535,7 +535,7 @@ const SubAdminPage = () => {
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -20 }}
                       transition={{ delay: index * 0.05 }}
-                      className="flex items-center justify-between p-4 bg-white border border-gray-100 rounded-xl hover:shadow-md transition-all"
+                      className="flex items-center justify-between p-4 bg-card border border-gray-100 rounded-xl hover:shadow-md transition-all"
                     >
                       <div className="flex items-center gap-4">
                         <div className="relative">
@@ -547,10 +547,10 @@ const SubAdminPage = () => {
                           </div>
                         </div>
                         <div>
-                          <h4 className="font-semibold text-gray-900">
+                          <h4 className="font-semibold text-foreground">
                             {admin.name || admin.username}
                           </h4>
-                          <p className="text-sm text-gray-500 flex items-center gap-1">
+                          <p className="text-sm text-muted-foreground flex items-center gap-1">
                             <Mail className="w-3 h-3" />
                             {admin.email}
                           </p>
@@ -564,7 +564,7 @@ const SubAdminPage = () => {
                           {getRoleLabel(admin.adminRole)}
                         </Badge>
 
-                        <div className="flex items-center gap-2 text-sm text-gray-500">
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
                           <Calendar className="w-4 h-4" />
                           {new Date(admin.createdAt).toLocaleDateString(
                             "fr-FR"
@@ -663,19 +663,19 @@ const SubAdminPage = () => {
                     <div
                       key={user._id}
                       onClick={() => setSelectedUser(user)}
-                      className={`flex items-center gap-3 p-3 cursor-pointer hover:bg-gray-50 transition-colors ${selectedUser?._id === user._id
+                      className={`flex items-center gap-3 p-3 cursor-pointer hover:bg-background transition-colors ${selectedUser?._id === user._id
                           ? "bg-purple-50 border-l-4 border-purple-500"
                           : ""
                         }`}
                     >
-                      <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-medium text-sm">
+                      <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-muted-foreground font-medium text-sm">
                         {(user.name || user.username)?.[0]?.toUpperCase()}
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="font-medium text-sm truncate">
                           {user.name || user.username}
                         </p>
-                        <p className="text-xs text-gray-500 truncate">
+                        <p className="text-xs text-muted-foreground truncate">
                           {user.email}
                         </p>
                       </div>
@@ -685,7 +685,7 @@ const SubAdminPage = () => {
                     </div>
                   ))}
                   {filteredUsers.length === 0 && (
-                    <p className="text-center text-gray-500 py-4 text-sm">
+                    <p className="text-center text-muted-foreground py-4 text-sm">
                       Aucun utilisateur trouvé
                     </p>
                   )}
@@ -733,14 +733,14 @@ const SubAdminPage = () => {
                       onClick={() => setAdminRole(role.value)}
                       className={`flex flex-col items-center gap-2 p-4 border rounded-lg cursor-pointer transition-all ${adminRole === role.value
                           ? "border-purple-500 bg-purple-50"
-                          : "border-gray-200 hover:border-gray-300"
+                          : "border-border hover:border-gray-300"
                         }`}
                     >
                       <role.icon
                         className={`w-6 h-6 ${adminRole === role.value ? "text-purple-500" : "text-gray-400"}`}
                       />
                       <span
-                        className={`text-sm font-medium ${adminRole === role.value ? "text-purple-700" : "text-gray-600"}`}
+                        className={`text-sm font-medium ${adminRole === role.value ? "text-purple-700" : "text-muted-foreground"}`}
                       >
                         {role.label}
                       </span>
@@ -761,7 +761,7 @@ const SubAdminPage = () => {
                       onClick={() => togglePermission(key)}
                       className={`flex items-start gap-3 p-3 border rounded-lg cursor-pointer transition-all ${selectedPermissions.includes(key)
                           ? "border-purple-500 bg-purple-50"
-                          : "border-gray-200 hover:border-gray-300"
+                          : "border-border hover:border-gray-300"
                         }`}
                     >
                       <Checkbox checked={selectedPermissions.includes(key)} />
@@ -771,12 +771,12 @@ const SubAdminPage = () => {
                             className={`w-4 h-4 ${selectedPermissions.includes(key) ? "text-purple-500" : "text-gray-400"}`}
                           />
                           <span
-                            className={`font-medium text-sm ${selectedPermissions.includes(key) ? "text-purple-700" : "text-gray-700"}`}
+                            className={`font-medium text-sm ${selectedPermissions.includes(key) ? "text-purple-700" : "text-foreground"}`}
                           >
                             {permission.label}
                           </span>
                         </div>
-                        <p className="text-xs text-gray-500 mt-1">
+                        <p className="text-xs text-muted-foreground mt-1">
                           {permission.description}
                         </p>
                       </div>
@@ -834,14 +834,14 @@ const SubAdminPage = () => {
                       onClick={() => setAdminRole(role.value)}
                       className={`flex flex-col items-center gap-2 p-4 border rounded-lg cursor-pointer transition-all ${adminRole === role.value
                           ? "border-purple-500 bg-purple-50"
-                          : "border-gray-200 hover:border-gray-300"
+                          : "border-border hover:border-gray-300"
                         }`}
                     >
                       <role.icon
                         className={`w-6 h-6 ${adminRole === role.value ? "text-purple-500" : "text-gray-400"}`}
                       />
                       <span
-                        className={`text-sm font-medium ${adminRole === role.value ? "text-purple-700" : "text-gray-600"}`}
+                        className={`text-sm font-medium ${adminRole === role.value ? "text-purple-700" : "text-muted-foreground"}`}
                       >
                         {role.label}
                       </span>
@@ -887,7 +887,7 @@ const SubAdminPage = () => {
                       onClick={() => togglePermission(key)}
                       className={`flex items-start gap-3 p-3 border rounded-lg cursor-pointer transition-all ${selectedPermissions.includes(key)
                           ? "border-purple-500 bg-purple-50"
-                          : "border-gray-200 hover:border-gray-300"
+                          : "border-border hover:border-gray-300"
                         }`}
                     >
                       <Checkbox checked={selectedPermissions.includes(key)} />
@@ -897,12 +897,12 @@ const SubAdminPage = () => {
                             className={`w-4 h-4 ${selectedPermissions.includes(key) ? "text-purple-500" : "text-gray-400"}`}
                           />
                           <span
-                            className={`font-medium text-sm ${selectedPermissions.includes(key) ? "text-purple-700" : "text-gray-700"}`}
+                            className={`font-medium text-sm ${selectedPermissions.includes(key) ? "text-purple-700" : "text-foreground"}`}
                           >
                             {permission.label}
                           </span>
                         </div>
-                        <p className="text-xs text-gray-500 mt-1">
+                        <p className="text-xs text-muted-foreground mt-1">
                           {permission.description}
                         </p>
                       </div>

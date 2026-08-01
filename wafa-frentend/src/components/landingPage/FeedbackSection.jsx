@@ -73,7 +73,7 @@ const FeedbackSection = () => {
   ]
 
   return (
-    <section className="py-20 px-6 bg-white relative overflow-hidden">
+    <section className="py-20 px-6 bg-background relative overflow-hidden">
       {/* Animated background elements */}
       <div className="absolute inset-0 overflow-hidden">
         <motion.div
@@ -86,7 +86,7 @@ const FeedbackSection = () => {
             repeat: Infinity,
             ease: "linear"
           }}
-          className="absolute -top-10 -right-10 w-40 h-40 bg-blue-100/20 rounded-full blur-xl"
+          className="absolute -top-10 -right-10 w-40 h-40 bg-blue-100/10 rounded-full blur-xl"
         />
         <motion.div
           animate={{
@@ -98,7 +98,7 @@ const FeedbackSection = () => {
             repeat: Infinity,
             ease: "linear"
           }}
-          className="absolute -bottom-10 -left-10 w-32 h-32 bg-teal-100/20 rounded-full blur-xl"
+          className="absolute -bottom-10 -left-10 w-32 h-32 bg-teal-100/10 rounded-full blur-xl"
         />
       </div>
 
@@ -145,22 +145,22 @@ const FeedbackSection = () => {
             initial={{ scale: 0, rotate: -180 }}
             whileInView={{ scale: 1, rotate: 0 }}
             transition={{ duration: 0.8, ease: "easeOut" }}
-            className="inline-flex items-center justify-center w-20 h-20 bg-blue-50 rounded-full mb-6 shadow-lg border border-blue-200"
+            className="inline-flex items-center justify-center w-20 h-20 bg-blue-50 dark:bg-blue-950/40 rounded-full mb-6 shadow-lg border border-blue-200 dark:border-blue-800"
           >
-            <FiMessageCircle className="text-4xl text-blue-600" />
+            <FiMessageCircle className="text-4xl text-blue-600 dark:text-blue-400" />
           </motion.div>
         </motion.div>
 
         <motion.h2
           variants={itemVariants}
-          className="text-4xl md:text-6xl font-bold mb-6 text-gray-900"
+          className="text-4xl md:text-6xl font-bold mb-6 text-foreground"
         >
-          Nous voulons vos <span className="text-blue-600">retours</span>
+          Nous voulons vos <span className="text-blue-600 dark:text-blue-400">retours</span>
         </motion.h2>
 
         <motion.p
           variants={itemVariants}
-          className="text-xl text-gray-600 mb-12 max-w-2xl mx-auto leading-relaxed"
+          className="text-xl text-muted-foreground mb-12 max-w-2xl mx-auto leading-relaxed"
         >
           Aidez-nous à améliorer WAFA en partageant vos pensées et suggestions.
           Votre contribution alimente notre innovation.
@@ -208,7 +208,7 @@ const FeedbackSection = () => {
                   borderColor: "rgb(59, 130, 246)"
                 }}
                 whileTap={{ scale: 0.98 }}
-                className="border-2 border-gray-300 hover:border-blue-600 text-gray-700 hover:text-blue-600 px-8 py-4 rounded-lg font-bold text-lg transition-all duration-300 flex items-center gap-3 min-w-[200px] justify-center bg-white shadow-md"
+                className="border-2 border-border text-foreground hover:text-blue-500 px-8 py-4 rounded-lg font-bold text-lg transition-all duration-300 flex items-center gap-3 min-w-[200px] justify-center bg-card shadow-md"
               >
                 <FiStar className="text-xl" />
                 <span>Évaluer l'app</span>
@@ -221,7 +221,7 @@ const FeedbackSection = () => {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
               onSubmit={handleSubmit}
-              className="max-w-2xl mx-auto bg-white p-8 rounded-2xl shadow-2xl border border-blue-100"
+              className="max-w-2xl mx-auto bg-card text-card-foreground p-8 rounded-2xl shadow-2xl border border-border"
             >
               {submitStatus === 'success' ? (
                 <motion.div
@@ -229,18 +229,18 @@ const FeedbackSection = () => {
                   animate={{ scale: 1 }}
                   className="text-center py-8"
                 >
-                  <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <FiCheck className="text-3xl text-green-600" />
+                  <div className="w-16 h-16 bg-green-100 dark:bg-green-900/40 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <FiCheck className="text-3xl text-green-600 dark:text-green-400" />
                   </div>
-                  <h3 className="text-2xl font-bold text-gray-900 mb-2">Merci pour votre retour!</h3>
-                  <p className="text-gray-600">Nous avons reçu votre message et vous répondrons bientôt.</p>
+                  <h3 className="text-2xl font-bold text-foreground mb-2">Merci pour votre retour!</h3>
+                  <p className="text-muted-foreground">Nous avons reçu votre message et vous répondrons bientôt.</p>
                 </motion.div>
               ) : (
                 <>
                   <div className="space-y-6">
                     <div>
-                      <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
-                        <FiUser className="text-blue-600" />
+                      <label className="flex items-center gap-2 text-sm font-semibold text-foreground mb-2">
+                        <FiUser className="text-blue-600 dark:text-blue-400" />
                         Nom
                       </label>
                       <input
@@ -249,14 +249,14 @@ const FeedbackSection = () => {
                         value={formData.name}
                         onChange={handleChange}
                         required
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                        className="w-full px-4 py-3 border border-border bg-background text-foreground rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                         placeholder="Votre nom"
                       />
                     </div>
 
                     <div>
-                      <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
-                        <FiMail className="text-blue-600" />
+                      <label className="flex items-center gap-2 text-sm font-semibold text-foreground mb-2">
+                        <FiMail className="text-blue-600 dark:text-blue-400" />
                         Email
                       </label>
                       <input
@@ -265,14 +265,14 @@ const FeedbackSection = () => {
                         value={formData.email}
                         onChange={handleChange}
                         required
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                        className="w-full px-4 py-3 border border-border bg-background text-foreground rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                         placeholder="votre@email.com"
                       />
                     </div>
 
                     <div>
-                      <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
-                        <FiMessageCircle className="text-blue-600" />
+                      <label className="flex items-center gap-2 text-sm font-semibold text-foreground mb-2">
+                        <FiMessageCircle className="text-blue-600 dark:text-blue-400" />
                         Message
                       </label>
                       <textarea
@@ -281,7 +281,7 @@ const FeedbackSection = () => {
                         onChange={handleChange}
                         required
                         rows="5"
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none"
+                        className="w-full px-4 py-3 border border-border bg-background text-foreground rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none"
                         placeholder="Partagez vos pensées, suggestions ou questions..."
                       />
                     </div>
@@ -290,7 +290,7 @@ const FeedbackSection = () => {
                       <motion.div
                         initial={{ opacity: 0, y: -10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm"
+                        className="bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 px-4 py-3 rounded-lg text-sm"
                       >
                         Une erreur s'est produite. Veuillez réessayer.
                       </motion.div>
@@ -302,7 +302,7 @@ const FeedbackSection = () => {
                       type="button"
                       onClick={() => setShowForm(false)}
                       disabled={isSubmitting}
-                      className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-50 transition-all disabled:opacity-50"
+                      className="flex-1 px-6 py-3 border-2 border-border text-foreground rounded-lg font-semibold hover:bg-accent transition-all disabled:opacity-50"
                     >
                       Annuler
                     </button>
@@ -344,7 +344,7 @@ const FeedbackSection = () => {
               <motion.div
                 key={index}
                 whileHover={{ y: -5, scale: 1.02 }}
-                className="bg-blue-50 border border-blue-200 rounded-xl p-4 text-center shadow-lg"
+                className="bg-card text-card-foreground border border-border rounded-xl p-4 text-center shadow-lg"
               >
                 <div className="flex justify-center mb-2">
                   {[...Array(5)].map((_, i) => (
@@ -358,8 +358,8 @@ const FeedbackSection = () => {
                     </motion.div>
                   ))}
                 </div>
-                <p className="text-gray-700 font-medium text-sm mb-2">"{testimonial.text}"</p>
-                <p className="text-blue-600 text-xs font-semibold">- {testimonial.author}</p>
+                <p className="text-foreground font-medium text-sm mb-2">"{testimonial.text}"</p>
+                <p className="text-blue-600 dark:text-blue-400 text-xs font-semibold">- {testimonial.author}</p>
               </motion.div>
             ))}
           </motion.div>

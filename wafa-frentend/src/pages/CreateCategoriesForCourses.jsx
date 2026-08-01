@@ -346,7 +346,7 @@ const CreateCategoriesForCourses = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-card">
       {/* Gradient Header */}
 
       <div className="max-w-7xl mx-auto px-6 py-8 space-y-6">
@@ -368,7 +368,7 @@ const CreateCategoriesForCourses = () => {
         >
           <div>
             <h2 className="text-2xl font-bold text-black mb-1">Catégories de Cours (Exam par cours)</h2>
-            <p className="text-gray-600">Total: <span className="font-semibold text-black">{filtered.length}</span> catégories • Ces catégories apparaissent dans "Exam par cours" côté utilisateur</p>
+            <p className="text-muted-foreground">Total: <span className="font-semibold text-black">{filtered.length}</span> catégories • Ces catégories apparaissent dans "Exam par cours" côté utilisateur</p>
           </div>
           <Button
             size="lg"
@@ -386,13 +386,13 @@ const CreateCategoriesForCourses = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
         >
-          <Card className="bg-white border-gray-200 shadow-md">
+          <Card className="bg-card border-border shadow-md">
             <CardHeader className="pb-4">
               <div className="flex items-center gap-2">
                 <Filter className="w-5 h-5 text-black" />
                 <div>
                   <CardTitle className="text-black">Search & Filter</CardTitle>
-                  <CardDescription className="text-gray-600">Find categories by name, module, or ID</CardDescription>
+                  <CardDescription className="text-muted-foreground">Find categories by name, module, or ID</CardDescription>
                 </div>
               </div>
             </CardHeader>
@@ -405,14 +405,14 @@ const CreateCategoriesForCourses = () => {
                     placeholder="Search by ID, module or category..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 bg-gray-50 border-gray-300 text-black placeholder:text-gray-500 focus:border-black focus:ring-black"
+                    className="pl-10 bg-background border-gray-300 text-black placeholder:text-muted-foreground focus:border-black focus:ring-black"
                   />
                 </div>
                 <Select value={semesterFilter} onValueChange={setSemesterFilter}>
-                  <SelectTrigger className="bg-gray-50 border-gray-300 text-black">
+                  <SelectTrigger className="bg-background border-gray-300 text-black">
                     <SelectValue placeholder="Select semester" />
                   </SelectTrigger>
-                  <SelectContent className="bg-white border-gray-200">
+                  <SelectContent className="bg-card border-border">
                     <SelectItem value="all" className="text-black">All Semesters</SelectItem>
                     {["S1", "S2", "S3", "S4", "S5", "S6", "S7", "S8", "S9", "S10", "EXT"].map((sem) => (
                       <SelectItem key={sem} value={sem} className="text-black">
@@ -422,10 +422,10 @@ const CreateCategoriesForCourses = () => {
                   </SelectContent>
                 </Select>
                 <Select value={moduleFilter} onValueChange={setModuleFilter}>
-                  <SelectTrigger className="bg-gray-50 border-gray-300 text-black">
+                  <SelectTrigger className="bg-background border-gray-300 text-black">
                     <SelectValue placeholder="Select module" />
                   </SelectTrigger>
-                  <SelectContent className="bg-white border-gray-200">
+                  <SelectContent className="bg-card border-border">
                     <SelectItem value="all" className="text-black">All Modules</SelectItem>
                     {modules.map((mod) => (
                       <SelectItem key={mod._id} value={mod._id} className="text-black">
@@ -467,12 +467,12 @@ const CreateCategoriesForCourses = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.3 }}
         >
-          <Card className="bg-white border-gray-200 shadow-md overflow-hidden">
-            <CardHeader className="pb-4 border-b border-gray-200">
+          <Card className="bg-card border-border shadow-md overflow-hidden">
+            <CardHeader className="pb-4 border-b border-border">
               <div className="flex items-center justify-between">
                 <div>
                   <CardTitle className="text-black text-xl">Liste des catégories</CardTitle>
-                  <CardDescription className="text-gray-600">
+                  <CardDescription className="text-muted-foreground">
                     {filtered.length === 0 ? "Aucune catégorie trouvée" : `Affichage de ${Math.min(currentRows.length, itemsPerPage)} sur ${filtered.length}`}
                   </CardDescription>
                 </div>
@@ -488,7 +488,7 @@ const CreateCategoriesForCourses = () => {
                   <div className="overflow-x-auto">
                     <table className="w-full">
                       <thead>
-                        <tr className="border-b border-gray-200 bg-gray-50">
+                        <tr className="border-b border-border bg-background">
                           <th className="text-left py-4 px-6 font-semibold text-black w-[50px]">
                             <Checkbox 
                               checked={selectedCategories.length === currentRows.length && currentRows.length > 0}
@@ -512,7 +512,7 @@ const CreateCategoriesForCourses = () => {
                               animate={{ opacity: 1, y: 0 }}
                               exit={{ opacity: 0, y: -10 }}
                               transition={{ duration: 0.3, delay: idx * 0.05 }}
-                              className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
+                              className="border-b border-gray-100 hover:bg-background transition-colors"
                             >
                               <td className="py-4 px-6">
                                 <Checkbox 
@@ -553,7 +553,7 @@ const CreateCategoriesForCourses = () => {
                                   <motion.button
                                     whileHover={{ scale: 1.1 }}
                                     whileTap={{ scale: 0.95 }}
-                                    className="p-2 text-blue-600 hover:text-blue-800 hover:bg-gray-100 rounded-lg transition-colors"
+                                    className="p-2 text-blue-600 hover:text-blue-800 hover:bg-muted rounded-lg transition-colors"
                                     onClick={() => handleEdit(row)}
                                   >
                                     <Edit size={18} />
@@ -561,7 +561,7 @@ const CreateCategoriesForCourses = () => {
                                   <motion.button
                                     whileHover={{ scale: 1.1 }}
                                     whileTap={{ scale: 0.95 }}
-                                    className="p-2 text-red-600 hover:text-red-800 hover:bg-gray-100 rounded-lg transition-colors"
+                                    className="p-2 text-red-600 hover:text-red-800 hover:bg-muted rounded-lg transition-colors"
                                     onClick={() => handleDelete(row.id)}
                                   >
                                     <Trash2 size={18} />
@@ -577,8 +577,8 @@ const CreateCategoriesForCourses = () => {
                 </CardContent>
 
                 {/* Pagination Footer */}
-                <CardFooter className="flex flex-col sm:flex-row justify-between items-center gap-4 border-t border-gray-200 bg-gray-50 p-6">
-                  <div className="text-sm text-gray-600">
+                <CardFooter className="flex flex-col sm:flex-row justify-between items-center gap-4 border-t border-border bg-background p-6">
+                  <div className="text-sm text-muted-foreground">
                     Showing <span className="font-semibold text-black">{startIndex + 1}</span> to{" "}
                     <span className="font-semibold text-black">{Math.min(endIndex, filtered.length)}</span> of{" "}
                     <span className="font-semibold text-black">{filtered.length}</span> results
@@ -594,8 +594,8 @@ const CreateCategoriesForCourses = () => {
                   className="text-center"
                 >
                   <Layers className="w-12 h-12 text-gray-400 mx-auto mb-4 opacity-50" />
-                  <p className="text-gray-700 text-lg">No categories found</p>
-                  <p className="text-gray-500 text-sm">Try adjusting your search or filters</p>
+                  <p className="text-foreground text-lg">No categories found</p>
+                  <p className="text-muted-foreground text-sm">Try adjusting your search or filters</p>
                 </motion.div>
               </CardContent>
             )}
@@ -607,7 +607,7 @@ const CreateCategoriesForCourses = () => {
       <AnimatePresence>
         {showCreateForm && (
           <Dialog open={showCreateForm} onOpenChange={setShowCreateForm}>
-            <DialogContent className="bg-white border-gray-200 text-black sm:max-w-md">
+            <DialogContent className="bg-card border-border text-black sm:max-w-md">
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -618,7 +618,7 @@ const CreateCategoriesForCourses = () => {
                   <DialogTitle className="text-black text-xl">
                     {editingCategory ? "Modifier la catégorie" : "Créer une catégorie de cours"}
                   </DialogTitle>
-                  <DialogDescription className="text-gray-600">
+                  <DialogDescription className="text-muted-foreground">
                     Cette catégorie apparaîtra dans la section "Exam par cours" côté utilisateur
                   </DialogDescription>
                 </DialogHeader>
@@ -626,7 +626,7 @@ const CreateCategoriesForCourses = () => {
                 <form className="space-y-4 py-4" onSubmit={(e) => { e.preventDefault(); editingCategory ? handleUpdate() : handleCreate(); }}>
                   <div className="space-y-2">
                     <Label className="text-black">Select Semester *</Label>
-                    <p className="text-xs text-gray-500 mb-1">
+                    <p className="text-xs text-muted-foreground mb-1">
                       Choisissez d'abord le semestre
                     </p>
                     <Select
@@ -636,10 +636,10 @@ const CreateCategoriesForCourses = () => {
                         handleFormChange("moduleId", "");
                       }}
                     >
-                      <SelectTrigger className="bg-gray-50 border-gray-300 text-black">
+                      <SelectTrigger className="bg-background border-gray-300 text-black">
                         <SelectValue placeholder="Choose semester" />
                       </SelectTrigger>
-                      <SelectContent className="bg-white border-gray-200">
+                      <SelectContent className="bg-card border-border">
                         {semesterOptions.map((semester) => (
                           <SelectItem key={semester} value={semester} className="text-black">
                             {semester}
@@ -651,14 +651,14 @@ const CreateCategoriesForCourses = () => {
 
                   <div className="space-y-2">
                     <Label className="text-black">Select Module *</Label>
-                    <p className="text-xs text-gray-500 mb-1">
+                    <p className="text-xs text-muted-foreground mb-1">
                       Le module auquel cette catégorie de cours sera rattachée
                     </p>
                     <Select value={formData.moduleId} onValueChange={(value) => handleFormChange("moduleId", value)}>
-                      <SelectTrigger className="bg-gray-50 border-gray-300 text-black" disabled={!formData.semester}>
+                      <SelectTrigger className="bg-background border-gray-300 text-black" disabled={!formData.semester}>
                         <SelectValue placeholder={formData.semester ? "Choose module" : "Choose semester first"} />
                       </SelectTrigger>
-                      <SelectContent className="bg-white border-gray-200">
+                      <SelectContent className="bg-card border-border">
                         {filteredFormModules.map((mod) => (
                           <SelectItem key={mod._id} value={mod._id} className="text-black">
                             {mod.name}
@@ -670,14 +670,14 @@ const CreateCategoriesForCourses = () => {
 
                   <div className="space-y-2">
                     <Label className="text-black">Nom de la catégorie *</Label>
-                    <p className="text-xs text-gray-500 mb-1">
+                    <p className="text-xs text-muted-foreground mb-1">
                       Cette catégorie apparaîtra dans "Exam par cours" côté utilisateur
                     </p>
                     <Input
                       value={formData.category}
                       onChange={(e) => handleFormChange("category", e.target.value)}
                       placeholder="Ex: Cardiologie, Neurologie, Anatomie..."
-                      className="bg-gray-50 border-gray-300 text-black"
+                      className="bg-background border-gray-300 text-black"
                     />
                   </div>
 
@@ -696,7 +696,7 @@ const CreateCategoriesForCourses = () => {
                             reader.readAsDataURL(file);
                           }
                         }}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-black file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-blue-600 file:text-white file:cursor-pointer hover:file:bg-blue-700"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-background text-black file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-blue-600 file:text-white file:cursor-pointer hover:file:bg-blue-700"
                       />
                       {imagePreview && (
                         <div className="relative w-32 h-24 rounded-lg overflow-hidden border border-gray-300">
@@ -718,7 +718,7 @@ const CreateCategoriesForCourses = () => {
                     <Button
                       type="button"
                       variant="outline"
-                      className="border-gray-300 text-black hover:bg-gray-100 hover:text-black"
+                      className="border-gray-300 text-black hover:bg-muted hover:text-black"
                       onClick={() => {
                         setShowCreateForm(false);
                         setEditingCategory(null);

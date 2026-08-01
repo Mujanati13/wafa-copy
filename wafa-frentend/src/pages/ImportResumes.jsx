@@ -148,19 +148,19 @@ const ImportResumes = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <Loader2 className="h-12 w-12 animate-spin text-blue-500" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4 md:p-6">
+    <div className="min-h-screen bg-background p-4 md:p-6">
       <div className="max-w-5xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex flex-col gap-2">
-          <h2 className="text-3xl font-bold text-gray-900">Résumés</h2>
-          <p className="text-gray-600">Importer et parcourir les résumés par module et cours</p>
+          <h2 className="text-3xl font-bold text-foreground">Résumés</h2>
+          <p className="text-muted-foreground">Importer et parcourir les résumés par module et cours</p>
         </div>
 
         {/* Import Section */}
@@ -172,14 +172,14 @@ const ImportResumes = () => {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-muted-foreground">
               Select your module hierarchy and provide the file details
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Module Select */}
               <div className="space-y-2">
-                <Label className="font-medium text-gray-700">
+                <Label className="font-medium text-foreground">
                   Module <span className="text-red-500">*</span>
                 </Label>
                 <Select value={selectedModule} onValueChange={setSelectedModule}>
@@ -198,7 +198,7 @@ const ImportResumes = () => {
 
               {/* Course Name Input */}
               <div className="space-y-2">
-                <Label className="font-medium text-gray-700">
+                <Label className="font-medium text-foreground">
                   Course name <span className="text-red-500">*</span>
                 </Label>
                 <Input
@@ -221,10 +221,10 @@ const ImportResumes = () => {
               <div className="flex flex-col items-center gap-3">
                 <Upload className="w-10 h-10 text-blue-500" />
                 <div className="text-center">
-                  <p className="font-medium text-gray-800">
+                  <p className="font-medium text-foreground">
                     Drop your file here or click to browse
                   </p>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-muted-foreground">
                     Supports PDF, Word (.doc, .docx), and Images (.jpg, .png, .gif, .webp)
                   </p>
                 </div>
@@ -238,7 +238,7 @@ const ImportResumes = () => {
                 <Button
                   type="button"
                   variant="outline"
-                  className="bg-white"
+                  className="bg-card"
                   onClick={(e) => {
                     e.stopPropagation();
                     document.getElementById('file-upload')?.click();
@@ -260,7 +260,7 @@ const ImportResumes = () => {
 
             {/* Resume Name Input */}
             <div className="space-y-2">
-              <Label className="font-medium text-gray-700">
+              <Label className="font-medium text-foreground">
                 Resume Name <span className="text-red-500">*</span>
               </Label>
               <Input
@@ -270,7 +270,7 @@ const ImportResumes = () => {
                 onChange={(e) => setResumeName(e.target.value)}
                 className="h-10"
               />
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-muted-foreground">
                 This will be used to identify the imported resume
               </p>
             </div>
@@ -296,7 +296,7 @@ const ImportResumes = () => {
               </Button>
             </div>
 
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-muted-foreground">
               → it will be appaired like lien (URL)
             </p>
           </CardContent>
@@ -305,7 +305,7 @@ const ImportResumes = () => {
         {/* Modules Accordion */}
         <div className="space-y-3">
           {modules.length === 0 ? (
-            <div className="text-center py-12 text-gray-500">
+            <div className="text-center py-12 text-muted-foreground">
               Aucun module trouvé
             </div>
           ) : (
@@ -314,22 +314,22 @@ const ImportResumes = () => {
               const isExpanded = expandedModules[module._id];
 
               return (
-                <div key={module._id} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                <div key={module._id} className="bg-card rounded-xl shadow-sm border border-border overflow-hidden">
                   {/* Module Header */}
                   <button
                     onClick={() => toggleModule(module._id)}
-                    className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
+                    className="w-full px-6 py-4 flex items-center justify-between hover:bg-background transition-colors"
                   >
                     <div className="flex items-center gap-3">
-                      <span className="text-lg font-semibold text-gray-900">
+                      <span className="text-lg font-semibold text-foreground">
                         {module.name}
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
                       {isExpanded ? (
-                        <ChevronDown className="w-5 h-5 text-gray-600" />
+                        <ChevronDown className="w-5 h-5 text-muted-foreground" />
                       ) : (
-                        <ChevronRight className="w-5 h-5 text-gray-600" />
+                        <ChevronRight className="w-5 h-5 text-muted-foreground" />
                       )}
                     </div>
                   </button>
@@ -342,11 +342,11 @@ const ImportResumes = () => {
                         animate={{ height: "auto", opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
                         transition={{ duration: 0.3 }}
-                        className="border-t border-gray-200"
+                        className="border-t border-border"
                       >
-                        <div className="px-6 py-4 bg-white">
+                        <div className="px-6 py-4 bg-card">
                           {courses.length === 0 ? (
-                            <p className="text-sm text-gray-500 italic">Aucun résumé disponible</p>
+                            <p className="text-sm text-muted-foreground italic">Aucun résumé disponible</p>
                           ) : (
                             <div className="space-y-2">
                               {courses.map((courseName, index) => {
@@ -354,7 +354,7 @@ const ImportResumes = () => {
                                 
                                 return (
                                   <div key={index} className="flex items-start gap-3 text-sm">
-                                    <span className="font-medium text-gray-700 whitespace-nowrap">
+                                    <span className="font-medium text-foreground whitespace-nowrap">
                                       - {courseName} :
                                     </span>
                                     <div className="flex flex-wrap gap-x-2 gap-y-1">

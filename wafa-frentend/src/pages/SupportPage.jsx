@@ -332,7 +332,7 @@ const SupportPage = () => {
           {/* FAQ Tab */}
           <TabsContent value="faq">
             <div className="space-y-4">
-              <div className="bg-white rounded-2xl border-2 border-blue-100 shadow-lg overflow-hidden">
+              <div className="bg-card text-card-foreground rounded-2xl border-2 border-border shadow-lg overflow-hidden">
                 <Accordion type="single" collapsible className="w-full">
                   {faqCategories.flatMap(category => 
                     category.faqs.map((item, idx) => {
@@ -352,10 +352,10 @@ const SupportPage = () => {
                               <div className={`p-1.5 sm:p-2 ${colorScheme.bg} rounded-lg group-hover:opacity-80 transition-opacity flex-shrink-0`}>
                                 <HelpCircle className={`h-4 w-4 sm:h-5 sm:w-5 ${colorScheme.icon}`} />
                               </div>
-                              <span className="font-semibold text-slate-900 text-sm sm:text-base">{item.question}</span>
+                              <span className="font-semibold text-foreground text-sm sm:text-base">{item.question}</span>
                             </div>
                           </AccordionTrigger>
-                          <AccordionContent className="text-slate-600 pb-4 sm:pb-6 px-4 sm:px-6 md:px-8 pl-10 sm:pl-16 text-sm sm:text-base">
+                          <AccordionContent className="text-muted-foreground pb-4 sm:pb-6 px-4 sm:px-6 md:px-8 pl-10 sm:pl-16 text-sm sm:text-base">
                             {item.answer}
                           </AccordionContent>
                         </AccordionItem>

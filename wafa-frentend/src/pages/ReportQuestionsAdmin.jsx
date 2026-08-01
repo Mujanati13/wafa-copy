@@ -292,14 +292,14 @@ const ReportQuestionsAdmin = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <Loader2 className="h-12 w-12 animate-spin text-blue-500" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4 md:p-6">
+    <div className="min-h-screen bg-background p-4 md:p-6">
       <div className="max-w-7xl mx-auto space-y-6">
         <PageHeader
           title="Gestion des Rapports"
@@ -334,7 +334,7 @@ const ReportQuestionsAdmin = () => {
         </div>
 
         {/* Filters */}
-        <Card className="shadow-lg border-slate-200">
+        <Card className="shadow-lg border-border">
           <CardContent className="p-4">
             <div className="space-y-4">
               {/* Row 1: Search */}
@@ -362,11 +362,11 @@ const ReportQuestionsAdmin = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                 {/* Status Filter */}
                 <div className="space-y-1">
-                  <Label className="text-xs text-slate-500">Statut</Label>
+                  <Label className="text-xs text-muted-foreground">Statut</Label>
                   <select
                     value={statusFilter}
                     onChange={(e) => setStatusFilter(e.target.value)}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-sm"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-card text-sm"
                   >
                     <option value="all">Tous les statuts</option>
                     <option value="pending">En attente</option>
@@ -377,11 +377,11 @@ const ReportQuestionsAdmin = () => {
 
                 {/* Category Filter */}
                 <div className="space-y-1">
-                  <Label className="text-xs text-slate-500">Type d'Examen</Label>
+                  <Label className="text-xs text-muted-foreground">Type d'Examen</Label>
                   <select
                     value={categoryFilter}
                     onChange={(e) => setCategoryFilter(e.target.value)}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-sm"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-card text-sm"
                   >
                     <option value="all">Tous les types</option>
                     <option value="Exam par years">Exam par years</option>
@@ -393,11 +393,11 @@ const ReportQuestionsAdmin = () => {
 
                 {/* Module Filter */}
                 <div className="space-y-1">
-                  <Label className="text-xs text-slate-500">Module</Label>
+                  <Label className="text-xs text-muted-foreground">Module</Label>
                   <select
                     value={moduleFilter}
                     onChange={(e) => setModuleFilter(e.target.value)}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-sm"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-card text-sm"
                   >
                     <option value="all">Tous les modules</option>
                     {uniqueModules.map(mod => (
@@ -408,11 +408,11 @@ const ReportQuestionsAdmin = () => {
 
                 {/* User Filter */}
                 <div className="space-y-1">
-                  <Label className="text-xs text-slate-500">Utilisateur</Label>
+                  <Label className="text-xs text-muted-foreground">Utilisateur</Label>
                   <select
                     value={userFilter}
                     onChange={(e) => setUserFilter(e.target.value)}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-sm"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-card text-sm"
                   >
                     <option value="all">Tous les utilisateurs</option>
                     {uniqueUsers.map(user => (
@@ -425,7 +425,7 @@ const ReportQuestionsAdmin = () => {
               {/* Row 3: Date Range */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                 <div className="space-y-1">
-                  <Label className="text-xs text-slate-500">Date début</Label>
+                  <Label className="text-xs text-muted-foreground">Date début</Label>
                   <Input
                     type="date"
                     value={dateFrom}
@@ -434,7 +434,7 @@ const ReportQuestionsAdmin = () => {
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-xs text-slate-500">Date fin</Label>
+                  <Label className="text-xs text-muted-foreground">Date fin</Label>
                   <Input
                     type="date"
                     value={dateTo}
@@ -458,8 +458,8 @@ const ReportQuestionsAdmin = () => {
 
               {/* Active Filters Display */}
               {hasActiveFilters && (
-                <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-200">
-                  <span className="text-sm text-slate-500">Filtres actifs:</span>
+                <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-border">
+                  <span className="text-sm text-muted-foreground">Filtres actifs:</span>
                   {searchTerm && (
                     <Badge variant="secondary" className="gap-1">
                       Recherche: {searchTerm.length > 15 ? searchTerm.substring(0, 15) + '...' : searchTerm}
@@ -562,7 +562,7 @@ const ReportQuestionsAdmin = () => {
                     currentReports.map((report) => (
                       <TableRow
                         key={report.id}
-                        className="cursor-pointer hover:bg-slate-50 transition-colors"
+                        className="cursor-pointer hover:bg-background transition-colors"
                       >
                         <TableCell className="w-12">
                           <Checkbox
@@ -575,7 +575,7 @@ const ReportQuestionsAdmin = () => {
                           <div className="flex items-center gap-2">
                             <button
                               onClick={() => handleViewDetails(report)}
-                              className="text-slate-400 hover:text-slate-600 transition-colors"
+                              className="text-slate-400 hover:text-muted-foreground transition-colors"
                             >
                               <ChevronDown className="h-4 w-4" />
                             </button>
@@ -583,7 +583,7 @@ const ReportQuestionsAdmin = () => {
                           </div>
                         </TableCell>
                         <TableCell>
-                          <span className="font-medium text-slate-700">{report.moduleName || "—"}</span>
+                          <span className="font-medium text-foreground">{report.moduleName || "—"}</span>
                         </TableCell>
                         <TableCell>
                           <Badge variant={
@@ -600,14 +600,14 @@ const ReportQuestionsAdmin = () => {
                             <div className="text-sm">
                               <span className="font-medium">{report.examName || "—"}</span>
                               {report.examYear && report.examYear !== "—" && (
-                                <span className="text-slate-500 ml-1">({report.examYear})</span>
+                                <span className="text-muted-foreground ml-1">({report.examYear})</span>
                               )}
                             </div>
                           )}
                           {report.moduleCategory === "Exam par courses" && (
                             <div className="text-sm">
                               {report.courseCategory && report.courseCategory !== "—" && (
-                                <span className="text-slate-500">{report.courseCategory} → </span>
+                                <span className="text-muted-foreground">{report.courseCategory} → </span>
                               )}
                               <span className="font-medium">{report.courseName || report.examName || "—"}</span>
                             </div>
@@ -622,7 +622,7 @@ const ReportQuestionsAdmin = () => {
                           )}
                         </TableCell>
                         <TableCell>
-                          <span className="text-sm font-medium text-slate-600">
+                          <span className="text-sm font-medium text-muted-foreground">
                             {report.questionNumber || "—"}
                           </span>
                         </TableCell>
@@ -717,7 +717,7 @@ const ReportQuestionsAdmin = () => {
             </div>
 
             {filteredReports.length > 0 && (
-              <div className="flex flex-col sm:flex-row justify-between items-center gap-4 border-t bg-slate-50/50 px-6 py-4">
+              <div className="flex flex-col sm:flex-row justify-between items-center gap-4 border-t bg-background/50 px-6 py-4">
                 <div className="text-sm text-muted-foreground">
                   Affichage de {startIndex + 1} à {Math.min(endIndex, filteredReports.length)} sur {filteredReports.length} résultats
                 </div>
@@ -751,15 +751,15 @@ const ReportQuestionsAdmin = () => {
                   <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium text-slate-600">Signalé par:</span>
-                        <span className="font-bold text-slate-900">{selectedReport.username}</span>
+                        <span className="text-sm font-medium text-muted-foreground">Signalé par:</span>
+                        <span className="font-bold text-foreground">{selectedReport.username}</span>
                       </div>
                       {selectedReport.userEmail && selectedReport.userEmail !== "—" && (
-                        <div className="text-sm text-slate-600">{selectedReport.userEmail}</div>
+                        <div className="text-sm text-muted-foreground">{selectedReport.userEmail}</div>
                       )}
                     </div>
                     <div className="flex items-center gap-3">
-                      <div className="text-sm text-slate-600">
+                      <div className="text-sm text-muted-foreground">
                         <Calendar className="h-4 w-4 inline mr-1" />
                         {selectedReport.date}
                       </div>
@@ -779,7 +779,7 @@ const ReportQuestionsAdmin = () => {
 
               {/* Context Information */}
               <div>
-                <h3 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
+                <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
                   <Layers className="h-5 w-5 text-indigo-600" />
                   Contexte de la Question
                 </h3>
@@ -791,19 +791,19 @@ const ReportQuestionsAdmin = () => {
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                         <div className="space-y-2">
                           <label className="text-xs font-semibold text-indigo-600 uppercase tracking-wide">Module</label>
-                          <div className="text-base font-semibold text-slate-900 bg-indigo-50 border-2 border-indigo-200 rounded-lg px-4 py-3">
+                          <div className="text-base font-semibold text-foreground bg-indigo-50 border-2 border-indigo-200 rounded-lg px-4 py-3">
                             {selectedReport.moduleName || "—"}
                           </div>
                         </div>
                         <div className="space-y-2">
                           <label className="text-xs font-semibold text-indigo-600 uppercase tracking-wide">Type d'Examen</label>
-                          <div className="text-base font-semibold text-slate-900 bg-indigo-50 border-2 border-indigo-200 rounded-lg px-4 py-3">
+                          <div className="text-base font-semibold text-foreground bg-indigo-50 border-2 border-indigo-200 rounded-lg px-4 py-3">
                             Exam par years
                           </div>
                         </div>
                         <div className="space-y-2">
                           <label className="text-xs font-semibold text-indigo-600 uppercase tracking-wide">Nom de l'Examen</label>
-                          <div className="text-base font-semibold text-slate-900 bg-indigo-50 border-2 border-indigo-200 rounded-lg px-4 py-3">
+                          <div className="text-base font-semibold text-foreground bg-indigo-50 border-2 border-indigo-200 rounded-lg px-4 py-3">
                             {selectedReport.examName || "—"}
                           </div>
                         </div>
@@ -825,19 +825,19 @@ const ReportQuestionsAdmin = () => {
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                         <div className="space-y-2">
                           <label className="text-xs font-semibold text-teal-600 uppercase tracking-wide">Module</label>
-                          <div className="text-base font-semibold text-slate-900 bg-teal-50 border-2 border-teal-200 rounded-lg px-4 py-3">
+                          <div className="text-base font-semibold text-foreground bg-teal-50 border-2 border-teal-200 rounded-lg px-4 py-3">
                             {selectedReport.moduleName || "—"}
                           </div>
                         </div>
                         <div className="space-y-2">
                           <label className="text-xs font-semibold text-teal-600 uppercase tracking-wide">Type d'Examen</label>
-                          <div className="text-base font-semibold text-slate-900 bg-teal-50 border-2 border-teal-200 rounded-lg px-4 py-3">
+                          <div className="text-base font-semibold text-foreground bg-teal-50 border-2 border-teal-200 rounded-lg px-4 py-3">
                             QCM banque
                           </div>
                         </div>
                         <div className="space-y-2">
                           <label className="text-xs font-semibold text-teal-600 uppercase tracking-wide">Nom du QCM</label>
-                          <div className="text-base font-semibold text-slate-900 bg-teal-50 border-2 border-teal-200 rounded-lg px-4 py-3">
+                          <div className="text-base font-semibold text-foreground bg-teal-50 border-2 border-teal-200 rounded-lg px-4 py-3">
                             {selectedReport.examName || "—"}
                           </div>
                         </div>
@@ -860,25 +860,25 @@ const ReportQuestionsAdmin = () => {
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                           <div className="space-y-2">
                             <label className="text-xs font-semibold text-purple-600 uppercase tracking-wide">Module</label>
-                            <div className="text-base font-semibold text-slate-900 bg-purple-50 border-2 border-purple-200 rounded-lg px-4 py-3">
+                            <div className="text-base font-semibold text-foreground bg-purple-50 border-2 border-purple-200 rounded-lg px-4 py-3">
                               {selectedReport.moduleName || "—"}
                             </div>
                           </div>
                           <div className="space-y-2">
                             <label className="text-xs font-semibold text-purple-600 uppercase tracking-wide">Type d'Examen</label>
-                            <div className="text-base font-semibold text-slate-900 bg-purple-50 border-2 border-purple-200 rounded-lg px-4 py-3">
+                            <div className="text-base font-semibold text-foreground bg-purple-50 border-2 border-purple-200 rounded-lg px-4 py-3">
                               Exam par courses
                             </div>
                           </div>
                           <div className="space-y-2">
                             <label className="text-xs font-semibold text-purple-600 uppercase tracking-wide">Catégorie</label>
-                            <div className="text-base font-semibold text-slate-900 bg-purple-50 border-2 border-purple-200 rounded-lg px-4 py-3">
+                            <div className="text-base font-semibold text-foreground bg-purple-50 border-2 border-purple-200 rounded-lg px-4 py-3">
                               {selectedReport.courseCategory || "—"}
                             </div>
                           </div>
                           <div className="space-y-2">
                             <label className="text-xs font-semibold text-purple-600 uppercase tracking-wide">Nom du Cours</label>
-                            <div className="text-base font-semibold text-slate-900 bg-purple-50 border-2 border-purple-200 rounded-lg px-4 py-3">
+                            <div className="text-base font-semibold text-foreground bg-purple-50 border-2 border-purple-200 rounded-lg px-4 py-3">
                               {selectedReport.courseName || selectedReport.examName || "—"}
                             </div>
                           </div>
@@ -886,7 +886,7 @@ const ReportQuestionsAdmin = () => {
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                           <div className="space-y-2">
                             <label className="text-xs font-semibold text-purple-600 uppercase tracking-wide">Année</label>
-                            <div className="text-base font-semibold text-slate-900 bg-purple-50 border-2 border-purple-200 rounded-lg px-4 py-3">
+                            <div className="text-base font-semibold text-foreground bg-purple-50 border-2 border-purple-200 rounded-lg px-4 py-3">
                               {selectedReport.examYear || "—"}
                             </div>
                           </div>
@@ -913,19 +913,19 @@ const ReportQuestionsAdmin = () => {
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                           <div className="space-y-2">
                             <label className="text-xs font-semibold text-blue-600 uppercase tracking-wide">Module</label>
-                            <div className="text-base font-semibold text-slate-900 bg-blue-50 border-2 border-blue-200 rounded-lg px-4 py-3">
+                            <div className="text-base font-semibold text-foreground bg-blue-50 border-2 border-blue-200 rounded-lg px-4 py-3">
                               {selectedReport.moduleName || "—"}
                             </div>
                           </div>
                           <div className="space-y-2">
                             <label className="text-xs font-semibold text-blue-600 uppercase tracking-wide">Type</label>
-                            <div className="text-base font-semibold text-slate-900 bg-blue-50 border-2 border-blue-200 rounded-lg px-4 py-3">
+                            <div className="text-base font-semibold text-foreground bg-blue-50 border-2 border-blue-200 rounded-lg px-4 py-3">
                               {selectedReport.moduleCategory || "—"}
                             </div>
                           </div>
                           <div className="space-y-2">
                             <label className="text-xs font-semibold text-blue-600 uppercase tracking-wide">Nom</label>
-                            <div className="text-base font-semibold text-slate-900 bg-blue-50 border-2 border-blue-200 rounded-lg px-4 py-3">
+                            <div className="text-base font-semibold text-foreground bg-blue-50 border-2 border-blue-200 rounded-lg px-4 py-3">
                               {selectedReport.examName || selectedReport.courseName || "—"}
                             </div>
                           </div>
@@ -942,13 +942,13 @@ const ReportQuestionsAdmin = () => {
                     <div className="flex items-center gap-4">
                       <div className="flex items-center gap-2">
                         <Hash className="h-5 w-5 text-amber-600" />
-                        <span className="text-sm font-medium text-slate-600">Session:</span>
+                        <span className="text-sm font-medium text-muted-foreground">Session:</span>
                         <span className="font-bold text-amber-900">{selectedReport.sessionLabel}</span>
                       </div>
                       {selectedReport.examYear && selectedReport.examYear !== "—" && (
                         <div className="flex items-center gap-2">
                           <Calendar className="h-5 w-5 text-amber-600" />
-                          <span className="text-sm font-medium text-slate-600">Année:</span>
+                          <span className="text-sm font-medium text-muted-foreground">Année:</span>
                           <span className="font-bold text-amber-900">{selectedReport.examYear}</span>
                         </div>
                       )}
@@ -960,25 +960,25 @@ const ReportQuestionsAdmin = () => {
               {/* Question & Report Details */}
               <div className="space-y-4">
                 <div>
-                  <h3 className="text-lg font-semibold text-slate-900 mb-3 flex items-center gap-2">
+                  <h3 className="text-lg font-semibold text-foreground mb-3 flex items-center gap-2">
                     <BookOpen className="h-5 w-5 text-blue-600" />
                     Question Signalée
                   </h3>
                   <Card>
                     <CardContent className="p-5">
-                      <p className="text-base leading-relaxed text-slate-800">{selectedReport.question}</p>
+                      <p className="text-base leading-relaxed text-foreground">{selectedReport.question}</p>
                     </CardContent>
                   </Card>
                 </div>
 
                 <div>
-                  <h3 className="text-lg font-semibold text-slate-900 mb-3 flex items-center gap-2">
+                  <h3 className="text-lg font-semibold text-foreground mb-3 flex items-center gap-2">
                     <AlertCircle className="h-5 w-5 text-green-600" />
                     Explications
                   </h3>
                   <Card>
                     <CardContent className="p-5">
-                      <p className="text-base leading-relaxed text-slate-700 min-h-32 max-h-60 overflow-y-auto bg-green-50 rounded-lg p-4 border border-green-100">
+                      <p className="text-base leading-relaxed text-foreground min-h-32 max-h-60 overflow-y-auto bg-green-50 rounded-lg p-4 border border-green-100">
                         {selectedReport.explanation || <span className="italic text-slate-400">Aucune explication fournie</span>}
                       </p>
                     </CardContent>
@@ -986,13 +986,13 @@ const ReportQuestionsAdmin = () => {
                 </div>
 
                 <div>
-                  <h3 className="text-lg font-semibold text-slate-900 mb-3 flex items-center gap-2">
+                  <h3 className="text-lg font-semibold text-foreground mb-3 flex items-center gap-2">
                     <AlertCircle className="h-5 w-5 text-orange-600" />
                     Détails du Signalement
                   </h3>
                   <Card>
                     <CardContent className="p-5">
-                      <p className="text-base leading-relaxed text-slate-700 min-h-40 max-h-80 overflow-y-auto bg-slate-50 rounded-lg p-4 border border-orange-100">
+                      <p className="text-base leading-relaxed text-foreground min-h-40 max-h-80 overflow-y-auto bg-background rounded-lg p-4 border border-orange-100">
                         {selectedReport.text || <span className="italic text-slate-400">Aucun détail fourni</span>}
                       </p>
                     </CardContent>
@@ -1053,7 +1053,7 @@ const ReportQuestionsAdmin = () => {
           <div className="mt-4">
             <Card className="bg-blue-50 border-blue-200">
               <CardContent className="p-6">
-                <p className="text-base leading-relaxed text-slate-800 whitespace-pre-wrap break-words">
+                <p className="text-base leading-relaxed text-foreground whitespace-pre-wrap break-words">
                   {questionPopup.text || '—'}
                 </p>
               </CardContent>
@@ -1082,7 +1082,7 @@ const ReportQuestionsAdmin = () => {
           <div className="mt-4">
             <Card className="bg-green-50 border-green-200">
               <CardContent className="p-6">
-                <p className="text-base leading-relaxed text-slate-700 whitespace-pre-wrap break-words">
+                <p className="text-base leading-relaxed text-foreground whitespace-pre-wrap break-words">
                   {detailsPopup.text || <span className="italic text-slate-400">Aucun détail fourni</span>}
                 </p>
               </CardContent>

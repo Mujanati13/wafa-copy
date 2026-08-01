@@ -129,10 +129,10 @@ Nous nous réservons le droit de modifier, suspendre ou interrompre tout aspect 
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 mb-4">
             <FileText className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
+          <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">
             Conditions d'Utilisation
           </h1>
-          <p className="text-gray-600 max-w-2xl mx-auto">
+          <p className="text-muted-foreground max-w-2xl mx-auto">
             Dernière mise à jour : {new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
           </p>
         </motion.div>
@@ -179,7 +179,7 @@ Nous nous réservons le droit de modifier, suspendre ou interrompre tout aspect 
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-gray-700 whitespace-pre-line leading-relaxed">
+                  <p className="text-foreground whitespace-pre-line leading-relaxed">
                     {section.content}
                   </p>
                 </CardContent>
@@ -219,7 +219,7 @@ Nous nous réservons le droit de modifier, suspendre ou interrompre tout aspect 
           transition={{ delay: 0.7 }}
           className="mt-8 text-center space-y-2"
         >
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-muted-foreground">
             <strong>WAFA</strong> - Plateforme d'apprentissage médical
           </p>
           <p className="text-sm text-gray-500">

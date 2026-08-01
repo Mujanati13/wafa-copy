@@ -97,10 +97,10 @@ Vous pouvez gérer vos préférences de cookies dans les paramètres de votre na
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 mb-4">
             <Shield className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
+          <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">
             Politique de Confidentialité
           </h1>
-          <p className="text-gray-600 max-w-2xl mx-auto">
+          <p className="text-muted-foreground max-w-2xl mx-auto">
             Dernière mise à jour : {new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
           </p>
         </motion.div>
@@ -113,13 +113,13 @@ Vous pouvez gérer vos préférences de cookies dans les paramètres de votre na
         >
           <Card className="mb-8">
             <CardContent className="pt-6">
-              <p className="text-gray-700 leading-relaxed">
+              <p className="text-foreground leading-relaxed">
                 Chez <strong>Imrs-Qcm</strong>, nous accordons une importance primordiale à la protection de vos données 
                 personnelles. Cette politique de confidentialité explique comment nous collectons, utilisons, 
                 stockons et protégeons vos informations lorsque vous utilisez notre plateforme d'apprentissage 
                 médical.
               </p>
-              <p className="text-gray-700 leading-relaxed mt-4">
+              <p className="text-foreground leading-relaxed mt-4">
                 En utilisant nos services, vous acceptez les pratiques décrites dans cette politique. 
                 Nous vous encourageons à la lire attentivement.
               </p>
@@ -146,7 +146,7 @@ Vous pouvez gérer vos préférences de cookies dans les paramètres de votre na
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-gray-700 whitespace-pre-line leading-relaxed">
+                  <p className="text-foreground whitespace-pre-line leading-relaxed">
                     {section.content}
                   </p>
                 </CardContent>

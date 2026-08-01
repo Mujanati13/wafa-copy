@@ -59,7 +59,7 @@ const ContentWarningModal = ({
         {/* Red Header Section */}
         <div className="bg-red-500 px-6 py-8 text-center space-y-3">
           <div className="flex justify-center mb-2">
-            <div className="h-16 w-16 rounded-full bg-white flex items-center justify-center shadow-lg">
+            <div className="h-16 w-16 rounded-full bg-background flex items-center justify-center shadow-lg">
               <AlertTriangle className="h-8 w-8 text-red-500" />
             </div>
           </div>
@@ -71,16 +71,16 @@ const ContentWarningModal = ({
         {/* Content Section */}
         <div className="px-6 py-6 space-y-4">
           <div className="space-y-4">
-            <p className="text-base font-semibold text-gray-800">
+            <p className="text-base font-semibold text-foreground">
               {t('common:upload_warning_title', 'Aucun contenu (text, image, pdf ...)')}
             </p>
             
             {/* Prohibited Content List */}
             <div className="space-y-2 ml-2">
-              <p className="text-sm text-gray-700 font-medium mb-2">
+              <p className="text-sm text-muted-foreground font-medium mb-2">
                 {t('common:prohibited_content', 'Contenu strictement interdit:')}
               </p>
-              <ul className="space-y-2 text-sm text-gray-700">
+              <ul className="space-y-2 text-sm text-muted-foreground">
                 <li className="flex items-start gap-2">
                   <span className="text-red-500 font-bold mt-0.5">•</span>
                   <span>{t('common:no_illegal', 'illégal qui est n\'est pas bien (pornographique ...) ou les chose qui est hors sujet, n\'est autorisé.')}</span>
@@ -105,7 +105,7 @@ const ContentWarningModal = ({
               />
               <Label 
                 htmlFor="accept-terms" 
-                className="text-xs leading-relaxed cursor-pointer text-gray-700"
+                className="text-xs leading-relaxed cursor-pointer text-muted-foreground"
               >
                 {t('common:accept_content_policy', "J'ai lu et j'accepte la politique de contenu. Je comprends que mon compte peut être supprimé en cas de violation.")}
               </Label>
@@ -114,11 +114,11 @@ const ContentWarningModal = ({
         </div>
 
         {/* Button Section */}
-        <div className="px-6 py-4 bg-gray-50 flex gap-3">
+        <div className="px-6 py-4 bg-card flex gap-3">
           <Button 
             variant="outline" 
             onClick={handleClose}
-            className="flex-1 h-12 font-semibold text-gray-700 border-2"
+            className="flex-1 h-12 font-semibold text-muted-foreground border-2"
           >
             {t('common:cancel', 'Annuler')}
           </Button>

@@ -65,15 +65,15 @@ const PlanModal = ({
           animate={{ scale: 1, opacity: 1, y: 0 }}
           exit={{ scale: 0.9, opacity: 0, y: 20 }}
           transition={{ type: "spring", duration: 0.5 }}
-          className="w-full max-w-2xl bg-gradient-to-br from-white to-gray-50 rounded-2xl shadow-2xl border border-gray-200 p-8 max-h-[90vh] overflow-y-auto"
+          className="w-full max-w-2xl bg-card text-card-foreground rounded-2xl shadow-2xl border border-border p-8 max-h-[90vh] overflow-y-auto"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Close Button */}
           <button
             onClick={onCancel}
-            className="absolute top-4 right-4 p-2 rounded-full hover:bg-gray-100 transition-colors group"
+            className="absolute top-4 right-4 p-2 rounded-full hover:bg-accent transition-colors group"
           >
-            <X className="w-5 h-5 text-gray-500 group-hover:text-gray-700" />
+            <X className="w-5 h-5 text-muted-foreground group-hover:text-foreground" />
           </button>
 
           {/* Header */}
@@ -82,9 +82,9 @@ const PlanModal = ({
               <div className="p-3 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl shadow-lg">
                 <Package className="w-6 h-6 text-white" />
               </div>
-              <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
+              <h1 className="text-2xl font-bold text-foreground">{title}</h1>
             </div>
-            <p className="text-sm text-gray-600 ml-1">
+            <p className="text-sm text-muted-foreground ml-1">
               {t("admin:plan_details")}
             </p>
           </div>
@@ -92,8 +92,8 @@ const PlanModal = ({
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <Label htmlFor="plan-name" className="text-sm font-semibold text-gray-800 flex items-center gap-2">
-                  <Package className="w-4 h-4 text-purple-600" />
+                <Label htmlFor="plan-name" className="text-sm font-semibold text-foreground flex items-center gap-2">
+                  <Package className="w-4 h-4 text-purple-600 dark:text-purple-400" />
                   {t("admin:plan_title")}
                 </Label>
                 <Input
@@ -103,12 +103,12 @@ const PlanModal = ({
                   onChange={(e) =>
                     setForm((p) => ({ ...p, name: e.target.value }))
                   }
-                  className="h-11 rounded-lg border-gray-300 focus:border-purple-500 focus:ring-purple-500 transition-all"
+                  className="h-11 rounded-lg border-border bg-background text-foreground focus:border-purple-500 transition-all"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="plan-period" className="text-sm font-semibold text-gray-800 flex items-center gap-2">
-                  <Package className="w-4 h-4 text-purple-600" />
+                <Label htmlFor="plan-period" className="text-sm font-semibold text-foreground flex items-center gap-2">
+                  <Package className="w-4 h-4 text-purple-600 dark:text-purple-400" />
                   Period
                 </Label>
                 <select
@@ -117,7 +117,7 @@ const PlanModal = ({
                   onChange={(e) =>
                     setForm((p) => ({ ...p, period: e.target.value }))
                   }
-                  className="h-11 w-full rounded-lg border border-gray-300 focus:border-purple-500 focus:ring-purple-500 transition-all px-3 bg-white"
+                  className="h-11 w-full rounded-lg border border-border focus:border-purple-500 focus:ring-purple-500 transition-all px-3 bg-background text-foreground"
                 >
                   <option value="Gratuit">Gratuit</option>
                   <option value="Semester">Semester</option>
@@ -131,7 +131,7 @@ const PlanModal = ({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="plan-desc" className="text-sm font-semibold text-gray-800 flex items-center gap-2">
+              <Label htmlFor="plan-desc" className="text-sm font-semibold text-foreground flex items-center gap-2">
                 <Package className="w-4 h-4 text-purple-600" />
                 {t("admin:description")}
               </Label>
@@ -142,15 +142,15 @@ const PlanModal = ({
                 onChange={(e) =>
                   setForm((p) => ({ ...p, description: e.target.value }))
                 }
-                className="h-11 rounded-lg border-gray-300 focus:border-purple-500 focus:ring-purple-500 transition-all"
+                className="h-11 rounded-lg border-border focus:border-purple-500 focus:ring-purple-500 transition-all"
               />
             </div>
 
             <div>
-              <Label className="text-sm font-semibold text-gray-800 mb-3 block">Pricing</Label>
+              <Label className="text-sm font-semibold text-foreground mb-3 block">Pricing</Label>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-blue-50 p-4 rounded-lg border border-blue-100">
                 <div className="space-y-2">
-                  <Label htmlFor="old-price" className="text-xs font-medium text-gray-700 flex items-center gap-2">
+                  <Label htmlFor="old-price" className="text-xs font-medium text-foreground flex items-center gap-2">
                     <DollarSign className="w-4 h-4 text-gray-500" />
                     {t("admin:old_price")} (Original)
                   </Label>
@@ -165,12 +165,12 @@ const PlanModal = ({
                       onChange={(e) =>
                         setForm((p) => ({ ...p, oldPrice: e.target.value }))
                       }
-                      className="h-11 pl-7 rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500 transition-all"
+                      className="h-11 pl-7 rounded-lg border-border focus:border-blue-500 focus:ring-blue-500 transition-all"
                     />
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="price" className="text-xs font-medium text-gray-700 flex items-center gap-2">
+                  <Label htmlFor="price" className="text-xs font-medium text-foreground flex items-center gap-2">
                     <DollarSign className="w-4 h-4 text-green-600" />
                     {t("admin:new_price")} (Current)
                   </Label>
@@ -185,7 +185,7 @@ const PlanModal = ({
                       onChange={(e) =>
                         setForm((p) => ({ ...p, price: e.target.value }))
                       }
-                      className="h-11 pl-7 rounded-lg border-gray-300 focus:border-green-500 focus:ring-green-500 transition-all font-semibold"
+                      className="h-11 pl-7 rounded-lg border-border focus:border-green-500 focus:ring-green-500 transition-all font-semibold"
                     />
                   </div>
                 </div>
@@ -193,7 +193,7 @@ const PlanModal = ({
             </div>
 
             <div className="space-y-3">
-              <Label className="text-sm font-semibold text-gray-800 flex items-center gap-2">
+              <Label className="text-sm font-semibold text-foreground flex items-center gap-2">
                 <Check className="w-4 h-4 text-green-600" />
                 {t("admin:features")}
               </Label>
@@ -217,7 +217,7 @@ const PlanModal = ({
                       }));
                     }
                   }}
-                  className="h-11 rounded-lg border-gray-300 focus:border-green-500 focus:ring-green-500 transition-all"
+                  className="h-11 rounded-lg border-border focus:border-green-500 focus:ring-green-500 transition-all"
                 />
                 <Button
                   type="button"
@@ -272,11 +272,11 @@ const PlanModal = ({
               ) : null}
             </div>
 
-            <div className="flex justify-end gap-3 pt-6 border-t border-gray-200 mt-8">
+            <div className="flex justify-end gap-3 pt-6 border-t border-border mt-8">
               <Button
                 type="button"
                 variant="outline"
-                className="px-6 h-11 rounded-lg border-gray-300 text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-all"
+                className="px-6 h-11 rounded-lg border-border text-foreground hover:bg-accent transition-all"
                 onClick={onCancel}
               >
                 {t("admin:cancel")}

@@ -169,14 +169,14 @@ const Myplaylist = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4 md:p-6 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-background to-muted p-4 md:p-6 flex items-center justify-center">
         <Loader className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4 md:p-6">
+    <div className="min-h-screen bg-gradient-to-br from-background to-muted p-4 md:p-6">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Hero Section */}
         <Card className="bg-gradient-to-br from-blue-500 to-teal-500 border-none text-white overflow-hidden">
@@ -190,14 +190,14 @@ const Myplaylist = () => {
                 <p className="text-white/90 text-lg">
                   {t('dashboard:organize_favorite_questions')}
                 </p>
-                <Badge variant="secondary" className="bg-white text-blue-700 hover:bg-white/90">
+                <Badge variant="secondary" className="bg-background text-blue-700 hover:bg-background/90">
                   {playlists.length} {t('dashboard:playlist')}{playlists.length > 1 ? 's' : ''} {t('dashboard:in_total')}
                 </Badge>
               </div>
               
               <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button className="bg-white text-blue-700 hover:bg-white/90 gap-2 text-base px-6">
+                  <Button className="bg-background text-blue-700 hover:bg-background/90 gap-2 text-base px-6">
                     <Plus className="h-5 w-5" />
                     {t('dashboard:new_playlist')}
                   </Button>

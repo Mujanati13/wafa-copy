@@ -128,11 +128,11 @@ const ResetPassword = () => {
   // Loading state while verifying code
   if (isVerifying) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-teal-50 flex items-center justify-center px-4 py-8">
-        <Card className="shadow-2xl border-0 backdrop-blur-sm bg-white/90 w-full max-w-md">
+      <div className="min-h-screen bg-background flex items-center justify-center px-4 py-8">
+        <Card className="shadow-2xl border-0 backdrop-blur-sm bg-card/90 w-full max-w-md">
           <CardContent className="p-12 text-center space-y-4">
             <Loader2 className="h-12 w-12 animate-spin text-blue-600 mx-auto" />
-            <p className="text-gray-600 font-medium">{t('auth:verifying_link')}</p>
+            <p className="text-muted-foreground font-medium">{t('auth:verifying_link')}</p>
           </CardContent>
         </Card>
       </div>
@@ -142,13 +142,13 @@ const ResetPassword = () => {
   // Success state
   if (isSuccess) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-teal-50 flex items-center justify-center px-4 py-8">
+      <div className="min-h-screen bg-background flex items-center justify-center px-4 py-8">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           className="w-full max-w-md"
         >
-          <Card className="shadow-2xl border-0 backdrop-blur-sm bg-white/90">
+          <Card className="shadow-2xl border-0 backdrop-blur-sm bg-card/90">
             <div className="flex justify-center pt-8">
               <img src={logo} alt="Logo" className="h-16 w-auto" />
             </div>
@@ -173,7 +173,7 @@ const ResetPassword = () => {
               >
                 {t('auth:password_reset_complete')}
               </motion.h2>
-              <p className="text-gray-600">
+              <p className="text-muted-foreground">
                 {t('auth:password_changed_success')}
               </p>
               <Alert className="border-green-200 bg-green-50">
@@ -200,7 +200,7 @@ const ResetPassword = () => {
   // Error state
   if (error && !oobCode) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-teal-50 flex items-center justify-center px-4 py-8">
+      <div className="min-h-screen bg-background flex items-center justify-center px-4 py-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -217,7 +217,7 @@ const ResetPassword = () => {
               <div className="h-20 w-20 rounded-full bg-gradient-to-br from-red-100 to-rose-100 flex items-center justify-center mx-auto">
                 <AlertCircle className="w-12 h-12 text-red-600" />
               </div>
-              <h2 className="text-2xl font-bold text-gray-900">
+              <h2 className="text-2xl font-bold text-foreground">
                 {t('auth:link_invalid_expired')}
               </h2>
               <Alert variant="destructive">
@@ -249,7 +249,7 @@ const ResetPassword = () => {
         transition={{ duration: 0.5 }}
         className="w-full max-w-md relative z-10"
       >
-        <Card className="shadow-2xl border-0 backdrop-blur-sm bg-white/90">
+        <Card className="shadow-2xl border-0 backdrop-blur-sm bg-card/90">
           {/* Logo */}
           <div className="flex justify-center pt-8 pb-2">
             <img src={logo} alt="Logo" className="h-16 w-auto" />
@@ -272,7 +272,7 @@ const ResetPassword = () => {
             <CardTitle className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-teal-600 bg-clip-text text-transparent">
               {t('auth:new_password')}
             </CardTitle>
-            <CardDescription className="text-gray-600">
+            <CardDescription className="text-muted-foreground">
               {userEmail && `${t('auth:for')} ${userEmail}`}
             </CardDescription>
           </CardHeader>
@@ -426,7 +426,7 @@ const ResetPassword = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
-          className="mt-6 text-center text-sm text-gray-600"
+          className="mt-6 text-center text-sm text-muted-foreground"
         >
           <p>{t('auth:need_help_contact_support')}</p>
         </motion.div>

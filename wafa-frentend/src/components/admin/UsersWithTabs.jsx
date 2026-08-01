@@ -301,7 +301,7 @@ const UsersWithTabs = () => {
       case "Student Discount":
         return "bg-green-100 text-green-800 border-green-200";
       case "Free":
-        return "bg-gray-100 text-gray-800 border-gray-200";
+        return "bg-muted text-foreground border-border";
       default:
         return "bg-blue-100 text-blue-800 border-blue-200";
     }
@@ -584,15 +584,15 @@ const UsersWithTabs = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-3 sm:p-4 md:p-6">
+    <div className="min-h-screen bg-background p-3 sm:p-4 md:p-6">
       <div className="w-full space-y-4 sm:space-y-6">
         {/* Header */}
         <div className="flex flex-col gap-3 sm:gap-4">
           <div>
-            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground">
               User Management
             </h1>
-            <p className="text-sm sm:text-base text-gray-600 mt-1">
+            <p className="text-sm sm:text-base text-muted-foreground mt-1">
               Manage user accounts, subscriptions, and access
             </p>
           </div>
@@ -634,10 +634,10 @@ const UsersWithTabs = () => {
             <CardContent className="p-3 sm:p-4 md:p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs sm:text-sm font-medium text-gray-600">
+                  <p className="text-xs sm:text-sm font-medium text-muted-foreground">
                     Total Users
                   </p>
-                  <p className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900">
+                  <p className="text-lg sm:text-xl md:text-2xl font-bold text-foreground">
                     {stats.totalUsers || 0}
                   </p>
                 </div>
@@ -653,21 +653,21 @@ const UsersWithTabs = () => {
             <CardContent className="p-3 sm:p-4 md:p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs sm:text-sm font-medium text-gray-600">
+                  <p className="text-xs sm:text-sm font-medium text-muted-foreground">
                     Free Users
                   </p>
-                  <p className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900">
+                  <p className="text-lg sm:text-xl md:text-2xl font-bold text-foreground">
                     {stats.freeUsers || 0}
                   </p>
-                  <p className="text-[10px] sm:text-xs md:text-sm text-gray-500 mt-0.5 sm:mt-1">
+                  <p className="text-[10px] sm:text-xs md:text-sm text-muted-foreground mt-0.5 sm:mt-1">
                     {stats.totalUsers
                       ? ((stats.freeUsers / stats.totalUsers) * 100).toFixed(1)
                       : 0}
                     % of total
                   </p>
                 </div>
-                <div className="p-2 sm:p-3 bg-gray-100 rounded-lg">
-                  <Gift className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-gray-600" />
+                <div className="p-2 sm:p-3 bg-muted rounded-lg">
+                  <Gift className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-muted-foreground" />
                 </div>
               </div>
             </CardContent>
@@ -678,13 +678,13 @@ const UsersWithTabs = () => {
             <CardContent className="p-3 sm:p-4 md:p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs sm:text-sm font-medium text-gray-600">
+                  <p className="text-xs sm:text-sm font-medium text-muted-foreground">
                     Paying Users
                   </p>
-                  <p className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900">
+                  <p className="text-lg sm:text-xl md:text-2xl font-bold text-foreground">
                     {stats.payingUsers || 0}
                   </p>
-                  <p className="text-[10px] sm:text-xs md:text-sm text-gray-500 mt-0.5 sm:mt-1">
+                  <p className="text-[10px] sm:text-xs md:text-sm text-muted-foreground mt-0.5 sm:mt-1">
                     {stats.totalUsers
                       ? ((stats.payingUsers / stats.totalUsers) * 100).toFixed(
                         1
@@ -705,13 +705,13 @@ const UsersWithTabs = () => {
             <CardContent className="p-3 sm:p-4 md:p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs sm:text-sm font-medium text-gray-600">
+                  <p className="text-xs sm:text-sm font-medium text-muted-foreground">
                     Active Users
                   </p>
-                  <p className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900">
+                  <p className="text-lg sm:text-xl md:text-2xl font-bold text-foreground">
                     {stats.activeUsers || 0}
                   </p>
-                  <p className="text-[10px] sm:text-xs md:text-sm text-gray-500 mt-0.5 sm:mt-1">
+                  <p className="text-[10px] sm:text-xs md:text-sm text-muted-foreground mt-0.5 sm:mt-1">
                     {stats.totalUsers
                       ? ((stats.activeUsers / stats.totalUsers) * 100).toFixed(
                         1
@@ -821,43 +821,43 @@ const UsersWithTabs = () => {
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[900px]">
                   <thead>
-                    <tr className="border-b border-gray-200">
-                      <th className="text-left py-3 px-4 font-medium text-gray-700">
+                    <tr className="border-b border-border">
+                      <th className="text-left py-3 px-4 font-medium text-foreground">
                         Utilisateur
                       </th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-700">
+                      <th className="text-left py-3 px-4 font-medium text-foreground">
                         Contact
                       </th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-700">
+                      <th className="text-left py-3 px-4 font-medium text-foreground">
                         <div className="flex items-center gap-1">
                           <GraduationCap className="w-4 h-4" />
                           Année
                         </div>
                       </th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-700">
+                      <th className="text-left py-3 px-4 font-medium text-foreground">
                         Statut
                       </th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-700">
+                      <th className="text-left py-3 px-4 font-medium text-foreground">
                         Semestre
                       </th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-700">
+                      <th className="text-left py-3 px-4 font-medium text-foreground">
                         Inscription
                       </th>
                       {activeTab === "paying" && (
                         <>
-                          <th className="text-left py-3 px-4 font-medium text-gray-700">
+                          <th className="text-left py-3 px-4 font-medium text-foreground">
                             <div className="flex items-center gap-1">
                               <CheckCircle className="w-4 h-4 text-green-600" />
                               Approbation
                             </div>
                           </th>
-                          <th className="text-left py-3 px-4 font-medium text-gray-700">
+                          <th className="text-left py-3 px-4 font-medium text-foreground">
                             <div className="flex items-center gap-1">
                               <CreditCard className="w-4 h-4 text-blue-600" />
                               Paiement
                             </div>
                           </th>
-                          <th className="text-left py-3 px-4 font-medium text-gray-700">
+                          <th className="text-left py-3 px-4 font-medium text-foreground">
                             <div className="flex items-center gap-1">
                               <CreditCard className="w-4 h-4 text-purple-600" />
                               Mode de paiement
@@ -865,13 +865,13 @@ const UsersWithTabs = () => {
                           </th>
                         </>
                       )}
-                      <th className="text-left py-3 px-4 font-medium text-gray-700">
+                      <th className="text-left py-3 px-4 font-medium text-foreground">
                         <div className="flex items-center gap-1">
                           <Shield className="w-4 h-4 text-purple-600" />
                           CGU
                         </div>
                       </th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-700">
+                      <th className="text-left py-3 px-4 font-medium text-foreground">
                         Actions
                       </th>
                     </tr>
@@ -880,12 +880,12 @@ const UsersWithTabs = () => {
                     {filteredUsers.map((user) => (
                       <tr
                         key={user._id}
-                        className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
+                        className="border-b border-gray-100 hover:bg-background transition-colors"
                       >
                         <td className="py-4 px-4">
                           <div className="flex items-center gap-3">
                             <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center flex-shrink-0">
-                              <span className="text-gray-600 font-medium text-sm">
+                              <span className="text-muted-foreground font-medium text-sm">
                                 {user.name
                                   ? user.name
                                     .split(" ")
@@ -896,10 +896,10 @@ const UsersWithTabs = () => {
                               </span>
                             </div>
                             <div className="min-w-0 flex-1">
-                              <div className="font-medium text-gray-900 truncate">
+                              <div className="font-medium text-foreground truncate">
                                 {user.name || user.username}
                               </div>
-                              <div className="text-sm text-gray-500">
+                              <div className="text-sm text-muted-foreground">
                                 @{user.username}
                               </div>
                             </div>
@@ -909,7 +909,7 @@ const UsersWithTabs = () => {
                           <div className="space-y-1">
                             <div className="flex items-center gap-2 text-sm">
                               <Mail className="text-gray-400 flex-shrink-0 w-3.5 h-3.5" />
-                              <span className="text-gray-700 truncate">
+                              <span className="text-foreground truncate">
                                 {user.email}
                               </span>
                             </div>
@@ -939,14 +939,14 @@ const UsersWithTabs = () => {
                           </div>
                         </td>
                         <td className="py-4 px-4">
-                          <span className="text-sm text-gray-700">
+                          <span className="text-sm text-foreground">
                             {user.semesters?.map((s) => s).join(", ") || "N/A"}
                           </span>
                         </td>
                         <td className="py-4 px-4">
                           <div className="flex items-center gap-2">
                             <Calendar className="text-gray-400 flex-shrink-0 w-3.5 h-3.5" />
-                            <span className="text-gray-700 text-sm">
+                            <span className="text-foreground text-sm">
                               {new Date(user.createdAt).toLocaleDateString("fr-FR")}
                             </span>
                           </div>
@@ -957,7 +957,7 @@ const UsersWithTabs = () => {
                               {user.approvalDate ? (
                                 <div className="flex items-center gap-2">
                                   <CheckCircle className="text-green-500 w-4 h-4" />
-                                  <span className="text-sm text-gray-700">
+                                  <span className="text-sm text-foreground">
                                     {new Date(user.approvalDate).toLocaleDateString("fr-FR")}
                                   </span>
                                 </div>
@@ -969,7 +969,7 @@ const UsersWithTabs = () => {
                               {user.paymentDate ? (
                                 <div className="flex items-center gap-2">
                                   <CreditCard className="text-blue-500 w-4 h-4" />
-                                  <span className="text-sm text-gray-700">
+                                  <span className="text-sm text-foreground">
                                     {new Date(user.paymentDate).toLocaleDateString("fr-FR")}
                                   </span>
                                 </div>
@@ -1004,7 +1004,7 @@ const UsersWithTabs = () => {
                                 <CheckCircle className="w-3 h-3" />
                                 Accepté
                               </Badge>
-                              <p className="text-xs text-gray-500">
+                              <p className="text-xs text-muted-foreground">
                                 {new Date(user.consentAcceptedAt).toLocaleDateString("fr-FR")}
                               </p>
                             </div>
@@ -1018,7 +1018,7 @@ const UsersWithTabs = () => {
                         <td className="py-4 px-4">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <button className="text-gray-400 hover:text-gray-600 transition-colors">
+                              <button className="text-gray-400 hover:text-muted-foreground transition-colors">
                                 <MoreVertical className="w-4 h-4" />
                               </button>
                             </DropdownMenuTrigger>
@@ -1093,8 +1093,8 @@ const UsersWithTabs = () => {
 
           {/* Pagination Footer */}
           {pagination.totalPages > 1 && (
-            <CardFooter className="flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-4 border-t bg-gray-50/50 p-3 sm:p-4">
-              <div className="text-xs sm:text-sm text-gray-600 text-center sm:text-left">
+            <CardFooter className="flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-4 border-t bg-background/50 p-3 sm:p-4">
+              <div className="text-xs sm:text-sm text-muted-foreground text-center sm:text-left">
                 Showing {(pagination.currentPage - 1) * itemsPerPage + 1} to{" "}
                 {Math.min(
                   pagination.currentPage * itemsPerPage,
@@ -1133,25 +1133,25 @@ const UsersWithTabs = () => {
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label className="text-gray-500">Nom</Label>
+                  <Label className="text-muted-foreground">Nom</Label>
                   <p className="font-medium">{selectedUser.name || selectedUser.username || "-"}</p>
                 </div>
                 <div>
-                  <Label className="text-gray-500">Username</Label>
+                  <Label className="text-muted-foreground">Username</Label>
                   <p className="font-medium">@{selectedUser.username}</p>
                 </div>
                 <div>
-                  <Label className="text-gray-500">Email</Label>
+                  <Label className="text-muted-foreground">Email</Label>
                   <p className="font-medium">{selectedUser.email}</p>
                 </div>
                 <div>
-                  <Label className="text-gray-500">Plan</Label>
+                  <Label className="text-muted-foreground">Plan</Label>
                   <Badge className={getPlanBadgeColor(selectedUser.plan)}>
                     {selectedUser.plan || "Free"}
                   </Badge>
                 </div>
                 <div>
-                  <Label className="text-gray-500">Statut</Label>
+                  <Label className="text-muted-foreground">Statut</Label>
                   <div className="flex flex-col gap-1 mt-1">
                     <Badge className={getStatusBadgeColor(selectedUser.isAactive)}>
                       {selectedUser.isAactive ? "Actif" : "Inactif"}
@@ -1165,27 +1165,27 @@ const UsersWithTabs = () => {
                   </div>
                 </div>
                 <div>
-                  <Label className="text-gray-500">Année d'étude</Label>
+                  <Label className="text-muted-foreground">Année d'étude</Label>
                   <p className="font-medium">{selectedUser.currentYear ? `${selectedUser.currentYear}ème année` : "-"}</p>
                 </div>
                 <div>
-                  <Label className="text-gray-500">Date d'inscription</Label>
+                  <Label className="text-muted-foreground">Date d'inscription</Label>
                   <p className="font-medium">{new Date(selectedUser.createdAt).toLocaleDateString("fr-FR")}</p>
                 </div>
                 <div className="col-span-2">
-                  <Label className="text-gray-500">CGU (Conditions Générales d'Utilisation)</Label>
+                  <Label className="text-muted-foreground">CGU (Conditions Générales d'Utilisation)</Label>
                   {selectedUser.consentAcceptedAt ? (
                     <div className="flex items-center gap-2 mt-1">
                       <Badge className="bg-green-100 text-green-700 border-green-200 gap-1">
                         <CheckCircle className="w-3 h-3" />
                         Accepté
                       </Badge>
-                      <span className="text-sm text-gray-600">
+                      <span className="text-sm text-muted-foreground">
                         le {new Date(selectedUser.consentAcceptedAt).toLocaleDateString("fr-FR")} à {new Date(selectedUser.consentAcceptedAt).toLocaleTimeString("fr-FR", { hour: '2-digit', minute: '2-digit' })}
                       </span>
                     </div>
                   ) : (
-                    <Badge variant="outline" className="mt-1 text-gray-500">
+                    <Badge variant="outline" className="mt-1 text-muted-foreground">
                       Non accepté
                     </Badge>
                   )}
@@ -1194,7 +1194,7 @@ const UsersWithTabs = () => {
               
               {/* Semesters Section */}
               <div className="border-t pt-4">
-                <Label className="text-gray-500">Semestres assignés</Label>
+                <Label className="text-muted-foreground">Semestres assignés</Label>
                 {selectedUser.semesters && selectedUser.semesters.length > 0 ? (
                   <div className="flex flex-wrap gap-2 mt-2">
                     {selectedUser.semesters.map((sem) => (
@@ -1211,20 +1211,20 @@ const UsersWithTabs = () => {
               {/* Block Status Section */}
               {selectedUser.isBlocked && (
                 <div className="border-t pt-4">
-                  <Label className="text-gray-500 flex items-center gap-2">
+                  <Label className="text-muted-foreground flex items-center gap-2">
                     <Ban className="w-4 h-4 text-red-600" />
                     Informations de blocage
                   </Label>
                   <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-md space-y-2">
                     {selectedUser.blockedAt && (
-                      <p className="text-sm text-gray-700">
+                      <p className="text-sm text-foreground">
                         <span className="font-medium">Bloqué le :</span>{" "}
                         {new Date(selectedUser.blockedAt).toLocaleDateString("fr-FR")} à{" "}
                         {new Date(selectedUser.blockedAt).toLocaleTimeString("fr-FR", { hour: '2-digit', minute: '2-digit' })}
                       </p>
                     )}
                     {selectedUser.blockedReason && (
-                      <p className="text-sm text-gray-700">
+                      <p className="text-sm text-foreground">
                         <span className="font-medium">Raison :</span> {selectedUser.blockedReason}
                       </p>
                     )}
@@ -1281,7 +1281,7 @@ const UsersWithTabs = () => {
                 <Label htmlFor="edit-year">Année d'étude</Label>
                 <select
                   id="edit-year"
-                  className="w-full p-2 border rounded-md bg-white"
+                  className="w-full p-2 border rounded-md bg-card"
                   value={editFormData.currentYear || ""}
                   onChange={(e) => setEditFormData({ ...editFormData, currentYear: e.target.value })}
                 >
@@ -1295,7 +1295,7 @@ const UsersWithTabs = () => {
                 <Label htmlFor="edit-plan">Plan</Label>
                 <select
                   id="edit-plan"
-                  className="w-full p-2 border rounded-md bg-white"
+                  className="w-full p-2 border rounded-md bg-card"
                   value={editFormData.plan || "Free"}
                   onChange={(e) => setEditFormData({ ...editFormData, plan: e.target.value })}
                 >
@@ -1309,7 +1309,7 @@ const UsersWithTabs = () => {
             {/* Semesters Multi-select */}
             <div>
               <Label>Semestres</Label>
-              <div className="grid grid-cols-5 gap-2 mt-2 p-3 border rounded-md bg-gray-50">
+              <div className="grid grid-cols-5 gap-2 mt-2 p-3 border rounded-md bg-background">
                 {semesterOptions.map((sem) => (
                   <label key={sem.value} className="flex items-center gap-2 cursor-pointer">
                     <input
@@ -1340,7 +1340,7 @@ const UsersWithTabs = () => {
             {/* Payment Info - Only show for non-Free plans */}
             {editFormData.plan !== "Free" && (
               <div className="border-t pt-4 mt-4">
-                <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
+                <h4 className="font-medium text-foreground mb-3 flex items-center gap-2">
                   <CreditCard className="w-4 h-4" />
                   Informations de paiement
                 </h4>
@@ -1349,7 +1349,7 @@ const UsersWithTabs = () => {
                     <Label htmlFor="edit-payment-mode">Mode de paiement</Label>
                     <select
                       id="edit-payment-mode"
-                      className="w-full p-2 border rounded-md bg-white"
+                      className="w-full p-2 border rounded-md bg-card"
                       value={editFormData.paymentMode || ""}
                       onChange={(e) => setEditFormData({ ...editFormData, paymentMode: e.target.value })}
                     >
@@ -1395,11 +1395,11 @@ const UsersWithTabs = () => {
 
             {/* CGU (Terms of Use) Section */}
             <div className="border-t pt-4 mt-4">
-              <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
+              <h4 className="font-medium text-foreground mb-3 flex items-center gap-2">
                 <Shield className="w-4 h-4 text-purple-600" />
                 Conditions Générales d'Utilisation (CGU)
               </h4>
-              <div className="space-y-3 p-3 bg-gray-50 rounded-lg">
+              <div className="space-y-3 p-3 bg-background rounded-lg">
                 <div className="flex items-center gap-2">
                   <input
                     type="checkbox"
@@ -1431,7 +1431,7 @@ const UsersWithTabs = () => {
                       onChange={(e) => setEditFormData({ ...editFormData, consentAcceptedAt: e.target.value })}
                       className="mt-1"
                     />
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-xs text-muted-foreground mt-1">
                       Date et heure à laquelle l'utilisateur a accepté les conditions d'utilisation
                     </p>
                   </div>

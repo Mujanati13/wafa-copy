@@ -83,17 +83,17 @@ const faqs = [
   };
 
   return (
-    <section id="faq" className="py-20 px-6 bg-gray-50 relative overflow-hidden">
+    <section id="faq" className="py-20 px-6 bg-background relative overflow-hidden">
       {/* Background decoration */}
-      <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 via-transparent to-teal-50/50"></div>
+      <div className="absolute inset-0 bg-gradient-to-br from-blue-50/10 via-transparent to-teal-50/10"></div>
       
       <motion.div 
-        className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-100/20 rounded-full blur-3xl"
+        className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-100/10 rounded-full blur-3xl"
         variants={orbVariants}
         animate="animate"
       />
       <motion.div 
-        className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-teal-100/20 rounded-full blur-3xl"
+        className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-teal-100/10 rounded-full blur-3xl"
         variants={orbVariants}
         animate="animate"
         transition={{ delay: 1 }}
@@ -107,7 +107,7 @@ const faqs = [
           whileInView="visible"
           viewport={{ once: true, amount: 0.3 }}
         >
-          <h2 className="text-4xl md:text-5xl font-bold mb-6 text-gray-900 leading-tight">
+          <h2 className="text-4xl md:text-5xl font-bold mb-6 text-foreground leading-tight">
             Réponses aux questions{' '}
             <motion.span 
               className="text-blue-600"
@@ -152,12 +152,12 @@ function FAQAccordion({ faqs }) {
 
   const getColorClasses = (color) => {
     const colors = {
-      blue: 'text-blue-500 bg-blue-50',
-      green: 'text-green-500 bg-green-50',
-      purple: 'text-purple-500 bg-purple-50',
-      teal: 'text-teal-500 bg-teal-50',
-      orange: 'text-orange-500 bg-orange-50',
-      indigo: 'text-indigo-500 bg-indigo-50'
+      blue: 'text-blue-500 bg-blue-50 dark:bg-blue-950/40',
+      green: 'text-green-500 bg-green-50 dark:bg-green-950/40',
+      purple: 'text-purple-500 bg-purple-50 dark:bg-purple-950/40',
+      teal: 'text-teal-500 bg-teal-50 dark:bg-teal-950/40',
+      orange: 'text-orange-500 bg-orange-50 dark:bg-orange-950/40',
+      indigo: 'text-indigo-500 bg-indigo-50 dark:bg-indigo-950/40'
     };
     return colors[color] || colors.blue;
   };
@@ -229,9 +229,9 @@ function FAQAccordion({ faqs }) {
           >
             <motion.div
               className={`
-                bg-white backdrop-blur-sm rounded-2xl shadow-lg border border-gray-200 overflow-hidden
-                transition-all duration-300 hover:shadow-xl hover:border-blue-300
-                ${open === index ? 'border-blue-400 shadow-blue-100' : ''}
+                bg-card text-card-foreground backdrop-blur-sm rounded-2xl shadow-lg border border-border overflow-hidden
+                transition-all duration-300 hover:shadow-xl hover:border-blue-400
+                ${open === index ? 'border-blue-500 shadow-blue-500/20' : ''}
               `}
               whileHover={{ scale: 1.01 }}
               transition={{ duration: 0.2 }}
@@ -246,7 +246,7 @@ function FAQAccordion({ faqs }) {
                   <div className={`p-3 rounded-lg ${colorClasses} flex-shrink-0`}>
                     <Icon className="w-5 h-5" />
                   </div>
-                  <span className="text-lg font-semibold text-gray-900 group-hover:text-blue-700 transition-colors duration-300">
+                  <span className="text-lg font-semibold text-foreground group-hover:text-blue-500 transition-colors duration-300">
                     {faq.q}
                   </span>
                 </div>
@@ -280,9 +280,9 @@ function FAQAccordion({ faqs }) {
                     variants={contentVariants}
                     className="overflow-hidden"
                   >
-                    <div className="px-8 pb-6 pt-2 border-t border-gray-100">
+                    <div className="px-8 pb-6 pt-2 border-t border-border">
                       <motion.p 
-                        className="text-gray-700 leading-relaxed"
+                        className="text-muted-foreground leading-relaxed"
                         initial={{ opacity: 0, y: -10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.1 }}

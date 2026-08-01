@@ -43,27 +43,23 @@ app.use('/uploads', (req, res, next) => {
   }
 }));
 
-// CORS middleware - Enhanced for Firefox/Brave compatibility
-console.log('CORS: Allowing all origins with enhanced browser compatibility');
+// CORS middleware
+const allowedOrigins = (process.env.CORS_ORIGIN || '')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
+console.log(`CORS: allowing ${allowedOrigins.length ? allowedOrigins.join(', ') : 'same-origin requests only'}`);
 
 app.use(cors({
   origin: function (origin, callback) {
-    // Allow all origins in development, specific origins in production
-    if (!origin || process.env.NODE_ENV !== 'production') {
+    // Non-browser clients have no Origin header. Browser requests must be
+    // explicitly listed in CORS_ORIGIN in production.
+    if (!origin || process.env.NODE_ENV !== 'production' || allowedOrigins.includes(origin)) {
       return callback(null, true);
     }
-    // In production, allow your domains
-    const allowedOrigins = [
-      'https://imrs-qcm.com',
-      'https://www.imrs-qcm.com',
-      'https://backend.imrs-qcm.com'
-    ];
-    if (allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      callback(null, true); // Still allow for now, but log it
-      console.log('Origin not in whitelist:', origin);
-    }
+    console.warn('CORS origin rejected:', origin);
+    callback(new Error('Origin is not allowed by CORS'));
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
@@ -98,9 +94,9 @@ app.use(
     cookie: {
       maxAge: 1000 * 60 * 60 * 24 * 30, // 30 days in milliseconds
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production', // true in production only
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-      domain: process.env.NODE_ENV === 'production' ? '.imrs-qcm.com' : undefined, // Share cookies across subdomains
+      secure: process.env.COOKIE_SECURE === 'true',
+      sameSite: process.env.COOKIE_SECURE === 'true' ? 'none' : 'lax',
+      ...(process.env.COOKIE_DOMAIN ? { domain: process.env.COOKIE_DOMAIN } : {}),
       // Enhanced for Firefox/Brave compatibility
       path: '/',
     },

@@ -313,7 +313,7 @@ const SelectFreeSemester = () => {
           transition={{ delay: 0.5 }}
           className="mt-12"
         >
-          <Card className="bg-slate-50 border-slate-200">
+          <Card className="bg-muted border-border">
             <CardContent className="p-6">
               <h4 className="font-semibold text-slate-800 mb-3">Ce que vous obtenez avec votre compte gratuit :</h4>
               <ul className="space-y-2 text-slate-600">

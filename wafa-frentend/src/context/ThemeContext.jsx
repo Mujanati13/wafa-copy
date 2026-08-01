@@ -27,40 +27,41 @@ export const themes = {
 
 export const ThemeProvider = ({ children }) => {
   const [currentTheme, setCurrentTheme] = useState(() => {
-    const savedTheme = localStorage.getItem("theme");
-    return savedTheme || "light";
+    try {
+      const savedTheme = localStorage.getItem("theme");
+      if (savedTheme) return savedTheme;
+    } catch (e) {}
+    // Fallback to system preference
+    if (typeof window !== "undefined" && window.matchMedia) {
+      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+    return 'light';
   });
 
   useEffect(() => {
-    localStorage.setItem("theme", currentTheme);
-    document.documentElement.style.setProperty(
-      "--primary-color",
-      themes[currentTheme].primary
-    );
-    document.documentElement.style.setProperty(
-      "--secondary-color",
-      themes[currentTheme].secondary
-    );
-    document.documentElement.style.setProperty(
-      "--background-color",
-      themes[currentTheme].background
-    );
-    document.documentElement.style.setProperty(
-      "--text-color",
-      themes[currentTheme].text
-    );
-    document.documentElement.style.setProperty(
-      "--card-bg",
-      themes[currentTheme].cardBg
-    );
-    document.documentElement.style.setProperty(
-      "--border-color",
-      themes[currentTheme].border
-    );
-    document.documentElement.style.setProperty(
-      "--error-color",
-      themes[currentTheme].error
-    );
+    try {
+      localStorage.setItem("theme", currentTheme);
+    } catch (e) {
+      // ignore
+    }
+
+    // Toggle .dark class for Tailwind / CSS variables
+    if (typeof document !== 'undefined') {
+      if (currentTheme === 'dark') {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+
+      // Also keep CSS custom properties for components that rely on them
+      document.documentElement.style.setProperty('--primary-color', themes[currentTheme].primary);
+      document.documentElement.style.setProperty('--secondary-color', themes[currentTheme].secondary);
+      document.documentElement.style.setProperty('--background-color', themes[currentTheme].background);
+      document.documentElement.style.setProperty('--text-color', themes[currentTheme].text);
+      document.documentElement.style.setProperty('--card-bg', themes[currentTheme].cardBg);
+      document.documentElement.style.setProperty('--border-color', themes[currentTheme].border);
+      document.documentElement.style.setProperty('--error-color', themes[currentTheme].error);
+    }
   }, [currentTheme]);
 
   const changeTheme = (themeName) => {

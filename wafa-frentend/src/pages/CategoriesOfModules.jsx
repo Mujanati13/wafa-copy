@@ -291,19 +291,19 @@ const CategoriesOfModules = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
+      <div className="min-h-screen bg-card flex items-center justify-center">
         <Loader2 className="h-12 w-12 animate-spin text-blue-600" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-card">
       <div className="max-w-7xl mx-auto px-6 py-8 space-y-6">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">Catégories de Modules</h2>
-            <p className="text-gray-600">Gérez les catégories et cours de chaque module</p>
+            <h2 className="text-2xl font-bold text-foreground">Catégories de Modules</h2>
+            <p className="text-muted-foreground">Gérez les catégories et cours de chaque module</p>
           </div>
 
           <Button onClick={() => setShowNewCategoryForm(true)} className="bg-blue-600 hover:bg-blue-700 gap-2">
@@ -463,7 +463,7 @@ const CategoriesOfModules = () => {
                           )}
                         </TableCell>
                         <TableCell>
-                          <Badge className={m.categoryColor || "bg-gray-100 text-gray-700"}>
+                          <Badge className={m.categoryColor || "bg-muted text-foreground"}>
                             {m.displayCategory}
                           </Badge>
                         </TableCell>
@@ -494,7 +494,7 @@ const CategoriesOfModules = () => {
               </Table>
             </div>
           </CardContent>
-          <CardFooter className="flex flex-col sm:flex-row justify-between items-center gap-4 border-t bg-slate-50/50">
+          <CardFooter className="flex flex-col sm:flex-row justify-between items-center gap-4 border-t bg-background/50">
             <div className="text-sm text-muted-foreground">
               Affichage {filteredModules.length === 0 ? 0 : startIndex + 1} à {Math.min(endIndex, filteredModules.length)} sur {filteredModules.length} résultats
             </div>

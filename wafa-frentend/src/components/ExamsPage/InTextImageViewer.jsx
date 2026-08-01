@@ -157,7 +157,7 @@ const InTextImageViewer = ({
               <Button
                 variant="ghost"
                 size="icon"
-                className="absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-white/80 hover:bg-white shadow-md"
+                className="absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-card/80 hover:bg-card shadow-md"
                 onClick={handlePrevious}
               >
                 <ChevronLeft className="h-6 w-6" />
@@ -165,7 +165,7 @@ const InTextImageViewer = ({
               <Button
                 variant="ghost"
                 size="icon"
-                className="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-white/80 hover:bg-white shadow-md"
+                className="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-card/80 hover:bg-card shadow-md"
                 onClick={handleNext}
               >
                 <ChevronRight className="h-6 w-6" />
@@ -203,7 +203,7 @@ const InTextImageViewer = ({
                   "w-16 h-16 rounded-lg overflow-hidden border-2 flex-shrink-0 transition-all",
                   currentIndex === idx
                     ? "border-primary ring-2 ring-primary/20"
-                    : "border-gray-200 hover:border-gray-400"
+                    : "border-border hover:border-gray-400"
                 )}
               >
                 <img

@@ -224,7 +224,7 @@ const ResumesAdmin = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center space-y-4">
           <Loader2 className="h-12 w-12 animate-spin text-blue-500 mx-auto" />
           <p className="text-muted-foreground">Chargement des résumés...</p>
@@ -234,7 +234,7 @@ const ResumesAdmin = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4 md:p-6">
+    <div className="min-h-screen bg-background p-4 md:p-6">
       <div className="max-w-7xl mx-auto space-y-6">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <PageHeader
@@ -399,7 +399,7 @@ const ResumesAdmin = () => {
                           </TableCell>
                           <TableCell>{submission.title || "—"}</TableCell>
                           <TableCell>
-                            <span className="text-sm text-slate-600">
+                            <span className="text-sm text-muted-foreground">
                               {submission.moduleId?.name || "—"}
                             </span>
                           </TableCell>
@@ -568,7 +568,7 @@ const ResumesAdmin = () => {
                                 {coursePdfs.map((pdf) => (
                                   <div
                                     key={pdf._id}
-                                    className="flex items-center justify-between p-3 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors"
+                                    className="flex items-center justify-between p-3 bg-background rounded-lg hover:bg-muted transition-colors"
                                   >
                                     <div className="flex items-center gap-3">
                                       <File className="h-4 w-4 text-red-500" />

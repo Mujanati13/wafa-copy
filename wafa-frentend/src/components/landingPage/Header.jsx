@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Menu, X, LogIn, UserPlus, LayoutDashboard, User, GraduationCap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import ThemeToggle from '@/components/ui/ThemeToggle';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Separator } from '@/components/ui/separator';
 
@@ -99,8 +100,8 @@ const Header = ({ settings }) => {
 
   return (
     <header className={`fixed left-0 right-0 z-50 transition-all duration-300 ${isScrolled
-        ? 'bg-white/95 backdrop-blur-md shadow-lg border-b'
-        : 'bg-white/90 backdrop-blur-sm'
+        ? 'bg-background/95 backdrop-blur-md shadow-lg border-b'
+        : 'bg-background/90 backdrop-blur-sm'
       } ${isVisible ? 'top-0' : '-top-20'
       }`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -143,6 +144,7 @@ const Header = ({ settings }) => {
 
           {/* Desktop CTA Buttons */}
           <div className="hidden md:flex items-center gap-3">
+            <ThemeToggle />
             {isLoggedIn ? (
               <>
                 <Button variant="outline" asChild>
@@ -198,9 +200,12 @@ const Header = ({ settings }) => {
                     </div>
                   )}
                   <div className="flex flex-col">
-                    <span className="text-lg font-bold text-gray-900 leading-none">{settings?.siteName || "Imrs-Qcma"}</span>
-                    <span className="text-xs text-gray-500">{settings?.siteVersion || "v1.1"}</span>
+                    <span className="text-lg font-bold text-foreground leading-none">{settings?.siteName || "Imrs-Qcma"}</span>
+                    <span className="text-xs text-muted-foreground">{settings?.siteVersion || "v1.1"}</span>
                   </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <ThemeToggle />
                 </div>
               </div>
 
