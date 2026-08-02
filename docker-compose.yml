@@ -78,10 +78,15 @@ services:
         condition: service_healthy
     networks:
       - app_network
+      - proxy_network
 
 networks:
   app_network:
     driver: bridge
+  # Existing shared reverse-proxy network on the VPS.
+  proxy_network:
+    name: ${PROXY_NETWORK:-wafa_wafa-network}
+    external: true
 
 volumes:
   mongodb_data:

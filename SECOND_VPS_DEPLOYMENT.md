@@ -6,6 +6,10 @@ loopback port (default `127.0.0.1:8081`). The VPS's existing Nginx owns ports
 80/443 and routes `copy.imrs-qcm.com` to this copy. The frontend proxies
 `/api` and `/uploads` internally to its own backend.
 
+The frontend also joins the existing `wafa_wafa-network`, allowing the
+already-running `wafa-nginx` Docker container to reach this copy by container
+name without exposing port 8081 publicly.
+
 ## 1. Copy the project to a new directory on the VPS
 
 ```bash
@@ -40,11 +44,11 @@ openssl rand -hex 32
 
 ## 3. Route the domains through the VPS Nginx
 
-Create a Nginx server configuration from
-`nginx/wafa-copy-domains.conf.example`. It serves the application at
-`copy.imrs-qcm.com` and exposes only `/api/` and `/uploads/` on
-`backend.copy.imrs-qcm.com`. Test and reload the existing Nginx, then obtain
-or renew the two certificates with Certbot. Do not create another Nginx
+The VPS uses the existing `wafa-nginx` Docker container, not host Nginx. Add
+the copy server blocks to `/root/wafa/nginx/nginx.conf`, proxying the frontend
+hostname to `wafa-copy-frontend-1:80` on `wafa_wafa-network`. Obtain the
+certificate through the existing Certbot webroot volume, then reload with
+`docker exec wafa-nginx nginx -s reload`. Do not create another Nginx
 container or bind this Compose project directly to ports 80/443.
 
 ## 4. Deploy and verify
