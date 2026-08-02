@@ -1,9 +1,10 @@
 # Deploy this copy alongside the existing VPS instance
 
 This project no longer uses the old instance's fixed container names, Docker
-volumes, network, ports 80/443, Nginx, or Certbot. It runs as a fully isolated
-Compose project and exposes one new public port (default `8081`). The frontend
-proxies `/api` and `/uploads` internally to its own backend.
+volumes, or network. It runs as a fully isolated Compose project on a private
+loopback port (default `127.0.0.1:8081`). The VPS's existing Nginx owns ports
+80/443 and routes `copy.imrs-qcm.com` to this copy. The frontend proxies
+`/api` and `/uploads` internally to its own backend.
 
 ## 1. Copy the project to a new directory on the VPS
 
@@ -26,8 +27,9 @@ chmod 600 .env
 ```
 
 Set `APP_PORT` to an unused port (for example `8081`) and replace every
-`REPLACE_...` value. Set both `FRONTEND_URL` and `CORS_ORIGIN` to the exact
-public URL, for example `http://203.0.113.10:8081`. If the Mongo password has
+`REPLACE_...` value. For this copy, keep `APP_HOST_BIND=127.0.0.1`, set both
+`FRONTEND_URL` and `CORS_ORIGIN` to `https://copy.imrs-qcm.com`, and set
+`COOKIE_SECURE=true`. If the Mongo password has
 characters such as `@`, `:`, `/`, `?`, or `#`, URL-encode it in `MONGO_URL`.
 
 Generate secrets with:
@@ -36,7 +38,16 @@ Generate secrets with:
 openssl rand -hex 32
 ```
 
-## 3. Deploy and verify
+## 3. Route the domains through the VPS Nginx
+
+Create a Nginx server configuration from
+`nginx/wafa-copy-domains.conf.example`. It serves the application at
+`copy.imrs-qcm.com` and exposes only `/api/` and `/uploads/` on
+`backend.copy.imrs-qcm.com`. Test and reload the existing Nginx, then obtain
+or renew the two certificates with Certbot. Do not create another Nginx
+container or bind this Compose project directly to ports 80/443.
+
+## 4. Deploy and verify
 
 ```bash
 chmod +x deploy-second-instance.sh
@@ -45,22 +56,10 @@ curl -fsS http://127.0.0.1:8081/api/v1/test
 docker compose --env-file .env logs --tail=100 backend frontend mongodb
 ```
 
-If UFW is enabled, allow only the chosen application port:
-
-```bash
-sudo ufw allow 8081/tcp
-```
-
-Open `http://YOUR_VPS_IP:8081`. The backend is deliberately not exposed on its
+Open `https://copy.imrs-qcm.com`. Port `8081` does not need a UFW rule because
+it is bound to loopback only. The backend is deliberately not exposed on its
 own host port; requests at `/api/v1/*` and `/uploads/*` remain within this
 instance's frontend proxy.
-
-## HTTPS/domain option
-
-For a real domain, place this copy behind the VPS's existing shared Nginx or
-reverse-proxy setup rather than starting a second server on 80/443. Route a new
-host name to `127.0.0.1:8081`, set `FRONTEND_URL` and `CORS_ORIGIN` to its
-`https://` URL, set `COOKIE_SECURE=true`, and rebuild with the deploy script.
 
 ## Manage only this copy
 
