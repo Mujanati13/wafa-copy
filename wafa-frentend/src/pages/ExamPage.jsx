@@ -1493,7 +1493,7 @@ const ExamPage = () => {
   // Loading state
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -1515,7 +1515,7 @@ const ExamPage = () => {
   // Error state
   if (error || !currentQuestionData) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -1628,7 +1628,7 @@ const ExamPage = () => {
   }).length;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/50 pb-20 lg:pb-0">
+    <div className="exam-workspace min-h-screen bg-background pb-20 lg:pb-0">
       {/* ============== MOBILE RESULTS BANNER ============== */}
       {showResults && (
         <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-indigo-600 to-purple-600 text-white safe-area-pt">
@@ -1672,7 +1672,7 @@ const ExamPage = () => {
 
       {/* ============== MOBILE HEADER ============== */}
       <header className={cn(
-        "lg:hidden bg-white dark:bg-slate-900 border-b sticky top-0 z-40 shadow-sm w-full",
+        "lg:hidden bg-card/95 border-b border-border sticky top-0 z-40 shadow-sm backdrop-blur-xl w-full",
         showResults && "mt-32" // Add margin when results banner is showing
       )}>
         {/* Single compact row */}
@@ -1742,7 +1742,7 @@ const ExamPage = () => {
       </header>
 
       {/* ============== DESKTOP HEADER ============== */}
-      <header className="hidden lg:block bg-white dark:bg-slate-900/80 backdrop-blur-lg border-b border-gray-200 dark:border-gray-700/50 sticky top-0 z-40 shadow-sm">
+      <header className="hidden lg:block bg-card/95 backdrop-blur-xl border-b border-border sticky top-0 z-40 shadow-sm">
         <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8">
           <div className="flex items-center justify-between h-12 sm:h-14 md:h-16">
             {/* Left Section - Menu button far left */}
@@ -1870,11 +1870,11 @@ const ExamPage = () => {
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8 py-3 sm:py-4 md:py-6 lg:py-8">
+      <div className="max-w-[1440px] mx-auto px-2 sm:px-4 lg:px-8 py-3 sm:py-4 md:py-6 lg:py-8">
         <div className="grid lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
           {/* Sidebar - Desktop */}
           <div className="hidden lg:block lg:col-span-1 h-full">
-            <Card className="sticky top-24 shadow-xl border-0 overflow-hidden flex flex-col h-[calc(100vh-7rem)]">
+            <Card className="sticky top-24 border-border bg-card shadow-lg overflow-hidden flex flex-col h-[calc(100vh-7rem)]">
               <CardContent className="p-0 flex-1 overflow-hidden min-h-0 flex flex-col">
                 {/* Legend Section - Moved to Top */}
                 <div className="border-b px-3 py-3 bg-gray-50/50 shrink-0">
@@ -2082,7 +2082,7 @@ const ExamPage = () => {
                 onTouchEnd={onTouchEnd}
                 className="touch-pan-y"
               >
-                <Card className="shadow-xl border-0 overflow-hidden">
+                <Card className="exam-question-card border-border bg-card shadow-lg overflow-hidden">
                   {/* Question Header - Compact unified row */}
                   <div className="bg-gradient-to-r from-gray-50 to-gray-100/50 border-b px-2 sm:px-4 md:px-6 py-2 sm:py-2.5">
                     <div className="flex items-center justify-between gap-1.5 sm:gap-2">
@@ -2397,8 +2397,7 @@ const ExamPage = () => {
                             whileTap={{ scale: (showCorrectness || currentQuestionData.isAnnulled) ? 1 : 0.99 }}
                             animate={isAnimating ? { scale: [1, 1.02, 1] } : {}}
                             className={cn(
-                              "w-full text-left rounded-xl border-2 transition-all duration-200",
-                              "focus:outline-none",
+                              "imrs-focus-ring w-full text-left rounded-xl border-2 transition-all duration-200",
                               !showCorrectness && !currentQuestionData.isAnnulled && "hover:shadow-md cursor-pointer active:scale-[0.98] bg-white dark:bg-slate-900",
                               (showCorrectness || currentQuestionData.isAnnulled) && "cursor-default",
                               // Annulled question state
@@ -2425,6 +2424,7 @@ const ExamPage = () => {
                                 : {}
                             }
                             onClick={() => !showCorrectness && !currentQuestionData.isAnnulled && handleAnswerSelect(currentQuestion, index)}
+                            aria-pressed={isSelected}
                             disabled={showCorrectness || currentQuestionData.isAnnulled}
                           >
                             <div className="p-3 sm:p-4 flex items-center gap-3">
@@ -2693,7 +2693,7 @@ const ExamPage = () => {
       {!showResults ? (
         <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 safe-area-pb">
           {/* Navigation row - White background */}
-          <div className="bg-white dark:bg-slate-900 border-t border-gray-200 dark:border-gray-700 shadow-lg px-3 py-2">
+          <div className="bg-card/95 border-t border-border shadow-lg px-3 py-2 backdrop-blur-xl">
             <div className="flex items-center gap-2">
               {/* Previous button */}
               <button
@@ -2719,10 +2719,10 @@ const ExamPage = () => {
                 <button
                   type="button"
                   onClick={(e) => handleVerifyQuestion(e)}
-                  disabled={isVerifying}
+                  disabled={isVerifying || !selectedAnswers[currentQuestion] || selectedAnswers[currentQuestion].length === 0}
                   className={cn(
                     "flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-semibold text-white transition-all active:scale-98",
-                    isVerifying && "opacity-70 cursor-not-allowed"
+                    (isVerifying || !selectedAnswers[currentQuestion] || selectedAnswers[currentQuestion].length === 0) && "opacity-70 cursor-not-allowed"
                   )}
                   style={{
                     background: `linear-gradient(135deg, ${moduleColor}, ${adjustColor(moduleColor, -30)})`,
@@ -2803,7 +2803,7 @@ const ExamPage = () => {
         </div>
       ) : (
         /* Mobile Results Bottom Bar */
-        <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white dark:bg-slate-900 border-t border-gray-200 dark:border-gray-700 shadow-lg safe-area-pb">
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-card/95 border-t border-border shadow-lg safe-area-pb backdrop-blur-xl">
           <div className="flex items-center gap-3 px-4 py-3">
             {/* Previous */}
             <button

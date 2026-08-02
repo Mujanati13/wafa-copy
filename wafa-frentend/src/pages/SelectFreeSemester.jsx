@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion as Motion } from 'framer-motion';
 import { GraduationCap, BookOpen, Sparkles, ChevronRight, Loader2, Check, Gift } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -155,7 +155,7 @@ const SelectFreeSemester = () => {
 
   if (isChecking || loadingModules) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-teal-50 flex items-center justify-center">
+      <div className="imrs-grid min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="h-8 w-8 animate-spin text-blue-600 mx-auto mb-2" />
           <p className="text-sm text-slate-600">Chargement des semestres...</p>
@@ -165,7 +165,7 @@ const SelectFreeSemester = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-teal-50 py-8 px-4">
+    <div className="imrs-grid min-h-screen bg-background py-8 px-4">
       {/* Background Effects */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/4 right-1/4 w-64 h-64 bg-blue-100 rounded-full opacity-30 blur-3xl animate-pulse" />
@@ -174,7 +174,7 @@ const SelectFreeSemester = () => {
 
       <div className="relative z-10 max-w-4xl mx-auto">
         {/* Header */}
-        <motion.div
+        <Motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-8"
@@ -190,17 +190,17 @@ const SelectFreeSemester = () => {
             <span className="font-medium">Offre de bienvenue</span>
           </div>
 
-          <h1 className="text-3xl md:text-4xl font-bold text-slate-800 mb-3">
+          <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-3">
             Choisissez votre semestre gratuit
           </h1>
           <p className="text-lg text-slate-600 max-w-2xl mx-auto">
             En tant que nouvel utilisateur, vous bénéficiez d'un accès gratuit à <span className="font-semibold text-blue-600">un semestre de votre choix</span> avec un module dédié. 
             Sélectionnez celui qui correspond à votre niveau actuel.
           </p>
-        </motion.div>
+        </Motion.div>
 
         {/* Semester Grid */}
-        <motion.div
+        <Motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
@@ -212,7 +212,7 @@ const SelectFreeSemester = () => {
             </div>
           ) : (
             semesters.map((semester, index) => (
-              <motion.div
+              <Motion.div
                 key={semester.id}
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -222,15 +222,15 @@ const SelectFreeSemester = () => {
                   onClick={() => setSelectedSemester(semester.id)}
                   className={`cursor-pointer transition-all duration-300 hover:shadow-lg hover:-translate-y-1 ${
                     selectedSemester === semester.id
-                      ? 'ring-2 ring-blue-500 bg-blue-50 border-blue-300'
-                      : 'hover:border-blue-200'
+                      ? 'ring-2 ring-cyan-500 bg-cyan-50 border-cyan-300 dark:bg-cyan-950/30'
+                      : 'hover:border-cyan-300'
                   }`}
                 >
                   <CardContent className="p-4 text-center">
                     <div className={`w-12 h-12 mx-auto mb-3 rounded-xl flex items-center justify-center ${
                       selectedSemester === semester.id
-                        ? 'bg-blue-500 text-white'
-                        : 'bg-slate-100 text-slate-600'
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-muted text-muted-foreground'
                     }`}>
                       {selectedSemester === semester.id ? (
                         <Check className="h-6 w-6" />
@@ -242,19 +242,19 @@ const SelectFreeSemester = () => {
                     <p className="text-xs text-slate-500 mt-1">{semester.year}</p>
                   </CardContent>
                 </Card>
-              </motion.div>
+              </Motion.div>
             ))
           )}
-        </motion.div>
+        </Motion.div>
 
         {/* Selected Semester Details */}
         {selectedSemester && (
-          <motion.div
+          <Motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             className="mb-8"
           >
-            <Card className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white border-0 shadow-xl">
+            <Card className="bg-gradient-to-r from-[#10265f] to-[#12718d] text-white border-0 shadow-xl">
               <CardContent className="p-6 flex items-center justify-between">
                 <div className="flex items-center gap-4">
                   <div className="w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center">
@@ -272,11 +272,11 @@ const SelectFreeSemester = () => {
                 <Sparkles className="h-8 w-8 text-amber-300" />
               </CardContent>
             </Card>
-          </motion.div>
+          </Motion.div>
         )}
 
         {/* Action Button */}
-        <motion.div
+        <Motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.4 }}
@@ -286,7 +286,7 @@ const SelectFreeSemester = () => {
             onClick={handleSelectSemester}
             disabled={!selectedSemester || isLoading}
             size="lg"
-            className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-8 py-6 text-lg rounded-xl shadow-lg hover:shadow-xl transition-all"
+            className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-6 text-lg rounded-xl shadow-lg hover:shadow-xl transition-all"
           >
             {isLoading ? (
               <>
@@ -304,10 +304,10 @@ const SelectFreeSemester = () => {
           <p className="text-sm text-slate-500 mt-4">
             💡 Vous pourrez accéder à d'autres semestres en passant à Premium
           </p>
-        </motion.div>
+        </Motion.div>
 
         {/* Info Card */}
-        <motion.div
+        <Motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
@@ -332,7 +332,7 @@ const SelectFreeSemester = () => {
               </ul>
             </CardContent>
           </Card>
-        </motion.div>
+        </Motion.div>
       </div>
     </div>
   );

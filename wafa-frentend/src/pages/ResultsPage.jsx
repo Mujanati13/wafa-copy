@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion as Motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { 
   Trophy, Clock, Target, TrendingUp, Calendar, 
@@ -17,14 +17,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { DataTable, StatCard, PageHeader } from '@/components/shared';
-import { cn } from '@/lib/utils';
 
 const ResultsPage = () => {
   const { t } = useTranslation(['dashboard', 'common']);
   const navigate = useNavigate();
   const [examResults, setExamResults] = useState([]);
   const [selectedPeriod, setSelectedPeriod] = useState('all');
-  const [selectedSubject, setSelectedSubject] = useState('all');
+  const [selectedSubject] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
 
   // Load exam results
@@ -142,14 +141,6 @@ const ResultsPage = () => {
     return matchesSubject && matchesSearch && matchesPeriod;
   });
 
-  const getScoreColor = (score) => {
-    const numScore = parseFloat(score);
-    if (numScore >= 16) return 'text-green-600';
-    if (numScore >= 12) return 'text-yellow-600';
-    if (numScore >= 10) return 'text-orange-600';
-    return 'text-red-600';
-  };
-
   const getScoreBadgeVariant = (score) => {
     const numScore = parseFloat(score);
     if (numScore >= 16) return 'default';
@@ -167,7 +158,7 @@ const ResultsPage = () => {
   const stats = calculateStats();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4 md:p-6">
+    <div className="min-h-screen bg-background p-4 md:p-6">
       <div className="max-w-7xl mx-auto space-y-6">
         <PageHeader
           title={t('dashboard:my_results')}
@@ -313,7 +304,7 @@ const ResultsPage = () => {
                   </div>
                 ) : (
                   filteredResults.map((result) => (
-                    <motion.div
+                    <Motion.div
                       key={result.examId}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
@@ -365,7 +356,7 @@ const ResultsPage = () => {
                           </div>
                         </CardContent>
                       </Card>
-                    </motion.div>
+                    </Motion.div>
                   ))
                 )}
               </div>

@@ -7,12 +7,11 @@ import {
   Outlet,
 } from "react-router-dom";
 import { Toaster } from "@/components/ui/sonner";
-import LandingPage from "./components/LandingPage";
+import RedesignedLandingPage from "./components/RedesignedLandingPage";
 import Login from "./components/auth/Login";
 import Register from "./components/auth/Register";
-import DashboardLayout from "./components/layout/DashboardLayout";
-import Dashboard from "./pages/Dashboard";
-import ExamsPage from "./pages/ExamsPage";
+import LearnerExperienceLayout from "./components/layout/LearnerExperienceLayout";
+import LearnerDashboard from "./pages/LearnerDashboard";
 import ExamPage from "./pages/ExamPage";
 import ResultsPage from "./pages/ResultsPage";
 import ProfilePage from "./pages/ProfilePage";
@@ -78,7 +77,7 @@ export default function App() {
     <Router>
       <Toaster position="top-right" />
       <Routes>
-        <Route path="/" element={<LandingPage />} />
+        <Route path="/" element={<RedesignedLandingPage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/admin/login" element={<AdminLogin />} />
         <Route path="/register" element={<Register />} />
@@ -93,8 +92,8 @@ export default function App() {
         <Route path="/payment/cancel" element={<PaymentCancel />} />
         <Route path="/select-semester" element={<SelectFreeSemester />} />
 
-        <Route path="/dashboard" element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
-          <Route path="home" element={<Dashboard />} />
+        <Route path="/dashboard" element={<ProtectedRoute><LearnerExperienceLayout /></ProtectedRoute>}>
+          <Route path="home" element={<LearnerDashboard />} />
           <Route path="playlist" element={<Myplaylist />} />
           <Route path="playlists" element={<PlaylistsPage />} />
           <Route path="notes" element={<NotesPage />} />
@@ -102,7 +101,7 @@ export default function App() {
           <Route path="leaderboard" element={<LeaderboardClient />} />
           <Route path="subscription" element={<ClientSubscriptionPage />} />
           <Route path="statistics" element={<StatisticsPage />} />
-          <Route path="exams" element={<ExamsPage />} />
+          <Route path="exams" element={<SubjectsPage />} />
           {/* <Route path="exam/:examId" element={<ExamPage />} /> */}
           <Route path="results" element={<ResultsPage />} />
           <Route path="progress" element={<ProgressPage />} />

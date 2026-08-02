@@ -385,35 +385,35 @@ const ExplicationModel = ({ question, setShowExplanation, userPlan = "Free" }) =
   const correctAnswersCount = question?.options?.filter(opt => opt.isCorrect).length || 0;
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-      <div className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-xl max-w-3xl w-full max-h-[85vh] overflow-hidden relative flex flex-col">
+    <div className="fixed inset-0 z-[60] flex items-end justify-center bg-slate-950/55 p-0 backdrop-blur-sm sm:items-center sm:p-4">
+      <div role="dialog" aria-modal="true" aria-label="Explications de la question" className="max-h-[92vh] w-full max-w-4xl overflow-hidden rounded-t-3xl border border-border bg-card shadow-2xl sm:max-h-[85vh] sm:rounded-3xl relative flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b bg-gradient-to-r from-blue-50 to-indigo-50">
+        <div className="flex items-center justify-between border-b border-border bg-primary px-5 py-4 text-primary-foreground">
           <div className="flex items-center gap-3">
-            <Sparkles className="h-5 w-5 text-blue-600" />
-            <h3 className="text-lg font-semibold text-gray-900">
+            <Sparkles className="h-5 w-5 text-cyan-200" />
+            <h3 className="text-lg font-semibold">
               Explications
             </h3>
-            <Badge variant="outline" className="ml-2">
+            <Badge variant="outline" className="ml-2 border-white/25 bg-white/10 text-white">
               {(hasAIExplanation ? 1 : 0) + userExplanations.length} / {MAX_EXPLANATIONS + 1}
             </Badge>
           </div>
           <button
             onClick={() => setShowExplanation(false)}
-            className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+            className="imrs-focus-ring rounded-full p-2 text-white/75 transition-colors hover:bg-white/10 hover:text-white"
           >
-            <X className="h-5 w-5 text-gray-500" />
+            <X className="h-5 w-5" />
           </button>
         </div>
 
         {/* Main Tabs */}
-        <div className="flex border-b border-gray-200 dark:border-gray-700 bg-gray-50">
+        <div className="flex overflow-x-auto border-b border-border bg-muted/50">
           <button
             onClick={() => hasPremiumProAccess && setActiveTab("ai")}
             disabled={!hasPremiumProAccess}
             className={`flex items-center gap-2 px-6 py-3 font-medium transition-all relative ${activeTab === "ai"
-              ? "border-b-2 border-blue-600 text-blue-700 bg-white dark:bg-slate-900"
-              : "text-gray-600 hover:bg-gray-100"
+              ? "border-b-2 border-primary text-primary bg-card"
+              : "text-muted-foreground hover:bg-muted"
               } ${!hasPremiumProAccess ? "opacity-50 cursor-not-allowed" : ""}`}
             title={!hasPremiumProAccess ? "Explication IA disponible uniquement pour Premium Pro" : ""}
           >
@@ -432,8 +432,8 @@ const ExplicationModel = ({ question, setShowExplanation, userPlan = "Free" }) =
             onClick={() => setActiveTab("user")}
             disabled={!hasPremiumAccess}
             className={`flex items-center gap-2 px-6 py-3 font-medium transition-all ${activeTab === "user"
-              ? "border-b-2 border-purple-600 text-purple-700 bg-white dark:bg-slate-900"
-              : "text-gray-600 hover:bg-gray-100"
+              ? "border-b-2 border-primary text-primary bg-card"
+              : "text-muted-foreground hover:bg-muted"
               } ${!hasPremiumAccess ? "opacity-50 cursor-not-allowed" : ""}`}
             title={!hasPremiumAccess ? "Explications disponibles à partir de Premium" : ""}
           >
@@ -453,7 +453,7 @@ const ExplicationModel = ({ question, setShowExplanation, userPlan = "Free" }) =
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-5">
+        <div className="flex-1 overflow-y-auto p-5 sm:p-6">
           {/* Show upgrade prompt for GRATUIT users */}
           {!hasPremiumAccess ? (
             <div className="flex items-center justify-center h-full py-12">
@@ -938,7 +938,7 @@ const ExplicationModel = ({ question, setShowExplanation, userPlan = "Free" }) =
 
         {/* Correct Answers Footer */}
         {question?.options && (
-          <div className="p-4 border-t bg-gray-50">
+          <div className="border-t border-border bg-muted/40 p-4">
             <div className="flex items-center gap-2 text-sm">
               <span className="font-medium text-gray-600">Réponses correctes:</span>
               <div className="flex gap-1">

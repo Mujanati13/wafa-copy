@@ -1,285 +1,71 @@
-import React, { useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { 
-  Trophy, TrendingUp, Calendar, Target, Award, Lock,
-  ChevronRight, BookOpen, BarChart3
-} from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
-import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { PageHeader, StatCard } from '@/components/shared';
-import { motion } from 'framer-motion';
+import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
+import { Activity, ArrowRight, BarChart3, BookOpen, CircleAlert, Clock3, Target, Trophy } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { Skeleton } from "@/components/ui/skeleton";
+import { dashboardService } from "@/services/dashboardService";
+import { useSemester } from "@/context/SemesterContext";
 
-const ProgressPage = () => {
-  const { t } = useTranslation(['dashboard', 'common']);
-  const [selectedPeriod, setSelectedPeriod] = useState('week');
-  const [selectedSubject, setSelectedSubject] = useState('all');
+const dayFormatter = new Intl.DateTimeFormat("fr-FR", { weekday: "short" });
 
-  const overallStats = [
-    { label: t('dashboard:exams_completed'), value: '127', icon: <BookOpen className="w-6 h-6" />, color: 'text-blue-600', bg: 'bg-blue-50' },
-    { label: t('dashboard:success_rate'), value: '87%', icon: <Target className="w-6 h-6" />, color: 'text-green-600', bg: 'bg-green-50' },
-    { label: t('dashboard:study_hours'), value: '234h', icon: <Calendar className="w-6 h-6" />, color: 'text-purple-600', bg: 'bg-purple-50' },
-    { label: t('dashboard:monthly_goal'), value: '76%', icon: <TrendingUp className="w-6 h-6" />, color: 'text-orange-600', bg: 'bg-orange-50' },
-  ];
+const statValue = (value) => Number.isFinite(Number(value)) ? Number(value) : 0;
 
-  const subjectProgress = [
-    { name: 'Anatomie', progress: 85, exams: 24, avgScore: 88, color: 'bg-blue-500' },
-    { name: 'Physiologie', progress: 72, exams: 18, avgScore: 76, color: 'bg-green-500' },
-    { name: 'Pharmacologie', progress: 90, exams: 21, avgScore: 91, color: 'bg-purple-500' },
-    { name: 'Pathologie', progress: 65, exams: 15, avgScore: 70, color: 'bg-orange-500' },
-    { name: 'Microbiologie', progress: 78, exams: 19, avgScore: 82, color: 'bg-pink-500' },
-  ];
+export default function ProgressPage() {
+  const { selectedSemester, setSelectedSemester, userSemesters, loading: semestersLoading } = useSemester();
+  const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
-  const weeklyActivity = [
-    { day: 'Lun', hours: 3.5, exams: 4 },
-    { day: 'Mar', hours: 4.2, exams: 5 },
-    { day: 'Mer', hours: 2.8, exams: 3 },
-    { day: 'Jeu', hours: 5.1, exams: 6 },
-    { day: 'Ven', hours: 3.9, exams: 4 },
-    { day: 'Sam', hours: 6.2, exams: 8 },
-    { day: 'Dim', hours: 4.5, exams: 5 },
-  ];
+  useEffect(() => {
+    let current = true;
+    setLoading(true); setError(false);
+    dashboardService.getUserStats(selectedSemester)
+      .then((response) => { if (current) setStats(response?.data?.stats || response?.stats || {}); })
+      .catch(() => { if (current) setError(true); })
+      .finally(() => { if (current) setLoading(false); });
+    return () => { current = false; };
+  }, [selectedSemester]);
 
-  const achievements = [
-    { 
-      title: t('dashboard:achievement_first_100'), 
-      description: t('dashboard:achievement_first_100_desc'),
-      unlocked: true,
-      icon: <Trophy className="h-6 w-6 text-white" />,
-      color: 'from-yellow-400 to-orange-500'
-    },
-    { 
-      title: t('dashboard:achievement_study_marathon'), 
-      description: t('dashboard:achievement_study_marathon_desc'),
-      unlocked: true,
-      icon: <Calendar className="h-6 w-6 text-white" />,
-      color: 'from-blue-400 to-purple-500'
-    },
-    { 
-      title: t('dashboard:achievement_expert'), 
-      description: t('dashboard:achievement_expert_desc'),
-      unlocked: false,
-      icon: <Award className="h-6 w-6 text-gray-400" />,
-      color: 'from-green-400 to-teal-500'
-    },
-    { 
-      title: t('dashboard:achievement_champion'), 
-      description: t('dashboard:achievement_champion_desc'),
-      unlocked: false,
-      icon: <Target className="h-6 w-6 text-gray-400" />,
-      color: 'from-pink-400 to-red-500'
-    },
-  ];
+  const overview = useMemo(() => {
+    const attempted = statValue(stats?.totalQuestionsAttempted || stats?.questionsAnswered);
+    const correct = statValue(stats?.totalCorrectAnswers || stats?.correctAnswers);
+    const accuracy = attempted ? Math.round((correct / attempted) * 100) : Math.round(statValue(stats?.averageScore));
+    const studyMinutes = Math.round(statValue(stats?.studyHours) * 60);
+    return { attempted, correct, accuracy, studyMinutes, exams: statValue(stats?.examsCompleted) };
+  }, [stats]);
 
-  const maxHours = Math.max(...weeklyActivity.map(d => d.hours));
+  const modules = useMemo(() => (stats?.moduleProgress || []).map((module) => {
+    const attempted = statValue(module.questionsAttempted);
+    const correct = statValue(module.correctAnswers);
+    return { id: module.moduleId || module.moduleName, name: module.moduleName || "Module", attempted, correct, score: attempted ? Math.round((correct / attempted) * 100) : statValue(module.averageScore), lastAttempted: module.lastAttempted };
+  }).sort((a, b) => b.attempted - a.attempted), [stats]);
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4 md:p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <PageHeader
-            title={t('dashboard:my_progress')}
-            description={t('dashboard:track_your_evolution')}
-          />
-          
-          <div className="flex gap-2">
-            <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
-              <SelectTrigger className="w-[140px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="week">{t('dashboard:this_week')}</SelectItem>
-                <SelectItem value="month">{t('dashboard:this_month')}</SelectItem>
-                <SelectItem value="year">{t('dashboard:this_year')}</SelectItem>
-                <SelectItem value="all">{t('common:all')}</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
+  const activity = useMemo(() => (stats?.weeklyActivity || []).slice(-7).map((entry) => ({
+    label: entry.date ? dayFormatter.format(new Date(entry.date)).replace(".", "") : "—",
+    questions: statValue(entry.questionsAttempted), correct: statValue(entry.correctAnswers), minutes: statValue(entry.timeSpent),
+  })), [stats]);
+  const maxActivity = Math.max(1, ...activity.map((entry) => entry.questions));
 
-        {/* Overall Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {overallStats.map((stat, index) => (
-            <StatCard key={index} {...stat} />
-          ))}
-        </div>
+  if (loading) return <ProgressSkeleton />;
 
-        {/* Subject Progress */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle>{t('dashboard:progress_by_subject')}</CardTitle>
-                <CardDescription>{t('dashboard:your_performance_each_module')}</CardDescription>
-              </div>
-              <Select value={selectedSubject} onValueChange={setSelectedSubject}>
-                <SelectTrigger className="w-[140px]">
-                  <SelectValue placeholder={t('common:all')} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">{t('common:all')}</SelectItem>
-                  <SelectItem value="anatomy">{t('dashboard:anatomy')}</SelectItem>
-                  <SelectItem value="physiology">{t('dashboard:physiology')}</SelectItem>
-                  <SelectItem value="pharmacology">{t('dashboard:pharmacology')}</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {subjectProgress.map((subject, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.1 }}
-                className="space-y-2"
-              >
-                <div className="flex items-center justify-between text-sm">
-                  <div className="flex items-center gap-2">
-                    <BookOpen className="h-4 w-4 text-muted-foreground" />
-                    <span className="font-medium">{subject.name}</span>
-                  </div>
-                  <div className="flex items-center gap-4 text-muted-foreground">
-                    <span>{subject.exams} {t('dashboard:exams')}</span>
-                    <Badge variant="secondary">{subject.avgScore}% {t('dashboard:avg')}</Badge>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Progress value={subject.progress} className="flex-1" />
-                  <span className="text-sm font-medium w-12 text-right">{subject.progress}%</span>
-                </div>
-              </motion.div>
-            ))}
-          </CardContent>
-        </Card>
-
-        <div className="grid lg:grid-cols-2 gap-6">
-          {/* Weekly Activity */}
-          <Card>
-            <CardHeader>
-              <CardTitle>{t('dashboard:weekly_activity')}</CardTitle>
-              <CardDescription>{t('dashboard:study_hours_per_day')}</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {weeklyActivity.map((day, index) => (
-                  <motion.div
-                    key={index}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.05 }}
-                    className="flex items-center gap-4"
-                  >
-                    <div className="w-12 text-sm font-medium text-muted-foreground">
-                      {day.day}
-                    </div>
-                    <div className="flex-1">
-                      <div className="h-10 bg-muted rounded-lg overflow-hidden">
-                        <motion.div
-                          initial={{ width: 0 }}
-                          animate={{ width: `${(day.hours / maxHours) * 100}%` }}
-                          transition={{ delay: index * 0.05 + 0.2, duration: 0.5 }}
-                          className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg flex items-center justify-end pr-3"
-                        >
-                          <span className="text-xs font-medium text-white">
-                            {day.hours}h
-                          </span>
-                        </motion.div>
-                      </div>
-                    </div>
-                    <Badge variant="outline" className="w-16 justify-center">
-                      {day.exams} {t('dashboard:exams')}
-                    </Badge>
-                  </motion.div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Achievements */}
-          <Card>
-            <CardHeader>
-              <CardTitle>{t('dashboard:achievements')}</CardTitle>
-              <CardDescription>{t('dashboard:unlock_badges_progress')}</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 gap-4">
-                {achievements.map((achievement, index) => (
-                  <motion.div
-                    key={index}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: index * 0.1 }}
-                    className={`
-                      relative p-4 rounded-lg border-2 transition-all
-                      ${achievement.unlocked 
-                        ? 'bg-gradient-to-br ' + achievement.color + ' border-transparent shadow-lg' 
-                        : 'bg-muted border-border opacity-60'
-                      }
-                    `}
-                  >
-                    {!achievement.unlocked && (
-                      <div className="absolute top-2 right-2">
-                        <Lock className="h-4 w-4 text-gray-400" />
-                      </div>
-                    )}
-                    <div className={`
-                      flex items-center justify-center h-12 w-12 rounded-full mb-3
-                      ${achievement.unlocked ? 'bg-white dark:bg-slate-900/20' : 'bg-white dark:bg-slate-900'}
-                    `}>
-                      {achievement.icon}
-                    </div>
-                    <h4 className={`font-semibold text-sm mb-1 ${achievement.unlocked ? 'text-white' : 'text-muted-foreground'}`}>
-                      {achievement.title}
-                    </h4>
-                    <p className={`text-xs ${achievement.unlocked ? 'text-white/90' : 'text-gray-500'}`}>
-                      {achievement.description}
-                    </p>
-                  </motion.div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Study Goals */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Objectifs d'étude</CardTitle>
-            <CardDescription>Vos objectifs du mois en cours</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-6">
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="font-medium">Examens complétés (38/50)</span>
-                  <span className="text-muted-foreground">76%</span>
-                </div>
-                <Progress value={76} className="h-3" />
-              </div>
-              
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="font-medium">Heures d'étude (34/50h)</span>
-                  <span className="text-muted-foreground">68%</span>
-                </div>
-                <Progress value={68} className="h-3" />
-              </div>
-              
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="font-medium">Taux de réussite cible (87/90%)</span>
-                  <span className="text-muted-foreground">97%</span>
-                </div>
-                <Progress value={97} className="h-3" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+  return <section className="space-y-6">
+    <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-end"><div><p className="imrs-eyebrow">Progression</p><h1 className="imrs-page-title">Apprenez de chaque session</h1><p className="imrs-page-copy">Suivez vos réponses vérifiées et identifiez les modules à reprendre.</p></div><SemesterPicker semesters={userSemesters} current={selectedSemester} onChange={setSelectedSemester} disabled={semestersLoading} /></div>
+    {error && <div role="alert" className="flex items-start gap-3 rounded-2xl border border-amber-400/50 bg-amber-50 p-4 text-sm text-amber-950 dark:bg-amber-950/25 dark:text-amber-100"><CircleAlert className="mt-0.5 h-5 w-5 shrink-0" /><div><strong>Vos statistiques ne sont pas disponibles pour le moment.</strong><p className="mt-1">La dernière progression enregistrée réapparaîtra dès que la connexion sera rétablie.</p></div></div>}
+    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"><Metric icon={<Target />} label="Taux de réussite" value={`${overview.accuracy}%`} copy="Réponses correctes" tone="cyan" /><Metric icon={<BookOpen />} label="Questions vérifiées" value={overview.attempted} copy={`${overview.correct} bonnes réponses`} tone="blue" /><Metric icon={<Clock3 />} label="Temps d’étude" value={formatMinutes(overview.studyMinutes)} copy="Dans ce semestre" tone="violet" /><Metric icon={<Trophy />} label="Examens terminés" value={overview.exams} copy="Sessions complétées" tone="amber" /></div>
+    {overview.attempted === 0 && !error ? <EmptyProgress /> : <>
+      <div className="grid gap-5 xl:grid-cols-[1.2fr_.8fr]">
+        <section className="imrs-surface p-5 sm:p-6"><header className="flex items-start justify-between gap-3"><div><h2 className="text-lg font-bold">Par module</h2><p className="mt-1 text-sm text-muted-foreground">Votre réussite sur les questions vérifiées.</p></div><BarChart3 className="h-5 w-5 text-cyan-600" /></header><div className="mt-6 space-y-5">{modules.length ? modules.map((module) => <ModuleProgress key={module.id} module={module} />) : <p className="rounded-xl bg-muted p-5 text-sm text-muted-foreground">Aucune progression de module n’a encore été enregistrée.</p>}</div></section>
+        <section className="imrs-surface p-5 sm:p-6"><header className="flex items-start justify-between gap-3"><div><h2 className="text-lg font-bold">Votre activité</h2><p className="mt-1 text-sm text-muted-foreground">Questions vérifiées sur les 7 derniers jours.</p></div><Activity className="h-5 w-5 text-cyan-600" /></header><div className="mt-8 flex h-48 items-end justify-between gap-2" aria-label="Activité des sept derniers jours">{activity.length ? activity.map((entry, index) => <div key={`${entry.label}-${index}`} className="flex min-w-0 flex-1 flex-col items-center gap-2"><span className="text-xs font-semibold text-muted-foreground">{entry.questions || ""}</span><div className="flex h-32 w-full max-w-10 items-end rounded-t-xl bg-muted"><div className="w-full rounded-t-xl bg-gradient-to-t from-primary to-cyan-400 transition-all" style={{ height: `${Math.max(entry.questions ? 12 : 0, (entry.questions / maxActivity) * 100)}%` }} /></div><span className="text-xs capitalize text-muted-foreground">{entry.label}</span></div>) : <p className="w-full self-center text-center text-sm text-muted-foreground">Votre activité apparaîtra ici après vos premières réponses vérifiées.</p>}</div></section>
       </div>
-    </div>
-  );
-};
+      <section className="rounded-2xl border border-cyan-400/25 bg-cyan-50/70 p-5 dark:bg-cyan-950/20 sm:flex sm:items-center sm:justify-between sm:p-6"><div className="flex gap-4"><div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-primary text-primary-foreground"><Target className="h-5 w-5" /></div><div><h2 className="font-bold">Prochaine meilleure action</h2><p className="mt-1 max-w-2xl text-sm leading-6 text-muted-foreground">Reprenez le module avec votre taux le plus faible pour consolider vos connaissances.</p></div></div><Button asChild className="mt-4 gap-2 sm:mt-0"><Link to="/dashboard/subjects">Étudier maintenant <ArrowRight className="h-4 w-4" /></Link></Button></section>
+    </>}
+  </section>;
+}
 
-export default ProgressPage;
+function SemesterPicker({ semesters, current, onChange, disabled }) { const choices = semesters.length ? semesters : current ? [current] : []; return <div className="flex flex-wrap gap-2" aria-label="Choisir un semestre">{choices.map((semester) => <button key={semester} disabled={disabled} onClick={() => onChange(semester)} className={`imrs-focus-ring rounded-xl px-4 py-2 text-sm font-semibold transition ${semester === current ? "bg-primary text-primary-foreground shadow-md" : "border border-border bg-card text-muted-foreground hover:text-primary"}`}>{semester}</button>)}</div>; }
+function Metric({ icon, label, value, copy, tone }) { const colors = { cyan: "bg-cyan-100 text-cyan-700 dark:bg-cyan-950/50 dark:text-cyan-200", blue: "bg-blue-100 text-blue-700 dark:bg-blue-950/50 dark:text-blue-200", violet: "bg-violet-100 text-violet-700 dark:bg-violet-950/50 dark:text-violet-200", amber: "bg-amber-100 text-amber-700 dark:bg-amber-950/50 dark:text-amber-200" }; return <article className="imrs-surface p-5"><div className={`grid h-10 w-10 place-items-center rounded-xl ${colors[tone]}`}>{icon}</div><p className="mt-4 text-sm font-medium text-muted-foreground">{label}</p><p className="mt-1 text-2xl font-bold tracking-tight">{value}</p><p className="mt-1 text-xs text-muted-foreground">{copy}</p></article>; }
+function ModuleProgress({ module }) { return <article><div className="flex items-center justify-between gap-3 text-sm"><div className="min-w-0"><p className="truncate font-semibold">{module.name}</p><p className="mt-0.5 text-xs text-muted-foreground">{module.attempted} question{module.attempted > 1 ? "s" : ""} vérifiée{module.attempted > 1 ? "s" : ""}</p></div><span className="font-bold text-primary">{module.score}%</span></div><Progress value={module.score} className="mt-2 h-2" /></article>; }
+function EmptyProgress() { return <section className="imrs-surface p-10 text-center sm:p-14"><div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-cyan-100 text-cyan-700 dark:bg-cyan-950/50 dark:text-cyan-200"><Target className="h-7 w-7" /></div><h2 className="mt-5 text-xl font-bold">Votre progression commence ici</h2><p className="mx-auto mt-2 max-w-md text-sm leading-6 text-muted-foreground">Répondez à vos premières questions pour voir votre réussite, activité et progression par module.</p><Button asChild className="mt-6 gap-2"><Link to="/dashboard/subjects">Choisir un module <ArrowRight className="h-4 w-4" /></Link></Button></section>; }
+function ProgressSkeleton() { return <div className="space-y-6"><div className="flex justify-between"><div className="space-y-2"><Skeleton className="h-4 w-28" /><Skeleton className="h-9 w-72" /></div><Skeleton className="h-10 w-36" /></div><div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{[1, 2, 3, 4].map((item) => <Skeleton key={item} className="h-40 rounded-2xl" />)}</div><div className="grid gap-5 xl:grid-cols-2"><Skeleton className="h-96 rounded-2xl" /><Skeleton className="h-96 rounded-2xl" /></div></div>; }
+function formatMinutes(value) { if (!value) return "0 min"; if (value < 60) return `${value} min`; return `${Math.floor(value / 60)} h${value % 60 ? ` ${value % 60} min` : ""}`; }
