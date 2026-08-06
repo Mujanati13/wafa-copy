@@ -51,15 +51,32 @@ const allowedOrigins = (process.env.CORS_ORIGIN || '')
 
 console.log(`CORS: allowing ${allowedOrigins.length ? allowedOrigins.join(', ') : 'same-origin requests only'}`);
 
-app.use(cors({
+const isSamePublicOrigin = (origin, requestHost) => {
+  try {
+    return new URL(origin).host.toLowerCase() === requestHost.toLowerCase();
+  } catch {
+    return false;
+  }
+};
+
+// Apply CORS per request so that a frontend served by this same public host
+// also works when it is accessed directly by its IP address. Other browser
+// origins still need to be explicitly configured in CORS_ORIGIN.
+app.use((req, res, next) => cors({
   origin: function (origin, callback) {
-    // Non-browser clients have no Origin header. Browser requests must be
-    // explicitly listed in CORS_ORIGIN in production.
-    if (!origin || process.env.NODE_ENV !== 'production' || allowedOrigins.includes(origin)) {
+    const isAllowed = !origin
+      || process.env.NODE_ENV !== 'production'
+      || allowedOrigins.includes(origin)
+      || isSamePublicOrigin(origin, req.get('host') || '');
+
+    if (isAllowed) {
       return callback(null, true);
     }
+
     console.warn('CORS origin rejected:', origin);
-    callback(new Error('Origin is not allowed by CORS'));
+    const error = new Error('Origin is not allowed by CORS');
+    error.code = 'CORS_ORIGIN_NOT_ALLOWED';
+    return callback(error);
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
@@ -67,7 +84,7 @@ app.use(cors({
   exposedHeaders: ['set-cookie'],
   preflightContinue: false,
   optionsSuccessStatus: 204
-}));
+})(req, res, next));
 
 // Request logging middleware
 app.use((req, res, next) => {
@@ -172,6 +189,12 @@ app.use((err, req, res, next) => {
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
+  if (err.code === 'CORS_ORIGIN_NOT_ALLOWED') {
+    return res.status(403).json({
+      success: false,
+      message: 'Origin is not allowed by CORS',
+    });
+  }
   res.status(500).json({
     success: false,
     message: "Internal Server Error",
