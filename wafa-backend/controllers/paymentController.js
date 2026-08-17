@@ -4,6 +4,8 @@ import User from "../models/userModel.js";
 import asyncHandler from "../handlers/asyncHandler.js";
 import { NotificationController } from "./notificationController.js";
 import PaypalSettings from "../models/paypalSettingsModel.js";
+import SubscriptionPlan from "../models/subscriptionPlanModel.js";
+import mongoose from "mongoose";
 
 // Cache PayPal settings
 let cachedPaypalSettings = null;
@@ -46,17 +48,37 @@ const environment = async () => {
 
 const client = async () => new paypal.core.PayPalHttpClient(await environment());
 
-// Pricing configuration
-const PRICING = {
-  "1month": 29.99,
-  "3months": 79.99,
-  "6months": 149.99,
-  "1year": 249.99,
+const VALID_SEMESTERS = ["S1", "S2", "S3", "S4", "S5", "S6", "S7", "S8", "S9", "S10"];
+
+const getBillingConfig = (plan) => {
+  const period = String(plan?.period || "").toLowerCase();
+  const name = String(plan?.name || "").toLowerCase();
+  const yearly = ["annee", "annuel", "annual", "year"].some(value => period.includes(value) || name.includes(value));
+
+  return yearly
+    ? { duration: "1year", semesterCount: 2, transactionPlan: "Premium Annuel" }
+    : { duration: "6months", semesterCount: 1, transactionPlan: "Premium" };
+};
+
+const validatePlanSemesters = (semesters, semesterCount) => {
+  const selected = [...new Set(Array.isArray(semesters) ? semesters : [])];
+  if (selected.length !== semesterCount || selected.some(semester => !VALID_SEMESTERS.includes(semester))) {
+    throw new Error(`This plan requires exactly ${semesterCount} valid semester${semesterCount > 1 ? "s" : ""}.`);
+  }
+
+  if (semesterCount === 2) {
+    const years = selected.map(semester => Math.ceil(Number(semester.slice(1)) / 2));
+    if (years[0] !== years[1]) {
+      throw new Error("A yearly plan must cover the two semesters of the same academic year.");
+    }
+  }
+
+  return selected.sort((a, b) => Number(a.slice(1)) - Number(b.slice(1)));
 };
 
 // Create PayPal order
 const createOrder = asyncHandler(async (req, res) => {
-  const { duration, semesters, planId } = req.body;
+  const { semesters, planId } = req.body;
 
   // Force refresh settings from database (clear cache)
   clearPaypalSettingsCache();
@@ -90,14 +112,29 @@ const createOrder = asyncHandler(async (req, res) => {
     throw new Error("Les paiements PayPal sont temporairement désactivés.");
   }
 
-  if (!duration || !PRICING[duration]) {
+  if (!mongoose.isValidObjectId(planId)) {
     res.status(400);
-    throw new Error("Invalid duration selected");
+    throw new Error("Invalid subscription plan.");
   }
+
+  const selectedPlan = await SubscriptionPlan.findOne({ _id: planId, status: "Active", price: { $gt: 0 } }).lean();
+  if (!selectedPlan) {
+    res.status(400);
+    throw new Error("Invalid or inactive subscription plan.");
+  }
+
+  const billing = getBillingConfig(selectedPlan);
+  const duration = billing.duration;
 
   // Validate semesters
   const validSemesters = ["S1", "S2", "S3", "S4", "S5", "S6", "S7", "S8", "S9", "S10"];
-  const selectedSemesters = semesters || [];
+  let selectedSemesters;
+  try {
+    selectedSemesters = validatePlanSemesters(semesters, billing.semesterCount);
+  } catch (error) {
+    res.status(400);
+    throw error;
+  }
 
   if (selectedSemesters.length === 0) {
     res.status(400);
@@ -112,17 +149,18 @@ const createOrder = asyncHandler(async (req, res) => {
     }
   }
 
-  const amount = PRICING[duration];
+  const amount = selectedPlan.price;
 
   // Create transaction record with semesters
   const transaction = await Transaction.create({
     user: req.user._id,
     amount,
     currency: "USD",
-    plan: "Premium",
+    plan: billing.transactionPlan,
     duration,
     semesters: selectedSemesters,
     status: "pending",
+    paymentMethod: "PayPal",
   });
 
   // Create PayPal order
@@ -137,7 +175,7 @@ const createOrder = asyncHandler(async (req, res) => {
           currency_code: "USD",
           value: amount.toFixed(2),
         },
-        description: `WAFA Premium Plan - ${duration}`,
+        description: `WAFA ${selectedPlan.name} - ${duration}`,
       },
     ],
     application_context: {
@@ -244,7 +282,7 @@ const capturePayment = asyncHandler(async (req, res) => {
 
       currentExpiry.setDate(currentExpiry.getDate() + daysToAdd);
 
-      user.plan = "Premium";
+      user.plan = transaction.plan;
       user.planExpiry = currentExpiry;
 
       // Replace semesters with the selected ones (remove free semester)
@@ -435,14 +473,12 @@ const handleWebhook = asyncHandler(async (req, res) => {
 
           currentExpiry.setDate(currentExpiry.getDate() + daysToAdd);
 
-          user.plan = "Premium";
+          user.plan = transaction.plan;
           user.planExpiry = currentExpiry;
 
           // Update user's semesters with the selected ones
           if (transaction.semesters && transaction.semesters.length > 0) {
-            const existingSemesters = user.semesters || [];
-            const newSemesters = [...new Set([...existingSemesters, ...transaction.semesters])];
-            user.semesters = newSemesters;
+            user.semesters = transaction.semesters;
           }
 
           await user.save();
@@ -487,15 +523,15 @@ const handleWebhook = asyncHandler(async (req, res) => {
 
 // Create bank transfer request
 const createBankTransferRequest = asyncHandler(async (req, res) => {
-  const { planId, planName, amount, semesters, paymentMode } = req.body;
+  const { planId, semesters } = req.body;
 
-  if (!planId || !planName || !amount || !semesters || !paymentMode) {
+  if (!planId || !semesters) {
     res.status(400);
     throw new Error("Tous les champs sont requis");
   }
 
   // Validate semesters
-  const validSemesters = ["S1", "S2", "S3", "S4", "S5", "S6", "S7", "S8", "S9", "S10"];
+  const validSemesters = VALID_SEMESTERS;
   if (!Array.isArray(semesters) || semesters.length === 0) {
     res.status(400);
     throw new Error("Veuillez sélectionner au moins un semestre");
@@ -508,27 +544,36 @@ const createBankTransferRequest = asyncHandler(async (req, res) => {
     }
   }
 
-  // Map plan name to valid enum value for Transaction model
-  let normalizedPlanName = planName;
-  const planNameLower = planName.toLowerCase();
-  
-  if (planNameLower.includes('annuel') || planNameLower.includes('annual') || planNameLower.includes('year')) {
-    normalizedPlanName = "Premium Annuel";
-  } else if (planNameLower.includes('premium')) {
-    normalizedPlanName = "Premium";
-  } else if (planNameLower.includes('gratuit') || planNameLower.includes('free')) {
-    normalizedPlanName = "Gratuit";
+  if (!mongoose.isValidObjectId(planId)) {
+    res.status(400);
+    throw new Error("Invalid subscription plan.");
+  }
+
+  const selectedPlan = await SubscriptionPlan.findOne({ _id: planId, status: "Active", price: { $gt: 0 } }).lean();
+  if (!selectedPlan) {
+    res.status(400);
+    throw new Error("Invalid or inactive subscription plan.");
+  }
+
+  const billing = getBillingConfig(selectedPlan);
+  let selectedSemesters;
+  try {
+    selectedSemesters = validatePlanSemesters(semesters, billing.semesterCount);
+  } catch (error) {
+    res.status(400);
+    throw error;
   }
 
   // Create transaction record for bank transfer
   const transaction = await Transaction.create({
     user: req.user._id,
-    amount,
+    amount: selectedPlan.price,
     currency: "MAD",
-    plan: normalizedPlanName,
-    semesters,
+    plan: billing.transactionPlan,
+    duration: billing.duration,
+    semesters: selectedSemesters,
     status: "pending",
-    paymentMethod: paymentMode,
+    paymentMethod: "Bank Transfer",
   });
 
   // Send notification to user
@@ -536,7 +581,7 @@ const createBankTransferRequest = asyncHandler(async (req, res) => {
     req.user._id,
     "subscription",
     "Demande de paiement créée",
-    `Votre demande de paiement pour le plan ${planName} a été enregistrée. Contactez-nous sur WhatsApp pour finaliser.`,
+    `Votre demande de paiement pour le plan ${selectedPlan.name} a été enregistrée. Contactez-nous sur WhatsApp pour finaliser.`,
     "/dashboard/subscription"
   );
 
@@ -551,7 +596,6 @@ const createBankTransferRequest = asyncHandler(async (req, res) => {
 // Admin: Approve a payment request
 const approvePayment = asyncHandler(async (req, res) => {
   const { transactionId } = req.params;
-  const { duration } = req.body || {}; // Optional: override duration
 
   const transaction = await Transaction.findById(transactionId);
 
@@ -589,7 +633,11 @@ const approvePayment = asyncHandler(async (req, res) => {
     "1year": 365,
   };
 
-  const daysToAdd = durationMap[duration || transaction.duration] || 30;
+  const daysToAdd = durationMap[transaction.duration];
+  if (!daysToAdd) {
+    res.status(400);
+    throw new Error("Durée d'abonnement invalide");
+  }
   const currentExpiry = user.planExpiry && user.planExpiry > new Date()
     ? new Date(user.planExpiry)
     : new Date();

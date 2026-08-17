@@ -29,16 +29,9 @@ export const dashboardService = {
   // Get user profile - use cached version from userService
   getUserProfile: async (forceRefresh = false) => {
     try {
-      // If force refresh, clear any cached data first
-      if (forceRefresh) {
-        userService.clearProfileCache();
-      }
-      const { data } = await api.get('/users/profile');
-      // Update cache with safe localStorage
-      if (data?.data?.user) {
-        safeLocalStorage.setItem('userProfile', JSON.stringify(data.data.user));
-      }
-      return data;
+      const user = await userService.getUserProfile(forceRefresh);
+      safeLocalStorage.setItem('userProfile', JSON.stringify(user));
+      return { data: { user } };
     } catch (error) {
       console.error("Error fetching user profile:", error);
       throw error;
@@ -97,37 +90,31 @@ export const dashboardService = {
       }
 
       // Determine which year to filter by (S1-S2 = Year 1, S3-S4 = Year 2, etc.)
-      let url = '/users/leaderboard?limit=1000';
+      let userId = null;
+      const cachedProfile = localStorage.getItem('userProfile');
+      if (cachedProfile) {
+        userId = JSON.parse(cachedProfile)._id;
+      }
+      if (!userId) {
+        userId = (await userService.getUserProfile())._id;
+      }
+
+      const params = new URLSearchParams({ limit: '20' });
+      if (userId) params.set('userId', userId);
 
       if (semester) {
         const year = getYearFromSemester(semester);
         const semesters = getSemestersForYear(year);
-        // Pass the year's semesters to the API
-        url += `&semesters=${semesters.join(',')}`;
+        params.set('semesters', semesters.join(','));
       }
 
-      // Fetch leaderboard and get user ID from cache/localStorage (avoid extra API call)
-      const { data } = await api.get(url);
-
-      // Get user ID from cached profile instead of making another API call
-      let userId = null;
-      const cachedProfile = localStorage.getItem('userProfile');
-      if (cachedProfile) {
-        const user = JSON.parse(cachedProfile);
-        userId = user._id;
-      } else {
-        // Fallback to API call only if no cache
-        const userProfile = await userService.getUserProfile();
-        userId = userProfile._id;
-      }
+      const { data } = await api.get(`/users/leaderboard?${params.toString()}`);
 
       // The API returns { success: true, data: { leaderboard: [...] } }
       const leaderboard = data.data?.leaderboard || data.leaderboard || [];
 
       // Find user's rank in leaderboard
-      const rank = leaderboard.findIndex(
-        (user) => user.userId?.toString() === userId?.toString() || user._id?.toString() === userId?.toString()
-      ) + 1 || 0;
+      const rank = data.data?.userRank || 0;
 
       const result = { rank, leaderboard };
       

@@ -152,17 +152,23 @@ export const examController = {
     getByModuleId: asyncHandler(async (req, res) => {
         const { moduleId } = req.params;
 
-        const exams = await examModel.find({ moduleId }).populate('moduleId', 'name color').lean();
+        const exams = await examModel.find({ moduleId })
+            .select('name moduleId year imageUrl infoText courseCategoryId')
+            .populate('moduleId', 'name color')
+            .lean();
 
         // Get question counts for each exam
         const examIds = exams.map(e => e._id);
-        const questions = await QuestionModel.find({ examId: { $in: examIds } }).lean();
+        const questionCounts = examIds.length
+            ? await QuestionModel.aggregate([
+                { $match: { examId: { $in: examIds } } },
+                { $group: { _id: '$examId', count: { $sum: 1 } } }
+            ])
+            : [];
 
         const questionCountByExam = {};
-        questions.forEach(q => {
-            const key = q.examId?.toString();
-            if (!questionCountByExam[key]) questionCountByExam[key] = 0;
-            questionCountByExam[key]++;
+        questionCounts.forEach(({ _id, count }) => {
+            questionCountByExam[_id.toString()] = count;
         });
 
         const examsWithCounts = exams.map(exam => ({

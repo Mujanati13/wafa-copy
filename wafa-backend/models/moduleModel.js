@@ -105,4 +105,6 @@ const moduleSchema = new mongoose.Schema(
     { timestamps: true }
 );
 
+moduleSchema.index({ semester: 1, order: 1 });
+
 export default mongoose.model("Module", moduleSchema);

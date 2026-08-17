@@ -132,7 +132,7 @@ const Dashboard = () => {
         // Force refresh user profile to get latest data from server
         const [modulesResponse, profileData] = await Promise.all([
           moduleService.getAllmodules(),
-          dashboardService.getUserProfile(true)  // Force refresh
+          dashboardService.getUserProfile()
         ]);
 
         const modulesData = modulesResponse.data;

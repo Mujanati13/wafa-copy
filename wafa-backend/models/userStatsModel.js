@@ -27,6 +27,23 @@ const userStatsSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    // Cumulative time reported by each active exam session. Keeping the last
+    // elapsed value per session makes periodic client updates idempotent.
+    studySessions: {
+      type: Map,
+      of: {
+        elapsedSeconds: {
+          type: Number,
+          default: 0,
+        },
+        updatedAt: {
+          type: Date,
+          default: Date.now,
+        },
+      },
+      default: new Map(),
+      select: false,
+    },
     totalExamsCompleted: {
       type: Number,
       default: 0,

@@ -120,12 +120,14 @@ export const examCourseController = {
 
         const courses = await ExamCourse.find({ moduleId })
             .populate("moduleId", "name")
+            .select('name moduleId category subCategory description difficulty color imageUrl status totalQuestions helpText')
+            .lean()
             .sort({ createdAt: -1 });
 
         // Add question count for each course
         const coursesWithCount = courses.map(course => ({
-            ...course.toObject(),
-            questionCount: course.linkedQuestions?.length || 0
+            ...course,
+            questionCount: course.totalQuestions || 0
         }));
 
         res.status(200).json({

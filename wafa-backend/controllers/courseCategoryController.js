@@ -15,7 +15,7 @@ export const courseCategoryController = {
         }
 
         // Check if category with same name exists for this module
-        const existing = await CourseCategory.findOne({ name, moduleId });
+        const existing = await CourseCategory.exists({ name, moduleId });
         if (existing) {
             return res.status(400).json({
                 success: false,
@@ -53,21 +53,46 @@ export const courseCategoryController = {
 
         const categories = await CourseCategory.find(filter)
             .populate("moduleId", "name semester")
-            .sort({ createdAt: -1 });
+            .sort({ createdAt: -1 })
+            .lean();
 
-        // Add exam course count for each category
-        const categoriesWithCounts = await Promise.all(
-            categories.map(async (cat) => {
-                const courseCount = await ExamCourse.countDocuments({
-                    category: cat.name,
-                    moduleId: cat.moduleId._id
-                });
-                return {
-                    ...cat.toObject(),
-                    examCourseCount: courseCount
-                };
-            })
+        // Count all categories in one grouped query instead of one query per row.
+        const moduleIds = [...new Map(
+            categories
+                .map(category => category.moduleId?._id)
+                .filter(Boolean)
+                .map(id => [id.toString(), id])
+        ).values()];
+        const categoryNames = [...new Set(categories.map(category => category.name))];
+        const groupedCounts = moduleIds.length > 0 && categoryNames.length > 0
+            ? await ExamCourse.aggregate([
+                {
+                    $match: {
+                        moduleId: { $in: moduleIds },
+                        category: { $in: categoryNames }
+                    }
+                },
+                {
+                    $group: {
+                        _id: { moduleId: "$moduleId", category: "$category" },
+                        count: { $sum: 1 }
+                    }
+                }
+            ])
+            : [];
+        const countByCategory = new Map(
+            groupedCounts.map(item => [
+                `${item._id.moduleId.toString()}:${item._id.category}`,
+                item.count
+            ])
         );
+
+        const categoriesWithCounts = categories.map(category => ({
+            ...category,
+            examCourseCount: countByCategory.get(
+                `${category.moduleId?._id?.toString()}:${category.name}`
+            ) || 0
+        }));
 
         res.status(200).json({
             success: true,
@@ -80,7 +105,8 @@ export const courseCategoryController = {
         const { id } = req.params;
 
         const category = await CourseCategory.findById(id)
-            .populate("moduleId", "name semester");
+            .populate("moduleId", "name semester")
+            .lean();
 
         if (!category) {
             return res.status(404).json({
@@ -93,12 +119,12 @@ export const courseCategoryController = {
         const examCourses = await ExamCourse.find({
             category: category.name,
             moduleId: category.moduleId._id
-        }).select("name status totalQuestions");
+        }).select("name status totalQuestions").lean();
 
         res.status(200).json({
             success: true,
             data: {
-                ...category.toObject(),
+                ...category,
                 examCourses
             }
         });
@@ -110,7 +136,8 @@ export const courseCategoryController = {
 
         const categories = await CourseCategory.find({ moduleId })
             .populate("moduleId", "name semester")
-            .sort({ name: 1 });
+            .sort({ name: 1 })
+            .lean();
 
         res.status(200).json({
             success: true,
@@ -202,13 +229,12 @@ export const courseCategoryController = {
     getCategoryNames: asyncHandler(async (req, res) => {
         const { moduleId } = req.params;
 
-        const categories = await CourseCategory.find({ moduleId, status: "active" })
-            .select("name")
-            .sort({ name: 1 });
+        const categories = await CourseCategory.distinct("name", { moduleId, status: "active" });
+        categories.sort((left, right) => left.localeCompare(right));
 
         res.status(200).json({
             success: true,
-            data: categories.map(c => c.name)
+            data: categories
         });
     })
 };

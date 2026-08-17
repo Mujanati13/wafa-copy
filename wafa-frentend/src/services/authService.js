@@ -244,7 +244,10 @@ export const signOut = async () => {
     // Call backend logout endpoint to destroy session
     try {
       await axios.post(`${API_URL}/auth/logout`, {}, {
-        withCredentials: true
+        withCredentials: true,
+        headers: localStorage.getItem('token')
+          ? { Authorization: `Bearer ${localStorage.getItem('token')}` }
+          : undefined
       });
     } catch (logoutError) {
       console.error('Backend logout error:', logoutError);

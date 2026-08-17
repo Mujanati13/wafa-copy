@@ -1,7 +1,6 @@
 import User from "../models/userModel.js";
 import bcrypt from "bcrypt";
 import crypto from "crypto";
-import jwt from "jsonwebtoken";
 import {
   sendVerificationEmail,
   sendPasswordResetEmail,
@@ -14,6 +13,33 @@ import {
   isFirebaseInitialized 
 } from "../config/firebase.js";
 import { validateEmailAddress } from "../utils/emailValidator.js";
+import {
+  ActiveSessionError,
+  createSingleSessionToken,
+  establishSingleSession,
+  releaseSingleSession,
+} from "../services/singleSessionService.js";
+
+const completeSessionLogin = async (req, user) => {
+  const sessionId = await establishSingleSession(req, user);
+  return createSingleSessionToken(user, sessionId);
+};
+
+const sendSessionError = (res, error) => {
+  if (error instanceof ActiveSessionError) {
+    return res.status(409).json({
+      success: false,
+      code: error.code,
+      message: error.message,
+    });
+  }
+
+  console.error("Failed to establish session:", error);
+  return res.status(500).json({
+    success: false,
+    message: "Failed to create session",
+  });
+};
 
 
 export const AuthController = {
@@ -443,20 +469,22 @@ export const AuthController = {
    * @param {Request} req - Express request object
    * @param {Response} res - Express response object
    */
-  logout: (req, res) => {
-    if (!req.user) {
-      res.status(401).json({
-        message: "User not authenticated",
-      });
-    }
+  logout: async (req, res) => {
+    await releaseSingleSession(req.user?._id, req.authSessionId);
+
     req.logout((err) => {
       if (err) {
         return res.status(500).json({
           message: "Logout failed",
         });
       }
-      res.status(200).json({
-        message: "Logout successful",
+
+      req.session.destroy((destroyError) => {
+        if (destroyError) {
+          return res.status(500).json({ message: "Logout failed" });
+        }
+        res.clearCookie("connect.sid");
+        return res.status(200).json({ message: "Logout successful" });
       });
     });
   },
@@ -466,14 +494,22 @@ export const AuthController = {
   * @param {Response} res - Express response object
   */
   checkAuth: (req, res) => {
-    if (req.isAuthenticated()) {
-      return res.status(200).json({
-        loggedIn: true,
-      });
-    }
     return res.status(200).json({
-      loggedIn: false,
+      loggedIn: true,
     });
+  },
+
+  googleCallback: async (req, res) => {
+    try {
+      await establishSingleSession(req, req.user);
+      return res.redirect(`${process.env.FRONTEND_URL}/dashboard/home`);
+    } catch (error) {
+      if (error instanceof ActiveSessionError) {
+        return res.redirect(`${process.env.FRONTEND_URL}/login?error=account_active`);
+      }
+      console.error("Google login session error:", error);
+      return res.redirect(`${process.env.FRONTEND_URL}/login?error=session_failed`);
+    }
   },
 
   /**
@@ -529,28 +565,8 @@ export const AuthController = {
         user.lastLogin = new Date();
         await user.save();
 
-        // Login user with passport session
-        req.login(user, (err) => {
-          if (err) {
-            console.error("❌ req.login error:", err);
-            return res.status(500).json({
-              success: false,
-              message: "Failed to create session",
-              error: err.message,
-            });
-          }
-
-          console.log("✅ req.login successful, user:", user._id);
-          console.log("✅ Session after login:", req.sessionID);
-          console.log("✅ Is authenticated:", req.isAuthenticated());
-
-          // Generate JWT token
-          const token = jwt.sign(
-            { id: user._id, email: user.email },
-            process.env.JWT_SECRET,
-            { expiresIn: "30d" }
-          );
-
+        try {
+          const token = await completeSessionLogin(req, user);
           return res.status(200).json({
             success: true,
             message: "Login successful",
@@ -569,8 +585,9 @@ export const AuthController = {
               role: user.role,
             },
           });
-        });
-        return; // Prevent code from continuing
+        } catch (error) {
+          return sendSessionError(res, error);
+        }
       }
 
       // Check if user exists with this email
@@ -615,22 +632,8 @@ export const AuthController = {
         user.lastLogin = new Date();
         await user.save();
 
-        // Login user with passport session
-        req.login(user, (err) => {
-          if (err) {
-            return res.status(500).json({
-              success: false,
-              message: "Failed to create session",
-              error: err.message,
-            });
-          }
-
-          const token = jwt.sign(
-            { id: user._id, email: user.email },
-            process.env.JWT_SECRET,
-            { expiresIn: "30d" }
-          );
-
+        try {
+          const token = await completeSessionLogin(req, user);
           return res.status(200).json({
             success: true,
             message: "Account linked and login successful",
@@ -649,8 +652,9 @@ export const AuthController = {
               role: user.role,
             },
           });
-        });
-        return; // Prevent code from continuing
+        } catch (error) {
+          return sendSessionError(res, error);
+        }
       }
 
       // Create new user with Firebase authentication
@@ -683,23 +687,9 @@ export const AuthController = {
         console.error("Error sending welcome email:", emailError);
       }
 
-      // Login the new user with passport session
-      req.login(newUser, (err) => {
-        if (err) {
-          return res.status(500).json({
-            success: false,
-            message: "Failed to create session",
-            error: err.message,
-          });
-        }
-
-        const token = jwt.sign(
-          { id: newUser._id, email: newUser.email },
-          process.env.JWT_SECRET,
-          { expiresIn: "30d" }
-        );
-
-        res.status(201).json({
+      try {
+        const token = await completeSessionLogin(req, newUser);
+        return res.status(201).json({
           success: true,
           message: "User registered and logged in successfully",
           token,
@@ -717,7 +707,9 @@ export const AuthController = {
             role: newUser.role,
           },
         });
-      });
+      } catch (error) {
+        return sendSessionError(res, error);
+      }
     } catch (error) {
       console.error("Firebase authentication error:", error);
       res.status(500).json({

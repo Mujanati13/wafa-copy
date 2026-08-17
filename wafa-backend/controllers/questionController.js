@@ -85,6 +85,13 @@ export const questionController = {
         if (!question) {
             return res.status(404).json({ success: false, message: "Question not found" });
         }
+        if (req.user?.plan === "Free" && !req.user?.isAdmin && question.examId?.toString() !== req.user.freeExam?.toString()) {
+            return res.status(403).json({
+                success: false,
+                code: "FREE_PLAN_EXAM_LIMIT",
+                message: "The free plan includes questions from one selected exam only."
+            });
+        }
         res.status(200).json({ success: true, data: question });
     }),
 
@@ -109,7 +116,11 @@ export const questionController = {
 
     getByModuleId: asyncHandler(async (req, res) => {
         const { moduleId } = req.params;
-        
+
+        if (req.user?.plan === "Free" && !req.user?.isAdmin && req.user.freeModule?.toString() !== moduleId) {
+            return res.status(200).json({ success: true, data: [] });
+        }
+
         // Get all exams for this module
         const ExamParYear = (await import('../models/examParYearModel.js')).default;
         const ExamCourse = (await import('../models/examCourseModel.js')).default;
@@ -132,12 +143,18 @@ export const questionController = {
         }
 
         // Get all questions from these exams
-        const questions = await QuestionModel.find({ 
+        const questionFilter = {
             $or: [
                 { examId: { $in: examIds } },
                 { qcmBanqueId: { $in: examIds } }
             ]
-        })
+        };
+
+        if (req.user?.plan === "Free" && !req.user?.isAdmin) {
+            questionFilter.$or = req.user.freeExam ? [{ examId: req.user.freeExam }] : [];
+        }
+
+        const questions = await QuestionModel.find(questionFilter)
             .select('text options note images sessionLabel questionNumber examId qcmBanqueId')
             .lean()
             .sort({ questionNumber: 1, createdAt: 1 });

@@ -7,90 +7,67 @@ export const AdminAnalyticsController = {
   // Get dashboard statistics
   getDashboardStats: asyncHandler(async (req, res) => {
     try {
-      // Total users count
-      const totalUsers = await User.countDocuments();
-      
-      // Active subscriptions (Premium users)
-      const activeSubscriptions = await User.countDocuments({ plan: "Premium" });
-      
-      // Users from last month for comparison
       const lastMonth = new Date();
       lastMonth.setMonth(lastMonth.getMonth() - 1);
-      
-      const usersLastMonth = await User.countDocuments({
-        createdAt: { $gte: lastMonth }
-      });
-      
-      // Calculate user growth percentage
-      const userGrowth = totalUsers > 0 
-        ? ((usersLastMonth / totalUsers) * 100).toFixed(1)
-        : 0;
-      
-      // Subscription growth
-      const subscriptionsLastMonth = await User.countDocuments({
-        plan: "Premium",
-        createdAt: { $gte: lastMonth }
-      });
-      
-      const subscriptionGrowth = activeSubscriptions > 0
-        ? ((subscriptionsLastMonth / activeSubscriptions) * 100).toFixed(1)
-        : 0;
-      
-      // Total exam attempts from user stats
-      const examStats = await UserStats.aggregate([
-        {
-          $group: {
-            _id: null,
-            totalExams: { $sum: "$totalExams" },
-            avgScore: { $avg: "$averageScore" },
-            totalStudyHours: { $sum: "$studyHours" }
-          }
-        }
-      ]);
-      
-      const examData = examStats[0] || { totalExams: 0, avgScore: 0, totalStudyHours: 0 };
-      
-      // Exam attempts last month
-      const examsLastMonth = await UserStats.aggregate([
-        {
-          $match: {
-            lastExamDate: { $gte: lastMonth }
-          }
-        },
-        {
-          $group: {
-            _id: null,
-            count: { $sum: "$totalExams" }
-          }
-        }
-      ]);
-      
-      const examGrowth = examData.totalExams > 0 && examsLastMonth[0]
-        ? ((examsLastMonth[0].count / examData.totalExams) * 100).toFixed(1)
-        : 0;
-      
-      // Calculate current month's revenue (from 1st of current month to now)
       const currentMonthStart = new Date();
       currentMonthStart.setDate(1);
       currentMonthStart.setHours(0, 0, 0, 0);
-      
       const currentMonthEnd = new Date();
-      
-      const transactions = await Transaction.aggregate([
-        {
-          $match: {
-            status: "completed",
-            createdAt: { $gte: currentMonthStart, $lte: currentMonthEnd }
+
+      // These metrics are independent, so start all database work together.
+      const [
+        totalUsers,
+        activeSubscriptions,
+        usersLastMonth,
+        subscriptionsLastMonth,
+        examStats,
+        examsLastMonth,
+        transactions
+      ] = await Promise.all([
+        User.countDocuments(),
+        User.countDocuments({ plan: "Premium" }),
+        User.countDocuments({ createdAt: { $gte: lastMonth } }),
+        User.countDocuments({ plan: "Premium", createdAt: { $gte: lastMonth } }),
+        UserStats.aggregate([
+          {
+            $group: {
+              _id: null,
+              totalExams: { $sum: "$totalExams" },
+              avgScore: { $avg: "$averageScore" },
+              totalStudyHours: { $sum: "$studyHours" }
+            }
           }
-        },
-        {
-          $group: {
-            _id: null,
-            total: { $sum: "$amount" }
-          }
-        }
+        ]),
+        UserStats.aggregate([
+          { $match: { lastExamDate: { $gte: lastMonth } } },
+          { $group: { _id: null, count: { $sum: "$totalExams" } } }
+        ]),
+        Transaction.aggregate([
+          {
+            $match: {
+              status: "completed",
+              createdAt: { $gte: currentMonthStart, $lte: currentMonthEnd }
+            }
+          },
+          { $group: { _id: null, total: { $sum: "$amount" } } }
+        ])
       ]);
-      
+
+      const userGrowth = totalUsers > 0
+        ? ((usersLastMonth / totalUsers) * 100).toFixed(1)
+        : 0;
+      const subscriptionGrowth = activeSubscriptions > 0
+        ? ((subscriptionsLastMonth / activeSubscriptions) * 100).toFixed(1)
+        : 0;
+      const examData = {
+        totalExams: 0,
+        avgScore: 0,
+        totalStudyHours: 0,
+        ...(examStats[0] || {})
+      };
+      const examGrowth = examData.totalExams > 0 && examsLastMonth[0]
+        ? ((examsLastMonth[0].count / examData.totalExams) * 100).toFixed(1)
+        : 0;
       const monthlyRevenue = transactions[0]?.total || 0;
       
       res.status(200).json({
@@ -116,8 +93,8 @@ export const AdminAnalyticsController = {
             currency: "MAD"
           },
           performanceMetrics: {
-            averageScore: examData.avgScore.toFixed(1),
-            totalStudyHours: examData.totalStudyHours.toFixed(1)
+            averageScore: Number(examData.avgScore || 0).toFixed(1),
+            totalStudyHours: Number(examData.totalStudyHours || 0).toFixed(1)
           }
         }
       });
@@ -183,18 +160,20 @@ export const AdminAnalyticsController = {
   // Get recent activity
   getRecentActivity: asyncHandler(async (req, res) => {
     const { limit = 10 } = req.query;
-    
-    // Get recent users
-    const recentUsers = await User.find()
-      .sort({ createdAt: -1 })
-      .limit(parseInt(limit))
-      .select("username email createdAt plan");
-    
-    // Get recent subscription upgrades
-    const recentSubscriptions = await User.find({ plan: "Premium" })
-      .sort({ updatedAt: -1 })
-      .limit(5)
-      .select("username email updatedAt");
+    const safeLimit = Math.min(Math.max(Number.parseInt(limit, 10) || 10, 1), 100);
+
+    const [recentUsers, recentSubscriptions] = await Promise.all([
+      User.find()
+        .sort({ createdAt: -1 })
+        .limit(safeLimit)
+        .select("username email createdAt plan")
+        .lean(),
+      User.find({ plan: "Premium" })
+        .sort({ updatedAt: -1 })
+        .limit(5)
+        .select("username email updatedAt")
+        .lean()
+    ]);
     
     // Format activities
     const activities = [
@@ -219,22 +198,25 @@ export const AdminAnalyticsController = {
     
     res.status(200).json({
       success: true,
-      data: activities.slice(0, parseInt(limit))
+      data: activities.slice(0, safeLimit)
     });
   }),
 
   // Get subscription analytics
   getSubscriptionAnalytics: asyncHandler(async (req, res) => {
-    const freeUsers = await User.countDocuments({ plan: "Free" });
-    const premiumUsers = await User.countDocuments({ plan: "Premium" });
-    
+    const [freeUsers, premiumUsers] = await Promise.all([
+      User.countDocuments({ plan: "Free" }),
+      User.countDocuments({ plan: "Premium" })
+    ]);
+    const total = freeUsers + premiumUsers;
+
     res.status(200).json({
       success: true,
       data: {
         free: freeUsers,
         premium: premiumUsers,
-        total: freeUsers + premiumUsers,
-        conversionRate: ((premiumUsers / (freeUsers + premiumUsers)) * 100).toFixed(2)
+        total,
+        conversionRate: total > 0 ? ((premiumUsers / total) * 100).toFixed(2) : "0.00"
       }
     });
   }),
@@ -262,6 +244,7 @@ export const AdminAnalyticsController = {
   // Get leaderboard with rankings
   getLeaderboard: asyncHandler(async (req, res) => {
     const { year, studentYear, period = 'all', limit = 200 } = req.query;
+    const safeLimit = Math.min(Math.max(Number.parseInt(limit, 10) || 200, 1), 500);
     
     // Build match criteria
     const matchCriteria = {};
@@ -363,7 +346,7 @@ export const AdminAnalyticsController = {
         $sort: { totalPoints: -1 }
       },
       {
-        $limit: parseInt(limit)
+        $limit: safeLimit
       }
     ]);
     

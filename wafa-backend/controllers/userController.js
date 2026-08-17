@@ -1,11 +1,105 @@
 import mongoose from "mongoose";
 import User from "../models/userModel.js";
 import UserStats from "../models/userStatsModel.js";
+import Transaction from "../models/transactionModel.js";
 import { saveProfilePictureLocally, deleteFromLocalStorage } from "../middleware/uploadMiddleware.js";
 import asyncHandler from "../handlers/asyncHandler.js";
 import { NotificationController } from "./notificationController.js";
 import admin from "../config/firebase.js";
 import bcrypt from "bcrypt";
+
+const getPagination = (query, defaultLimit = 10, maxLimit = 100) => {
+    const page = Math.max(Number.parseInt(query.page, 10) || 1, 1);
+    const limit = Math.min(
+        Math.max(Number.parseInt(query.limit, 10) || defaultLimit, 1),
+        maxLimit
+    );
+
+    return { page, limit, skip: (page - 1) * limit };
+};
+
+const getAcademicYear = (user) => {
+    const semesterNumbers = (user?.semesters || [])
+        .map((semester) => Number.parseInt(String(semester).replace(/\D/g, ""), 10))
+        .filter((semester) => Number.isInteger(semester) && semester >= 1 && semester <= 10);
+
+    if (semesterNumbers.length > 0) {
+        return Math.ceil(Math.max(...semesterNumbers) / 2);
+    }
+
+    const currentYearMatch = String(user?.currentYear || "").match(/(?:^|\D)([1-5])(?:\D|$)/);
+    return currentYearMatch ? Number.parseInt(currentYearMatch[1], 10) : null;
+};
+
+const getStudyHours = (totalTimeSpent) => (
+    Math.round(((Number(totalTimeSpent) || 0) / 3600) * 10) / 10
+);
+
+const getAcademicRanking = async (user, totalPoints) => {
+    const academicYear = getAcademicYear(user);
+    if (!academicYear) return { rank: null, totalUsers: 0, academicYear: null };
+
+    const academicYearSemesters = [`S${academicYear * 2 - 1}`, `S${academicYear * 2}`];
+    const academicYearPattern = new RegExp(`(^|\\D)${academicYear}(\\D|$)`, "i");
+    const currentUserId = user._id;
+    const currentUserPoints = Number(totalPoints) || 0;
+
+    const [ranking] = await User.aggregate([
+        {
+            $match: {
+                isAactive: true,
+                isBlocked: { $ne: true },
+                $or: [
+                    { semesters: { $in: academicYearSemesters } },
+                    { currentYear: academicYearPattern },
+                ],
+            },
+        },
+        {
+            $lookup: {
+                from: "userstats",
+                localField: "_id",
+                foreignField: "userId",
+                as: "stats",
+            },
+        },
+        { $addFields: { stats: { $arrayElemAt: ["$stats", 0] } } },
+        {
+            $project: {
+                points: { $ifNull: ["$stats.totalPoints", 0] },
+            },
+        },
+        {
+            $facet: {
+                ahead: [
+                    {
+                        $match: {
+                            $expr: {
+                                $or: [
+                                    { $gt: ["$points", currentUserPoints] },
+                                    {
+                                        $and: [
+                                            { $eq: ["$points", currentUserPoints] },
+                                            { $lt: ["$_id", currentUserId] },
+                                        ],
+                                    },
+                                ],
+                            },
+                        },
+                    },
+                    { $count: "count" },
+                ],
+                total: [{ $count: "count" }],
+            },
+        },
+    ]);
+
+    return {
+        rank: (ranking?.ahead?.[0]?.count || 0) + 1,
+        totalUsers: ranking?.total?.[0]?.count || 0,
+        academicYear,
+    };
+};
 
 export const UserController = {
     // Admin create user - creates user with Firebase and MongoDB
@@ -200,26 +294,27 @@ export const UserController = {
     // Get all users with pagination
     getAllUsers: async (req, res) => {
         try {
-            const page = parseInt(req.query.page) || 1;
-            const limit = parseInt(req.query.limit) || 10;
-            const skip = (page - 1) * limit;
+            const { page, limit, skip } = getPagination(req.query);
 
-            const users = await User.find({})
-                .select('-resetCode')
-                .sort({ createdAt: -1 })
-                .skip(skip)
-                .limit(limit);
+            const [users, totalUsers] = await Promise.all([
+                User.find({})
+                    .select('-resetCode')
+                    .sort({ createdAt: -1 })
+                    .skip(skip)
+                    .limit(limit)
+                    .lean(),
+                User.countDocuments({})
+            ]);
 
             // Add hasPassword field and remove actual password
             const usersWithPasswordFlag = users.map(user => {
-                const userObj = user.toObject();
-                const hasPassword = !!(userObj.password && userObj.password.length > 0);
-                userObj.hasPassword = hasPassword;
-                delete userObj.password;
-                return userObj;
+                const { password, ...safeUser } = user;
+                return {
+                    ...safeUser,
+                    hasPassword: Boolean(password)
+                };
             });
 
-            const totalUsers = await User.countDocuments({});
             const totalPages = Math.ceil(totalUsers / limit);
 
             res.status(200).json({
@@ -248,17 +343,17 @@ export const UserController = {
     // Get free users (plan: "Free")
     getFreeUsers: async (req, res) => {
         try {
-            const page = parseInt(req.query.page) || 1;
-            const limit = parseInt(req.query.limit) || 10;
-            const skip = (page - 1) * limit;
-
-            const users = await User.find({ plan: "Free" })
-                .select('-password -resetCode')
-                .sort({ createdAt: -1 })
-                .skip(skip)
-                .limit(limit);
-
-            const totalFreeUsers = await User.countDocuments({ plan: "Free" });
+            const { page, limit, skip } = getPagination(req.query);
+            const filter = { plan: "Free" };
+            const [users, totalFreeUsers] = await Promise.all([
+                User.find(filter)
+                    .select('-password -resetCode')
+                    .sort({ createdAt: -1 })
+                    .skip(skip)
+                    .limit(limit)
+                    .lean(),
+                User.countDocuments(filter)
+            ]);
             const totalPages = Math.ceil(totalFreeUsers / limit);
 
             res.status(200).json({
@@ -287,43 +382,51 @@ export const UserController = {
     // Get paying users (plan: not "Free")
     getPayingUsers: async (req, res) => {
         try {
-            const page = parseInt(req.query.page) || 1;
-            const limit = parseInt(req.query.limit) || 10;
-            const skip = (page - 1) * limit;
-
-            const users = await User.find({ plan: { $ne: "Free" } })
-                .select('-password -resetCode')
-                .sort({ createdAt: -1 })
-                .skip(skip)
-                .limit(limit);
-
-            // Get payment method for each user - first from user document, then from transactions
-            const Transaction = (await import('../models/transactionModel.js')).default;
-
-            const usersWithPayment = await Promise.all(users.map(async (user) => {
-                // First check if user has paymentMode directly set
-                if (user.paymentMode) {
-                    return {
-                        ...user.toObject(),
-                        paymentMethod: user.paymentMode
-                    };
-                }
-                
-                // Fall back to getting from latest transaction
-                const latestTransaction = await Transaction.findOne({
-                    user: user._id,
-                    status: 'completed'
-                })
+            const { page, limit, skip } = getPagination(req.query);
+            const filter = { plan: { $ne: "Free" } };
+            const [users, totalPayingUsers] = await Promise.all([
+                User.find(filter)
+                    .select('-password -resetCode')
                     .sort({ createdAt: -1 })
-                    .select('paymentMethod');
+                    .skip(skip)
+                    .limit(limit)
+                    .lean(),
+                User.countDocuments(filter)
+            ]);
 
-                return {
-                    ...user.toObject(),
-                    paymentMethod: latestTransaction?.paymentMethod || 'Contact'
-                };
+            const usersNeedingTransaction = users
+                .filter(user => !user.paymentMode)
+                .map(user => user._id);
+            const latestTransactions = usersNeedingTransaction.length > 0
+                ? await Transaction.aggregate([
+                    {
+                        $match: {
+                            user: { $in: usersNeedingTransaction },
+                            status: 'completed'
+                        }
+                    },
+                    { $sort: { createdAt: -1 } },
+                    {
+                        $group: {
+                            _id: '$user',
+                            paymentMethod: { $first: '$paymentMethod' }
+                        }
+                    }
+                ])
+                : [];
+            const paymentMethodByUser = new Map(
+                latestTransactions.map(transaction => [
+                    transaction._id.toString(),
+                    transaction.paymentMethod
+                ])
+            );
+            const usersWithPayment = users.map(user => ({
+                ...user,
+                paymentMethod: user.paymentMode
+                    || paymentMethodByUser.get(user._id.toString())
+                    || 'Contact'
             }));
 
-            const totalPayingUsers = await User.countDocuments({ plan: { $ne: "Free" } });
             const totalPages = Math.ceil(totalPayingUsers / limit);
 
             res.status(200).json({
@@ -352,23 +455,23 @@ export const UserController = {
     // Get user statistics
     getUserStats: async (req, res) => {
         try {
-            const totalUsers = await User.countDocuments({});
-            const freeUsers = await User.countDocuments({ plan: "Free" });
-            const payingUsers = await User.countDocuments({ plan: { $ne: "Free" } });
-            const activeUsers = await User.countDocuments({ isAactive: true });
-            const adminUsers = await User.countDocuments({ isAdmin: true });
-
-            // Plan breakdown
-            const planBreakdown = await User.aggregate([
-                {
-                    $group: {
-                        _id: "$plan",
-                        count: { $sum: 1 }
-                    }
-                },
-                {
-                    $sort: { count: -1 }
-                }
+            const [
+                totalUsers,
+                freeUsers,
+                payingUsers,
+                activeUsers,
+                adminUsers,
+                planBreakdown
+            ] = await Promise.all([
+                User.countDocuments({}),
+                User.countDocuments({ plan: "Free" }),
+                User.countDocuments({ plan: { $ne: "Free" } }),
+                User.countDocuments({ isAactive: true }),
+                User.countDocuments({ isAdmin: true }),
+                User.aggregate([
+                    { $group: { _id: "$plan", count: { $sum: 1 } } },
+                    { $sort: { count: -1 } }
+                ])
             ]);
 
             res.status(200).json({
@@ -848,12 +951,17 @@ export const UserController = {
             completionPercentage: 0 // Will be calculated by frontend based on total questions
         }));
 
+        const ranking = await getAcademicRanking(req.user, userStats.totalPoints || 0);
+
         // Calculate additional stats
         const stats = {
             examsCompleted: userStats.totalExams || userStats.totalExamsCompleted || 0,
             averageScore: userStats.averageScore || 0,
-            studyHours: userStats.studyHours || Math.round((userStats.totalTimeSpent || 0) / 3600),
-            rank: userStats.rank || 0,
+            studyTimeSeconds: userStats.totalTimeSpent || 0,
+            studyHours: getStudyHours(userStats.totalTimeSpent),
+            rank: ranking.rank,
+            rankedUsers: ranking.totalUsers,
+            academicYear: ranking.academicYear,
             achievements: userStats.achievements || [],
             moduleProgress: consolidatedProgress,
             questionsAnswered: userStats.questionsAnswered || 0,
@@ -869,6 +977,72 @@ export const UserController = {
             data: { 
                 stats,
                 answeredQuestions: answeredQuestionsObj
+            },
+        });
+    }),
+
+    // Persist cumulative elapsed time from an active exam session. The session
+    // value is monotonic, so retries or duplicate browser requests add no time.
+    recordStudyTime: asyncHandler(async (req, res) => {
+        const { sessionId, elapsedSeconds } = req.body;
+        const safeSessionId = typeof sessionId === "string" ? sessionId.trim() : "";
+        const safeElapsedSeconds = Number.parseInt(elapsedSeconds, 10);
+
+        if (!/^[a-zA-Z0-9_-]{8,128}$/.test(safeSessionId)) {
+            return res.status(400).json({ success: false, message: "Invalid study session" });
+        }
+        if (!Number.isInteger(safeElapsedSeconds) || safeElapsedSeconds < 0 || safeElapsedSeconds > 12 * 60 * 60) {
+            return res.status(400).json({ success: false, message: "Invalid elapsed study time" });
+        }
+
+        let userStats = await UserStats.findOne({ userId: req.user._id }).select("+studySessions");
+        if (!userStats) {
+            userStats = await UserStats.create({ userId: req.user._id });
+        }
+
+        const previousElapsedSeconds = Number(userStats.studySessions?.get(safeSessionId)?.elapsedSeconds) || 0;
+        const addedSeconds = Math.max(safeElapsedSeconds - previousElapsedSeconds, 0);
+        const now = new Date();
+
+        userStats.studySessions.set(safeSessionId, {
+            elapsedSeconds: Math.max(safeElapsedSeconds, previousElapsedSeconds),
+            updatedAt: now,
+        });
+
+        if (addedSeconds > 0) {
+            userStats.totalTimeSpent = (userStats.totalTimeSpent || 0) + addedSeconds;
+
+            const startOfToday = new Date(now);
+            startOfToday.setHours(0, 0, 0, 0);
+            const todayActivity = userStats.weeklyActivity.find((activity) => {
+                if (!activity.date) return false;
+                const activityDate = new Date(activity.date);
+                activityDate.setHours(0, 0, 0, 0);
+                return activityDate.getTime() === startOfToday.getTime();
+            });
+
+            if (todayActivity) {
+                todayActivity.timeSpent = (todayActivity.timeSpent || 0) + addedSeconds;
+            } else {
+                userStats.weeklyActivity.push({
+                    date: startOfToday,
+                    questionsAttempted: 0,
+                    correctAnswers: 0,
+                    timeSpent: addedSeconds,
+                    examsCompleted: 0,
+                });
+            }
+            userStats.lastActivityDate = now;
+        }
+
+        await userStats.save();
+
+        res.status(200).json({
+            success: true,
+            data: {
+                addedSeconds,
+                studyTimeSeconds: userStats.totalTimeSpent || 0,
+                studyHours: getStudyHours(userStats.totalTimeSpent),
             },
         });
     }),
@@ -896,10 +1070,17 @@ export const UserController = {
         });
     }),
 
-    // Select free semester for new users (one-time only)
+    // Select the single module/exam included with the free plan (one-time only)
     selectFreeSemester: asyncHandler(async (req, res) => {
         const userId = req.user._id;
-        const { semester } = req.body;
+        const { semester, moduleId, examId } = req.body;
+
+        if (!mongoose.isValidObjectId(moduleId) || !mongoose.isValidObjectId(examId)) {
+            return res.status(400).json({
+                success: false,
+                message: "Please select a valid module and exam."
+            });
+        }
 
         const availableSemesters = (await mongoose
             .model("Module")
@@ -923,7 +1104,7 @@ export const UserController = {
         }
 
         // Check if user already used their free semester selection
-        if (user.hasUsedFreeSemester) {
+        if (user.hasUsedFreeSemester && user.freeModule && user.freeExam) {
             return res.status(400).json({
                 success: false,
                 message: "You have already selected your free semester. Upgrade to Premium for more access.",
@@ -932,7 +1113,7 @@ export const UserController = {
         }
 
         // Check if user already has semesters (shouldn't happen, but extra check)
-        if (user.semesters && user.semesters.length > 0) {
+        if (user.semesters && user.semesters.length > 0 && user.freeModule && user.freeExam) {
             return res.status(400).json({
                 success: false,
                 message: "You already have semester access",
@@ -940,25 +1121,35 @@ export const UserController = {
             });
         }
 
-        const fallbackModules = await mongoose
-            .model("Module")
-            .find({ semester })
-            .sort({ order: 1, createdAt: 1 })
-            .limit(1)
-            .select("name")
+        const selectedModule = await mongoose.model("Module")
+            .findOne({ _id: moduleId, semester })
+            .select("name semester")
             .lean();
-        const selectedFreeModules = (fallbackModules || []).map((module) => module.name).filter(Boolean);
 
-        if (selectedFreeModules.length === 0) {
+        if (!selectedModule) {
             return res.status(400).json({
                 success: false,
-                message: `No modules available for semester ${semester}`
+                message: `The selected module is not available in ${semester}.`
             });
         }
 
-        // Grant the free semester
+        const selectedExam = await mongoose.model("ExamParYear")
+            .findOne({ _id: examId, moduleId: selectedModule._id })
+            .select("name moduleId")
+            .lean();
+
+        if (!selectedExam) {
+            return res.status(400).json({
+                success: false,
+                message: "The selected exam does not belong to the selected module."
+            });
+        }
+
+        // Keep the semester for navigation, but grant content access only to this exam.
         user.semesters = [semester];
-        user.freeModules = selectedFreeModules || [];
+        user.freeModules = [selectedModule.name];
+        user.freeModule = selectedModule._id;
+        user.freeExam = selectedExam._id;
         user.hasUsedFreeSemester = true;
         user.freeSemesterSelectedAt = new Date();
         await user.save();
@@ -969,8 +1160,8 @@ export const UserController = {
             await NotificationController.createNotification(
                 userId,
                 "system",
-                "Semestre gratuit activé !",
-                `Vous avez maintenant accès au ${semester}. Profitez de votre apprentissage !`,
+                "Examen gratuit activé !",
+                `Vous avez maintenant accès à l'examen ${selectedExam.name} du module ${selectedModule.name}.`,
                 "/dashboard/home"
             );
         } catch (notifError) {
@@ -979,11 +1170,13 @@ export const UserController = {
 
         res.status(200).json({
             success: true,
-            message: `Free semester ${semester} has been activated!`,
+            message: `Your free exam ${selectedExam.name} has been activated.`,
             data: {
                 user: {
                     _id: user._id,
                     semesters: user.semesters,
+                    freeModule: user.freeModule,
+                    freeExam: user.freeExam,
                     hasUsedFreeSemester: user.hasUsedFreeSemester,
                     plan: user.plan
                 }
@@ -995,7 +1188,7 @@ export const UserController = {
     checkFreeSemesterStatus: asyncHandler(async (req, res) => {
         const userId = req.user._id;
 
-        const user = await User.findById(userId).select('semesters hasUsedFreeSemester plan');
+        const user = await User.findById(userId).select('semesters hasUsedFreeSemester plan freeModule freeExam');
 
         if (!user) {
             return res.status(404).json({
@@ -1006,8 +1199,7 @@ export const UserController = {
 
         const needsToSelectSemester = 
             user.plan === "Free" && 
-            !user.hasUsedFreeSemester && 
-            (!user.semesters || user.semesters.length === 0);
+            (!user.freeModule || !user.freeExam);
 
         res.status(200).json({
             success: true,
@@ -1015,6 +1207,8 @@ export const UserController = {
                 needsToSelectSemester,
                 hasUsedFreeSemester: user.hasUsedFreeSemester || false,
                 currentSemesters: user.semesters || [],
+                freeModule: user.freeModule || null,
+                freeExam: user.freeExam || null,
                 plan: user.plan
             }
         });
@@ -1061,9 +1255,21 @@ export const UserController = {
 
     // Get leaderboard for public display
     getLeaderboard: asyncHandler(async (req, res) => {
-        const { limit = 20, sortBy = 'totalPoints', userId, segmented = 'false' } = req.query;
+        const { limit = 20, sortBy = 'totalPoints' } = req.query;
+        const safeLimit = Math.min(Math.max(Number.parseInt(limit, 10) || 20, 1), 1000);
 
         try {
+            const requestingUser = req.user;
+            const academicYear = requestingUser?.currentYear?.trim();
+
+            if (!academicYear) {
+                return res.status(400).json({
+                    success: false,
+                    code: 'ACADEMIC_YEAR_REQUIRED',
+                    message: 'Please set your academic year in your profile to view the ranking.'
+                });
+            }
+
             // Get total questions count for percentage calculation
             const Question = mongoose.model('Question');
             const totalQuestionsInSystem = await Question.countDocuments({});
@@ -1078,11 +1284,12 @@ export const UserController = {
             // Start from Users and lookup their stats to include users with 0 stats
             const User = mongoose.model('User');
             
-            const leaderboard = await User.aggregate([
+            const [leaderboardResult] = await User.aggregate([
                 {
                     $match: {
                         isAactive: true,
-                        isBlocked: { $ne: true }
+                        isBlocked: { $ne: true },
+                        currentYear: academicYear
                     }
                 },
                 {
@@ -1148,35 +1355,37 @@ export const UserController = {
                     }
                 },
                 {
-                    $sort: { sortValue: -1, totalPoints: -1 }
+                    $setWindowFields: {
+                        sortBy: { sortValue: -1, totalPoints: -1, odUserIdStr: 1 },
+                        output: {
+                            rank: { $documentNumber: {} }
+                        }
+                    }
+                },
+                {
+                    $facet: {
+                        leaderboard: [{ $limit: safeLimit }],
+                        currentUser: [
+                            { $match: { odUserId: requestingUser._id } },
+                            { $project: { _id: 0, rank: 1 } }
+                        ],
+                        metadata: [{ $count: "totalUsers" }]
+                    }
                 }
             ]);
 
-            // Add ranks
-            const rankedLeaderboard = leaderboard.map((entry, index) => ({
-                ...entry,
-                rank: index + 1
-            }));
-
-            // Get user's rank if userId provided
-            let userRank = null;
-            if (userId) {
-                const userIndex = rankedLeaderboard.findIndex(u => u.odUserIdStr === userId);
-                if (userIndex !== -1) {
-                    userRank = userIndex + 1;
-                }
-            }
-
-            // Return top N users based on limit
-            const displayLeaderboard = rankedLeaderboard.slice(0, parseInt(limit));
+            const displayLeaderboard = leaderboardResult?.leaderboard || [];
+            const userRank = leaderboardResult?.currentUser?.[0]?.rank || null;
+            const totalUsers = leaderboardResult?.metadata?.[0]?.totalUsers || 0;
 
             res.status(200).json({
                 success: true,
                 data: {
                     leaderboard: displayLeaderboard,
                     userRank,
-                    totalUsers: rankedLeaderboard.length,
-                    totalQuestionsInSystem
+                    totalUsers,
+                    totalQuestionsInSystem,
+                    academicYear
                 }
             });
         } catch (error) {

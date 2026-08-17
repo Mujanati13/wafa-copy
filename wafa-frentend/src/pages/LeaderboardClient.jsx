@@ -93,6 +93,7 @@ const LeaderboardClient = () => {
   const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState("totalPoints"); // totalPoints, bluePoints, greenPoints, level, percentage
   const [totalQuestionsInSystem, setTotalQuestionsInSystem] = useState(0);
+  const [academicYear, setAcademicYear] = useState(null);
   const [openDropdownId, setOpenDropdownId] = useState(null);
 
   // Fetch user profile on mount
@@ -124,16 +125,17 @@ const LeaderboardClient = () => {
   }, [navigate]);
 
   useEffect(() => {
-    fetchLeaderboard();
+    if (user) fetchLeaderboard();
   }, [sortBy, user]);
 
   const fetchLeaderboard = async () => {
     try {
       setLoading(true);
-      const response = await userService.getLeaderboard(100, sortBy, user?._id);
+      const response = await userService.getLeaderboard(100, sortBy);
       setLeaderboardData(response.data.leaderboard || []);
       setUserContext({ userRank: response.data.userRank });
       setTotalQuestionsInSystem(response.data.totalQuestionsInSystem || 0);
+      setAcademicYear(response.data.academicYear || user?.currentYear || null);
     } catch (error) {
       console.error('Error fetching leaderboard:', error);
       toast.error('Erreur', {
@@ -192,7 +194,7 @@ const LeaderboardClient = () => {
         <Award className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
         <div className="flex-1">
           <p className="text-sm font-medium text-blue-900">
-            Le classement affiche tous les étudiants de toutes les années confondues.
+            Classement de votre année académique{academicYear ? ` : ${academicYear}` : ''}. Vous voyez uniquement les étudiants de votre année.
           </p>
         </div>
       </div>

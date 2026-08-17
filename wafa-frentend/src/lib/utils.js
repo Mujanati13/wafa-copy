@@ -53,6 +53,7 @@ api.interceptors.response.use(
     const config = error.config || {};
     const method = (config.method || 'get').toLowerCase();
     const status = error.response?.status;
+    const errorCode = error.response?.data?.code;
     const isGetRequest = method === 'get';
     const isTransientFailure = !error.response || error.code === 'ECONNABORTED' || (status >= 500 && status < 600);
 
@@ -64,6 +65,13 @@ api.interceptors.response.use(
         await new Promise((resolve) => setTimeout(resolve, 400));
         return api.request(config);
       }
+    }
+
+    if (status === 401 && errorCode === 'SESSION_INVALID') {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      localStorage.removeItem('userProfile');
+      window.dispatchEvent(new Event('auth-state-changed'));
     }
 
     console.error('API Error:', error.response?.data || error.message);

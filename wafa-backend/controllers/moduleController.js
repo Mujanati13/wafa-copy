@@ -7,6 +7,15 @@ import UserStats from "../models/userStatsModel.js";
 import examCourseModel from "../models/examCourseModel.js";
 import qcmBanqueModel from "../models/qcmBanqueModel.js";
 
+const MODULE_LIST_CACHE_TTL_MS = 60 * 1000;
+let moduleListCache = null;
+let moduleListCacheExpiresAt = 0;
+
+const clearModuleListCache = () => {
+    moduleListCache = null;
+    moduleListCacheExpiresAt = 0;
+};
+
 export const moduleController = {
     create: asyncHandler(async (req, res) => {
         const { name, semester, imageUrl, infoText, color, helpContent, helpImage, helpPdf, difficulty, contentType, textContent, availableInAllSemesters } = req.body;
@@ -35,6 +44,7 @@ export const moduleController = {
             contentType: contentType || "url",
             textContent
         });
+        clearModuleListCache();
         res.status(201).json({
             success: true,
             data: newModule
@@ -94,6 +104,8 @@ export const moduleController = {
             });
         }
 
+        clearModuleListCache();
+
         res.status(200).json({
             success: true,
             data: updatedModule
@@ -112,6 +124,8 @@ export const moduleController = {
             });
         }
 
+        clearModuleListCache();
+
         res.status(200).json({
             success: true,
             message: "Module deleted successfully"
@@ -119,25 +133,32 @@ export const moduleController = {
     }),
 
     getAll: asyncHandler(async (req, res) => {
-        // Get all modules sorted by semester and order
-        const modules = await moduleSchema.find({}).sort({ semester: 1, order: 1 }).lean();
+        const includeQuestions = req.query.includeQuestions === "true";
+        const now = Date.now();
+        if (!includeQuestions && moduleListCache && now < moduleListCacheExpiresAt) {
+            res.set('Cache-Control', 'private, no-cache');
+            return res.status(200).json(moduleListCache);
+        }
+
+        // AI context data is only needed by the dedicated AI configuration endpoint.
+        const modules = await moduleSchema.find({})
+            .select('-aiContextFiles -aiPrompt')
+            .sort({ semester: 1, order: 1, _id: 1 })
+            .lean();
 
         // Get all ExamParYears for all modules
         const moduleIds = modules.map(m => m._id);
-        const examParYears = await examParYearModel.find({ moduleId: { $in: moduleIds } }).lean();
+        const examParYears = await examParYearModel.find({ moduleId: { $in: moduleIds } })
+            .select('name moduleId year imageUrl infoText courseCategoryId')
+            .lean();
 
-        // Map moduleId to examParYearIds
-        const moduleIdToExamParYearIds = {};
-        examParYears.forEach(epy => {
-            if (!moduleIdToExamParYearIds[epy.moduleId]) {
-                moduleIdToExamParYearIds[epy.moduleId] = [];
-            }
-            moduleIdToExamParYearIds[epy.moduleId].push(epy._id);
-        });
-
-        // Get all questions for all examParYears
         const allExamParYearIds = examParYears.map(epy => epy._id);
-        const questions = await questionModule.find({ examId: { $in: allExamParYearIds } }).lean();
+        const questionData = includeQuestions
+            ? await questionModule.find({ examId: { $in: allExamParYearIds } }).lean()
+            : (allExamParYearIds.length ? await questionModule.aggregate([
+                { $match: { examId: { $in: allExamParYearIds } } },
+                { $group: { _id: '$examId', count: { $sum: 1 } } }
+            ]) : []);
 
         // Build a map from examParYearId -> moduleId
         const examIdToModuleId = {};
@@ -153,33 +174,48 @@ export const moduleController = {
             moduleIdToExams[moduleId].push(epy);
         });
 
-        // Count questions per module
         const moduleIdToQuestionCount = {};
-        const moduleIdToQuestions = {};
-        questions.forEach(q => {
-            // Find which module this question belongs to
-            const examId = q.examId.toString();
-            const moduleId = examIdToModuleId[examId];
-            if (!moduleId) return;
-            if (!moduleIdToQuestionCount[moduleId]) moduleIdToQuestionCount[moduleId] = 0;
-            if (!moduleIdToQuestions[moduleId]) moduleIdToQuestions[moduleId] = [];
-            moduleIdToQuestionCount[moduleId]++;
-            moduleIdToQuestions[moduleId].push(q);
-        });
+        const moduleIdToQuestions = includeQuestions ? {} : null;
+
+        if (includeQuestions) {
+            questionData.forEach(question => {
+                const moduleId = examIdToModuleId[question.examId?.toString()];
+                if (!moduleId) return;
+                moduleIdToQuestionCount[moduleId] = (moduleIdToQuestionCount[moduleId] || 0) + 1;
+                if (!moduleIdToQuestions[moduleId]) moduleIdToQuestions[moduleId] = [];
+                moduleIdToQuestions[moduleId].push(question);
+            });
+        } else {
+            questionData.forEach(({ _id, count }) => {
+                const moduleId = examIdToModuleId[_id.toString()];
+                if (!moduleId) return;
+                moduleIdToQuestionCount[moduleId] = (moduleIdToQuestionCount[moduleId] || 0) + count;
+            });
+        }
 
         // Attach question count to each module
-        const modulesWithRelations = modules.map(m => ({
-            ...m,
-            totalQuestions: moduleIdToQuestionCount[m._id.toString()] || 0,
-            exams: moduleIdToExams[m._id.toString()] || [],
-            questions: moduleIdToQuestions[m._id.toString()] || []
-        }));
+        const modulesWithRelations = modules.map(m => {
+            const moduleId = m._id.toString();
+            return {
+                ...m,
+                totalQuestions: moduleIdToQuestionCount[moduleId] || 0,
+                exams: moduleIdToExams[moduleId] || [],
+                ...(includeQuestions ? { questions: moduleIdToQuestions[moduleId] || [] } : {})
+            };
+        });
 
-        res.status(200).json({
+        const payload = {
             success: true,
             count: modulesWithRelations.length,
             data: modulesWithRelations
-        });
+        };
+
+        if (!includeQuestions) {
+            moduleListCache = payload;
+            moduleListCacheExpiresAt = Date.now() + MODULE_LIST_CACHE_TTL_MS;
+        }
+        res.set('Cache-Control', 'private, no-cache');
+        res.status(200).json(payload);
     }),
 
     getById: asyncHandler(async (req, res) => {
@@ -218,8 +254,14 @@ export const moduleController = {
         const { id } = req.params;
         const userId = req.user._id;
 
-        // Get the module
-        const module = await moduleSchema.findById(id).lean();
+        const [module, examParYears, examCourses, qcmBanques, userStats] = await Promise.all([
+            moduleSchema.findById(id).select("name").lean(),
+            examParYearModel.find({ moduleId: id }).select("_id").lean(),
+            examCourseModel.find({ moduleId: id }).select("linkedQuestions").lean(),
+            qcmBanqueModel.find({ moduleId: id }).select("_id").lean(),
+            UserStats.findOne({ userId }).select("answeredQuestions").lean()
+        ]);
+
         if (!module) {
             return res.status(404).json({
                 success: false,
@@ -227,48 +269,35 @@ export const moduleController = {
             });
         }
 
-        // Get all exam types for this module
-        const [examParYears, examCourses, qcmBanques] = await Promise.all([
-            examParYearModel.find({ moduleId: id }).lean(),
-            examCourseModel.find({ moduleId: id }).lean(),
-            qcmBanqueModel.find({ moduleId: id }).lean()
-        ]);
+        const yearExamIds = examParYears.map(exam => exam._id);
+        const qcmIds = qcmBanques.map(qcm => qcm._id);
+        const linkedQuestionIds = examCourses.flatMap(course => course.linkedQuestions || []);
 
-        // Collect all exam IDs
-        const allExamIds = [
-            ...examParYears.map(e => e._id),
-            ...examCourses.map(e => e._id),
-            ...qcmBanques.map(e => e._id)
-        ];
-
-        // Get all questions for these exams
-        const questions = await questionModule.find({ 
-            examId: { $in: allExamIds } 
-        }).lean();
+        // This endpoint only needs identifiers to calculate progress.
+        const questions = await questionModule.find({
+            $or: [
+                { examId: { $in: yearExamIds } },
+                { qcmBanqueId: { $in: qcmIds } },
+                { _id: { $in: linkedQuestionIds } }
+            ]
+        }).select("_id").lean();
         
         const totalQuestions = questions.length;
 
-        // Get user stats
-        const userStats = await UserStats.findOne({ userId }).lean();
-        
         let questionsAnswered = 0;
         let percentage = 0;
 
         if (userStats && userStats.answeredQuestions) {
-            // Count how many questions from this module the user has answered
-            const answeredQuestionsMap = userStats.answeredQuestions;
-            
-            // Convert Map to object if needed
-            const answeredQuestionsObj = answeredQuestionsMap instanceof Map 
-                ? Object.fromEntries(answeredQuestionsMap)
-                : answeredQuestionsMap;
+            const answeredQuestionIds = new Set(
+                userStats.answeredQuestions instanceof Map
+                    ? userStats.answeredQuestions.keys()
+                    : Object.keys(userStats.answeredQuestions)
+            );
 
-            // Count answered questions for this module
-            questions.forEach(q => {
-                if (answeredQuestionsObj[q._id.toString()]) {
-                    questionsAnswered++;
-                }
-            });
+            questionsAnswered = questions.reduce(
+                (count, question) => count + (answeredQuestionIds.has(question._id.toString()) ? 1 : 0),
+                0
+            );
 
             // Calculate percentage
             if (totalQuestions > 0) {

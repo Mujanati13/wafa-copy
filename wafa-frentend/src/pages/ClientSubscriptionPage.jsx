@@ -37,11 +37,16 @@ const ClientSubscriptionPage = () => {
   // All available semesters
   const allSemesters = ["S1", "S2", "S3", "S4", "S5", "S6", "S7", "S8", "S9", "S10"];
 
+  const isYearlyPlan = (plan) => {
+    const value = `${plan?.period || ''} ${plan?.name || ''}`.toLowerCase();
+    return ['annee', 'annuel', 'annual', 'year'].some((label) => value.includes(label));
+  };
+
   // Get the maximum number of semesters user can select based on plan
   const getMaxSemesters = (plan) => {
     if (!plan) return 0;
     // Premium (Semester) allows 1 semester, Premium Annuel allows 2 semesters
-    if (plan.period === "Annee") return 2;
+    if (isYearlyPlan(plan)) return 2;
     return 1;
   };
 
@@ -105,6 +110,18 @@ const ClientSubscriptionPage = () => {
   // Handle semester selection
   const handleSemesterChange = (semester, checked) => {
     const maxSemesters = getMaxSemesters(selectedPlan);
+
+    if (isYearlyPlan(selectedPlan)) {
+      if (!checked) {
+        setSelectedSemesters([]);
+        return;
+      }
+
+      const semesterNumber = Number(semester.slice(1));
+      const firstSemester = semesterNumber % 2 === 0 ? semesterNumber - 1 : semesterNumber;
+      setSelectedSemesters([`S${firstSemester}`, `S${firstSemester + 1}`]);
+      return;
+    }
 
     if (checked) {
       if (selectedSemesters.length < maxSemesters) {
@@ -195,16 +212,7 @@ const ClientSubscriptionPage = () => {
     try {
       setPaymentLoading(true);
 
-      // Map plan duration to backend format
-      const durationMap = {
-        '1 Mois': '1month',
-        '3 Mois': '3months',
-        '6 Mois': '6months',
-        '1 An': '1year',
-        '12 Mois': '1year',
-      };
-
-      const duration = selectedPlan.period === "Annee" ? '1year' : '6months';
+      const duration = isYearlyPlan(selectedPlan) ? '1year' : '6months';
 
       // Create PayPal order with selected semesters
       const response = await api.post(
@@ -339,7 +347,7 @@ const ClientSubscriptionPage = () => {
                         )}
 
                         <CardHeader className={isCurrentPlan ? 'pt-8' : ''}>
-                          <CardTitle className="text-2xl">{plan.name === 'Premium Annuel' ? 'Premium Pro' : plan.name}</CardTitle>
+                          <CardTitle className="text-2xl">{plan.name}</CardTitle>
                           <CardDescription>{plan.description}</CardDescription>
                           <div className="mt-4">
                             <span className="text-3xl font-bold text-foreground">
@@ -365,7 +373,7 @@ const ClientSubscriptionPage = () => {
                               <>
                                 <div className="flex items-start gap-3">
                                   <span className="text-green-500 flex-shrink-0 mt-0.5">✔️</span>
-                                  <span className="text-sm text-muted-foreground">1 module</span>
+                                  <span className="text-sm text-muted-foreground">1 examen dans 1 module</span>
                                 </div>
                                 <div className="flex items-start gap-3">
                                   <span className="text-green-500 flex-shrink-0 mt-0.5">✔️</span>
@@ -587,7 +595,7 @@ const ClientSubscriptionPage = () => {
                 </div>
                 {selectedPlan.period && (
                   <p className="text-sm text-muted-foreground">
-                    Durée: {selectedPlan.period === "Annee" ? "1 Année" : "1 Semestre"}
+                    Durée: {isYearlyPlan(selectedPlan) ? "1 Année" : "1 Semestre"}
                   </p>
                 )}
               </div>

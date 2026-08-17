@@ -64,6 +64,28 @@ const ProfilePage = () => {
 
   const [editData, setEditData] = useState({ ...profileData });
 
+  // `averageScore` is stored by the API as a percentage (0-100). Convert it
+  // at the display boundary so the /20 label always has a valid value.
+  const getAverageOutOfTwenty = (averageScore) => {
+    const percentage = Number(averageScore);
+    if (!Number.isFinite(percentage)) return 0;
+    return Math.min(20, Math.max(0, (percentage / 100) * 20));
+  };
+
+  const formatStudyDuration = (studyTimeSeconds, studyHours) => {
+    const seconds = Number(studyTimeSeconds);
+    if (Number.isFinite(seconds) && seconds > 0) {
+      const totalMinutes = Math.max(1, Math.floor(seconds / 60));
+      const hours = Math.floor(totalMinutes / 60);
+      const minutes = totalMinutes % 60;
+      if (hours === 0) return `${totalMinutes} min`;
+      return minutes > 0 ? `${hours} h ${minutes} min` : `${hours} h`;
+    }
+
+    const hours = Number(studyHours);
+    return Number.isFinite(hours) && hours > 0 ? `${hours} h` : '0 min';
+  };
+
   // Helper function to determine year from semesters
   const getYearFromSemesters = (semesters) => {
     if (!semesters || semesters.length === 0) return '';
@@ -303,17 +325,20 @@ const ProfilePage = () => {
     },
     { 
       label: t('dashboard:overall_average'), 
-      value: userStats?.averageScore ? `${userStats.averageScore.toFixed(1)}/20` : '0/20', 
+      value: `${getAverageOutOfTwenty(userStats?.averageScore).toFixed(1)}/20`,
       icon: <Star className="h-4 w-4" /> 
     },
-    { 
-      label: t('dashboard:study_hours'), 
-      value: userStats?.studyHours ? `${userStats.studyHours}h` : '0h', 
-      icon: <Clock className="h-4 w-4" /> 
+    {
+      label: t('dashboard:study_hours'),
+      value: formatStudyDuration(userStats?.studyTimeSeconds, userStats?.studyHours),
+      icon: <Clock className="h-4 w-4" />
     },
-    { 
-      label: t('dashboard:ranking'), 
-      value: userStats?.rank || 'N/A', 
+    {
+      label: t('dashboard:ranking'),
+      value: userStats?.rank ? `#${userStats.rank}` : 'Non classÃ©',
+      description: userStats?.rankedUsers
+        ? `${userStats.rankedUsers} Ã©tudiant${userStats.rankedUsers > 1 ? 's' : ''} â€” ${userStats.academicYear}Ã¨me annÃ©e`
+        : undefined,
       icon: <Trophy className="h-4 w-4" /> 
     }
   ];

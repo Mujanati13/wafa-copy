@@ -3,16 +3,21 @@ import { Strategy } from "passport-local";
 import user from "../models/userModel.js";
 import bcrypt from "bcrypt";
 
-Passport.serializeUser((user, done) => {
-  done(null, user._id);
+const shouldLogAuth = () => (
+  process.env.AUTH_FAILURE_LOGGING === "true" || process.env.NODE_ENV !== "production"
+);
+
+Passport.serializeUser((authenticatedUser, done) => {
+  done(null, authenticatedUser._id);
 });
 
 Passport.deserializeUser(async (id, done) => {
   try {
     const foundUser = await user.findById(id);
     if (!foundUser) {
-      // User no longer exists - clear the session
-      console.log("⚠️ Session user not found, clearing session");
+      if (shouldLogAuth()) {
+        console.log("Session user not found, clearing session");
+      }
       return done(null, false);
     }
 
@@ -25,51 +30,36 @@ Passport.deserializeUser(async (id, done) => {
 export default Passport.use(
   new Strategy({ usernameField: "email" }, async (email, password, done) => {
     try {
-      console.log("🔍 Login attempt - Email:", email);
-      console.log("🔍 Password received:", password ? "Yes (length: " + password.length + ")" : "No/Empty");
-      console.log("🔍 Email type:", typeof email);
-      console.log("🔍 Email length:", email?.length);
-      
-      const foundUser = await user.findOne({ email: email });
-      console.log("🔍 User found:", foundUser ? "Yes" : "No");
-      
+      const normalizedEmail = typeof email === "string" ? email.trim() : email;
+      if (shouldLogAuth()) {
+        console.log("Login attempt:", normalizedEmail);
+      }
+
+      const foundUser = await user.findOne({ email: normalizedEmail });
       if (!foundUser) {
-        // Check if there are any users at all
-        const totalUsers = await user.countDocuments();
-        console.log("📊 Total users in DB:", totalUsers);
-        
-        // Try to find with trimmed email
-        const trimmedUser = await user.findOne({ email: email.trim() });
-        console.log("🔍 User found with trimmed email:", trimmedUser ? "Yes" : "No");
-        
         throw new Error("User not found");
       }
 
-      // Check if user is blocked
       if (foundUser.isBlocked) {
-        console.log("🚫 User is blocked:", email);
+        if (shouldLogAuth()) {
+          console.log("User is blocked:", normalizedEmail);
+        }
         const reason = foundUser.blockedReason ? ` Reason: ${foundUser.blockedReason}` : "";
         throw new Error(`Your account has been blocked.${reason} Please contact support.`);
       }
 
-      // Email verification disabled - users can log in immediately after registration
-
-      // Check if password exists in user document
       if (!foundUser.password) {
-        console.log("❌ User has no password field - might be a Google/Firebase user");
         throw new Error("This account uses Google sign-in. Please sign in with Google.");
       }
 
-      // Ensure password from request exists
       if (!password) {
         throw new Error("Password is required");
       }
 
-      const comparePassword = await bcrypt.compare(
-        password,
-        foundUser.password
-      );
-      if (!comparePassword) throw new Error("Invalid credentials");
+      const comparePassword = await bcrypt.compare(password, foundUser.password);
+      if (!comparePassword) {
+        throw new Error("Invalid credentials");
+      }
 
       return done(null, foundUser);
     } catch (error) {

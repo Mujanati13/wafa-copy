@@ -77,6 +77,8 @@ examCourseSchema.index({ moduleId: 1 });
 examCourseSchema.index({ category: 1 });
 examCourseSchema.index({ status: 1 });
 examCourseSchema.index({ moduleId: 1, status: 1 });
+examCourseSchema.index({ moduleId: 1, category: 1 });
+examCourseSchema.index({ moduleId: 1, createdAt: -1 });
 
 // Update totalQuestions when linkedQuestions changes
 examCourseSchema.pre("save", function(next) {

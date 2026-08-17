@@ -19,6 +19,14 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 5010;
+const isProduction = process.env.NODE_ENV === "production";
+const verboseRequestLogging = process.env.REQUEST_LOGGING === "true" || !isProduction;
+const slowRequestThresholdMs = Number.parseInt(process.env.SLOW_REQUEST_THRESHOLD_MS || "1000", 10);
+const autoIndex = process.env.MONGO_AUTO_INDEX
+  ? process.env.MONGO_AUTO_INDEX === "true"
+  : !isProduction;
+
+app.disable("x-powered-by");
 
 // Body parsing middleware - these must come first
 app.use(express.json({ limit: '100mb' }));
@@ -31,16 +39,12 @@ if (!fs.existsSync(uploadsDir)) {
   console.log(`Created uploads directory at: ${uploadsDir}`);
 }
 
-// Serve static files from uploads folder with better logging
-app.use('/uploads', (req, res, next) => {
-  console.log(`[Static File Request] ${req.method} ${req.url} -> ${path.join(uploadsDir, req.path)}`);
-  next();
-}, express.static(uploadsDir, {
+// Cache uploaded assets in production and avoid per-file request logging.
+app.use('/uploads', express.static(uploadsDir, {
   dotfiles: 'allow',
   index: false,
-  setHeaders: (res, path) => {
-    console.log(`[Serving File] ${path}`);
-  }
+  maxAge: isProduction ? '7d' : 0,
+  immutable: isProduction
 }));
 
 // CORS middleware
@@ -49,7 +53,9 @@ const allowedOrigins = (process.env.CORS_ORIGIN || '')
   .map((origin) => origin.trim())
   .filter(Boolean);
 
-console.log(`CORS: allowing ${allowedOrigins.length ? allowedOrigins.join(', ') : 'same-origin requests only'}`);
+if (verboseRequestLogging) {
+  console.log(`CORS: allowing ${allowedOrigins.length ? allowedOrigins.join(', ') : 'same-origin requests only'}`);
+}
 
 const isSamePublicOrigin = (origin, requestHost) => {
   try {
@@ -86,18 +92,27 @@ app.use((req, res, next) => cors({
   optionsSuccessStatus: 204
 })(req, res, next));
 
-// Request logging middleware
+// Full request diagnostics are opt-in in production. Slow requests remain
+// visible without logging every request.
 app.use((req, res, next) => {
-  console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
-  if (req.method === 'POST' || req.method === 'PUT' || req.method === 'PATCH') {
-    console.log('Request body type:', typeof req.body);
-    console.log('Request body keys:', Object.keys(req.body || {}));
+  const startedAt = process.hrtime.bigint();
+
+  if (verboseRequestLogging) {
+    console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
   }
+
+  res.on("finish", () => {
+    const elapsedMs = Number(process.hrtime.bigint() - startedAt) / 1e6;
+    if (Number.isFinite(slowRequestThresholdMs) && elapsedMs >= slowRequestThresholdMs) {
+      console.warn(`[Slow API] ${req.method} ${req.originalUrl} ${res.statusCode} ${elapsedMs.toFixed(1)}ms`);
+    }
+  });
+
   next();
 });
 
 // Database connection
-mongoose.connect(process.env.MONGO_URL)
+mongoose.connect(process.env.MONGO_URL, { autoIndex })
   .then(() => console.log("MongoDB connected"))
   .catch(err => console.error("MongoDB connection error:", err));
 app.use(
@@ -107,6 +122,8 @@ app.use(
     resave: false,
     store: MongoStore.create({
       client: mongoose.connection.getClient(),
+      // Avoid writing the same active session back to MongoDB on every API call.
+      touchAfter: 24 * 3600,
     }),
     cookie: {
       maxAge: 1000 * 60 * 60 * 24 * 30, // 30 days in milliseconds
@@ -123,12 +140,13 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 // Debug middleware to log authentication status
-app.use((req, res, next) => {
-  console.log('Session ID:', req.sessionID);
-  console.log('Is Authenticated:', req.isAuthenticated ? req.isAuthenticated() : false);
-  console.log('User:', req.user ? { id: req.user._id, email: req.user.email } : 'Not authenticated');
-  next();
-});
+if (verboseRequestLogging) {
+  app.use((req, res, next) => {
+    console.log('Session ID:', req.sessionID);
+    console.log('Is Authenticated:', req.isAuthenticated ? req.isAuthenticated() : false);
+    next();
+  });
+}
 
 // Test route for debugging
 app.get("/api/v1/test", (req, res) => {

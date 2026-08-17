@@ -3,7 +3,9 @@ import { api } from "@/lib/utils";
 // Module cache
 let moduleCache = null;
 let moduleCacheTime = null;
-const MODULE_CACHE_EXPIRY = 60000; // 1 minute cache
+const MODULE_CACHE_EXPIRY = 5 * 60 * 1000;
+const MODULE_CACHE_KEY = 'modules';
+const MODULE_CACHE_TIME_KEY = 'modulesCacheTime';
 let pendingModuleRequest = null;
 
 export const moduleService = {
@@ -20,19 +22,20 @@ export const moduleService = {
                 return { data: moduleCache };
             }
 
-            // If there's already a pending request, wait for it
+            // Share one network request across the sidebar, dashboard and pages.
             if (pendingModuleRequest) {
                 return pendingModuleRequest;
             }
 
-            // Try localStorage first for instant display
+            // Reuse a recent persisted list after reloads and route changes.
             if (!forceRefresh) {
-                const cached = localStorage.getItem('modules');
-                if (cached) {
+                const cached = localStorage.getItem(MODULE_CACHE_KEY);
+                const cachedAt = Number(localStorage.getItem(MODULE_CACHE_TIME_KEY));
+                if (cached && cachedAt && (now - cachedAt) < MODULE_CACHE_EXPIRY) {
                     const parsedCache = JSON.parse(cached);
-                    // Return cached immediately but still fetch in background
-                    moduleCache = { data: parsedCache };
-                    moduleCacheTime = now;
+                    moduleCache = { success: true, count: parsedCache.length, data: parsedCache };
+                    moduleCacheTime = cachedAt;
+                    return { data: moduleCache };
                 }
             }
 
@@ -44,12 +47,13 @@ export const moduleService = {
                 
                 // Try to save to localStorage, but don't fail if quota exceeded
                 try {
-                    localStorage.setItem("modules", JSON.stringify(response.data.data));
+                    localStorage.setItem(MODULE_CACHE_KEY, JSON.stringify(response.data.data));
+                    localStorage.setItem(MODULE_CACHE_TIME_KEY, String(moduleCacheTime));
                 } catch (e) {
                     // Quota exceeded - clear old data and try storing only essential fields
                     console.warn('localStorage quota exceeded, clearing old cache:', e);
                     try {
-                        localStorage.removeItem("modules");
+                        localStorage.removeItem(MODULE_CACHE_KEY);
                         // Store minimal module data (only what's needed for sidebar)
                         const minimalModules = response.data.data.map(m => ({
                             _id: m._id,
@@ -57,7 +61,8 @@ export const moduleService = {
                             semester: m.semester,
                             icon: m.icon
                         }));
-                        localStorage.setItem("modules", JSON.stringify(minimalModules));
+                        localStorage.setItem(MODULE_CACHE_KEY, JSON.stringify(minimalModules));
+                        localStorage.setItem(MODULE_CACHE_TIME_KEY, String(moduleCacheTime));
                     } catch (e2) {
                         console.error('Still cannot save to localStorage:', e2);
                         // Continue without localStorage cache
@@ -86,6 +91,7 @@ export const moduleService = {
     clearCache: () => {
         moduleCache = null;
         moduleCacheTime = null;
+        localStorage.removeItem(MODULE_CACHE_TIME_KEY);
     },
 
     // Get module by ID
@@ -103,6 +109,7 @@ export const moduleService = {
     createModule: async (moduleData) => {
         try {
             const response = await api.post("/modules/create", moduleData);
+            moduleService.clearCache();
             return response;
         } catch (error) {
             console.error('Error creating module:', error);
@@ -114,6 +121,7 @@ export const moduleService = {
     updateModule: async (id, moduleData) => {
         try {
             const response = await api.put(`/modules/${id}`, moduleData);
+            moduleService.clearCache();
             return response;
         } catch (error) {
             console.error('Error updating module:', error);
@@ -125,6 +133,7 @@ export const moduleService = {
     deleteModule: async (id) => {
         try {
             const response = await api.delete(`/modules/${id}`);
+            moduleService.clearCache();
             return response;
         } catch (error) {
             console.error('Error deleting module:', error);

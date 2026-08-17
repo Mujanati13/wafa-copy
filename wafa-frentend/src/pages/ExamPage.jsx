@@ -225,6 +225,7 @@ const ExamPage = () => {
   const questionCardRef = useRef(null);
   const questionsLengthRef = useRef(0); // Track questions length for navigation
   const currentQuestionRef = useRef(0); // Track current question for debugging
+  const timeElapsedRef = useRef(0);
 
   // User profile state for header
   const [userProfile, setUserProfile] = useState(null);
@@ -250,6 +251,10 @@ const ExamPage = () => {
     }, 1000);
     return () => clearInterval(timer);
   }, [showResults]);
+
+  useEffect(() => {
+    timeElapsedRef.current = timeElapsed;
+  }, [timeElapsed]);
 
   // Fetch user profile for header
   useEffect(() => {
@@ -881,14 +886,31 @@ const ExamPage = () => {
     return () => clearTimeout(saveTimer);
   }, [selectedAnswers, currentQuestion, flaggedQuestions, verifiedQuestions, examId, examData, showResults, examType, timeElapsed, userProfile, questions, hasUnsavedChanges, lastSavedAnswers]);
 
-  // Periodically save time elapsed (every 30 seconds)
+  // Persist the cumulative timer server-side. The API only adds the delta for
+  // this study session, so repeated requests and cleanup requests are safe.
   useEffect(() => {
     if (!examData || showResults || !userProfile?._id) return;
 
-    const timeUpdateTimer = setInterval(() => {
+    const currentUserId = userProfile._id;
+    const storageKey = `exam_progress_${currentUserId}_${examType}_${examId}`;
+    const sessionStorageKey = `exam_study_session_${currentUserId}_${examType}_${examId}`;
+    let studySessionId;
+
+    try {
+      studySessionId = sessionStorage.getItem(sessionStorageKey);
+      if (!studySessionId) {
+        studySessionId = window.crypto?.randomUUID?.()
+          || `study_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+        sessionStorage.setItem(sessionStorageKey, studySessionId);
+      }
+    } catch {
+      studySessionId = `study_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+    }
+
+    const persistElapsedTime = () => {
+      const elapsedSeconds = Math.max(0, Math.floor(timeElapsedRef.current));
+
       try {
-        const currentUserId = userProfile._id;
-        const storageKey = `exam_progress_${currentUserId}_${examType}_${examId}`;
         const savedProgress = localStorage.getItem(storageKey);
         if (savedProgress) {
           const progress = JSON.parse(savedProgress);
@@ -902,10 +924,20 @@ const ExamPage = () => {
       } catch (error) {
         console.error('Failed to save time:', error);
       }
-    }, 30000); // Every 30 seconds
 
-    return () => clearInterval(timeUpdateTimer);
-  }, [examData, showResults, examType, examId, timeElapsed, userProfile]);
+      if (elapsedSeconds > 0) {
+        api.post('/users/study-time', { sessionId: studySessionId, elapsedSeconds })
+          .catch((error) => console.error('Failed to record study time:', error));
+      }
+    };
+
+    const timeUpdateTimer = setInterval(persistElapsedTime, 30000);
+
+    return () => {
+      clearInterval(timeUpdateTimer);
+      persistElapsedTime();
+    };
+  }, [examData, showResults, examType, examId, userProfile?._id]);
 
   // Warn before leaving - only if there are actual unsaved changes
   useEffect(() => {

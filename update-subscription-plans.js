@@ -34,7 +34,7 @@ const plansData = [
     period: "Gratuit",
     order: 1,
     features: [
-      { text: "1 module", included: true },
+      { text: "1 examen dans 1 module", included: true },
       { text: "Questions triées", included: true },
       { text: "Interface adaptée aux mobiles", included: true },
       { text: "Pourcentage des réponses", included: true },
@@ -70,10 +70,10 @@ const plansData = [
     ]
   },
   {
-    name: "PREMIUM PRO",
+    name: "PREMIUM ANNUEL",
     price: 150,
     oldPrice: 200,
-    period: "Semestre",
+    period: "Annuel",
     order: 3,
     features: [
       { text: "Tous les modules", included: true },

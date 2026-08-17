@@ -28,6 +28,16 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    activeSessionId: {
+      type: String,
+      default: null,
+      select: false,
+    },
+    activeSessionExpiresAt: {
+      type: Date,
+      default: null,
+      select: false,
+    },
     blockedAt: {
       type: Date,
       default: null,
@@ -173,9 +183,27 @@ const userSchema = new mongoose.Schema(
       type: [String],
       default: [],
     },
+    // The free plan grants access to exactly one exam in one module.
+    freeModule: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Module",
+      default: null,
+    },
+    freeExam: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "ExamParYear",
+      default: null,
+    },
   },
   {
     timestamps: true,
   }
 );
+
+userSchema.index({ createdAt: -1 });
+userSchema.index({ plan: 1, createdAt: -1 });
+userSchema.index({ plan: 1, updatedAt: -1 });
+userSchema.index({ isAactive: 1, isBlocked: 1, semesters: 1 });
+userSchema.index({ isAactive: 1, isBlocked: 1, currentYear: 1 });
+
 export default mongoose.model("User", userSchema);

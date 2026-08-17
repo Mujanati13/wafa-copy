@@ -116,18 +116,22 @@ export const qcmBanqueController = {
     getByModuleId: asyncHandler(async (req, res) => {
         const { moduleId } = req.params;
         
-        const qcmList = await QCMBanque.find({ moduleId }).populate('moduleId', 'name').lean();
+        const qcmList = await QCMBanque.find({ moduleId })
+            .select('name moduleId imageUrl infoText')
+            .populate('moduleId', 'name')
+            .lean();
         const qcmIds = qcmList.map(q => q._id);
 
-        // Get questions related to these QCM banques
-        const questions = await QuestionModel.find({ qcmBanqueId: { $in: qcmIds } }).lean();
+        const questionCounts = qcmIds.length
+            ? await QuestionModel.aggregate([
+                { $match: { qcmBanqueId: { $in: qcmIds } } },
+                { $group: { _id: '$qcmBanqueId', count: { $sum: 1 } } }
+            ])
+            : [];
 
-        // Group questions by qcmBanqueId
         const questionsByQCM = {};
-        questions.forEach(q => {
-            const key = q.qcmBanqueId?.toString();
-            if (!questionsByQCM[key]) questionsByQCM[key] = 0;
-            questionsByQCM[key]++;
+        questionCounts.forEach(({ _id, count }) => {
+            questionsByQCM[_id.toString()] = count;
         });
 
         // Attach question count to each QCM

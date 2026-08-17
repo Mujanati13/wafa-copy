@@ -2,42 +2,46 @@
  * Authentication and Authorization Middleware
  */
 import jwt from "jsonwebtoken";
-import User from "../models/userModel.js";
+import { refreshSingleSession } from "../services/singleSessionService.js";
+
+const shouldLogAuthFailures = () => (
+  process.env.AUTH_FAILURE_LOGGING === "true" || process.env.NODE_ENV !== "production"
+);
 
 /**
  * Middleware to check if user is authenticated (supports both session and JWT)
  */
 export const isAuthenticated = async (req, res, next) => {
-  // First check if user is authenticated via session (Passport)
-  if (req.isAuthenticated && req.isAuthenticated()) {
-    return next();
-  }
-  
-  // If not authenticated via session, check for JWT token
   const authHeader = req.headers.authorization;
   if (authHeader && authHeader.startsWith('Bearer ')) {
     const token = authHeader.substring(7);
     try {
-      console.log('Verifying JWT token for:', req.path);
       const decoded = jwt.verify(token, process.env.JWT_SECRET || process.env.SESSION_SECRET);
-      console.log('JWT decoded:', { id: decoded.id, email: decoded.email });
-      const user = await User.findById(decoded.id || decoded.userId);
+      const user = await refreshSingleSession(decoded.id || decoded.userId, decoded.sid);
       if (user) {
-        console.log('User found:', user.email);
         req.user = user;
+        req.authSessionId = decoded.sid;
         return next();
       }
-      console.log('User not found for id:', decoded.id || decoded.userId);
     } catch (error) {
-      console.error('JWT verification failed:', error.message);
+      if (shouldLogAuthFailures()) {
+        console.error('JWT/session verification failed:', error.message);
+      }
     }
-  } else {
-    console.log('No Authorization header found for:', req.path);
+  } else if (req.isAuthenticated && req.isAuthenticated()) {
+    const sessionId = req.session?.singleSessionId;
+    const user = await refreshSingleSession(req.user?._id, sessionId);
+    if (user) {
+      req.user = user;
+      req.authSessionId = sessionId;
+      return next();
+    }
   }
-  
+
   return res.status(401).json({
     success: false,
-    message: "Authentication required. Please login to access this resource.",
+    code: "SESSION_INVALID",
+    message: "This session is no longer active. Please login again.",
   });
 };
 
@@ -120,6 +124,35 @@ export const hasActiveSubscription = (req, res, next) => {
 };
 
 /**
+ * Restrict free users to the single exam selected during onboarding.
+ * Must run after isAuthenticated. Paid users and admins are unaffected.
+ */
+export const hasExamAccess = (req, res, next) => {
+  const user = req.user;
+
+  if (!user) {
+    return res.status(401).json({ success: false, message: "Authentication required." });
+  }
+
+  if (user.isAdmin || user.plan !== "Free") {
+    return next();
+  }
+
+  const requestedExamId = req.params.examId || req.params.id || req.body?.examId || req.body?.qcmBanqueId;
+  const freeExamId = user.freeExam?.toString();
+
+  if (requestedExamId && freeExamId && requestedExamId.toString() === freeExamId) {
+    return next();
+  }
+
+  return res.status(403).json({
+    success: false,
+    code: "FREE_PLAN_EXAM_LIMIT",
+    message: "The free plan includes one exam from one module. Upgrade to access this exam.",
+  });
+};
+
+/**
  * Optional authentication - doesn't block if not authenticated
  */
 export const optionalAuth = (req, res, next) => {
@@ -132,5 +165,6 @@ export default {
   isAdmin,
   isEmailVerified,
   hasActiveSubscription,
+  hasExamAccess,
   optionalAuth,
 };

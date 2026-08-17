@@ -102,8 +102,8 @@ export const userService = {
                 return userService._profileCache;
             }
 
-            // If there's already a pending request, wait for it (prevents duplicate calls)
-            if (!forceRefresh && userService._pendingProfileRequest) {
+            // Always share an in-flight profile request, including forced refreshes.
+            if (userService._pendingProfileRequest) {
                 return userService._pendingProfileRequest;
             }
 
@@ -111,7 +111,6 @@ export const userService = {
             if (forceRefresh) {
                 localStorage.removeItem('userProfile');
                 userService._profileCache = null;
-                userService._pendingProfileRequest = null;
             }
 
             // Create the request and store it
@@ -232,10 +231,9 @@ export const userService = {
     },
 
     // Get leaderboard
-    getLeaderboard: async (limit = 20, sortBy = 'totalPoints', userId = null) => {
+    getLeaderboard: async (limit = 20, sortBy = 'totalPoints') => {
         try {
             const params = { limit, sortBy };
-            if (userId) params.userId = userId;
             const response = await api.get(`/users/leaderboard`, { params });
             return response.data;
         } catch (error) {
@@ -268,11 +266,11 @@ export const userService = {
     },
 
     // Select free semester for new users
-    selectFreeSemester: async (semester) => {
+    selectFreeSemester: async (semester, moduleId, examId) => {
         try {
             // Clear profile cache since we're updating the user
             userService.clearProfileCache();
-            const response = await api.post('/users/select-free-semester', { semester });
+            const response = await api.post('/users/select-free-semester', { semester, moduleId, examId });
             return response.data;
         } catch (error) {
             console.error('Error selecting free semester:', error);

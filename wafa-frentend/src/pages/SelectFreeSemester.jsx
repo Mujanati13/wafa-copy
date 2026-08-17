@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion as Motion } from 'framer-motion';
-import { GraduationCap, BookOpen, Sparkles, ChevronRight, Loader2, Check, Gift } from 'lucide-react';
+import { GraduationCap, BookOpen, Sparkles, ChevronRight, Loader2, Check, Gift, FileQuestion } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
@@ -18,6 +18,8 @@ const getYearText = (semesterId) => {
 const SelectFreeSemester = () => {
   const navigate = useNavigate();
   const [selectedSemester, setSelectedSemester] = useState(null);
+  const [selectedModuleId, setSelectedModuleId] = useState(null);
+  const [selectedExamId, setSelectedExamId] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isChecking, setIsChecking] = useState(true);
   const [semesters, setSemesters] = useState([]);
@@ -46,13 +48,13 @@ const SelectFreeSemester = () => {
               year: getYearText(semester),
               description: module.name || '',
               moduleCount: 1,
-              modules: module.name ? [module.name] : []
+              modules: [module]
             });
           } else {
             const existing = semesterMap.get(semester);
             existing.moduleCount += 1;
             if (module.name) {
-              existing.modules.push(module.name);
+              existing.modules.push(module);
               if (!existing.description) {
                 existing.description = module.name;
               }
@@ -85,7 +87,7 @@ const SelectFreeSemester = () => {
     const checkStatus = async () => {
       try {
         const response = await userService.checkFreeSemesterStatus();
-        if (!response.data.needsToSelectSemester) {
+        if (!response.data?.needsToSelectSemester) {
           // User already has a semester or has used their free selection
           navigate('/dashboard/home');
         }
@@ -106,6 +108,11 @@ const SelectFreeSemester = () => {
       return;
     }
 
+    if (!selectedModuleId || !selectedExamId) {
+      toast.error('Veuillez sélectionner un module et un examen');
+      return;
+    }
+
     const availableSemesterIds = new Set(semesters.map((semester) => semester.id));
     if (!availableSemesterIds.has(selectedSemester)) {
       toast.error('Semestre invalide', {
@@ -117,11 +124,11 @@ const SelectFreeSemester = () => {
     setIsLoading(true);
 
     try {
-      const response = await userService.selectFreeSemester(selectedSemester);
+      const response = await userService.selectFreeSemester(selectedSemester, selectedModuleId, selectedExamId);
 
       if (response.success) {
-        toast.success('Semestre activé !', {
-          description: `Vous avez maintenant accès au ${selectedSemester}`,
+        toast.success('Examen gratuit activé !', {
+          description: 'Vous avez maintenant accès à l’examen sélectionné.',
           duration: 5000,
         });
 
@@ -191,11 +198,10 @@ const SelectFreeSemester = () => {
           </div>
 
           <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-3">
-            Choisissez votre semestre gratuit
+            Choisissez votre examen gratuit
           </h1>
           <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-            En tant que nouvel utilisateur, vous bénéficiez d'un accès gratuit à <span className="font-semibold text-blue-600">un semestre de votre choix</span> avec un module dédié. 
-            Sélectionnez celui qui correspond à votre niveau actuel.
+            Le plan gratuit donne accès à <span className="font-semibold text-blue-600">un examen dans un seul module</span>. Choisissez votre semestre, votre module, puis votre examen.
           </p>
         </Motion.div>
 
@@ -219,7 +225,7 @@ const SelectFreeSemester = () => {
                 transition={{ delay: 0.1 + index * 0.05 }}
               >
                 <Card
-                  onClick={() => setSelectedSemester(semester.id)}
+                  onClick={() => { setSelectedSemester(semester.id); setSelectedModuleId(null); setSelectedExamId(null); }}
                   className={`cursor-pointer transition-all duration-300 hover:shadow-lg hover:-translate-y-1 ${
                     selectedSemester === semester.id
                       ? 'ring-2 ring-cyan-500 bg-cyan-50 border-cyan-300 dark:bg-cyan-950/30'
@@ -275,6 +281,48 @@ const SelectFreeSemester = () => {
           </Motion.div>
         )}
 
+        {selectedSemester && (
+          <Motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mb-8 space-y-5">
+            <div>
+              <h2 className="mb-3 text-lg font-bold text-foreground">1. Choisissez un module</h2>
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {(semesters.find((item) => item.id === selectedSemester)?.modules || []).map((module) => (
+                  <Card
+                    key={module._id}
+                    onClick={() => { setSelectedModuleId(module._id); setSelectedExamId(null); }}
+                    className={`cursor-pointer transition ${selectedModuleId === module._id ? 'border-cyan-500 bg-cyan-50 ring-2 ring-cyan-500 dark:bg-cyan-950/30' : 'hover:border-cyan-300'}`}
+                  >
+                    <CardContent className="flex items-center gap-3 p-4">
+                      <BookOpen className="h-5 w-5 text-cyan-600" />
+                      <span className="font-semibold">{module.name}</span>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+
+            {selectedModuleId && (
+              <div>
+                <h2 className="mb-3 text-lg font-bold text-foreground">2. Choisissez un examen</h2>
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  {(semesters.find((item) => item.id === selectedSemester)?.modules.find((item) => item._id === selectedModuleId)?.exams || []).map((exam) => (
+                    <Card
+                      key={exam._id}
+                      onClick={() => setSelectedExamId(exam._id)}
+                      className={`cursor-pointer transition ${selectedExamId === exam._id ? 'border-cyan-500 bg-cyan-50 ring-2 ring-cyan-500 dark:bg-cyan-950/30' : 'hover:border-cyan-300'}`}
+                    >
+                      <CardContent className="flex items-center gap-3 p-4">
+                        <FileQuestion className="h-5 w-5 text-cyan-600" />
+                        <div><p className="font-semibold">{exam.name}</p>{exam.year && <p className="text-xs text-muted-foreground">{exam.year}</p>}</div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            )}
+          </Motion.div>
+        )}
+
         {/* Action Button */}
         <Motion.div
           initial={{ opacity: 0 }}
@@ -284,7 +332,7 @@ const SelectFreeSemester = () => {
         >
           <Button
             onClick={handleSelectSemester}
-            disabled={!selectedSemester || isLoading}
+            disabled={!selectedSemester || !selectedModuleId || !selectedExamId || isLoading}
             size="lg"
             className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-6 text-lg rounded-xl shadow-lg hover:shadow-xl transition-all"
           >
@@ -295,14 +343,14 @@ const SelectFreeSemester = () => {
               </>
             ) : (
               <>
-                Activer mon semestre gratuit
+                Activer mon examen gratuit
                 <ChevronRight className="ml-2 h-5 w-5" />
               </>
             )}
           </Button>
 
           <p className="text-sm text-slate-500 mt-4">
-            💡 Vous pourrez accéder à d'autres semestres en passant à Premium
+            💡 Passez à Premium pour accéder aux autres examens et modules
           </p>
         </Motion.div>
 
@@ -319,11 +367,11 @@ const SelectFreeSemester = () => {
               <ul className="space-y-2 text-slate-600">
                 <li className="flex items-center gap-2">
                   <Check className="h-4 w-4 text-green-500" />
-                  Accès complet à un module du semestre choisi
+                  Accès à un examen du module choisi
                 </li>
                 <li className="flex items-center gap-2">
                   <Check className="h-4 w-4 text-green-500" />
-                  QCM et exercices illimités pour ce module
+                  Questions et exercices de cet examen
                 </li>
                 <li className="flex items-center gap-2">
                   <Check className="h-4 w-4 text-green-500" />

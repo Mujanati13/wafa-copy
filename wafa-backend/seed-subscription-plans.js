@@ -23,8 +23,7 @@ const seedSubscriptionPlans = async () => {
                 oldPrice: null,
                 period: 'Semester',
                 features: [
-                    { text: 'one module', included: true },
-                    { text: 'un exam', included: true },
+                    { text: 'un examen dans un module', included: true },
                     { text: 'Mobile-friendly interface', included: true },
                     { text: 'fonctionalités', included: false },
                     { text: 'Access to Boards', included: false },

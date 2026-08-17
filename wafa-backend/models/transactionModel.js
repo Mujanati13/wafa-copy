@@ -67,6 +67,8 @@ const transactionSchema = new mongoose.Schema(
 
 // Index for querying user transactions
 transactionSchema.index({ user: 1, createdAt: -1 });
+transactionSchema.index({ user: 1, status: 1, createdAt: -1 });
+transactionSchema.index({ status: 1, createdAt: -1 });
 
 const Transaction = mongoose.model("Transaction", transactionSchema);
 

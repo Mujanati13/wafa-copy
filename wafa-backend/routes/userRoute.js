@@ -29,6 +29,7 @@ router.post("/upload-photo", isAuthenticated, uploadProfilePicture, UserControll
 
 // User stats and achievements (authenticated)
 router.get("/my-stats", isAuthenticated, UserController.getMyStats);
+router.post("/study-time", isAuthenticated, UserController.recordStudyTime);
 
 // Get user's subscription info (authenticated)
 router.get("/subscription-info", isAuthenticated, UserController.getSubscriptionInfo);
@@ -37,8 +38,8 @@ router.get("/subscription-info", isAuthenticated, UserController.getSubscription
 router.get("/free-semester-status", isAuthenticated, UserController.checkFreeSemesterStatus);
 router.post("/select-free-semester", isAuthenticated, UserController.selectFreeSemester);
 
-// Get leaderboard (public)
-router.get("/leaderboard", UserController.getLeaderboard);
+// Get the authenticated user's academic-year leaderboard
+router.get("/leaderboard", isAuthenticated, UserController.getLeaderboard);
 
 // Unlock achievement and send notification
 router.post("/unlock-achievement", isAuthenticated, UserController.unlockAchievement);

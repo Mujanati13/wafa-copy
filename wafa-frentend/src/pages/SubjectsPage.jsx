@@ -118,9 +118,9 @@ export default function SubjectsPage() {
       try {
         const [moduleResponse, coursesResponse, examsResponse, qcmResponse] = await Promise.all([
           moduleService.getModuleById(courseId),
-          api.get(`/exam-courses?moduleId=${courseId}`).catch(() => ({ data: { data: [] } })),
-          api.get("/exams/all").catch(() => ({ data: { data: [] } })),
-          api.get("/qcm-banque/all").catch(() => ({ data: { data: [] } })),
+          api.get(`/exam-courses/module/${courseId}`).catch(() => ({ data: { data: [] } })),
+          api.get(`/exams/module/${courseId}`).catch(() => ({ data: { data: [] } })),
+          api.get(`/qcm-banque/module/${courseId}`).catch(() => ({ data: { data: [] } })),
         ]);
         if (cancelled) return;
         const selectedModule = normalizeModule(moduleResponse.data?.data);
@@ -132,8 +132,8 @@ export default function SubjectsPage() {
           type,
         }));
         const courses = coursesResponse.data?.data || [];
-        const moduleExams = (examsResponse.data?.data || []).filter((item) => String(item.moduleId?._id || item.moduleId || "") === String(courseId) || item.moduleName === selectedModule.name);
-        const moduleQcm = (qcmResponse.data?.data || []).filter((item) => String(item.moduleId?._id || item.moduleId || "") === String(courseId) || item.moduleName === selectedModule.name);
+        const moduleExams = examsResponse.data?.data || [];
+        const moduleQcm = qcmResponse.data?.data || [];
         const years = maps(moduleExams.length ? moduleExams : courses.filter((item) => item.category === "Exam par years"), "year").sort((a, b) => (b.year || 0) - (a.year || 0));
         const qcm = maps(moduleQcm.length ? moduleQcm : courses.filter((item) => item.category === "QCM banque"), "qcm").sort((a, b) => a.name.localeCompare(b.name));
         const course = maps(courses.filter((item) => item.category !== "Exam par years" && item.category !== "QCM banque"), "course").sort((a, b) => a.name.localeCompare(b.name));

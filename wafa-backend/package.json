@@ -8,7 +8,9 @@
     "start": "node app.js",
     "dev": "nodemon app.js",
     "seed:modules": "node seed-modules.js",
-    "seed:demo": "node seed-demo-data.js"
+    "seed:demo": "node seed-demo-data.js",
+    "test:performance": "node --test --test-concurrency=1 tests/api-performance.test.js",
+    "db:indexes": "node scripts/sync-performance-indexes.js"
   },
   "author": "",
   "license": "ISC",
