@@ -18,17 +18,44 @@ const getPagination = (query, defaultLimit = 10, maxLimit = 100) => {
     return { page, limit, skip: (page - 1) * limit };
 };
 
-const getAcademicYear = (user) => {
+const getAcademicYear = (user, queryYear = null) => {
+    if (queryYear !== null && queryYear !== undefined && queryYear !== "") {
+        const parsedQuery = Number.parseInt(String(queryYear).replace(/\D/g, ""), 10);
+        if (Number.isInteger(parsedQuery) && parsedQuery >= 1 && parsedQuery <= 12) {
+            return parsedQuery;
+        }
+    }
+
     const semesterNumbers = (user?.semesters || [])
         .map((semester) => Number.parseInt(String(semester).replace(/\D/g, ""), 10))
-        .filter((semester) => Number.isInteger(semester) && semester >= 1 && semester <= 10);
+        .filter((semester) => Number.isInteger(semester) && semester >= 1 && semester <= 12);
 
     if (semesterNumbers.length > 0) {
         return Math.ceil(Math.max(...semesterNumbers) / 2);
     }
 
-    const currentYearMatch = String(user?.currentYear || "").match(/(?:^|\D)([1-5])(?:\D|$)/);
-    return currentYearMatch ? Number.parseInt(currentYearMatch[1], 10) : null;
+    const rawYear = String(user?.currentYear || "").trim();
+    if (!rawYear) return null;
+
+    const semesterFormatMatch = rawYear.match(/^S(\d+)$/i);
+    if (semesterFormatMatch) {
+        const sNum = Number.parseInt(semesterFormatMatch[1], 10);
+        if (sNum >= 1 && sNum <= 12) {
+            return Math.ceil(sNum / 2);
+        }
+    }
+
+    const currentYearMatch = rawYear.match(/(?:^|\D)([1-6])(?:\D|$)/);
+    if (currentYearMatch) {
+        return Number.parseInt(currentYearMatch[1], 10);
+    }
+
+    const parsedDirect = Number.parseInt(rawYear.replace(/\D/g, ""), 10);
+    if (Number.isInteger(parsedDirect) && parsedDirect >= 1 && parsedDirect <= 6) {
+        return parsedDirect;
+    }
+
+    return null;
 };
 
 const getStudyHours = (totalTimeSpent) => (
@@ -1243,6 +1270,40 @@ export const UserController = {
                     name: achievementName,
                     description: achievementDescription
                 }
+                plan: user.plan
+            }
+        });
+    }),
+
+    // Unlock achievement and send notification
+    unlockAchievement: asyncHandler(async (req, res) => {
+        const { userId, achievementName, achievementDescription } = req.body;
+
+        if (!userId || !achievementName) {
+            return res.status(400).json({
+                success: false,
+                message: "User ID and achievement name are required"
+            });
+        }
+
+        // You would typically get UserStats model here
+        // For now, sending notification
+        try {
+            await NotificationController.createNotification(
+                userId,
+                "achievement",
+                "Nouveau badge débloqué !",
+                `Félicitations ! Vous avez débloqué le badge '${achievementName}'. ${achievementDescription || ''}`,
+                "/dashboard/profile"
+            );
+
+            res.status(200).json({
+                success: true,
+                message: "Achievement unlocked and notification sent",
+                achievement: {
+                    name: achievementName,
+                    description: achievementDescription
+                }
             });
         } catch (error) {
             console.error("Error unlocking achievement:", error);
@@ -1255,23 +1316,14 @@ export const UserController = {
 
     // Get leaderboard for public display
     getLeaderboard: asyncHandler(async (req, res) => {
-        const { limit = 20, sortBy = 'totalPoints' } = req.query;
+        const { limit = 20, sortBy = 'totalPoints', year, academicYear: reqAcademicYear } = req.query;
         const safeLimit = Math.min(Math.max(Number.parseInt(limit, 10) || 20, 1), 1000);
 
         try {
             const requestingUser = req.user;
-            // A number of existing accounts have semesters assigned without a
-            // `currentYear` value. Derive their cohort from the semester so the
-            // ranking remains available and consistent with profile statistics.
-            const academicYear = getAcademicYear(requestingUser);
-
-            if (!academicYear) {
-                return res.status(400).json({
-                    success: false,
-                    code: 'ACADEMIC_YEAR_REQUIRED',
-                    message: 'Please set your academic year in your profile to view the ranking.'
-                });
-            }
+            // Derive cohort from query, semesters or currentYear
+            const academicYear = getAcademicYear(requestingUser, reqAcademicYear || year);
+            const requiresAcademicYear = !academicYear;
 
             // Get total questions count for percentage calculation
             const Question = mongoose.model('Question');
@@ -1284,19 +1336,24 @@ export const UserController = {
             else if (sortBy === 'level') sortField = '$totalPoints'; // Level is based on totalPoints
             else if (sortBy === 'percentage') sortField = '$percentageAnswered';
 
+            const matchConditions = {
+                isAactive: true,
+                isBlocked: { $ne: true }
+            };
+
+            if (academicYear) {
+                matchConditions.$or = [
+                    { semesters: { $in: [`S${academicYear * 2 - 1}`, `S${academicYear * 2}`] } },
+                    { currentYear: new RegExp(`(^|\\D)${academicYear}(\\D|$)`, "i") },
+                ];
+            }
+
             // Start from Users and lookup their stats to include users with 0 stats
             const User = mongoose.model('User');
             
             const [leaderboardResult] = await User.aggregate([
                 {
-                    $match: {
-                        isAactive: true,
-                        isBlocked: { $ne: true },
-                        $or: [
-                            { semesters: { $in: [`S${academicYear * 2 - 1}`, `S${academicYear * 2}`] } },
-                            { currentYear: new RegExp(`(^|\\D)${academicYear}(\\D|$)`, "i") },
-                        ],
-                    }
+                    $match: matchConditions
                 },
                 {
                     $lookup: {
@@ -1391,7 +1448,8 @@ export const UserController = {
                     userRank,
                     totalUsers,
                     totalQuestionsInSystem,
-                    academicYear
+                    academicYear,
+                    requiresAcademicYear
                 }
             });
         } catch (error) {

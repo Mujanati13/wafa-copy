@@ -109,23 +109,23 @@ const NoteModal = ({ isOpen, onClose, questionId, moduleId, examData }) => {
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
-            className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-2xl w-full p-6"
+            className="bg-card text-card-foreground border border-border rounded-2xl shadow-2xl max-w-2xl w-full p-6"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3 flex-1 min-w-0">
-                <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-                  <NotebookPen className="text-blue-600" size={20} />
+                <div className="w-10 h-10 bg-blue-100 dark:bg-blue-950/50 rounded-full flex items-center justify-center flex-shrink-0">
+                  <NotebookPen className="text-blue-600 dark:text-blue-400" size={20} />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <h3 className="text-xl font-bold text-gray-800">
+                  <h3 className="text-xl font-bold text-foreground">
                     Ma note personnelle
                   </h3>
-                  <p className="text-xs text-gray-500 truncate">
+                  <p className="text-xs text-muted-foreground truncate">
                     {getContextInfo()}
                   </p>
                   {lastSaved && (
-                    <p className="text-xs text-gray-400">
+                    <p className="text-xs text-muted-foreground">
                       Dernière sauvegarde: {lastSaved.toLocaleTimeString("fr-FR")}
                     </p>
                   )}
@@ -133,7 +133,7 @@ const NoteModal = ({ isOpen, onClose, questionId, moduleId, examData }) => {
               </div>
               <button
                 onClick={onClose}
-                className="text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0 p-2"
+                className="text-muted-foreground hover:text-foreground transition-colors flex-shrink-0 p-2"
               >
                 <FaTimes size={20} />
               </button>
@@ -142,7 +142,7 @@ const NoteModal = ({ isOpen, onClose, questionId, moduleId, examData }) => {
             <textarea
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              className="w-full h-64 px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+              className="w-full h-64 px-4 py-3 border-2 border-border rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
               placeholder="Écrivez votre note ici..."
             />
 
@@ -150,7 +150,7 @@ const NoteModal = ({ isOpen, onClose, questionId, moduleId, examData }) => {
               <button
                 onClick={saveNote}
                 disabled={loading || !content.trim()}
-                className="flex-1 py-3 bg-blue-500 text-white rounded-lg font-semibold hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+                className="flex-1 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
               >
                 <FaSave />
                 {loading ? "Enregistrement..." : "Enregistrer"}
@@ -160,7 +160,7 @@ const NoteModal = ({ isOpen, onClose, questionId, moduleId, examData }) => {
                 <button
                   onClick={deleteNote}
                   disabled={loading}
-                  className="px-6 py-3 bg-red-500 text-white rounded-lg font-semibold hover:bg-red-600 disabled:bg-gray-300 transition-colors flex items-center gap-2"
+                  className="px-6 py-3 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 disabled:opacity-50 transition-colors flex items-center gap-2"
                 >
                   <FaTrash />
                   Supprimer

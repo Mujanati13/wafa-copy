@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
-  BarChart3, Bell, BookOpen, ChevronLeft, CircleHelp, CreditCard, Crown,
+  BarChart3, BookOpen, ChevronLeft, CircleHelp, CreditCard, Crown,
   FileText, GraduationCap, Home, Library, LogOut, Menu, NotebookPen,
   Settings, Trophy, UserRound, X,
 } from "lucide-react";
@@ -9,6 +9,7 @@ import { SemesterProvider } from "@/context/SemesterContext";
 import { Button } from "@/components/ui/button";
 import ThemeToggle from "@/components/ui/ThemeToggle";
 import LanguageSwitcher from "@/components/shared/LanguageSwitcher";
+import NotificationDropdown from "@/components/layout/NotificationDropdown";
 import logo from "@/assets/logo.png";
 import { cn } from "@/lib/utils";
 
@@ -77,7 +78,7 @@ export default function LearnerExperienceLayout() {
         <div className="flex items-center gap-1 sm:gap-2">
           <div className="hidden lg:block"><LanguageSwitcher /></div>
           <ThemeToggle />
-          <Button variant="ghost" size="icon" className="relative" aria-label="Notifications"><Bell className="h-4 w-4" /><span className="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-cyan-500" /></Button>
+          <NotificationDropdown />
           <NavLink to="/dashboard/profile" className="imrs-focus-ring grid h-9 w-9 place-items-center rounded-full bg-primary text-xs font-bold text-primary-foreground" aria-label="Profil">{initials || "IM"}</NavLink>
         </div>
       </header>

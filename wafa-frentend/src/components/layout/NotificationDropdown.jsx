@@ -133,13 +133,13 @@ const NotificationDropdown = () => {
   // Get color based on notification type
   const getNotificationColor = (type) => {
     const colorMap = {
-      exam_result: "text-yellow-600 bg-yellow-50",
-      note_created: "text-blue-600 bg-blue-50",
-      achievement: "text-purple-600 bg-purple-50",
-      subscription: "text-green-600 bg-green-50",
-      system: "text-slate-600 bg-slate-50",
+      exam_result: "text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 border border-amber-200/50 dark:border-amber-800/40",
+      note_created: "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 border border-blue-200/50 dark:border-blue-800/40",
+      achievement: "text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/40 border border-purple-200/50 dark:border-purple-800/40",
+      subscription: "text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/50 dark:border-emerald-800/40",
+      system: "text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-900/60 border border-slate-200/50 dark:border-slate-800/40",
     };
-    return colorMap[type] || "text-slate-600 bg-slate-50";
+    return colorMap[type] || "text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-900/60";
   };
 
   // Format relative time in French
@@ -149,7 +149,6 @@ const NotificationDropdown = () => {
     const now = new Date();
     const notificationDate = new Date(date);
     
-    // Check if date is valid
     if (isNaN(notificationDate.getTime())) {
       return "Date invalide";
     }
@@ -171,23 +170,23 @@ const NotificationDropdown = () => {
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative">
-          <Bell className="h-5 w-5" />
+        <Button variant="ghost" size="icon" className="relative" aria-label="Notifications">
+          <Bell className="h-4 w-4 text-foreground" />
           {unreadCount > 0 && (
             <Badge
               variant="destructive"
-              className="absolute -top-1 -right-1 h-5 min-w-[20px] flex items-center justify-center p-0 text-[10px] animate-pulse"
+              className="absolute -top-1 -right-1 h-4 min-w-[16px] px-1 flex items-center justify-center text-[10px] font-semibold animate-pulse"
             >
               {unreadCount > 9 ? "9+" : unreadCount}
             </Badge>
           )}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-[380px] p-0" style={{ zIndex: 9999 }}>
+      <DropdownMenuContent align="end" className="w-[340px] sm:w-[380px] p-0 bg-popover text-popover-foreground border-border shadow-xl z-50">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b">
+        <div className="flex items-center justify-between p-3.5 border-b border-border">
           <div>
-            <h3 className="font-semibold text-base">Notifications</h3>
+            <h3 className="font-semibold text-sm sm:text-base text-foreground">Notifications</h3>
             <p className="text-xs text-muted-foreground mt-0.5">
               {unreadCount > 0 ? `${unreadCount} non lue${unreadCount > 1 ? "s" : ""}` : "Tout est à jour"}
             </p>
@@ -197,29 +196,29 @@ const NotificationDropdown = () => {
               variant="ghost"
               size="sm"
               onClick={handleMarkAllAsRead}
-              className="gap-2 h-8 text-xs"
+              className="gap-1.5 h-7 text-xs text-muted-foreground hover:text-foreground"
             >
-              <CheckCheck className="h-3 w-3" />
+              <CheckCheck className="h-3.5 w-3.5" />
               Tout marquer
             </Button>
           )}
         </div>
 
         {/* Notifications List */}
-        <ScrollArea className="max-h-[400px]">
+        <ScrollArea className="max-h-[380px]">
           {loading ? (
             <div className="p-8 text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-2 border-blue-500 border-t-transparent mx-auto" />
+              <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent mx-auto" />
               <p className="text-sm text-muted-foreground mt-2">Chargement...</p>
             </div>
           ) : notifications.length === 0 ? (
             <div className="p-8 text-center">
-              <Bell className="h-12 w-12 text-muted-foreground/30 mx-auto mb-3" />
+              <Bell className="h-10 w-10 text-muted-foreground/30 mx-auto mb-2" />
               <p className="text-sm font-medium text-foreground">Aucune notification</p>
               <p className="text-xs text-muted-foreground mt-1">Vous êtes à jour !</p>
             </div>
           ) : (
-            <div className="py-2">
+            <div className="divide-y divide-border">
               <AnimatePresence>
                 {notifications.map((notification, index) => {
                   const Icon = getNotificationIcon(notification.type);
@@ -228,41 +227,42 @@ const NotificationDropdown = () => {
                   return (
                     <motion.div
                       key={notification._id}
-                      initial={{ opacity: 0, y: -10 }}
+                      initial={{ opacity: 0, y: -6 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, x: -100 }}
-                      transition={{ delay: index * 0.05 }}
+                      transition={{ delay: index * 0.03 }}
                     >
                       <button
                         onClick={() => handleNotificationClick(notification)}
                         className={cn(
-                          "w-full px-4 py-3 flex items-start gap-3 hover:bg-accent transition-colors text-left",
-                          !notification.read && "bg-blue-50/50"
+                          "w-full px-3.5 py-3 flex items-start gap-3 hover:bg-muted/50 transition-colors text-left",
+                          !notification.read && "bg-blue-50/40 dark:bg-blue-950/20"
                         )}
                       >
                         <div className={cn("p-2 rounded-lg flex-shrink-0 mt-0.5", colorClass)}>
                           <Icon className="h-4 w-4" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-start justify-between gap-2 mb-1">
-                            <p className={cn("text-sm font-medium", !notification.read && "text-foreground")}>
+                          <div className="flex items-start justify-between gap-2 mb-0.5">
+                            <p className={cn("text-xs sm:text-sm font-medium text-foreground", !notification.read && "font-semibold")}>
                               {notification.title}
                             </p>
                             {!notification.read && (
-                              <div className="w-2 h-2 rounded-full bg-blue-500 flex-shrink-0 mt-1" />
+                              <div className="w-2 h-2 rounded-full bg-cyan-500 flex-shrink-0 mt-1" />
                             )}
                           </div>
-                          <p className="text-xs text-muted-foreground line-clamp-2">{notification.message}</p>
-                          <p className="text-xs text-muted-foreground/70 mt-1">{getRelativeTime(notification.createdAt)}</p>
+                          <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">{notification.message}</p>
+                          <p className="text-[11px] text-muted-foreground/80 mt-1">{getRelativeTime(notification.createdAt)}</p>
                         </div>
                         <button
+                          type="button"
                           onClick={(e) => handleDelete(e, notification._id)}
-                          className="p-1 hover:bg-accent rounded text-muted-foreground hover:text-destructive transition-colors flex-shrink-0"
+                          className="p-1 hover:bg-muted rounded text-muted-foreground hover:text-destructive transition-colors flex-shrink-0"
+                          title="Supprimer"
                         >
-                          <Trash2 className="h-3 w-3" />
+                          <Trash2 className="h-3.5 w-3.5" />
                         </button>
                       </button>
-                      {index < notifications.length - 1 && <Separator />}
                     </motion.div>
                   );
                 })}
@@ -274,11 +274,11 @@ const NotificationDropdown = () => {
         {/* Footer */}
         {notifications.length > 0 && (
           <>
-            <Separator />
+            <Separator className="bg-border" />
             <div className="p-2">
               <Button
                 variant="ghost"
-                className="w-full text-xs h-8"
+                className="w-full text-xs h-8 text-muted-foreground hover:text-foreground"
                 onClick={() => {
                   navigate("/dashboard/notifications");
                   setOpen(false);

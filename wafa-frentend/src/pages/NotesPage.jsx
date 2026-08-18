@@ -345,12 +345,12 @@ const NotesPage = () => {
   const unpinnedNotes = sortedNotes.filter((note) => !note.isPinned);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-      <div className="container mx-auto p-6 space-y-6">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 text-foreground">
+      <div className="container mx-auto p-4 md:p-6 space-y-6">
         {/* Header Section */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg">
+            <div className="p-2.5 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl shadow-sm shadow-blue-500/20">
               <NotebookPen className="h-6 w-6 text-white" />
             </div>
             <div>
@@ -359,10 +359,10 @@ const NotesPage = () => {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Badge variant="secondary" className="text-sm">
+            <Badge variant="secondary" className="text-sm px-3 py-1 bg-secondary text-secondary-foreground">
               {notes.length} notes
             </Badge>
-            <Button onClick={createNewNote} className="gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700">
+            <Button onClick={createNewNote} className="gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-sm">
               <Plus className="h-4 w-4" />
               Nouvelle note
             </Button>
@@ -370,18 +370,18 @@ const NotesPage = () => {
         </div>
 
         {/* Filters Section */}
-        <Card className="border-border">
+        <Card className="border-border bg-card shadow-sm">
           <CardContent className="p-4">
             <div className="space-y-4">
               {/* Search */}
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Rechercher une note..."
-                  className="pl-10 bg-background"
+                  className="pl-10 bg-background border-border text-foreground placeholder:text-muted-foreground"
                 />
               </div>
 
@@ -399,7 +399,7 @@ const NotesPage = () => {
                     className={cn(
                       "px-3 py-1.5 text-sm font-medium rounded-md transition-all",
                       filterType === "recent" 
-                        ? "bg-background text-blue-600 shadow-sm" 
+                        ? "bg-background text-blue-600 dark:text-blue-400 shadow-sm" 
                         : "text-muted-foreground hover:text-foreground"
                     )}
                   >
@@ -410,7 +410,7 @@ const NotesPage = () => {
                     className={cn(
                       "px-3 py-1.5 text-sm font-medium rounded-md transition-all",
                       filterType === "module" 
-                        ? "bg-background text-blue-600 shadow-sm" 
+                        ? "bg-background text-blue-600 dark:text-blue-400 shadow-sm" 
                         : "text-muted-foreground hover:text-foreground"
                     )}
                   >
@@ -426,7 +426,7 @@ const NotesPage = () => {
                     className={cn(
                       "px-3 py-1.5 text-sm font-medium rounded-md transition-all flex items-center gap-1",
                       filterType === "date" 
-                        ? "bg-background text-blue-600 shadow-sm" 
+                        ? "bg-background text-blue-600 dark:text-blue-400 shadow-sm" 
                         : "text-muted-foreground hover:text-foreground"
                     )}
                   >
@@ -436,11 +436,11 @@ const NotesPage = () => {
                 </div>
 
                 {/* Divider */}
-                <div className="h-8 w-px bg-slate-200" />
+                <div className="h-8 w-px bg-border hidden sm:block" />
 
                 {/* Filter Button */}
-                <Badge variant="outline" className="text-muted-foreground h-8 px-3">
-                  <Filter className="h-3 w-3 mr-1" />
+                <Badge variant="outline" className="text-muted-foreground border-border h-8 px-3">
+                  <Filter className="h-3 w-3 mr-1 text-muted-foreground" />
                   Filter
                 </Badge>
               </div>
@@ -452,11 +452,11 @@ const NotesPage = () => {
                   value={selectedModule} 
                   onValueChange={setSelectedModule}
                 >
-                  <SelectTrigger className="w-[180px] bg-background">
+                  <SelectTrigger className="w-[180px] bg-background border-border text-foreground">
                     <SelectValue placeholder="Module" />
                   </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All modules</SelectItem>
+                  <SelectContent className="bg-popover border-border text-popover-foreground">
+                    <SelectItem value="all">Tous les modules</SelectItem>
                     {getUniqueModules().map((name) => (
                       <SelectItem key={name} value={name}>
                         {name}
@@ -470,11 +470,11 @@ const NotesPage = () => {
                   value={selectedExamName} 
                   onValueChange={setSelectedExamName}
                 >
-                  <SelectTrigger className="w-[160px] bg-background">
+                  <SelectTrigger className="w-[160px] bg-background border-border text-foreground">
                     <SelectValue placeholder="Exam Name" />
                   </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All exams</SelectItem>
+                  <SelectContent className="bg-popover border-border text-popover-foreground">
+                    <SelectItem value="all">Tous les examens</SelectItem>
                     {getExamNames().map((name) => (
                       <SelectItem key={name} value={name}>
                         {name}
@@ -485,11 +485,11 @@ const NotesPage = () => {
 
                 {/* Number of Question Filter */}
                 <Select value={selectedQuestionNumber} onValueChange={setSelectedQuestionNumber}>
-                  <SelectTrigger className="w-[180px] bg-background">
+                  <SelectTrigger className="w-[180px] bg-background border-border text-foreground">
                     <SelectValue placeholder="Number of Question" />
                   </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All questions</SelectItem>
+                  <SelectContent className="bg-popover border-border text-popover-foreground">
+                    <SelectItem value="all">Toutes les questions</SelectItem>
                     {getQuestionNumbers().map((num) => (
                       <SelectItem key={num} value={num.toString()}>
                         Question {num}
@@ -504,13 +504,13 @@ const NotesPage = () => {
                     type="date"
                     value={dateFilter}
                     onChange={(e) => setDateFilter(e.target.value)}
-                    className="w-[160px] bg-background"
+                    className="w-[160px] bg-background border-border text-foreground dark:[color-scheme:dark]"
                   />
                 )}
 
                 {/* Filter indicator */}
                 <div className="ml-auto">
-                  <Badge variant="outline" className="text-muted-foreground">
+                  <Badge variant="outline" className="text-muted-foreground border-border">
                     {sortedNotes.length} résultat{sortedNotes.length !== 1 ? 's' : ''}
                   </Badge>
                 </div>
@@ -524,20 +524,20 @@ const NotesPage = () => {
           {loading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {[...Array(8)].map((_, i) => (
-                <Skeleton key={i} className="h-64 w-full rounded-xl" />
+                <Skeleton key={i} className="h-64 w-full rounded-xl bg-muted" />
               ))}
             </div>
           ) : sortedNotes.length === 0 ? (
-            <Card className="border-border">
+            <Card className="border-border bg-card">
               <CardContent className="p-12 text-center">
                 <div className="space-y-3">
                   <div className="flex justify-center">
-                    <div className="p-4 bg-muted rounded-full">
-                      <FileText className="h-10 w-10 text-slate-400" />
+                    <div className="p-4 bg-muted/60 rounded-full">
+                      <FileText className="h-10 w-10 text-muted-foreground" />
                     </div>
                   </div>
                   <div>
-                    <p className="text-lg font-semibold text-muted-foreground">
+                    <p className="text-lg font-semibold text-foreground">
                       {searchQuery ? "Aucune note trouvée" : "Aucune note"}
                     </p>
                     <p className="text-sm text-muted-foreground mt-2">
@@ -599,17 +599,17 @@ const NotesPage = () => {
 
         {/* Question Preview Modal */}
         <Dialog open={showQuestionModal} onOpenChange={setShowQuestionModal}>
-          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto bg-card text-card-foreground border-border">
             <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                <BookOpen className="h-5 w-5 text-blue-600" />
+              <DialogTitle className="flex items-center gap-2 text-foreground">
+                <BookOpen className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                 Question liée à la note
               </DialogTitle>
             </DialogHeader>
             {questionPreview && (
               <div className="space-y-4">
                 {/* Question Text */}
-                <div className="p-4 bg-card rounded-lg">
+                <div className="p-4 bg-muted/40 rounded-lg border border-border">
                   <p className="font-medium text-foreground">
                     {questionPreview.question?.text || "Question non disponible"}
                   </p>
@@ -617,20 +617,20 @@ const NotesPage = () => {
 
                 {/* Options */}
                 <div className="space-y-2">
-                  <p className="text-sm font-medium text-muted-foreground">Choix:</p>
+                  <p className="text-sm font-medium text-muted-foreground">Choix :</p>
                   {questionPreview.question?.options?.map((option, idx) => (
                     <div
                       key={idx}
                       className={cn(
                         "p-3 rounded-lg border-2 transition-all",
                         option.isCorrect
-                          ? "bg-emerald-50 border-emerald-400 text-emerald-800"
-                          : "bg-background border-border text-muted-foreground"
+                          ? "bg-emerald-50 dark:bg-emerald-950/30 border-emerald-400 dark:border-emerald-700/60 text-emerald-800 dark:text-emerald-200"
+                          : "bg-background border-border text-foreground"
                       )}
                     >
                       <div className="flex items-center gap-2">
                         {option.isCorrect && (
-                          <CheckCircle2 className="h-4 w-4 text-emerald-600 flex-shrink-0" />
+                          <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
                         )}
                         <span className="text-sm">{option.text}</span>
                       </div>
@@ -639,12 +639,12 @@ const NotesPage = () => {
                 </div>
 
                 {/* Note Content */}
-                <div className="p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+                <div className="p-4 bg-amber-50/80 dark:bg-amber-950/30 rounded-lg border border-amber-200/80 dark:border-amber-800/40">
                   <div className="flex items-center gap-2 mb-2">
-                    <NotebookPen className="h-4 w-4 text-yellow-600" />
-                    <span className="text-sm font-medium text-yellow-800">Votre note:</span>
+                    <NotebookPen className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                    <span className="text-sm font-medium text-amber-800 dark:text-amber-300">Votre note :</span>
                   </div>
-                  <p className="text-sm text-yellow-900">
+                  <p className="text-sm text-amber-900 dark:text-amber-200 whitespace-pre-wrap leading-relaxed">
                     {questionPreview.note?.content || "Aucun contenu"}
                   </p>
                 </div>
@@ -655,10 +655,10 @@ const NotesPage = () => {
 
         {/* Edit Note Modal */}
         <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
-          <DialogContent className="max-w-lg">
+          <DialogContent className="max-w-lg bg-card text-card-foreground border-border">
             <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                <Edit2 className="h-5 w-5 text-blue-600" />
+              <DialogTitle className="flex items-center gap-2 text-foreground">
+                <Edit2 className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                 Modifier la note
               </DialogTitle>
             </DialogHeader>
@@ -672,6 +672,7 @@ const NotesPage = () => {
                     value={editingNote.title || ""}
                     onChange={(e) => setEditingNote({ ...editingNote, title: e.target.value })}
                     placeholder="Titre de la note..."
+                    className="bg-background border-border text-foreground"
                   />
                 </div>
                 <div>
@@ -682,14 +683,14 @@ const NotesPage = () => {
                     value={editingNote.content || ""}
                     onChange={(e) => setEditingNote({ ...editingNote, content: e.target.value })}
                     placeholder="Contenu de la note..."
-                    className="min-h-[200px]"
+                    className="min-h-[200px] bg-background border-border text-foreground"
                   />
                 </div>
                 <div className="flex justify-end gap-2">
-                  <Button variant="outline" onClick={() => setShowEditModal(false)}>
+                  <Button variant="outline" onClick={() => setShowEditModal(false)} className="border-border">
                     Annuler
                   </Button>
-                  <Button onClick={saveEditedNote} className="bg-blue-600 hover:bg-blue-700">
+                  <Button onClick={saveEditedNote} className="bg-blue-600 hover:bg-blue-700 text-white">
                     Sauvegarder
                   </Button>
                 </div>
@@ -734,10 +735,10 @@ const NoteCard = ({ note, onDelete, onViewQuestion, onEdit, onTogglePin }) => {
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-background rounded-xl border-2 border-border hover:border-blue-300 transition-all shadow-sm hover:shadow-md overflow-hidden flex flex-col h-full"
+      className="bg-card text-card-foreground rounded-xl border border-border hover:border-blue-300 dark:hover:border-blue-600 transition-all shadow-sm hover:shadow-md overflow-hidden flex flex-col h-full"
     >
       {/* Date Header */}
-      <div className="px-4 py-2 bg-card border-b border-border flex items-center justify-between flex-shrink-0">
+      <div className="px-4 py-2 bg-muted/40 border-b border-border flex items-center justify-between flex-shrink-0">
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <Calendar className="h-3.5 w-3.5" />
           <span>{new Date(note.createdAt).toLocaleDateString('fr-FR', {
@@ -747,7 +748,7 @@ const NoteCard = ({ note, onDelete, onViewQuestion, onEdit, onTogglePin }) => {
           })}</span>
         </div>
         {note.isPinned && (
-          <Pin className="h-3.5 w-3.5 text-yellow-500 fill-yellow-500" />
+          <Pin className="h-3.5 w-3.5 text-amber-500 fill-amber-500" />
         )}
       </div>
 
@@ -756,30 +757,30 @@ const NoteCard = ({ note, onDelete, onViewQuestion, onEdit, onTogglePin }) => {
         <div className="px-4 pt-3 pb-2 space-y-2 flex-shrink-0">
           {/* Module + Exam on same line when both exist */}
           {moduleInfo && examInfo ? (
-            <div className="flex items-center gap-2 px-2 py-1.5 bg-gradient-to-r from-blue-50 to-purple-50 rounded-md border border-blue-200">
-              <BookOpen className="h-3.5 w-3.5 text-blue-600 flex-shrink-0" />
+            <div className="flex items-center gap-2 px-2.5 py-1.5 bg-blue-50/80 dark:bg-blue-950/40 rounded-md border border-blue-200/80 dark:border-blue-800/40">
+              <BookOpen className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400 flex-shrink-0" />
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-medium text-blue-900 truncate">
+                <p className="text-xs font-medium text-blue-900 dark:text-blue-200 truncate">
                   {moduleInfo.name} {moduleInfo.semester && `(${moduleInfo.semester})`}
                 </p>
-                <p className="text-xs text-purple-700 truncate">{examInfo}</p>
+                <p className="text-xs text-purple-700 dark:text-purple-300 truncate">{examInfo}</p>
               </div>
             </div>
           ) : (
             <>
               {moduleInfo && (
-                <div className="flex items-center gap-2 px-2 py-1.5 bg-blue-50 rounded-md border border-blue-200">
-                  <BookOpen className="h-3.5 w-3.5 text-blue-600 flex-shrink-0" />
-                  <div className="flex-1">
-                    <p className="text-xs font-medium text-blue-900">{moduleInfo.name}</p>
-                    {moduleInfo.semester && <p className="text-xs text-blue-700">{moduleInfo.semester}</p>}
+                <div className="flex items-center gap-2 px-2.5 py-1.5 bg-blue-50/80 dark:bg-blue-950/40 rounded-md border border-blue-200/80 dark:border-blue-800/40">
+                  <BookOpen className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400 flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-medium text-blue-900 dark:text-blue-200 truncate">{moduleInfo.name}</p>
+                    {moduleInfo.semester && <p className="text-xs text-blue-700 dark:text-blue-300 truncate">{moduleInfo.semester}</p>}
                   </div>
                 </div>
               )}
               {examInfo && (
-                <div className="flex items-center gap-2 px-2 py-1.5 bg-purple-50 rounded-md border border-purple-200">
-                  <Tag className="h-3.5 w-3.5 text-purple-600 flex-shrink-0" />
-                  <p className="text-xs font-medium text-purple-900">{examInfo}</p>
+                <div className="flex items-center gap-2 px-2.5 py-1.5 bg-purple-50/80 dark:bg-purple-950/40 rounded-md border border-purple-200/80 dark:border-purple-800/40">
+                  <Tag className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400 flex-shrink-0" />
+                  <p className="text-xs font-medium text-purple-900 dark:text-purple-200 truncate">{examInfo}</p>
                 </div>
               )}
             </>
@@ -787,9 +788,9 @@ const NoteCard = ({ note, onDelete, onViewQuestion, onEdit, onTogglePin }) => {
           
           {/* Question Reference */}
           {questionNumber && (
-            <div className="flex items-center gap-2 px-2 py-1.5 bg-amber-50 rounded-md border border-amber-200">
-              <FileText className="h-3.5 w-3.5 text-amber-600 flex-shrink-0" />
-              <p className="text-xs font-medium text-amber-900">Question #{questionNumber}</p>
+            <div className="flex items-center gap-2 px-2.5 py-1.5 bg-amber-50/80 dark:bg-amber-950/40 rounded-md border border-amber-200/80 dark:border-amber-800/40">
+              <FileText className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400 flex-shrink-0" />
+              <p className="text-xs font-medium text-amber-900 dark:text-amber-200">Question #{questionNumber}</p>
             </div>
           )}
         </div>
@@ -797,7 +798,7 @@ const NoteCard = ({ note, onDelete, onViewQuestion, onEdit, onTogglePin }) => {
 
       {/* Note Content */}
       <div className="p-4 flex-1 overflow-hidden">
-        <h3 className="font-bold text-base text-foreground mb-3 line-clamp-2">
+        <h3 className="font-bold text-base text-card-foreground mb-2 line-clamp-2">
           {note.title || "Sans titre"}
         </h3>
         <p className="text-sm text-muted-foreground line-clamp-4 min-h-[4rem] leading-relaxed">
@@ -812,7 +813,7 @@ const NoteCard = ({ note, onDelete, onViewQuestion, onEdit, onTogglePin }) => {
           variant="outline"
           size="sm"
           onClick={onViewQuestion}
-          className="w-full h-8 text-xs gap-1"
+          className="w-full h-8 text-xs gap-1 border-border"
           disabled={!note.questionId}
         >
           <Eye className="h-3.5 w-3.5" />
@@ -824,7 +825,7 @@ const NoteCard = ({ note, onDelete, onViewQuestion, onEdit, onTogglePin }) => {
           variant="outline"
           size="sm"
           onClick={onEdit}
-          className="w-full h-8 text-xs gap-1"
+          className="w-full h-8 text-xs gap-1 border-border"
         >
           <Edit2 className="h-3.5 w-3.5" />
           <span className="hidden sm:inline">Modifier</span>
@@ -835,7 +836,7 @@ const NoteCard = ({ note, onDelete, onViewQuestion, onEdit, onTogglePin }) => {
           variant="outline"
           size="sm"
           onClick={onDelete}
-          className="w-full h-8 text-xs text-red-500 hover:text-red-600 hover:bg-red-50 gap-1"
+          className="w-full h-8 text-xs text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40 dark:text-red-400 border-border gap-1"
         >
           <Trash2 className="h-3.5 w-3.5" />
           <span className="hidden sm:inline">Supprimer</span>
