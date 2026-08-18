@@ -17,6 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, Trash2, Upload, FileText, Database, FolderOpen, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { api } from "@/lib/utils";
+import { cryptoCompat } from "@/lib/cryptoCompat";
 
 const ImportQCMBanque = () => {
   const { t } = useTranslation(['admin', 'common']);
@@ -80,18 +81,18 @@ const ImportQCMBanque = () => {
 
   // Image mappings
   const [imageMappings, setImageMappings] = useState([
-    { id: crypto.randomUUID(), file: null, questionNumbers: "" },
+    { id: cryptoCompat.randomUUID(), file: null, questionNumbers: "" },
   ]);
 
   // Category mappings for questions (sessions)
   const [categoryMappings, setCategoryMappings] = useState([
-    { id: crypto.randomUUID(), category: "", questionNumbers: "" },
+    { id: cryptoCompat.randomUUID(), category: "", questionNumbers: "" },
   ]);
 
   const handleAddImageRow = () =>
     setImageMappings((prev) => [
       ...prev,
-      { id: crypto.randomUUID(), file: null, questionNumbers: "" },
+      { id: cryptoCompat.randomUUID(), file: null, questionNumbers: "" },
     ]);
 
   const handleRemoveImageRow = (id) =>
@@ -100,7 +101,7 @@ const ImportQCMBanque = () => {
   const handleAddCategoryRow = () =>
     setCategoryMappings((prev) => [
       ...prev,
-      { id: crypto.randomUUID(), category: "", questionNumbers: "" },
+      { id: cryptoCompat.randomUUID(), category: "", questionNumbers: "" },
     ]);
 
   const handleRemoveCategoryRow = (id) =>
@@ -175,7 +176,7 @@ const ImportQCMBanque = () => {
       }
 
       toast.success(`${validImageMappings.length} image(s) téléchargée(s) et attachée(s)`);
-      setImageMappings([{ id: crypto.randomUUID(), file: null, questionNumbers: "" }]);
+      setImageMappings([{ id: cryptoCompat.randomUUID(), file: null, questionNumbers: "" }]);
     } catch (error) {
       console.error('Upload error:', error);
       toast.error(error.response?.data?.message || 'Erreur lors du téléchargement');
@@ -212,7 +213,7 @@ const ImportQCMBanque = () => {
       });
 
       toast.success(`${validCategoryMappings.length} catégorie(s) assignée(s)`);
-      setCategoryMappings([{ id: crypto.randomUUID(), category: "", questionNumbers: "" }]);
+      setCategoryMappings([{ id: cryptoCompat.randomUUID(), category: "", questionNumbers: "" }]);
     } catch (error) {
       console.error('Assignment error:', error);
       toast.error(error.response?.data?.message || 'Erreur lors de l\'assignation');

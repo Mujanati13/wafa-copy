@@ -33,6 +33,7 @@ import {
   Filter
 } from "lucide-react";
 import { toast } from "sonner";
+import { cryptoCompat } from "@/lib/cryptoCompat";
 import {
   Dialog,
   DialogContent,
@@ -115,18 +116,18 @@ const ImportExamParCourse = () => {
 
   // Question linking mappings
   const [yearMappings, setYearMappings] = useState([
-    { id: crypto.randomUUID(), examYearId: "", yearName: "", questionNumbers: "" },
+    { id: cryptoCompat.randomUUID(), examYearId: "", yearName: "", questionNumbers: "" },
   ]);
 
   // Image mappings for attaching images to linked questions
   const [imageMappings, setImageMappings] = useState([
-    { id: crypto.randomUUID(), file: null, questionNumbers: "" },
+    { id: cryptoCompat.randomUUID(), file: null, questionNumbers: "" },
   ]);
 
   const handleAddImageRow = () =>
     setImageMappings((prev) => [
       ...prev,
-      { id: crypto.randomUUID(), file: null, questionNumbers: "" },
+      { id: cryptoCompat.randomUUID(), file: null, questionNumbers: "" },
     ]);
 
   const handleRemoveImageRow = (id) =>
@@ -182,7 +183,7 @@ const ImportExamParCourse = () => {
 
       toast.success(`${validMappings.length} image(s) téléchargée(s) et attachée(s)`);
       setImageMappings([
-        { id: crypto.randomUUID(), file: null, questionNumbers: "" },
+        { id: cryptoCompat.randomUUID(), file: null, questionNumbers: "" },
       ]);
     } catch (error) {
       console.error("Error uploading images:", error);
@@ -291,7 +292,7 @@ const ImportExamParCourse = () => {
   const handleAddYearRow = () =>
     setYearMappings((prev) => [
       ...prev,
-      { id: crypto.randomUUID(), examYearId: "", yearName: "", questionNumbers: "" },
+      { id: cryptoCompat.randomUUID(), examYearId: "", yearName: "", questionNumbers: "" },
     ]);
 
   const handleRemoveYearRow = (id) =>
@@ -353,7 +354,7 @@ const ImportExamParCourse = () => {
       if (response.data.success) {
         toast.success(response.data.message);
         setYearMappings([
-          { id: crypto.randomUUID(), examYearId: "", yearName: "", questionNumbers: "" },
+          { id: cryptoCompat.randomUUID(), examYearId: "", yearName: "", questionNumbers: "" },
         ]);
         // Refresh courses to get updated question counts
         if (selectedModule) {

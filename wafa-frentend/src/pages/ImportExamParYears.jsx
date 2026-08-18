@@ -16,6 +16,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Plus, Trash2, Upload, FileText, Calendar, Loader2 } from "lucide-react";
 import { api } from "@/lib/utils";
+import { cryptoCompat } from "@/lib/cryptoCompat";
 import { toast } from "sonner";
 
 const ImportExamParYears = () => {
@@ -64,18 +65,18 @@ const ImportExamParYears = () => {
 
   // Left column: images attachment to question numbers
   const [imageMappings, setImageMappings] = useState([
-    { id: crypto.randomUUID(), file: null, questionNumbers: "" },
+    { id: cryptoCompat.randomUUID(), file: null, questionNumbers: "" },
   ]);
 
   // Right column: integrate questions into a sub module
   const [subModuleMappings, setSubModuleMappings] = useState([
-    { id: crypto.randomUUID(), name: "", questionNumbers: "" },
+    { id: cryptoCompat.randomUUID(), name: "", questionNumbers: "" },
   ]);
 
   const handleAddImageRow = () =>
     setImageMappings((prev) => [
       ...prev,
-      { id: crypto.randomUUID(), file: null, questionNumbers: "" },
+      { id: cryptoCompat.randomUUID(), file: null, questionNumbers: "" },
     ]);
 
   const handleRemoveImageRow = (id) =>
@@ -84,7 +85,7 @@ const ImportExamParYears = () => {
   const handleAddSubModuleRow = () =>
     setSubModuleMappings((prev) => [
       ...prev,
-      { id: crypto.randomUUID(), name: "", questionNumbers: "" },
+      { id: cryptoCompat.randomUUID(), name: "", questionNumbers: "" },
     ]);
 
   const handleRemoveSubModuleRow = (id) =>
@@ -176,7 +177,7 @@ const ImportExamParYears = () => {
 
       // Reset image mappings
       setImageMappings([
-        { id: crypto.randomUUID(), file: null, questionNumbers: "" },
+        { id: cryptoCompat.randomUUID(), file: null, questionNumbers: "" },
       ]);
     } catch (error) {
       console.error("Error uploading images:", error);
@@ -217,7 +218,7 @@ const ImportExamParYears = () => {
 
       // Reset sub-module mappings
       setSubModuleMappings([
-        { id: crypto.randomUUID(), name: "", questionNumbers: "" },
+        { id: cryptoCompat.randomUUID(), name: "", questionNumbers: "" },
       ]);
     } catch (error) {
       console.error("Error assigning sub-modules:", error);

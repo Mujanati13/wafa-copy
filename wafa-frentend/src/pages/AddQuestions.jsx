@@ -14,6 +14,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { PageHeader } from "@/components/shared";
 import { toast } from "sonner";
 import { api } from "@/lib/utils";
+import { cryptoCompat } from "@/lib/cryptoCompat";
 
 const AddQuestions = () => {
   const { t } = useTranslation(['admin', 'common']);
@@ -102,8 +103,8 @@ const AddQuestions = () => {
   const [selectedQCMName, setSelectedQCMName] = useState("");
   const [questionText, setQuestionText] = useState("");
   const [options, setOptions] = useState([
-    { id: crypto.randomUUID(), text: "", isCorrect: false },
-    { id: crypto.randomUUID(), text: "", isCorrect: false },
+    { id: cryptoCompat.randomUUID(), text: "", isCorrect: false },
+    { id: cryptoCompat.randomUUID(), text: "", isCorrect: false },
   ]);
   const [note, setNote] = useState("");
   const [imageFile, setImageFile] = useState(null);
@@ -287,7 +288,7 @@ const AddQuestions = () => {
   };
 
   const handleAddOption = () => {
-    setOptions((prev) => [...prev, { id: crypto.randomUUID(), text: "", isCorrect: false }]);
+    setOptions((prev) => [...prev, { id: cryptoCompat.randomUUID(), text: "", isCorrect: false }]);
   };
 
   const handleRemoveOption = (id) => {
@@ -483,8 +484,8 @@ const AddQuestions = () => {
       // Reset form
       setQuestionText("");
       setOptions([
-        { id: crypto.randomUUID(), text: "", isCorrect: false },
-        { id: crypto.randomUUID(), text: "", isCorrect: false },
+        { id: cryptoCompat.randomUUID(), text: "", isCorrect: false },
+        { id: cryptoCompat.randomUUID(), text: "", isCorrect: false },
       ]);
       setNote("");
       setImageFile(null);
