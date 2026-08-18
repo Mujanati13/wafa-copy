@@ -335,9 +335,9 @@ const ProfilePage = () => {
     },
     {
       label: t('dashboard:ranking'),
-      value: userStats?.rank ? `#${userStats.rank}` : 'Non classÃ©',
+      value: userStats?.rank ? `#${userStats.rank}` : 'Non classé',
       description: userStats?.rankedUsers
-        ? `${userStats.rankedUsers} Ã©tudiant${userStats.rankedUsers > 1 ? 's' : ''} â€” ${userStats.academicYear}Ã¨me annÃ©e`
+        ? `${userStats.rankedUsers} étudiant${userStats.rankedUsers > 1 ? 's' : ''} — ${userStats.academicYear}ème année`
         : undefined,
       icon: <Trophy className="h-4 w-4" /> 
     }

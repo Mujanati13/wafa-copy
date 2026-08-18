@@ -1260,7 +1260,10 @@ export const UserController = {
 
         try {
             const requestingUser = req.user;
-            const academicYear = requestingUser?.currentYear?.trim();
+            // A number of existing accounts have semesters assigned without a
+            // `currentYear` value. Derive their cohort from the semester so the
+            // ranking remains available and consistent with profile statistics.
+            const academicYear = getAcademicYear(requestingUser);
 
             if (!academicYear) {
                 return res.status(400).json({
@@ -1289,7 +1292,10 @@ export const UserController = {
                     $match: {
                         isAactive: true,
                         isBlocked: { $ne: true },
-                        currentYear: academicYear
+                        $or: [
+                            { semesters: { $in: [`S${academicYear * 2 - 1}`, `S${academicYear * 2}`] } },
+                            { currentYear: new RegExp(`(^|\\D)${academicYear}(\\D|$)`, "i") },
+                        ],
                     }
                 },
                 {
