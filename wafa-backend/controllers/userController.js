@@ -1385,7 +1385,7 @@ export const UserController = {
                 },
                 {
                     $setWindowFields: {
-                        sortBy: { sortValue: -1, totalPoints: -1, odUserIdStr: 1 },
+                        sortBy: { sortValue: -1 },
                         output: {
                             rank: { $documentNumber: {} }
                         }
