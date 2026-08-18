@@ -157,7 +157,7 @@ const CommunityModal = ({
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
-            className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-md w-full overflow-hidden max-h-[90vh] flex flex-col"
+            className="bg-card text-card-foreground border border-border rounded-2xl shadow-2xl max-w-md w-full overflow-hidden max-h-[90vh] flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header with module color */}
@@ -169,7 +169,7 @@ const CommunityModal = ({
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-white dark:bg-slate-900/20 rounded-full flex items-center justify-center">
+                  <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
                     <Users className="h-5 w-5" />
                   </div>
                   <div>
@@ -211,8 +211,8 @@ const CommunityModal = ({
 
               {/* Question text */}
               {questionText && (
-                <div className="mb-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
-                  <p className="text-sm text-gray-800 font-medium">
+                <div className="mb-4 p-3 bg-muted/40 rounded-lg border border-border">
+                  <p className="text-sm text-foreground font-medium">
                     {questionText}
                   </p>
                 </div>
@@ -243,11 +243,11 @@ const CommunityModal = ({
                           onClick={() => toggleOption(index)}
                           disabled={!canVote || hasVoted}
                           className={`w-full overflow-hidden rounded-lg border-2 transition-all text-left ${
-                            !canVote || hasVoted ? "cursor-default" : "cursor-pointer hover:border-gray-300"
+                            !canVote || hasVoted ? "cursor-default" : "cursor-pointer hover:border-primary/50 bg-card text-foreground"
                           }`}
                           style={{
                             borderColor: isSelected ? moduleColor : '#E5E7EB',
-                            backgroundColor: isSelected ? `${moduleColor}08` : 'white'
+                            backgroundColor: isSelected ? `${moduleColor}15` : undefined
                           }}
                         >
                           <div className="flex items-center gap-3 p-3">
@@ -265,12 +265,12 @@ const CommunityModal = ({
                             </div>
 
                             {/* Option letter */}
-                            <span className="font-semibold text-gray-700">
+                            <span className="font-semibold text-foreground">
                               {letter}-
                             </span>
 
                             {/* Option text */}
-                            <span className="text-sm text-gray-700 flex-1">
+                            <span className="text-sm text-foreground flex-1">
                               {option.text}
                             </span>
 
@@ -290,7 +290,7 @@ const CommunityModal = ({
 
                           {/* Vote progress bar - shown after voting */}
                           {hasVoted && (
-                            <div className="h-1 bg-gray-100">
+                            <div className="h-1 bg-muted">
                               <div 
                                 className="h-full transition-all duration-500"
                                 style={{
@@ -311,7 +311,7 @@ const CommunityModal = ({
                       <button
                         onClick={handleConfirmVote}
                         disabled={selectedOptions.length === 0 || submitting}
-                        className="px-6 py-2 rounded-lg border-2 border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                        className="px-6 py-2 rounded-lg border border-border text-foreground font-medium hover:bg-muted transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                       >
                         {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
                         confirmer
@@ -336,11 +336,11 @@ const CommunityModal = ({
 
                   {/* Explanation info */}
                   <div className="mt-4 space-y-3">
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-muted-foreground">
                       Si tu veux ajouter à votre vote une forte valeur (comme si 20 personnes a voté votre choix), 
                       <strong> ajouté un explication</strong>.
                     </p>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-muted-foreground">
                       Et en plus tu vas <span className="text-blue-600 font-semibold">gagner un point bleu</span>.
                     </p>
                   </div>
@@ -354,7 +354,7 @@ const CommunityModal = ({
                           onOpenExplanation();
                         }
                       }}
-                      className="px-6 py-2 rounded-lg border-2 border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition-colors"
+                      className="px-6 py-2 rounded-lg border border-border text-foreground font-medium hover:bg-muted transition-colors"
                     >
                       explication
                     </button>

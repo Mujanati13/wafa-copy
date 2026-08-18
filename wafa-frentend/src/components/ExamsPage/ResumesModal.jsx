@@ -96,14 +96,14 @@ const ResumesModal = ({ isOpen, onClose, examData }) => {
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.95, opacity: 0 }}
           transition={{ duration: 0.2 }}
-          className="bg-white dark:bg-slate-900 rounded-xl shadow-2xl w-full max-w-2xl max-h-[80vh] overflow-hidden"
+          className="bg-card text-card-foreground border border-border rounded-xl shadow-2xl w-full max-w-2xl max-h-[80vh] overflow-hidden"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
           <div className="bg-gradient-to-r from-purple-600 to-indigo-600 p-5 text-white">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="bg-white dark:bg-slate-900/20 p-2 rounded-lg">
+                <div className="bg-white/20 p-2 rounded-lg">
                   <BookOpen className="h-5 w-5" />
                 </div>
                 <div>
@@ -119,7 +119,7 @@ const ResumesModal = ({ isOpen, onClose, examData }) => {
                 variant="ghost"
                 size="icon"
                 onClick={onClose}
-                className="text-white hover:bg-white dark:bg-slate-900/20 rounded-full"
+                className="text-white hover:bg-white/20 rounded-full"
               >
                 <X className="h-5 w-5" />
               </Button>
@@ -160,7 +160,7 @@ const ResumesModal = ({ isOpen, onClose, examData }) => {
                   <div key={courseName} className="space-y-3">
                     <div className="flex items-center gap-2">
                       <FolderOpen className="h-4 w-4 text-purple-600" />
-                      <h3 className="font-semibold text-gray-900">{courseName}</h3>
+                      <h3 className="font-semibold text-foreground">{courseName}</h3>
                       <Badge variant="secondary" className="text-xs">
                         {courseResumes.length}
                       </Badge>
@@ -174,18 +174,18 @@ const ResumesModal = ({ isOpen, onClose, examData }) => {
                             key={resume._id}
                             initial={{ opacity: 0, x: -10 }}
                             animate={{ opacity: 1, x: 0 }}
-                            className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border hover:bg-purple-50 hover:border-purple-200 transition-colors group"
+                            className="flex items-center justify-between p-3 bg-muted/30 rounded-lg border border-border hover:bg-muted/60 hover:border-purple-500/40 transition-colors group"
                           >
                             <div className="flex items-center gap-3">
-                              <div className="p-2 bg-white dark:bg-slate-900 rounded-lg border group-hover:bg-purple-100 transition-colors">
+                              <div className="p-2 bg-card rounded-lg border border-border group-hover:bg-purple-500/20 transition-colors">
                                 {getFileIcon(fileType)}
                               </div>
                               <div>
-                                <p className="font-medium text-gray-900 text-sm">
+                                <p className="font-medium text-foreground text-sm">
                                   {resume.title}
                                 </p>
                                 <div className="flex items-center gap-2">
-                                  <p className="text-xs text-gray-500">
+                                  <p className="text-xs text-muted-foreground">
                                     {new Date(resume.createdAt).toLocaleDateString('fr-FR')}
                                   </p>
                                   {fileType !== 'pdf' && (
@@ -201,7 +201,7 @@ const ResumesModal = ({ isOpen, onClose, examData }) => {
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => handleViewFile(resume, fileType, fileFullUrl)}
-                                className="gap-1.5 text-purple-600 hover:text-purple-700 hover:bg-purple-100"
+                                className="gap-1.5 text-purple-600 dark:text-purple-400 hover:bg-purple-500/15"
                               >
                                 <ExternalLink className="h-4 w-4" />
                                 <span className="hidden sm:inline">{t('common:view', 'Voir')}</span>
@@ -216,7 +216,7 @@ const ResumesModal = ({ isOpen, onClose, examData }) => {
                                   link.download = resume.title || `resume${ext}`;
                                   link.click();
                                 }}
-                                className="gap-1.5 text-gray-600 hover:text-gray-700 hover:bg-gray-100"
+                                className="gap-1.5 text-muted-foreground hover:text-foreground hover:bg-muted"
                               >
                                 <Download className="h-4 w-4" />
                                 <span className="hidden sm:inline">{t('common:download', 'Télécharger')}</span>

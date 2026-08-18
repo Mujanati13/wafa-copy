@@ -112,26 +112,26 @@ const PlaylistModal = ({ isOpen, onClose, questionId }) => {
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
-            className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-md w-full p-6"
+            className="bg-card text-card-foreground border border-border rounded-2xl shadow-2xl max-w-md w-full p-6"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
+                <div className="w-10 h-10 bg-purple-500/20 rounded-full flex items-center justify-center">
                   <Album className="text-purple-600" size={20} />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-gray-800">
+                  <h3 className="text-xl font-bold text-foreground">
                     Mes Playlists
                   </h3>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-muted-foreground">
                     {playlists.length} playlist{playlists.length !== 1 ? 's' : ''}
                   </p>
                 </div>
               </div>
               <button
                 onClick={onClose}
-                className="text-gray-400 hover:text-gray-600 transition-colors rounded-full hover:bg-gray-100 p-2"
+                className="text-muted-foreground hover:text-foreground transition-colors rounded-full hover:bg-muted p-2"
               >
                 <FaTimes size={20} />
               </button>
@@ -142,8 +142,8 @@ const PlaylistModal = ({ isOpen, onClose, questionId }) => {
                 <Loader2 className="h-8 w-8 animate-spin text-purple-600" />
               </div>
             ) : playlists.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
-                <Album className="h-12 w-12 mx-auto mb-3 text-gray-300" />
+              <div className="text-center py-8 text-muted-foreground">
+                <Album className="h-12 w-12 mx-auto mb-3 text-muted-foreground/40" />
                 <p className="font-medium mb-1">Aucune playlist</p>
                 <p className="text-sm">Créez votre première playlist</p>
               </div>
@@ -168,16 +168,16 @@ const PlaylistModal = ({ isOpen, onClose, questionId }) => {
                           <Loader2 className="h-5 w-5 animate-spin text-purple-600" />
                         ) : (
                           <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                            contains ? "bg-purple-100" : "bg-white dark:bg-slate-900 border border-gray-200"
+                            contains ? "bg-purple-500/20" : "bg-muted border border-border"
                           }`}>
                             <Album size={18} className={contains ? "text-purple-600" : "text-gray-400"} />
                           </div>
                         )}
                         <div className="text-left">
-                          <p className="font-semibold text-gray-800 text-sm">
+                          <p className="font-semibold text-foreground text-sm">
                             {playlist.title}
                           </p>
-                          <p className="text-xs text-gray-500">
+                          <p className="text-xs text-muted-foreground">
                             {playlist.questionIds?.length || 0} question{(playlist.questionIds?.length || 0) !== 1 ? 's' : ''}
                           </p>
                         </div>
@@ -194,8 +194,8 @@ const PlaylistModal = ({ isOpen, onClose, questionId }) => {
             )}
 
             {showCreateForm ? (
-              <div className="mt-4 p-4 bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl border-2 border-purple-200">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <div className="mt-4 p-4 bg-muted/30 rounded-xl border border-border">
+                <label className="block text-sm font-semibold text-foreground mb-2">
                   Nom de la playlist
                 </label>
                 <input
@@ -204,7 +204,7 @@ const PlaylistModal = ({ isOpen, onClose, questionId }) => {
                   onChange={(e) => setNewPlaylistName(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && !loading && newPlaylistName.trim() && createPlaylist()}
                   placeholder="Ex: Mes questions difficiles"
-                  className="w-full px-4 py-2.5 border-2 border-purple-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent mb-3 text-sm"
+                  className="w-full px-4 py-2.5 bg-background text-foreground border border-border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent mb-3 text-sm"
                   autoFocus
                   maxLength={50}
                 />
@@ -232,7 +232,7 @@ const PlaylistModal = ({ isOpen, onClose, questionId }) => {
                       setNewPlaylistName("");
                     }}
                     disabled={loading}
-                    className="px-4 py-2.5 bg-white dark:bg-slate-900 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors border-2 border-gray-200 font-medium"
+                    className="px-4 py-2.5 bg-card text-foreground rounded-lg hover:bg-muted transition-colors border border-border font-medium"
                   >
                     Annuler
                   </button>

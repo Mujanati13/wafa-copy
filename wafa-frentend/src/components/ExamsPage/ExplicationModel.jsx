@@ -461,10 +461,10 @@ const ExplicationModel = ({ question, setShowExplanation, userPlan = "Free" }) =
                 <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center mx-auto mb-4">
                   <Sparkles className="h-10 w-10 text-blue-600" />
                 </div>
-                <h4 className="text-xl font-bold text-gray-900 mb-2">
+                <h4 className="text-xl font-bold text-foreground mb-2">
                   Explications Premium
                 </h4>
-                <p className="text-gray-600 mb-6">
+                <p className="text-muted-foreground mb-6">
                   Les explications d\u00e9taill\u00e9es sont disponibles \u00e0 partir du plan <strong>Premium</strong>.
                   <br />
                   Passez \u00e0 Premium pour acc\u00e9der aux explications des \u00e9tudiants et \u00e0 Premium Pro pour l'IA.
@@ -488,14 +488,14 @@ const ExplicationModel = ({ question, setShowExplanation, userPlan = "Free" }) =
                 <>
                   {/* AI Text */}
                   {aiExplanation.text && (
-                    <div className="border border-blue-200 rounded-lg bg-gradient-to-br from-blue-50/50 to-white p-4 space-y-3">
+                    <div className="border border-blue-500/30 rounded-lg bg-blue-500/5 p-4 space-y-3">
                       <div className="flex items-center gap-2 mb-2">
                         <Bot className="h-4 w-4 text-blue-600" />
                         <span className="text-sm font-semibold text-blue-700">Généré par IA</span>
                       </div>
                       <div className="prose prose-sm prose-slate max-w-none">
                         <div 
-                          className="text-gray-800 text-sm leading-relaxed"
+                          className="text-foreground text-sm leading-relaxed"
                           dangerouslySetInnerHTML={{
                             __html: aiExplanation.text
                               .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
@@ -520,7 +520,7 @@ const ExplicationModel = ({ question, setShowExplanation, userPlan = "Free" }) =
                   {/* AI Images */}
                   {aiExplanation.images.length > 0 && (
                     <div className="space-y-3">
-                      <p className="text-sm font-medium text-gray-700">Il doit etre comme ça :</p>
+                      <p className="text-sm font-medium text-foreground">Il doit etre comme ça :</p>
                       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                         {aiExplanation.images.map((src, idx) => {
                           let fullImgUrl = src;
@@ -545,7 +545,7 @@ const ExplicationModel = ({ question, setShowExplanation, userPlan = "Free" }) =
                           <button
                             key={`${src}-${idx}`}
                             type="button"
-                            className="group relative aspect-video w-full overflow-hidden rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-gray-50 hover:border-blue-400 transition-all shadow-sm hover:shadow-md"
+                            className="group relative aspect-video w-full overflow-hidden rounded-xl border border-border bg-muted/30 hover:border-blue-400 transition-all shadow-sm hover:shadow-md"
                             onClick={() => window.open(fullImgUrl, "_blank", "noopener,noreferrer")}
                             title="Lors de la click d'image : agrandir"
                           >
@@ -570,13 +570,13 @@ const ExplicationModel = ({ question, setShowExplanation, userPlan = "Free" }) =
                 </>
               ) : (
                 <div className="text-center py-12">
-                  <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
+                  <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
                     <Bot className="h-8 w-8 text-gray-400" />
                   </div>
-                  <h4 className="text-lg font-medium text-gray-700 mb-2">
+                  <h4 className="text-lg font-medium text-foreground mb-2">
                     Pas d'explication IA disponible
                   </h4>
-                  <p className="text-gray-500 text-sm mb-4">
+                  <p className="text-muted-foreground text-sm mb-4">
                     Cliquez sur le bouton ci-dessous pour générer une explication<br />
                     avec l'intelligence artificielle Gemini.
                   </p>
@@ -612,7 +612,7 @@ const ExplicationModel = ({ question, setShowExplanation, userPlan = "Free" }) =
                       onClick={() => setActiveExplanationIndex(idx)}
                       className={`px-4 py-1.5 rounded-full font-medium transition-all ${activeExplanationIndex === idx
                         ? "bg-purple-100 text-purple-700 border-2 border-purple-300"
-                        : "bg-gray-100 text-gray-600 border border-gray-200 dark:border-gray-700 hover:bg-gray-200"
+                        : "bg-muted text-muted-foreground border border-border hover:bg-muted/80"
                         }`}
                     >
                       <User className="inline h-3 w-3 mr-1" />
@@ -645,9 +645,9 @@ const ExplicationModel = ({ question, setShowExplanation, userPlan = "Free" }) =
               )}
 
               {/* Correct Answers Count */}
-              <div className="bg-green-50 border border-green-200 rounded-lg p-3 flex items-center gap-2">
+              <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-lg p-3 flex items-center gap-2">
                 <Check className="h-5 w-5 text-green-600" />
-                <span className="text-sm font-medium text-green-800">
+                <span className="text-sm font-medium text-emerald-700 dark:text-emerald-300">
                   Réponses correctes : {correctAnswersCount}
                 </span>
               </div>
@@ -670,7 +670,7 @@ const ExplicationModel = ({ question, setShowExplanation, userPlan = "Free" }) =
                         {currentUserExplanation.author?.[0]?.toUpperCase() || 'U'}
                       </div>
                       <div>
-                        <p className="text-sm font-medium text-gray-900">
+                        <p className="text-sm font-medium text-foreground">
                           {currentUserExplanation.author || 'Utilisateur'}
                         </p>
                         {currentUserExplanation.verified && (
@@ -681,7 +681,7 @@ const ExplicationModel = ({ question, setShowExplanation, userPlan = "Free" }) =
                         )}
                       </div>
                     </div>
-                    <span className="text-xs text-gray-500">
+                    <span className="text-xs text-muted-foreground">
                       {currentUserExplanation.createdAt 
                         ? new Date(currentUserExplanation.createdAt).toLocaleDateString('fr-FR')
                         : ''}
@@ -691,7 +691,7 @@ const ExplicationModel = ({ question, setShowExplanation, userPlan = "Free" }) =
                   {/* Explanation Text */}
                   {currentUserExplanation.text && (
                     <div className="prose prose-sm max-w-none">
-                      <p className="text-gray-800 text-sm leading-relaxed whitespace-pre-line">
+                      <p className="text-foreground text-sm leading-relaxed whitespace-pre-line">
                         {currentUserExplanation.text}
                       </p>
                     </div>
@@ -700,7 +700,7 @@ const ExplicationModel = ({ question, setShowExplanation, userPlan = "Free" }) =
                   {/* Display images if any */}
                   {currentUserExplanation.images?.length > 0 && (
                     <div className="space-y-3">
-                      <p className="text-sm font-medium text-gray-700">Il doit etre comme ça :</p>
+                      <p className="text-sm font-medium text-foreground">Il doit etre comme ça :</p>
                       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                         {currentUserExplanation.images.map((imgUrl, idx) => {
                           let fullImgUrl = imgUrl;
@@ -725,7 +725,7 @@ const ExplicationModel = ({ question, setShowExplanation, userPlan = "Free" }) =
                           <button
                             key={idx}
                             type="button"
-                            className="group relative aspect-video w-full overflow-hidden rounded-xl border-2 border-gray-200 dark:border-gray-700 bg-gray-50 hover:border-purple-400 transition-all shadow-sm hover:shadow-md"
+                            className="group relative aspect-video w-full overflow-hidden rounded-xl border border-border bg-muted/30 hover:border-purple-400 transition-all shadow-sm hover:shadow-md"
                             onClick={() => window.open(fullImgUrl, "_blank", "noopener,noreferrer")}
                             title="Lors de la click d'image : agrandir"
                           >
@@ -772,10 +772,10 @@ const ExplicationModel = ({ question, setShowExplanation, userPlan = "Free" }) =
                   <div className="w-16 h-16 rounded-full bg-purple-50 flex items-center justify-center mx-auto mb-4">
                     <Users className="h-8 w-8 text-purple-400" />
                   </div>
-                  <h4 className="text-lg font-medium text-gray-700 mb-2">
+                  <h4 className="text-lg font-medium text-foreground mb-2">
                     Aucune explication de la communauté
                   </h4>
-                  <p className="text-gray-500 text-sm mb-4">
+                  <p className="text-muted-foreground text-sm mb-4">
                     Soyez le premier à partager votre compréhension !
                   </p>
                   {currentUserSubmission ? (
@@ -896,7 +896,7 @@ const ExplicationModel = ({ question, setShowExplanation, userPlan = "Free" }) =
                       {uploadedPdf && (
                         <div className="flex items-center gap-2 p-2 bg-white dark:bg-slate-900 rounded-lg border border-purple-200">
                           <FileText className="h-5 w-5 text-purple-600" />
-                          <span className="flex-1 text-sm text-gray-700 truncate">{uploadedPdf.name}</span>
+                          <span className="flex-1 text-sm text-foreground truncate">{uploadedPdf.name}</span>
                           <Button
                             size="sm"
                             variant="ghost"
@@ -940,7 +940,7 @@ const ExplicationModel = ({ question, setShowExplanation, userPlan = "Free" }) =
         {question?.options && (
           <div className="border-t border-border bg-muted/40 p-4">
             <div className="flex items-center gap-2 text-sm">
-              <span className="font-medium text-gray-600">Réponses correctes:</span>
+              <span className="font-medium text-muted-foreground">Réponses correctes:</span>
               <div className="flex gap-1">
                 {question.options.map((opt, idx) =>
                   opt.isCorrect && (
@@ -958,7 +958,7 @@ const ExplicationModel = ({ question, setShowExplanation, userPlan = "Free" }) =
         {showWarning && (
           <div className="fixed inset-0 bg-black/60 z-[70] flex items-center justify-center p-4">
             <div
-              className="bg-white dark:bg-slate-900 rounded-xl shadow-2xl max-w-sm w-full overflow-hidden"
+              className="bg-card text-card-foreground border border-border rounded-xl shadow-2xl max-w-sm w-full overflow-hidden"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Red Header */}
@@ -979,10 +979,10 @@ const ExplicationModel = ({ question, setShowExplanation, userPlan = "Free" }) =
 
               {/* Content */}
               <div className="px-6 py-5 text-center">
-                <p className="text-gray-700 font-medium mb-3">
+                <p className="text-foreground font-medium mb-3">
                   Aucun contenu (text, image, pdf ...)
                 </p>
-                <p className="text-gray-600 text-sm mb-4">
+                <p className="text-muted-foreground text-sm mb-4">
                   - illégal qui est n'est pas bien (pornographique ...) ou les chose qui est hors sujet, n'est autorisé.
                 </p>
                 <p className="text-red-600 font-semibold text-sm">

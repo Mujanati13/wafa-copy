@@ -1561,7 +1561,7 @@ const ExamPage = () => {
               }}
             >
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-white dark:bg-slate-900/20 rounded-full flex items-center justify-center">
+                <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
                   <AlertCircle className="h-6 w-6" />
                 </div>
                 <div>
@@ -1573,10 +1573,10 @@ const ExamPage = () => {
 
             <CardContent className="p-6 space-y-6">
               <div className="space-y-3">
-                <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
+                <p className="text-foreground leading-relaxed">
                   {t('dashboard:exam_not_available_msg') || "Désolé, cet examen n'est pas disponible pour le moment. Cela peut arriver pour plusieurs raisons :"}
                 </p>
-                <ul className="space-y-2 text-sm text-gray-600 ml-4">
+                <ul className="space-y-2 text-sm text-muted-foreground ml-4">
                   <li className="flex items-start gap-2">
                     <span className="mt-0.5" style={{ color: moduleColor }}>•</span>
                     <span>{t('dashboard:exam_removed') || "L'examen a peut-être été supprimé ou déplacé"}</span>
@@ -1667,7 +1667,7 @@ const ExamPage = () => {
           <div className="px-4 py-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-white dark:bg-slate-900/20 flex items-center justify-center">
+                <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center">
                   <Trophy className="h-6 w-6" />
                 </div>
                 <div>
@@ -1685,14 +1685,14 @@ const ExamPage = () => {
             <div className="flex gap-2 mt-3">
               <button
                 onClick={handleRetry}
-                className="flex-1 py-2 px-3 rounded-lg bg-white dark:bg-slate-900/20 text-white text-sm font-medium flex items-center justify-center gap-2"
+                className="flex-1 py-2 px-3 rounded-lg bg-white/20 text-white text-sm font-medium flex items-center justify-center gap-2"
               >
                 <RefreshCcw className="h-4 w-4" />
                 Recommencer
               </button>
               <button
                 onClick={() => navigate('/dashboard/home')}
-                className="flex-1 py-2 px-3 rounded-lg bg-white dark:bg-slate-900 text-indigo-600 text-sm font-medium flex items-center justify-center gap-2"
+                className="flex-1 py-2 px-3 rounded-lg bg-card text-primary text-sm font-medium flex items-center justify-center gap-2"
               >
                 <Home className="h-4 w-4" />
                 Accueil
@@ -1713,14 +1713,14 @@ const ExamPage = () => {
           <div className="flex items-center gap-1">
             <button
               onClick={() => setShowSidebar(true)}
-              className="flex items-center justify-center p-1.5 rounded-lg bg-blue-100 hover:bg-blue-200 active:bg-blue-300 transition-colors text-blue-700"
+              className="flex items-center justify-center p-1.5 rounded-lg bg-primary/10 hover:bg-primary/20 active:bg-primary/30 transition-colors text-primary border border-primary/20"
               aria-label="Show questions"
             >
               <Menu className="h-4 w-4" />
             </button>
             <button
               onClick={handleExitWithSave}
-              className="flex items-center gap-1 px-2 py-1 rounded-lg bg-gray-100 hover:bg-gray-200 active:bg-gray-300 transition-colors text-gray-700 dark:text-gray-300"
+              className="flex items-center gap-1 px-2 py-1 rounded-lg bg-muted hover:bg-muted/80 active:bg-muted transition-colors text-foreground border border-border"
             >
               <LogOut className="h-3.5 w-3.5" />
               <span className="text-xs font-medium">Exit</span>
@@ -1739,7 +1739,7 @@ const ExamPage = () => {
               <Timer className="h-3 w-3" />
               <span>{formatTime(timeElapsed)}</span>
             </Badge>
-            <span className="text-[10px] text-gray-400">
+            <span className="text-[10px] text-muted-foreground">
               Q{sessionQuestionInfo.position}/{sessionQuestionInfo.total}
             </span>
             {isSaved ? (
@@ -1752,7 +1752,7 @@ const ExamPage = () => {
 
           {/* Right: Verified count only */}
           <div className="flex items-center gap-1.5">
-            <span className="text-[10px] text-emerald-600 flex items-center gap-0.5">
+            <span className="text-[10px] text-emerald-600 dark:text-emerald-400 flex items-center gap-0.5">
               <CheckCircle2 className="h-3 w-3" />
               {verifiedCount}
             </span>
@@ -1760,7 +1760,7 @@ const ExamPage = () => {
         </div>
 
         {/* Thin progress bar */}
-        <div className="h-1 bg-gray-100">
+        <div className="h-1 bg-muted">
           <motion.div
             className="h-full"
             style={{
@@ -1784,7 +1784,7 @@ const ExamPage = () => {
                 variant="outline"
                 size="sm"
                 onClick={handleExitWithSave}
-                className="gap-1.5 text-gray-700 dark:text-gray-300 hover:bg-gray-100"
+                className="gap-1.5 text-foreground hover:bg-muted border-border"
               >
                 <LogOut className="h-4 w-4" />
                 <span>Exit</span>
@@ -1807,7 +1807,7 @@ const ExamPage = () => {
                 variant="outline"
                 className={cn(
                   "gap-1 text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 transition-all",
-                  isSaved ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-amber-200 bg-amber-50 text-amber-700"
+                  isSaved ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300" : "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300"
                 )}
               >
                 {isSaved ? (
@@ -1823,23 +1823,23 @@ const ExamPage = () => {
             <div className="flex items-center gap-2 md:gap-3">
               {/* Font Size Controls Popup */}
               <div className="relative">
-                <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
+                <div className="flex items-center gap-1 bg-muted rounded-lg p-1 border border-border">
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-7 w-7 hover:bg-white dark:bg-slate-900"
+                    className="h-7 w-7 hover:bg-card text-foreground"
                     onClick={() => adjustFontSize(-2)}
                     disabled={fontSize <= 12}
                   >
                     <Minus className="h-3 w-3" />
                   </Button>
-                  <span className="text-xs px-2 font-medium text-gray-600 min-w-[40px] text-center">
+                  <span className="text-xs px-2 font-medium text-foreground min-w-[40px] text-center">
                     {fontSize}px
                   </span>
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-7 w-7 hover:bg-white dark:bg-slate-900"
+                    className="h-7 w-7 hover:bg-card text-foreground"
                     onClick={() => adjustFontSize(2)}
                     disabled={fontSize >= 24}
                   >
@@ -1858,7 +1858,7 @@ const ExamPage = () => {
               >
                 <Button
                   onClick={() => setShowKeyboardShortcuts(true)}
-                  className="gap-2 bg-purple-50 text-purple-600 border border-purple-300 hover:bg-purple-100 hover:border-purple-400 shadow-sm transition-all"
+                  className="gap-2 bg-purple-500/10 text-purple-700 dark:text-purple-300 border border-purple-500/30 hover:bg-purple-500/20 shadow-sm transition-all"
                   variant="outline"
                   title="Voir tous les raccourcis clavier"
                 >
@@ -1876,7 +1876,7 @@ const ExamPage = () => {
               >
                 <Button
                   onClick={() => setShowVueEnsemble(true)}
-                  className="gap-2 bg-blue-50 text-blue-600 border border-blue-300 hover:bg-blue-100 hover:border-blue-400 shadow-sm transition-all"
+                  className="gap-2 bg-blue-500/10 text-blue-700 dark:text-blue-300 border border-blue-500/30 hover:bg-blue-500/20 shadow-sm transition-all"
                   variant="outline"
                   title="Voir l'aperçu des questions"
                 >
@@ -1889,7 +1889,7 @@ const ExamPage = () => {
         </div>
 
         {/* Progress Bar */}
-        <div className="h-1 bg-gray-100">
+        <div className="h-1 bg-muted">
           <motion.div
             className="h-full"
             style={{
@@ -1909,27 +1909,27 @@ const ExamPage = () => {
             <Card className="sticky top-24 border-border bg-card shadow-lg overflow-hidden flex flex-col h-[calc(100vh-7rem)]">
               <CardContent className="p-0 flex-1 overflow-hidden min-h-0 flex flex-col">
                 {/* Legend Section - Moved to Top */}
-                <div className="border-b px-3 py-3 bg-gray-50/50 shrink-0">
+                <div className="border-b border-border px-3 py-3 bg-muted/30 shrink-0">
                   <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5 text-[10px]">
                     <div className="flex items-center gap-1">
-                      <div className="w-3 h-3 rounded bg-gray-100 border border-gray-300"></div>
-                      <span className="text-gray-500">non visité</span>
+                      <div className="w-3 h-3 rounded bg-muted border border-border"></div>
+                      <span className="text-muted-foreground">non visité</span>
                     </div>
                     <div className="flex items-center gap-1">
-                      <div className="w-3 h-3 rounded bg-orange-100 border border-orange-300"></div>
-                      <span className="text-gray-500">visité</span>
+                      <div className="w-3 h-3 rounded bg-amber-500/20 border border-amber-500/40"></div>
+                      <span className="text-muted-foreground">visité</span>
                     </div>
                     <div className="flex items-center gap-1">
-                      <div className="w-3 h-3 rounded bg-green-100 border border-green-300"></div>
-                      <span className="text-gray-500">correct</span>
+                      <div className="w-3 h-3 rounded bg-emerald-500/20 border border-emerald-500/40"></div>
+                      <span className="text-muted-foreground">correct</span>
                     </div>
                     <div className="flex items-center gap-1">
-                      <div className="w-3 h-3 rounded bg-red-100 border border-red-300"></div>
-                      <span className="text-gray-500">incorrect</span>
+                      <div className="w-3 h-3 rounded bg-rose-500/20 border border-rose-500/40"></div>
+                      <span className="text-muted-foreground">incorrect</span>
                     </div>
                     <div className="flex items-center gap-1">
-                      <div className="w-3 h-3 rounded bg-purple-100 border border-purple-300"></div>
-                      <span className="text-gray-500">surligné</span>
+                      <div className="w-3 h-3 rounded bg-purple-500/20 border border-purple-500/40"></div>
+                      <span className="text-muted-foreground">surligné</span>
                     </div>
                   </div>
                 </div>
@@ -1950,19 +1950,19 @@ const ExamPage = () => {
                               }
                               setCollapsedSessions(newCollapsed);
                             }}
-                            className="w-full flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 transition-colors group"
+                            className="w-full flex items-center justify-between p-2 rounded-lg hover:bg-muted/50 transition-colors group"
                           >
                             <div className="flex items-center gap-2">
                               <div className={cn(
                                 "transition-transform duration-200",
                                 !isCollapsed && "rotate-90"
                               )}>
-                                <ChevronRight className="h-4 w-4 text-gray-400" />
+                                <ChevronRight className="h-4 w-4 text-muted-foreground" />
                               </div>
-                              <Calendar className="h-4 w-4 text-gray-500" />
-                              <span className="font-medium text-sm text-gray-700 dark:text-gray-300">{sessionName}</span>
+                              <Calendar className="h-4 w-4 text-muted-foreground" />
+                              <span className="font-medium text-sm text-foreground">{sessionName}</span>
                             </div>
-                            <Badge variant="outline" className="text-xs bg-gray-50">
+                            <Badge variant="outline" className="text-xs bg-muted text-muted-foreground">
                               {sessionQuestions.length}
                             </Badge>
                           </button>
@@ -1980,12 +1980,12 @@ const ExamPage = () => {
                                     onClick={() => goToQuestion(globalIndex)}
                                     className={cn(
                                       "relative w-8 h-8 rounded-md text-xs font-semibold transition-all border-2 flex items-center justify-center",
-                                      isCurrent && "ring-2 ring-blue-500 ring-offset-1",
-                                      status === 'correct' && "bg-green-100 border-green-300 text-green-700",
-                                      status === 'incorrect' && "bg-red-100 border-red-300 text-red-700",
-                                      status === 'flagged' && "bg-purple-100 border-purple-300 text-purple-700",
-                                      status === 'visited' && "bg-orange-100 border-orange-300 text-orange-700",
-                                      status === 'unanswered' && "bg-gray-100 border-gray-300 text-gray-600",
+                                      isCurrent && "ring-2 ring-primary ring-offset-1 ring-offset-background",
+                                      status === 'correct' && "bg-emerald-500/20 border-emerald-500/40 text-emerald-700 dark:text-emerald-300",
+                                      status === 'incorrect' && "bg-rose-500/20 border-rose-500/40 text-rose-700 dark:text-rose-300",
+                                      status === 'flagged' && "bg-purple-500/20 border-purple-500/40 text-purple-700 dark:text-purple-300",
+                                      status === 'visited' && "bg-amber-500/20 border-amber-500/40 text-amber-700 dark:text-amber-300",
+                                      status === 'unanswered' && "bg-muted/60 border-border text-muted-foreground hover:bg-muted",
                                       "hover:shadow-md active:scale-95"
                                     )}
                                     title={`Q${questionData?.displayNumber || idx + 1}`}
@@ -2007,17 +2007,17 @@ const ExamPage = () => {
 
                 {/* Progression Section */}
                 {!showResults && (
-                  <div className="border-t p-3 bg-gradient-to-br from-gray-50 to-white shrink-0">
+                  <div className="border-t border-border p-3 bg-muted/20 shrink-0">
                     <div className="space-y-3">
                       {/* Verified Progress Only */}
                       <div>
                         <div className="flex items-center justify-between text-sm mb-1">
-                          <span className="font-medium text-gray-700 dark:text-gray-300">Vérifiées</span>
-                          <span className="text-gray-500">
+                          <span className="font-medium text-foreground">Vérifiées</span>
+                          <span className="text-muted-foreground">
                             {Object.keys(verifiedQuestions).length} / {questions.length}
                           </span>
                         </div>
-                        <div className="flex h-2 rounded-full overflow-hidden bg-gray-100">
+                        <div className="flex h-2 rounded-full overflow-hidden bg-muted">
                           {(() => {
                             const correctCount = questions.filter((_, i) => {
                               const verifiedData = verifiedQuestions[i];
@@ -2065,16 +2065,16 @@ const ExamPage = () => {
 
                 {/* Score Summary */}
                 {showResults && (
-                  <div className="border-t p-4 space-y-4 bg-gradient-to-br from-gray-50 to-white">
+                  <div className="border-t border-border p-4 space-y-4 bg-card">
                     <div className="text-center space-y-2">
                       <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-white">
                         <Trophy className="h-8 w-8" />
                       </div>
                       <div>
-                        <p className="text-3xl font-bold text-gray-900">
+                        <p className="text-3xl font-bold text-foreground">
                           {Math.round((score.correct / score.total) * 100)}%
                         </p>
-                        <p className="text-sm text-gray-500">
+                        <p className="text-sm text-muted-foreground">
                           {score.correct}/{score.total} {t('dashboard:correct') || 'correct'}
                         </p>
                       </div>
@@ -2116,7 +2116,7 @@ const ExamPage = () => {
               >
                 <Card className="exam-question-card border-border bg-card shadow-lg overflow-hidden">
                   {/* Question Header - Compact unified row */}
-                  <div className="bg-gradient-to-r from-gray-50 to-gray-100/50 border-b px-2 sm:px-4 md:px-6 py-2 sm:py-2.5">
+                  <div className="bg-muted/40 dark:bg-muted/20 border-b border-border px-2 sm:px-4 md:px-6 py-2 sm:py-2.5">
                     <div className="flex items-center justify-between gap-1.5 sm:gap-2">
                       {/* Left: Verify button + Breadcrumb */}
                       <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 flex-1">
@@ -2151,8 +2151,8 @@ const ExamPage = () => {
                           ) : null}
                         </div>
                         {/* Breadcrumb */}
-                        <div className="flex items-center gap-1.5 text-[10px] sm:text-xs text-gray-700 dark:text-gray-300 bg-white dark:bg-slate-900 px-2.5 py-1.5 sm:py-2 rounded-lg flex-wrap border border-gray-200 dark:border-gray-700 shadow-sm">
-                          <BookOpen className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0 text-gray-500" />
+                        <div className="flex items-center gap-1.5 text-[10px] sm:text-xs text-foreground bg-card px-2.5 py-1.5 sm:py-2 rounded-lg flex-wrap border border-border shadow-sm">
+                          <BookOpen className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0 text-muted-foreground" />
                           <span className="break-words font-medium max-w-full leading-relaxed">
                             {(() => {
                               const moduleName = examData?.moduleName || 'Module';
@@ -2189,7 +2189,7 @@ const ExamPage = () => {
                       </div>
 
                       {/* Right: Desktop action buttons + Mobile 3-dot menu */}
-                      <div className="flex items-center gap-0.5 shrink-0 bg-blue-100 rounded-lg px-2 py-1.5">
+                      <div className="flex items-center gap-0.5 shrink-0 bg-muted/60 dark:bg-muted/40 border border-border/80 rounded-lg px-2 py-1.5">
                         {/* DESKTOP: Show all buttons */}
                         <div className="hidden sm:flex items-center gap-0.5">
                           {/* Playlist */}
@@ -2198,8 +2198,8 @@ const ExamPage = () => {
                             size="icon"
                             onClick={() => handlePremiumProFeature('Playlist', () => setShowPlaylistModal(true))}
                             className={cn(
-                              "h-6 w-6 sm:h-8 sm:w-8 hover:bg-blue-200",
-                              hasPremiumProAccess ? "text-blue-700" : "text-blue-400 cursor-not-allowed"
+                              "h-6 w-6 sm:h-8 sm:w-8 hover:bg-muted hover:text-primary",
+                              hasPremiumProAccess ? "text-foreground" : "text-muted-foreground/40 cursor-not-allowed"
                             )}
                             disabled={!hasPremiumProAccess}
                             title={hasPremiumProAccess ? "Playlist" : "Playlist (Premium Pro requis)"}
@@ -2211,7 +2211,7 @@ const ExamPage = () => {
                             variant="ghost"
                             size="icon"
                             onClick={() => setShowResumesModal(true)}
-                            className="text-blue-700 h-6 w-6 sm:h-8 sm:w-8 hover:bg-blue-200"
+                            className="text-foreground h-6 w-6 sm:h-8 sm:w-8 hover:bg-muted hover:text-primary"
                             title="Résumés"
                           >
                             <FileText className="h-3 w-3 sm:h-4 sm:w-4" />
@@ -2221,7 +2221,7 @@ const ExamPage = () => {
                             variant="ghost"
                             size="icon"
                             onClick={() => setShowImageGallery(true)}
-                            className="text-blue-700 h-6 w-6 sm:h-8 sm:w-8 hover:bg-blue-200"
+                            className="text-foreground h-6 w-6 sm:h-8 sm:w-8 hover:bg-muted hover:text-primary"
                             title={`Images (${currentQuestionData.images?.length || 0})`}
                           >
                             <Image className="h-3 w-3 sm:h-4 sm:w-4" />
@@ -2231,8 +2231,8 @@ const ExamPage = () => {
                             size="icon"
                             onClick={() => handlePremiumProFeature('Notes', () => setShowNoteModal(true))}
                             className={cn(
-                              "h-6 w-6 sm:h-8 sm:w-8 hover:bg-blue-200",
-                              hasPremiumProAccess ? "text-blue-700" : "text-blue-400 cursor-not-allowed"
+                              "h-6 w-6 sm:h-8 sm:w-8 hover:bg-muted hover:text-primary",
+                              hasPremiumProAccess ? "text-foreground" : "text-muted-foreground/40 cursor-not-allowed"
                             )}
                             disabled={!hasPremiumProAccess}
                             title={hasPremiumProAccess ? "Note" : "Note (Premium Pro requis)"}
@@ -2243,7 +2243,7 @@ const ExamPage = () => {
                             variant="ghost"
                             size="icon"
                             onClick={() => setShowReportModal(true)}
-                            className="text-blue-700 hover:text-red-600 hover:bg-blue-200 h-6 w-6 sm:h-8 sm:w-8"
+                            className="text-foreground hover:text-red-500 hover:bg-muted h-6 w-6 sm:h-8 sm:w-8"
                             title="Signaler"
                           >
                             <AlertCircle className="h-3 w-3 sm:h-4 sm:w-4" />
@@ -2255,8 +2255,8 @@ const ExamPage = () => {
                             className={cn(
                               "transition-all h-6 w-6 sm:h-8 sm:w-8",
                               flaggedQuestions.has(currentQuestion)
-                                ? "text-amber-500 hover:bg-blue-200"
-                                : "text-blue-700 hover:bg-blue-200"
+                                ? "text-amber-500 hover:bg-muted"
+                                : "text-foreground hover:bg-muted hover:text-amber-500"
                             )}
                             title="Surligner"
                           >
@@ -2363,20 +2363,20 @@ const ExamPage = () => {
                   <CardContent className="p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-5 md:space-y-6">
                     {/* Annulled Question Badge */}
                     {currentQuestionData.isAnnulled && (
-                      <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-amber-50 border border-amber-200 rounded-lg">
-                        <TriangleAlert className="h-4 w-4 text-amber-600" />
-                        <span className="text-sm font-medium text-amber-700">Question Annulée</span>
-                        <span className="text-xs text-amber-600">(Pas de points attribués)</span>
+                      <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-amber-500/15 border border-amber-500/30 rounded-lg">
+                        <TriangleAlert className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                        <span className="text-sm font-medium text-amber-700 dark:text-amber-300">Question Annulée</span>
+                        <span className="text-xs text-amber-600 dark:text-amber-400">(Pas de points attribués)</span>
                       </div>
                     )}
 
                     {/* Question Text */}
                     <div className="space-y-2">
-                      <div className="text-sm font-semibold text-gray-500">
+                      <div className="text-sm font-semibold text-muted-foreground">
                         Q{sessionQuestionInfo.position}/{sessionQuestionInfo.total}
                       </div>
                       <div
-                        className="text-gray-800 leading-relaxed font-medium text-sm sm:text-base"
+                        className="text-foreground leading-relaxed font-medium text-sm sm:text-base"
                         style={{ fontSize: `${Math.max(14, fontSize - 2)}px`, lineHeight: '1.6' }}
                       >
                         {currentQuestionData.question || currentQuestionData.text}
@@ -2395,7 +2395,7 @@ const ExamPage = () => {
                                 setZoomedImageUrl(fullImgUrl);
                                 setShowImageZoom(true);
                               }}
-                              className="relative rounded-lg sm:rounded-xl overflow-hidden border bg-gray-50 cursor-pointer hover:border-blue-400 transition-all group w-full"
+                              className="relative rounded-lg sm:rounded-xl overflow-hidden border border-border bg-muted/30 cursor-pointer hover:border-primary transition-all group w-full"
                               title="Click to zoom"
                             >
                               <img
@@ -2430,22 +2430,22 @@ const ExamPage = () => {
                             animate={isAnimating ? { scale: [1, 1.02, 1] } : {}}
                             className={cn(
                               "imrs-focus-ring w-full text-left rounded-xl border-2 transition-all duration-200",
-                              !showCorrectness && !currentQuestionData.isAnnulled && "hover:shadow-md cursor-pointer active:scale-[0.98] bg-white dark:bg-slate-900",
+                              !showCorrectness && !currentQuestionData.isAnnulled && "hover:shadow-md cursor-pointer active:scale-[0.98] bg-card text-foreground",
                               (showCorrectness || currentQuestionData.isAnnulled) && "cursor-default",
                               // Annulled question state
-                              currentQuestionData.isAnnulled && "border-gray-200 dark:border-gray-700 bg-gray-50 opacity-70",
+                              currentQuestionData.isAnnulled && "border-border bg-muted/40 opacity-70",
                               // Default state (not selected, not showing correctness)
-                              !currentQuestionData.isAnnulled && !isSelected && !showCorrectness && "border-gray-200 dark:border-gray-700 hover:border-gray-300 bg-white dark:bg-slate-900",
+                              !currentQuestionData.isAnnulled && !isSelected && !showCorrectness && "border-border hover:border-border/80 bg-card text-foreground",
                               // Selected but not verified yet - show module color for all
-                              !currentQuestionData.isAnnulled && isSelected && !showCorrectness && "border-2 bg-white dark:bg-slate-900",
+                              !currentQuestionData.isAnnulled && isSelected && !showCorrectness && "border-2 bg-card text-foreground shadow-sm",
                               // After verification - correct answer that WAS selected (darker green)
-                              !currentQuestionData.isAnnulled && showCorrectness && isCorrect && isSelected && "border-emerald-500 bg-emerald-100 hover:bg-emerald-200 hover:border-emerald-600",
+                              !currentQuestionData.isAnnulled && showCorrectness && isCorrect && isSelected && "border-emerald-500 bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-950 dark:text-emerald-200",
                               // After verification - correct answer that was NOT selected (lighter green with dashed border)
-                              !currentQuestionData.isAnnulled && showCorrectness && isCorrect && !isSelected && "border-emerald-300 border-dashed bg-emerald-50 hover:bg-emerald-100",
+                              !currentQuestionData.isAnnulled && showCorrectness && isCorrect && !isSelected && "border-emerald-500/60 border-dashed bg-emerald-500/10 text-emerald-800 dark:text-emerald-300",
                               // After verification - wrong answer selected (light red background)
-                              !currentQuestionData.isAnnulled && showCorrectness && !isCorrect && isSelected && "border-red-400 bg-red-50 hover:bg-red-100 hover:border-red-500",
+                              !currentQuestionData.isAnnulled && showCorrectness && !isCorrect && isSelected && "border-rose-500 bg-rose-500/15 hover:bg-rose-500/25 text-rose-950 dark:text-rose-200",
                               // After verification - not selected and not correct (gray) - keep normal opacity
-                              !currentQuestionData.isAnnulled && showCorrectness && !isCorrect && !isSelected && "border-gray-200 dark:border-gray-700 bg-white dark:bg-slate-900"
+                              !currentQuestionData.isAnnulled && showCorrectness && !isCorrect && !isSelected && "border-border/80 bg-card text-muted-foreground opacity-80"
                             )}
                             style={
                               !currentQuestionData.isAnnulled && isSelected && !showCorrectness
@@ -2464,12 +2464,12 @@ const ExamPage = () => {
                               <div
                                 className={cn(
                                   "shrink-0 w-8 h-8 rounded-full flex items-center justify-center font-semibold text-sm transition-all",
-                                  !isSelected && !showCorrectness && "bg-gray-100 text-gray-600",
-                                  isSelected && !showCorrectness && "text-white",
-                                  showCorrectness && isCorrect && isSelected && "bg-emerald-600 text-white font-bold",
-                                  showCorrectness && isCorrect && !isSelected && "bg-emerald-400 text-white font-bold border-2 border-emerald-500 border-dashed",
-                                  showCorrectness && !isCorrect && isSelected && "bg-red-500 text-white",
-                                  showCorrectness && !isCorrect && !isSelected && "bg-gray-100 text-gray-600"
+                                  !isSelected && !showCorrectness && "bg-muted text-muted-foreground",
+                                  isSelected && !showCorrectness && "text-white font-bold",
+                                  showCorrectness && isCorrect && isSelected && "bg-emerald-500 text-white font-bold",
+                                  showCorrectness && isCorrect && !isSelected && "bg-emerald-500/80 text-white font-bold border-2 border-emerald-500 border-dashed",
+                                  showCorrectness && !isCorrect && isSelected && "bg-rose-500 text-white font-bold",
+                                  showCorrectness && !isCorrect && !isSelected && "bg-muted text-muted-foreground"
                                 )}
                                 style={
                                   isSelected && !showCorrectness
@@ -2484,10 +2484,10 @@ const ExamPage = () => {
                               <span
                                 className={cn(
                                   "flex-1 text-sm sm:text-base",
-                                  showCorrectness && isCorrect && isSelected && "text-emerald-700 font-semibold",
-                                  showCorrectness && isCorrect && !isSelected && "text-emerald-600 font-medium",
-                                  showCorrectness && !isCorrect && isSelected && "text-red-700",
-                                  showCorrectness && !isCorrect && !isSelected && "text-gray-600"
+                                  showCorrectness && isCorrect && isSelected && "text-emerald-700 dark:text-emerald-300 font-semibold",
+                                  showCorrectness && isCorrect && !isSelected && "text-emerald-600 dark:text-emerald-400 font-medium",
+                                  showCorrectness && !isCorrect && isSelected && "text-rose-700 dark:text-rose-300",
+                                  showCorrectness && !isCorrect && !isSelected && "text-muted-foreground"
                                 )}
                                 style={{ fontSize: `${Math.max(13, fontSize - 2)}px` }}
                               >
@@ -2508,7 +2508,7 @@ const ExamPage = () => {
                     </div>
 
                     {/* Action Buttons - Below Answer Options */}
-                    <div className="pt-4 border-t">
+                    <div className="pt-4 border-t border-border">
                       {!isQuestionVerified && !showResults && !currentQuestionData.isAnnulled ? (
                         /* Before Verification: Show Vérifier only (hide for annulled questions) */
                         <div className="flex items-center gap-2">
@@ -2545,7 +2545,7 @@ const ExamPage = () => {
                               <Button
                                 variant="outline"
                                 onClick={(e) => handleResetQuestion(e)}
-                                className="gap-2 border-gray-300 hover:bg-gray-50"
+                                className="gap-2 border-border hover:bg-muted text-foreground"
                               >
                                 <RefreshCcw className="h-4 w-4" />
                                 Ressayer
@@ -2554,7 +2554,7 @@ const ExamPage = () => {
                             <Button
                               variant="outline"
                               onClick={() => setShowExplanation(true)}
-                              className="gap-2 text-amber-600 border-amber-300 hover:bg-amber-50"
+                              className="gap-2 text-amber-600 dark:text-amber-400 border-amber-300/60 dark:border-amber-700/60 hover:bg-amber-500/10"
                             >
                               <Lightbulb className="h-4 w-4" />
                               Explication
@@ -2563,7 +2563,7 @@ const ExamPage = () => {
                               variant="outline"
                               onClick={() => handlePremiumProFeature('Communauté', () => setShowCommunityModal(true))}
                               disabled={!hasPremiumProAccess}
-                              className="gap-2 text-green-600 border-green-300 hover:bg-green-50 disabled:opacity-50"
+                              className="gap-2 text-emerald-600 dark:text-emerald-400 border-emerald-300/60 dark:border-emerald-700/60 hover:bg-emerald-500/10 disabled:opacity-50"
                             >
                               <Users className="h-4 w-4" />
                               Community
@@ -2571,7 +2571,7 @@ const ExamPage = () => {
                             <Button
                               variant="outline"
                               onClick={() => setShowVueEnsemble(true)}
-                              className="gap-2 text-blue-600 border-blue-300 hover:bg-blue-50"
+                              className="gap-2 text-blue-600 dark:text-blue-400 border-blue-300/60 dark:border-blue-700/60 hover:bg-blue-500/10"
                             >
                               <LayoutGrid className="h-4 w-4" />
                               Vue d'ensemble
@@ -2581,22 +2581,22 @@ const ExamPage = () => {
                           {/* Status Display - Mobile Only */}
                           <div className="lg:hidden">
                             {verifiedQuestions[currentQuestion]?.isCorrect ? (
-                              <div className="bg-emerald-50 border-l-4 border-emerald-500 p-3 rounded-r-lg">
+                              <div className="bg-emerald-500/15 border-l-4 border-emerald-500 p-3 rounded-r-lg">
                                 <div className="flex items-center gap-2">
-                                  <CheckCircle className="h-5 w-5 text-emerald-600 flex-shrink-0" />
+                                  <CheckCircle className="h-5 w-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
                                   <div>
-                                    <p className="font-semibold text-emerald-800">Correct !</p>
-                                    <p className="text-sm text-emerald-700">Bonne réponse</p>
+                                    <p className="font-semibold text-emerald-800 dark:text-emerald-200">Correct !</p>
+                                    <p className="text-sm text-emerald-700 dark:text-emerald-300">Bonne réponse</p>
                                   </div>
                                 </div>
                               </div>
                             ) : (
-                              <div className="bg-red-50 border-l-4 border-red-500 p-3 rounded-r-lg">
+                              <div className="bg-rose-500/15 border-l-4 border-rose-500 p-3 rounded-r-lg">
                                 <div className="flex items-center gap-2">
-                                  <XCircle className="h-5 w-5 text-red-600 flex-shrink-0" />
+                                  <XCircle className="h-5 w-5 text-rose-600 dark:text-rose-400 flex-shrink-0" />
                                   <div>
-                                    <p className="font-semibold text-red-800">Incorrect</p>
-                                    <p className="text-sm text-red-700">Réessayez ou consultez l'explication</p>
+                                    <p className="font-semibold text-rose-800 dark:text-rose-200">Incorrect</p>
+                                    <p className="text-sm text-rose-700 dark:text-rose-300">Réessayez ou consultez l'explication</p>
                                   </div>
                                 </div>
                               </div>
@@ -2607,17 +2607,17 @@ const ExamPage = () => {
 
                       {/* Desktop Action Buttons - Inside Card */}
                       {isQuestionVerified && (
-                        <div className="hidden lg:flex flex-col gap-3 pt-4 border-t">
+                        <div className="hidden lg:flex flex-col gap-3 pt-4 border-t border-border">
                           {/* Status Display - Desktop */}
                           {verifiedQuestions[currentQuestion]?.isCorrect ? (
-                            <div className="flex items-center justify-center gap-2 px-4 py-2 bg-emerald-50 border border-emerald-200 rounded-lg">
-                              <CheckCircle className="h-5 w-5 text-emerald-600 flex-shrink-0" />
-                              <span className="font-semibold text-emerald-800">Réponse correcte !</span>
+                            <div className="flex items-center justify-center gap-2 px-4 py-2 bg-emerald-500/15 border border-emerald-500/30 rounded-lg text-emerald-800 dark:text-emerald-200">
+                              <CheckCircle className="h-5 w-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
+                              <span className="font-semibold">Réponse correcte !</span>
                             </div>
                           ) : (
-                            <div className="flex items-center justify-center gap-2 px-4 py-2 bg-red-50 border border-red-200 rounded-lg">
-                              <XCircle className="h-5 w-5 text-red-600 flex-shrink-0" />
-                              <span className="font-semibold text-red-800">Réponse incorrecte</span>
+                            <div className="flex items-center justify-center gap-2 px-4 py-2 bg-rose-500/15 border border-rose-500/30 rounded-lg text-rose-800 dark:text-rose-200">
+                              <XCircle className="h-5 w-5 text-rose-600 dark:text-rose-400 flex-shrink-0" />
+                              <span className="font-semibold">Réponse incorrecte</span>
                             </div>
                           )}
 
@@ -2627,7 +2627,7 @@ const ExamPage = () => {
                               <Button
                                 variant="outline"
                                 onClick={(e) => handleResetQuestion(e)}
-                                className="gap-2 border-gray-300 hover:bg-gray-50"
+                                className="gap-2 border-border hover:bg-muted text-foreground"
                               >
                                 <RefreshCcw className="h-4 w-4" />
                                 Ressayer
@@ -2636,7 +2636,7 @@ const ExamPage = () => {
                             <Button
                               variant="outline"
                               onClick={() => setShowExplanation(true)}
-                              className="gap-2 text-amber-600 border-amber-300 hover:bg-amber-50"
+                              className="gap-2 text-amber-600 dark:text-amber-400 border-amber-300/60 dark:border-amber-700/60 hover:bg-amber-500/10"
                             >
                               <Lightbulb className="h-4 w-4" />
                               Explication
@@ -2645,7 +2645,7 @@ const ExamPage = () => {
                               variant="outline"
                               onClick={() => handlePremiumProFeature('Communauté', () => setShowCommunityModal(true))}
                               disabled={!hasPremiumProAccess}
-                              className="gap-2 text-green-600 border-green-300 hover:bg-green-50 disabled:opacity-50"
+                              className="gap-2 text-emerald-600 dark:text-emerald-400 border-emerald-300/60 dark:border-emerald-700/60 hover:bg-emerald-500/10 disabled:opacity-50"
                             >
                               <Users className="h-4 w-4" />
                               Communauté
@@ -2691,7 +2691,7 @@ const ExamPage = () => {
                         "w-2 h-2 rounded-full transition-all",
                         actualIndex === currentQuestion
                           ? "w-6"
-                          : "bg-gray-300 hover:bg-gray-400"
+                          : "bg-muted-foreground/30 hover:bg-muted-foreground/50"
                       )}
                       style={
                         actualIndex === currentQuestion
@@ -2739,8 +2739,8 @@ const ExamPage = () => {
                 className={cn(
                   "p-3 rounded-xl transition-all active:scale-95",
                   currentQuestion === 0
-                    ? "bg-gray-100 text-gray-300 cursor-not-allowed"
-                    : "bg-gray-100 text-gray-700 dark:text-gray-300 cursor-pointer"
+                    ? "bg-muted/40 text-muted-foreground/30 cursor-not-allowed"
+                    : "bg-muted text-foreground hover:bg-muted/80 cursor-pointer"
                 )}
               >
                 <ChevronLeft className="h-5 w-5" />
@@ -2778,7 +2778,7 @@ const ExamPage = () => {
                   {/* Explanation button */}
                   <button
                     onClick={() => setShowExplanation(true)}
-                    className="flex-1 flex items-center justify-center gap-2 py-3 px-3 rounded-xl font-medium text-amber-700 bg-amber-100 transition-all active:scale-98"
+                    className="flex-1 flex items-center justify-center gap-2 py-3 px-3 rounded-xl font-medium text-amber-700 dark:text-amber-300 bg-amber-500/20 border border-amber-500/30 transition-all active:scale-98"
                   >
                     <Lightbulb className="h-5 w-5" />
                     Explication
@@ -2788,7 +2788,7 @@ const ExamPage = () => {
                   <button
                     type="button"
                     onClick={(e) => handleResetQuestion(e)}
-                    className="p-3 rounded-xl bg-gray-100 text-gray-600 transition-all active:scale-95"
+                    className="p-3 rounded-xl bg-muted text-foreground hover:bg-muted/80 transition-all active:scale-95"
                   >
                     <RefreshCcw className="h-5 w-5" />
                   </button>
@@ -2817,7 +2817,7 @@ const ExamPage = () => {
                 className={cn(
                   "p-3 rounded-xl transition-all active:scale-95",
                   currentQuestion === questions.length - 1
-                    ? "bg-gray-100 text-gray-300 cursor-not-allowed"
+                    ? "bg-muted/40 text-muted-foreground/30 cursor-not-allowed"
                     : "text-white cursor-pointer"
                 )}
                 style={
@@ -2848,7 +2848,7 @@ const ExamPage = () => {
               disabled={currentQuestion === 0}
               className={cn(
                 "p-3 rounded-xl transition-all active:scale-95",
-                currentQuestion === 0 ? "bg-gray-100 text-gray-300 cursor-not-allowed" : "bg-gray-100 text-gray-700 dark:text-gray-300 cursor-pointer"
+                currentQuestion === 0 ? "bg-muted/40 text-muted-foreground/30 cursor-not-allowed" : "bg-muted text-foreground hover:bg-muted/80 cursor-pointer"
               )}
             >
               <ChevronLeft className="h-5 w-5" />
@@ -2877,7 +2877,7 @@ const ExamPage = () => {
               disabled={currentQuestion === questions.length - 1}
               className={cn(
                 "p-3 rounded-xl transition-all active:scale-95",
-                currentQuestion === questions.length - 1 ? "bg-gray-100 text-gray-300 cursor-not-allowed" : "bg-gray-100 text-gray-700 dark:text-gray-300 cursor-pointer"
+                currentQuestion === questions.length - 1 ? "bg-muted/40 text-muted-foreground/30 cursor-not-allowed" : "bg-muted text-foreground hover:bg-muted/80 cursor-pointer"
               )}
             >
               <ChevronRight className="h-5 w-5" />
@@ -2901,50 +2901,50 @@ const ExamPage = () => {
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="absolute bottom-0 left-0 right-0 bg-white dark:bg-slate-900 rounded-t-3xl shadow-2xl max-h-[75vh] flex flex-col"
+              className="absolute bottom-0 left-0 right-0 bg-card text-card-foreground border-t border-border rounded-t-3xl shadow-2xl max-h-[75vh] flex flex-col"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Handle */}
               <div className="flex justify-center pt-3 pb-2">
-                <div className="w-10 h-1 bg-gray-300 rounded-full" />
+                <div className="w-10 h-1 bg-muted-foreground/30 rounded-full" />
               </div>
 
               {/* Header */}
-              <div className="flex items-center justify-between px-4 pb-3 border-b">
+              <div className="flex items-center justify-between px-4 pb-3 border-b border-border">
                 <div>
-                  <h3 className="font-bold text-lg text-gray-900">Questions</h3>
-                  <p className="text-sm text-gray-500">
+                  <h3 className="font-bold text-lg text-foreground">Questions</h3>
+                  <p className="text-sm text-muted-foreground">
                     {verifiedCount} vérifiées • {correctCount} correctes
                   </p>
                 </div>
                 <button
                   onClick={() => setShowMobileQuestionNav(false)}
-                  className="p-2 rounded-full bg-gray-100"
+                  className="p-2 rounded-full bg-muted hover:bg-muted/80 text-foreground"
                 >
-                  <X className="h-5 w-5 text-gray-600" />
+                  <X className="h-5 w-5" />
                 </button>
               </div>
 
               {/* Legend */}
-              <div className="flex items-center justify-center gap-3 py-2 px-4 bg-gray-50 text-[10px]">
+              <div className="flex items-center justify-center gap-3 py-2 px-4 bg-muted/40 border-b border-border text-muted-foreground text-[10px]">
                 <span className="flex items-center gap-1">
-                  <div className="w-3 h-3 rounded-full bg-gray-200 border border-gray-300" />
+                  <div className="w-3 h-3 rounded-full bg-muted border border-border" />
                   non visité
                 </span>
                 <span className="flex items-center gap-1">
-                  <div className="w-3 h-3 rounded-full bg-orange-200 border border-orange-400" />
+                  <div className="w-3 h-3 rounded-full bg-amber-500/20 border border-amber-500/40" />
                   visité
                 </span>
                 <span className="flex items-center gap-1">
-                  <div className="w-3 h-3 rounded-full bg-green-200 border border-green-400" />
+                  <div className="w-3 h-3 rounded-full bg-emerald-500/20 border border-emerald-500/40" />
                   correct
                 </span>
                 <span className="flex items-center gap-1">
-                  <div className="w-3 h-3 rounded-full bg-red-200 border border-red-400" />
+                  <div className="w-3 h-3 rounded-full bg-rose-500/20 border border-rose-500/40" />
                   incorrect
                 </span>
                 <span className="flex items-center gap-1">
-                  <div className="w-3 h-3 rounded-full bg-purple-200 border border-purple-400" />
+                  <div className="w-3 h-3 rounded-full bg-purple-500/20 border border-purple-500/40" />
                   surligné
                 </span>
               </div>
@@ -2966,11 +2966,11 @@ const ExamPage = () => {
                         className={cn(
                           "relative aspect-square rounded-xl text-sm font-semibold transition-all active:scale-95 border-2",
                           isCurrent && "ring-2 ring-offset-2",
-                          status === 'correct' && "bg-green-100 border-green-300 text-green-700",
-                          status === 'incorrect' && "bg-red-100 border-red-300 text-red-700",
-                          status === 'flagged' && "bg-purple-100 border-purple-300 text-purple-700",
-                          status === 'visited' && "bg-orange-100 border-orange-300 text-orange-700",
-                          status === 'unanswered' && "bg-gray-50 border-gray-200 dark:border-gray-700 text-gray-500"
+                          status === 'correct' && "bg-emerald-500/20 border-emerald-500/40 text-emerald-700 dark:text-emerald-300",
+                          status === 'incorrect' && "bg-rose-500/20 border-rose-500/40 text-rose-700 dark:text-rose-300",
+                          status === 'flagged' && "bg-purple-500/20 border-purple-500/40 text-purple-700 dark:text-purple-300",
+                          status === 'visited' && "bg-amber-500/20 border-amber-500/40 text-amber-700 dark:text-amber-300",
+                          status === 'unanswered' && "bg-muted/60 border-border text-muted-foreground"
                         )}
                         style={
                           isCurrent
@@ -2990,7 +2990,7 @@ const ExamPage = () => {
 
               {/* Submit button */}
               {!showResults && (
-                <div className="p-4 border-t bg-white dark:bg-slate-900">
+                <div className="p-4 border-t border-border bg-card">
                   <button
                     onClick={() => {
                       setShowMobileQuestionNav(false);
@@ -3039,41 +3039,41 @@ const ExamPage = () => {
               animate={{ x: 0 }}
               exit={{ x: '-100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="absolute left-0 top-0 bottom-0 w-80 max-w-[85vw] bg-white dark:bg-slate-900 shadow-2xl"
+              className="absolute left-0 top-0 bottom-0 w-80 max-w-[85vw] bg-card text-card-foreground shadow-2xl border-r border-border"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Header */}
-              <div className="border-b bg-gradient-to-br from-orange-50 to-orange-100/50">
-                <div className="flex items-center justify-between p-3 border-b bg-white dark:bg-slate-900/50">
-                  <h3 className="font-semibold text-gray-900 text-sm">{t('dashboard:questions') || 'Questions'}</h3>
+              <div className="border-b border-border bg-muted/30">
+                <div className="flex items-center justify-between p-3 border-b border-border bg-card">
+                  <h3 className="font-semibold text-foreground text-sm">{t('dashboard:questions') || 'Questions'}</h3>
                   <Button variant="ghost" size="icon" onClick={() => setShowSidebar(false)} className="h-8 w-8">
                     <X className="h-5 w-5" />
                   </Button>
                 </div>
 
                 {/* Legend Section */}
-                <div className="border-b">
+                <div className="border-b border-border">
                   <div className="px-4 py-3">
                     <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[10px]">
                       <div className="flex items-center gap-1">
-                        <div className="w-3 h-3 rounded bg-gray-100 border border-gray-300"></div>
-                        <span className="text-gray-500">non visité</span>
+                        <div className="w-3 h-3 rounded bg-muted border border-border"></div>
+                        <span className="text-muted-foreground">non visité</span>
                       </div>
                       <div className="flex items-center gap-1">
-                        <div className="w-3 h-3 rounded bg-orange-100 border border-orange-300"></div>
-                        <span className="text-gray-500">visité</span>
+                        <div className="w-3 h-3 rounded bg-amber-500/20 border border-amber-500/40"></div>
+                        <span className="text-muted-foreground">visité</span>
                       </div>
                       <div className="flex items-center gap-1">
-                        <div className="w-3 h-3 rounded bg-green-100 border border-green-300"></div>
-                        <span className="text-gray-500">correct</span>
+                        <div className="w-3 h-3 rounded bg-emerald-500/20 border border-emerald-500/40"></div>
+                        <span className="text-muted-foreground">correct</span>
                       </div>
                       <div className="flex items-center gap-1">
-                        <div className="w-3 h-3 rounded bg-red-100 border border-red-300"></div>
-                        <span className="text-gray-500">incorrect</span>
+                        <div className="w-3 h-3 rounded bg-rose-500/20 border border-rose-500/40"></div>
+                        <span className="text-muted-foreground">incorrect</span>
                       </div>
                       <div className="flex items-center gap-1">
-                        <div className="w-3 h-3 rounded bg-purple-100 border border-purple-300"></div>
-                        <span className="text-gray-500">surligné</span>
+                        <div className="w-3 h-3 rounded bg-purple-500/20 border border-purple-500/40"></div>
+                        <span className="text-muted-foreground">surligné</span>
                       </div>
                     </div>
                   </div>
@@ -3088,7 +3088,7 @@ const ExamPage = () => {
                     return (
                       <div key={sessionName} className="space-y-1">
                         <button
-                          className="w-full flex items-center justify-between p-2.5 rounded-lg hover:bg-gray-50 active:bg-gray-100 transition-colors group"
+                          className="w-full flex items-center justify-between p-2.5 rounded-lg hover:bg-muted/50 active:bg-muted transition-colors group"
                           onClick={() => {
                             const newCollapsed = new Set(collapsedSessions);
                             if (newCollapsed.has(sessionName)) {
@@ -3104,12 +3104,12 @@ const ExamPage = () => {
                               "transition-transform duration-200 shrink-0",
                               !isCollapsed && "rotate-90"
                             )}>
-                              <ChevronRight className="h-4 w-4 text-gray-400" />
+                              <ChevronRight className="h-4 w-4 text-muted-foreground" />
                             </div>
                             <Calendar className="h-4 w-4 text-gray-500 shrink-0" />
-                            <span className="text-sm font-medium text-gray-700 dark:text-gray-300 break-words line-clamp-2">{sessionName}</span>
+                            <span className="text-sm font-medium text-foreground break-words line-clamp-2">{sessionName}</span>
                           </div>
-                          <Badge variant="outline" className="bg-gray-50">{sessionQuestions.length}</Badge>
+                          <Badge variant="outline" className="bg-muted text-muted-foreground">{sessionQuestions.length}</Badge>
                         </button>
 
                         {!isCollapsed && (
@@ -3128,8 +3128,8 @@ const ExamPage = () => {
                                   className={cn(
                                     "w-full flex items-center gap-2.5 px-2.5 py-2 rounded-md text-sm font-medium transition-all",
                                     "lg:flex-col lg:items-center lg:justify-center lg:gap-1 lg:px-2 lg:py-1.5 lg:text-xs",
-                                    isCurrent && "bg-blue-50 border-l-2 border-blue-500 lg:border-l-0 lg:ring-2 lg:ring-blue-500",
-                                    !isCurrent && "hover:bg-gray-50 active:bg-gray-100"
+                                    isCurrent && "bg-primary/10 border-l-2 border-primary lg:border-l-0 lg:ring-2 lg:ring-primary",
+                                    !isCurrent && "hover:bg-muted/50 active:bg-muted"
                                   )}
                                   onClick={() => {
                                     goToQuestion(globalIndex);
@@ -3138,15 +3138,15 @@ const ExamPage = () => {
                                 >
                                   <div className={cn(
                                     "w-6 h-6 rounded flex items-center justify-center shrink-0 text-xs border font-medium",
-                                    status === 'correct' && "bg-green-100 border-green-300 text-green-700",
-                                    status === 'incorrect' && "bg-red-100 border-red-300 text-red-700",
-                                    status === 'flagged' && "bg-purple-100 border-purple-300 text-purple-700",
-                                    status === 'visited' && "bg-orange-100 border-orange-300 text-orange-700",
-                                    status === 'unanswered' && "bg-gray-100 border-gray-300 text-gray-600"
+                                    status === 'correct' && "bg-emerald-500/20 border-emerald-500/40 text-emerald-700 dark:text-emerald-300",
+                                    status === 'incorrect' && "bg-rose-500/20 border-rose-500/40 text-rose-700 dark:text-rose-300",
+                                    status === 'flagged' && "bg-purple-500/20 border-purple-500/40 text-purple-700 dark:text-purple-300",
+                                    status === 'visited' && "bg-amber-500/20 border-amber-500/40 text-amber-700 dark:text-amber-300",
+                                    status === 'unanswered' && "bg-muted border-border text-muted-foreground"
                                   )}>
                                     {shouldShowNumberInBox(questionData) ? (questionData?.displayNumber || idx + 1) : ''}
                                   </div>
-                                  <span className="flex-1 text-left text-gray-600 lg:flex-none lg:text-center lg:text-[10px] lg:leading-tight">Q{questionData?.displayNumber || idx + 1}</span>
+                                  <span className="flex-1 text-left text-muted-foreground lg:flex-none lg:text-center lg:text-[10px] lg:leading-tight">Q{questionData?.displayNumber || idx + 1}</span>
                                   {isFlagged && (
                                     <Flag className="h-3 w-3 fill-purple-500 text-purple-500 shrink-0" />
                                   )}
@@ -3163,10 +3163,10 @@ const ExamPage = () => {
 
               {/* Progress Bar - Bottom */}
               {!showResults && (
-                <div className="border-t p-4 bg-white dark:bg-slate-900">
+                <div className="border-t border-border p-4 bg-card">
                   <div className="space-y-2">
                     <div className="flex items-center justify-between text-sm">
-                      <span className="font-medium text-gray-700 dark:text-gray-300">Vérifiées</span>
+                      <span className="font-medium text-foreground">Vérifiées</span>
                       <span className="font-semibold" style={{ color: moduleColor }}>
                         {Math.round((verifiedCount / questions.length) * 100)}%
                       </span>
@@ -3174,7 +3174,7 @@ const ExamPage = () => {
                     <div className="flex items-center justify-between text-xs text-gray-500">
                       <span>{verifiedCount} / {questions.length} vérifiées</span>
                     </div>
-                    <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                    <div className="h-2 bg-muted rounded-full overflow-hidden">
                       <div
                         className="h-full transition-all duration-300 rounded-full"
                         style={{
@@ -3189,7 +3189,7 @@ const ExamPage = () => {
 
               {/* Mobile Results */}
               {showResults && (
-                <div className="border-t p-4 bg-gray-50">
+                <div className="border-t border-border p-4 bg-card">
                   <div className="flex items-center justify-between mb-3">
                     <span className="font-medium">{t('dashboard:your_score') || 'Your Score'}</span>
                     <span className="text-2xl font-bold text-blue-600">
@@ -3221,17 +3221,17 @@ const ExamPage = () => {
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-md w-full p-6"
+              className="bg-card text-card-foreground border border-border rounded-2xl shadow-2xl max-w-md w-full p-6"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="text-center space-y-4">
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-100 text-blue-600">
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 text-primary">
                   <CheckCircle className="h-8 w-8" />
                 </div>
-                <h3 className="text-xl font-bold text-gray-900">
+                <h3 className="text-xl font-bold text-foreground">
                   {t('dashboard:confirm_submit') || 'Submit Exam?'}
                 </h3>
-                <div className="space-y-2 text-sm text-gray-600">
+                <div className="space-y-2 text-sm text-muted-foreground">
                   <p>
                     {t('dashboard:answered_questions') || 'You have answered'}{' '}
                     <strong>{answeredCount}</strong> {t('common:of') || 'of'}{' '}
@@ -3285,15 +3285,15 @@ const ExamPage = () => {
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-md w-full p-6"
+              className="bg-card text-card-foreground border border-border rounded-2xl shadow-2xl max-w-md w-full p-6"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                    <Keyboard className="h-5 w-5 text-blue-600" />
+                  <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
+                    <Keyboard className="h-5 w-5 text-primary" />
                   </div>
-                  <h3 className="text-xl font-bold text-gray-900">
+                  <h3 className="text-xl font-bold text-foreground">
                     {t('dashboard:keyboard_shortcuts') || 'Keyboard Shortcuts'}
                   </h3>
                 </div>
@@ -3312,12 +3312,12 @@ const ExamPage = () => {
                   { keys: ['Esc'], action: t('dashboard:close_modal') || 'Close modal' },
                 ].map(({ keys, action }) => (
                   <div key={action} className="flex items-center justify-between py-2">
-                    <span className="text-gray-600">{action}</span>
+                    <span className="text-foreground text-sm">{action}</span>
                     <div className="flex gap-1">
                       {keys.map((key) => (
                         <kbd
                           key={key}
-                          className="px-2 py-1 bg-gray-100 border rounded text-sm font-mono"
+                          className="px-2 py-1 bg-muted border border-border rounded text-sm font-mono text-foreground"
                         >
                           {key}
                         </kbd>
@@ -3412,7 +3412,7 @@ const ExamPage = () => {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white dark:bg-slate-900 rounded-xl shadow-2xl w-full max-w-6xl max-h-[90vh] flex flex-col"
+              className="bg-card text-card-foreground border border-border rounded-xl shadow-2xl w-full max-w-6xl max-h-[90vh] flex flex-col"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Modal Header */}
@@ -3420,11 +3420,11 @@ const ExamPage = () => {
                 <div className="flex items-center gap-2 sm:gap-3">
                   <LayoutGrid className="h-5 w-5 sm:h-6 sm:w-6" />
                   <h2 className="text-base sm:text-xl font-bold">Vue d'ensemble</h2>
-                  <Badge className="bg-white dark:bg-slate-900/20 text-white text-[10px] sm:text-xs">{questions.length} questions</Badge>
+                  <Badge className="bg-white/20 text-white text-[10px] sm:text-xs">{questions.length} questions</Badge>
                 </div>
                 <button
                   onClick={() => setShowVueEnsemble(false)}
-                  className="p-1.5 sm:p-2 rounded-full hover:bg-white dark:bg-slate-900/20 transition-colors"
+                  className="p-1.5 sm:p-2 rounded-full hover:bg-white/20 transition-colors"
                 >
                   <X className="h-4 w-4 sm:h-5 sm:w-5" />
                 </button>
@@ -3444,12 +3444,12 @@ const ExamPage = () => {
                         key={index}
                         className={cn(
                           "p-4 rounded-lg border-2 cursor-pointer transition-all hover:shadow-lg",
-                          status === 'correct' && "border-emerald-400 bg-emerald-50",
-                          status === 'incorrect' && "border-red-400 bg-red-50",
-                          status === 'answered' && "border-blue-300 bg-blue-50/50",
-                          status === 'visited' && "border-orange-300 bg-orange-50/50",
-                          status === 'flagged' && "border-purple-300 bg-purple-50",
-                          status === 'unanswered' && "border-gray-200 dark:border-gray-700 bg-gray-50",
+                          status === 'correct' && "border-emerald-500/50 bg-emerald-500/10",
+                          status === 'incorrect' && "border-rose-500/50 bg-rose-500/10",
+                          status === 'answered' && "border-primary/50 bg-primary/10",
+                          status === 'visited' && "border-amber-500/50 bg-amber-500/10",
+                          status === 'flagged' && "border-purple-500/50 bg-purple-500/10",
+                          status === 'unanswered' && "border-border bg-muted/20 hover:bg-muted/40",
                           index === currentQuestion && "ring-2 ring-indigo-500"
                         )}
                         onClick={() => {
@@ -3459,7 +3459,7 @@ const ExamPage = () => {
                       >
                         {/* Question Header */}
                         <div className="flex items-start justify-between mb-3">
-                          <span className="font-semibold text-gray-700 dark:text-gray-300 text-sm">
+                          <span className="font-semibold text-foreground text-sm">
                             {index + 1}.) {q.question?.substring(0, 80)}{q.question?.length > 80 ? '...' : ''}
                           </span>
                         </div>
@@ -3476,19 +3476,19 @@ const ExamPage = () => {
                                 key={optIdx}
                                 className={cn(
                                   "flex items-center gap-2 p-2 rounded-lg border text-sm transition-colors",
-                                  !showResult && !isSelected && "border-gray-200 dark:border-gray-700 bg-white dark:bg-slate-900",
-                                  !showResult && isSelected && "border-blue-400 bg-blue-50",
-                                  showResult && isCorrect && "border-emerald-400 bg-emerald-50",
-                                  showResult && isSelected && !isCorrect && "border-red-400 bg-red-50"
+                                  !showResult && !isSelected && "border-border bg-card text-foreground",
+                                  !showResult && isSelected && "border-primary bg-primary/10 text-foreground",
+                                  showResult && isCorrect && "border-emerald-500 bg-emerald-500/15 text-emerald-950 dark:text-emerald-200",
+                                  showResult && isSelected && !isCorrect && "border-rose-500 bg-rose-500/15 text-rose-950 dark:text-rose-200"
                                 )}
                               >
                                 {/* Checkbox */}
                                 <div className={cn(
                                   "w-5 h-5 rounded border-2 flex items-center justify-center shrink-0",
-                                  !showResult && !isSelected && "border-gray-300 bg-white dark:bg-slate-900",
-                                  !showResult && isSelected && "border-blue-500 bg-blue-500",
+                                  !showResult && !isSelected && "border-border bg-muted",
+                                  !showResult && isSelected && "border-primary bg-primary",
                                   showResult && isCorrect && "border-emerald-500 bg-emerald-500",
-                                  showResult && isSelected && !isCorrect && "border-red-500 bg-red-500"
+                                  showResult && isSelected && !isCorrect && "border-rose-500 bg-rose-500"
                                 )}>
                                   {(isSelected || (showResult && isCorrect)) && (
                                     <Check className="h-3 w-3 text-white" />
@@ -3498,8 +3498,8 @@ const ExamPage = () => {
                                 {/* Option Label */}
                                 <span className={cn(
                                   "font-medium",
-                                  showResult && isCorrect && "text-emerald-700",
-                                  showResult && isSelected && !isCorrect && "text-red-700"
+                                  showResult && isCorrect && "text-emerald-700 dark:text-emerald-300",
+                                  showResult && isSelected && !isCorrect && "text-rose-700 dark:text-rose-300"
                                 )}>
                                   {String.fromCharCode(65 + optIdx)}-
                                 </span>
@@ -3507,8 +3507,8 @@ const ExamPage = () => {
                                 {/* Option Text */}
                                 <span className={cn(
                                   "flex-1 truncate",
-                                  showResult && isCorrect && "text-emerald-700",
-                                  showResult && isSelected && !isCorrect && "text-red-700 line-through"
+                                  showResult && isCorrect && "text-emerald-700 dark:text-emerald-300",
+                                  showResult && isSelected && !isCorrect && "text-rose-700 dark:text-rose-300 line-through"
                                 )}>
                                   {option.text}
                                 </span>
@@ -3523,23 +3523,23 @@ const ExamPage = () => {
               </div>
 
               {/* Modal Footer */}
-              <div className="p-3 sm:p-4 border-t bg-gray-50 rounded-b-xl shrink-0">
+              <div className="p-3 sm:p-4 border-t border-border bg-card rounded-b-xl shrink-0">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                  <div className="flex items-center flex-wrap gap-3 sm:gap-4 text-xs sm:text-sm text-gray-600">
+                  <div className="flex items-center flex-wrap gap-3 sm:gap-4 text-xs sm:text-sm text-muted-foreground">
                     <span className="flex items-center gap-1">
-                      <div className="w-4 h-4 rounded bg-emerald-100 border-2 border-emerald-400 flex items-center justify-center">
+                      <div className="w-4 h-4 rounded bg-emerald-500/20 border-2 border-emerald-500 flex items-center justify-center">
                         <Check className="h-2.5 w-2.5 text-emerald-600" />
                       </div>
                       Correct
                     </span>
                     <span className="flex items-center gap-1">
-                      <div className="w-4 h-4 rounded bg-red-100 border-2 border-red-400 flex items-center justify-center">
+                      <div className="w-4 h-4 rounded bg-rose-500/20 border-2 border-rose-500 flex items-center justify-center">
                         <X className="h-2.5 w-2.5 text-red-600" />
                       </div>
                       Incorrect
                     </span>
                     <span className="flex items-center gap-1">
-                      <div className="w-4 h-4 rounded bg-blue-100 border-2 border-blue-400"></div>
+                      <div className="w-4 h-4 rounded bg-primary/20 border-2 border-primary"></div>
                       Sélectionné
                     </span>
                   </div>
@@ -3571,21 +3571,21 @@ const ExamPage = () => {
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-md sm:max-w-lg w-full p-4 sm:p-6"
+              className="bg-card text-card-foreground border border-border rounded-2xl shadow-2xl max-w-md sm:max-w-lg w-full p-4 sm:p-6"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="text-center space-y-4">
-                <div className="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-amber-100 text-amber-600">
+                <div className="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400">
                   {isSavingBeforeExit ? (
                     <div className="w-6 h-6 sm:w-8 sm:h-8 border-4 border-amber-600 border-t-transparent rounded-full animate-spin" />
                   ) : (
                     <AlertCircle className="h-6 w-6 sm:h-8 sm:w-8" />
                   )}
                 </div>
-                <h3 className="text-lg sm:text-xl font-bold text-gray-900">
+                <h3 className="text-lg sm:text-xl font-bold text-foreground">
                   {isSavingBeforeExit ? 'Enregistrement en cours...' : 'Modifications non enregistrées'}
                 </h3>
-                <p className="text-xs sm:text-sm text-gray-600">
+                <p className="text-xs sm:text-sm text-muted-foreground">
                   {isSavingBeforeExit
                     ? 'Veuillez patienter pendant que nous enregistrons vos réponses...'
                     : 'Voulez-vous enregistrer vos réponses avant de quitter ?'}
@@ -3636,7 +3636,7 @@ const ExamPage = () => {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white dark:bg-slate-900 rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] sm:max-h-[85vh] flex flex-col"
+              className="bg-card text-card-foreground border border-border rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] sm:max-h-[85vh] flex flex-col"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Header */}
@@ -3649,7 +3649,7 @@ const ExamPage = () => {
                 </div>
                 <button
                   onClick={() => setShowImageGallery(false)}
-                  className="p-1.5 sm:p-2 rounded-full hover:bg-white dark:bg-slate-900/20 transition-colors"
+                  className="p-1.5 sm:p-2 rounded-full hover:bg-white/20 transition-colors"
                 >
                   <X className="h-4 w-4 sm:h-5 sm:w-5" />
                 </button>
@@ -3701,13 +3701,13 @@ const ExamPage = () => {
                     if (allImages.length === 0) {
                       return (
                         <div className="text-center py-8 sm:py-12">
-                          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-3 sm:mb-4">
-                            <Image className="h-8 w-8 sm:h-10 sm:w-10 text-gray-400" />
+                          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-muted flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                            <Image className="h-8 w-8 sm:h-10 sm:w-10 text-muted-foreground" />
                           </div>
-                          <h4 className="text-base sm:text-lg font-medium text-gray-700 dark:text-gray-300 mb-2">
+                          <h4 className="text-base sm:text-lg font-medium text-foreground mb-2">
                             Aucune image dans cet examen
                           </h4>
-                          <p className="text-gray-500 text-xs sm:text-sm">
+                          <p className="text-muted-foreground text-xs sm:text-sm">
                             Cet examen ne contient pas d'images.
                           </p>
                         </div>
@@ -3719,7 +3719,7 @@ const ExamPage = () => {
                         {allImages.map((img, idx) => (
                           <div
                             key={idx}
-                            className="relative group cursor-pointer rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-all"
+                            className="relative group cursor-pointer rounded-lg overflow-hidden border border-border hover:shadow-lg transition-all"
                             onClick={() => {
                               goToQuestion(img.questionIndex);
                               setShowImageGallery(false);
@@ -3755,12 +3755,12 @@ const ExamPage = () => {
               </ScrollArea>
 
               {/* Footer */}
-              <div className="p-3 sm:p-4 border-t bg-gray-50 rounded-b-xl">
+              <div className="p-3 sm:p-4 border-t border-border bg-card rounded-b-xl">
                 <div className="flex justify-end">
                   <Button
                     variant="outline"
                     onClick={() => setShowImageGallery(false)}
-                    className="w-full sm:w-auto"
+                    className="w-full sm:w-auto border-border text-foreground hover:bg-muted"
                   >
                     Fermer
                   </Button>
@@ -3794,7 +3794,7 @@ const ExamPage = () => {
               />
               <button
                 onClick={() => setShowImageZoom(false)}
-                className="absolute top-4 right-4 p-2 rounded-full bg-white dark:bg-slate-900/90 hover:bg-white dark:bg-slate-900 text-black transition-colors shadow-lg"
+                className="absolute top-4 right-4 p-2 rounded-full bg-card hover:bg-card/80 text-foreground transition-colors shadow-lg border border-border"
               >
                 <X className="h-6 w-6" />
               </button>

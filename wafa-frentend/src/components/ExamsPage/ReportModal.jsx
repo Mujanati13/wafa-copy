@@ -71,16 +71,16 @@ const ReportModal = ({ isOpen, onClose, questionId }) => {
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
-            className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-md w-full p-6"
+            className="bg-card text-card-foreground border border-border rounded-2xl shadow-2xl max-w-md w-full p-6"
             onClick={(e) => e.stopPropagation()}
           >
             {success ? (
               <div className="text-center py-8">
                 <div className="text-6xl mb-4">✅</div>
-                <h3 className="text-2xl font-bold text-gray-800">
+                <h3 className="text-2xl font-bold text-foreground">
                   Signalement envoyé!
                 </h3>
-                <p className="text-gray-600 mt-2">
+                <p className="text-muted-foreground mt-2">
                   Merci de nous aider à améliorer la qualité
                 </p>
               </div>
@@ -88,16 +88,16 @@ const ReportModal = ({ isOpen, onClose, questionId }) => {
               <>
                 <div className="flex items-center justify-between mb-6">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                    <div className="w-10 h-10 bg-red-500/20 rounded-full flex items-center justify-center">
                       <FaFlag className="text-red-600" />
                     </div>
-                    <h3 className="text-xl font-bold text-gray-800">
+                    <h3 className="text-xl font-bold text-foreground">
                       Signaler un problème
                     </h3>
                   </div>
                   <button
                     onClick={onClose}
-                    className="text-gray-400 hover:text-gray-600 transition-colors"
+                    className="text-muted-foreground hover:text-foreground transition-colors"
                   >
                     <FaTimes size={20} />
                   </button>
@@ -105,7 +105,7 @@ const ReportModal = ({ isOpen, onClose, questionId }) => {
 
                 <form onSubmit={handleSubmitClick} className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-foreground mb-2">
                       Raison du signalement
                     </label>
                     <div className="grid grid-cols-2 gap-2">
@@ -116,7 +116,7 @@ const ReportModal = ({ isOpen, onClose, questionId }) => {
                           onClick={() => setReason(r)}
                           className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${reason === r
                             ? "bg-red-500 text-white shadow-md"
-                            : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                            : "bg-muted text-foreground hover:bg-muted/80"
                             }`}
                         >
                           {r}
@@ -126,13 +126,13 @@ const ReportModal = ({ isOpen, onClose, questionId }) => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-foreground mb-2">
                       Description (optionnel)
                     </label>
                     <textarea
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none"
+                      className="w-full px-3 py-2 bg-background text-foreground border border-border rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none"
                       rows={4}
                       placeholder="Décrivez le problème..."
                     />
@@ -164,7 +164,7 @@ const ReportModal = ({ isOpen, onClose, questionId }) => {
                   initial={{ scale: 0.9, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   exit={{ scale: 0.9, opacity: 0 }}
-                  className="bg-white dark:bg-slate-900 rounded-xl shadow-2xl max-w-sm w-full overflow-hidden"
+                  className="bg-card text-card-foreground border border-border rounded-xl shadow-2xl max-w-sm w-full overflow-hidden"
                   onClick={(e) => e.stopPropagation()}
                 >
                   {/* Red Header */}
@@ -176,7 +176,7 @@ const ReportModal = ({ isOpen, onClose, questionId }) => {
                       <FaTimes size={18} />
                     </button>
                     <div className="flex flex-col items-center text-white">
-                      <div className="w-16 h-16 bg-white dark:bg-slate-900 rounded-full flex items-center justify-center mb-3">
+                      <div className="w-16 h-16 bg-card rounded-full flex items-center justify-center mb-3">
                         <TriangleAlert className="h-10 w-10 text-red-500" />
                       </div>
                       <h3 className="text-2xl font-bold">WARNING!</h3>
@@ -185,10 +185,10 @@ const ReportModal = ({ isOpen, onClose, questionId }) => {
 
                   {/* Content */}
                   <div className="px-6 py-5 text-center">
-                    <p className="text-gray-700 font-medium mb-3">
+                    <p className="text-foreground font-medium mb-3">
                       Aucun contenu (text, image, pdf ...)
                     </p>
-                    <p className="text-gray-600 text-sm mb-4">
+                    <p className="text-muted-foreground text-sm mb-4">
                       - illégal qui est n'est pas bien (pornographique ...) ou les chose qui est hors sujet, n'est autorisé.
                     </p>
                     <p className="text-red-600 font-semibold text-sm">
