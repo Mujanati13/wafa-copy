@@ -196,5 +196,35 @@ function SectionHeading({ eyebrow, title, copy: description, centered = false })
 function MiniStat({ label, value }) { return <div className="rounded-xl bg-white/10 p-3"><p className="text-[11px] text-blue-100">{label}</p><p className="mt-1 text-lg font-bold">{value}</p></div>; }
 function Metric({ value, label }) { return <div className="px-3 py-1"><p className="text-xl font-bold text-primary sm:text-2xl">{value}</p><p className="mt-1 text-xs text-muted-foreground sm:text-sm">{label}</p></div>; }
 function PricingSkeleton() { return <>{[1, 2, 3].map((item) => <div key={item} className="h-96 animate-pulse rounded-2xl border border-border bg-muted" />)}</>; }
-function PricingCard({ plan, popular, text, onChoose }) { const features = (plan.features || plan.featureList || []).map((feature) => typeof feature === "string" ? feature : feature.text).filter(Boolean); return <article className={`relative rounded-2xl border bg-card p-6 ${popular ? "border-cyan-400 shadow-xl shadow-cyan-950/10" : "border-border"}`}>{popular && <span className="absolute -top-3 left-6 rounded-full bg-cyan-500 px-3 py-1 text-xs font-bold text-white">{text.popular}</span>}<p className="text-sm font-semibold text-cyan-700 dark:text-cyan-300">{plan.name || "IMRS Premium"}</p><div className="mt-5 flex items-baseline gap-1"><span className="text-4xl font-bold">{plan.price ?? plan.monthlyPrice ?? "—"}</span>{plan.price && <span className="text-sm text-muted-foreground">MAD {text.perMonth}</span>}</div><p className="mt-4 min-h-12 text-sm leading-6 text-muted-foreground">{plan.description || text.includes}</p><Button onClick={onChoose} className="mt-6 w-full" variant={popular ? "default" : "outline"}>{text.choose}</Button><ul className="mt-6 space-y-3 border-t border-border pt-5 text-sm">{features.slice(0, 6).map((feature, index) => <li key={`${feature}-${index}`} className="flex gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0 text-cyan-600" />{feature}</li>)}</ul></article>; }
+function PricingCard({ plan, popular, text, onChoose }) {
+  const features = (plan.features || plan.featureList || [])
+    .map((feature) => ({
+      text: typeof feature === "string" ? feature : feature?.text,
+      included: typeof feature === "string" || feature?.included !== false,
+    }))
+    .filter((feature) => feature.text);
+
+  return (
+    <article className={`relative rounded-2xl border bg-card p-6 ${popular ? "border-cyan-400 shadow-xl shadow-cyan-950/10" : "border-border"}`}>
+      {popular && <span className="absolute -top-3 left-6 rounded-full bg-cyan-500 px-3 py-1 text-xs font-bold text-white">{text.popular}</span>}
+      <p className="text-sm font-semibold text-cyan-700 dark:text-cyan-300">{plan.name || "IMRS Premium"}</p>
+      <div className="mt-5 flex items-baseline gap-1">
+        <span className="text-4xl font-bold">{plan.price ?? plan.monthlyPrice ?? "—"}</span>
+        {plan.price && <span className="text-sm text-muted-foreground">MAD {text.perMonth}</span>}
+      </div>
+      <p className="mt-4 min-h-12 text-sm leading-6 text-muted-foreground">{plan.description || text.includes}</p>
+      <Button onClick={onChoose} className="mt-6 w-full" variant={popular ? "default" : "outline"}>{text.choose}</Button>
+      <ul className="mt-6 space-y-3 border-t border-border pt-5 text-sm">
+        {features.slice(0, 6).map((feature, index) => (
+          <li key={`${feature.text}-${index}`} className={`flex gap-2 ${feature.included ? "" : "opacity-60"}`}>
+            {feature.included
+              ? <Check className="mt-0.5 h-4 w-4 shrink-0 text-cyan-600" />
+              : <X className="mt-0.5 h-4 w-4 shrink-0 text-red-500" />}
+            <span className={feature.included ? "" : "text-muted-foreground line-through"}>{feature.text}</span>
+          </li>
+        ))}
+      </ul>
+    </article>
+  );
+}
 function DefaultPlans({ text, onChoose }) { return ["Découverte", "Premium", "Premium annuel"].map((name, index) => <PricingCard key={name} popular={index === 1} onChoose={onChoose} text={text} plan={{ name, price: index === 0 ? 0 : index === 1 ? 49 : 399, description: index === 0 ? "Pour découvrir votre premier semestre." : "Pour réviser sans interruption.", features: ["Accès aux QCM", "Suivi de progression", "Ressources de révision"] }} />); }
