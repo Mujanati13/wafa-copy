@@ -368,10 +368,10 @@ const StatisticsPage = () => {
         whileHover={{ scale: 1.02, y: -2 }}
         transition={{ duration: 0.2 }}
         onClick={onClick}
-        className={`bg-blue-50/80 rounded-xl p-4 cursor-pointer border-2 transition-all duration-200 ${
+        className={`bg-card text-card-foreground rounded-xl p-4 cursor-pointer border transition-all duration-200 ${
           isSelected 
-            ? "border-blue-500 shadow-lg ring-2 ring-blue-200" 
-            : "border-blue-100 hover:border-blue-200 hover:shadow-md"
+            ? "border-primary shadow-lg ring-2 ring-primary/20" 
+            : "border-border hover:border-primary/40 hover:bg-muted/30 hover:shadow-md"
         }`}
       >
         <div className="flex items-center gap-4">
@@ -381,7 +381,6 @@ const StatisticsPage = () => {
             size={50} 
             strokeWidth={5}
             color={color}
-            trackColor="#e0e7ff"
           />
 
           {/* Content */}
@@ -397,7 +396,7 @@ const StatisticsPage = () => {
             </p>
 
             {/* Progress Bar (Green for correct, Red for incorrect, gray for remaining) */}
-            <div className="h-2 bg-gray-200 rounded-full overflow-hidden flex">
+            <div className="h-2 bg-muted rounded-full overflow-hidden flex">
               {correctPercent > 0 && (
                 <div 
                   className="h-full bg-emerald-500 transition-all duration-300"
@@ -414,7 +413,7 @@ const StatisticsPage = () => {
           </div>
 
           {/* Arrow */}
-          <ChevronRight className="h-5 w-5 text-blue-500 flex-shrink-0" />
+          <ChevronRight className="h-5 w-5 text-muted-foreground flex-shrink-0" />
         </div>
       </motion.div>
     );
@@ -465,10 +464,10 @@ const StatisticsPage = () => {
           {/* Header */}
           <div className="flex items-start justify-between gap-2">
             <div className="flex items-center gap-2 flex-1 min-w-0">
-              <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
-                {type === "exam-years" && <Calendar className="h-4 w-4 text-blue-600" />}
-                {type === "par-cours" && <FileText className="h-4 w-4 text-blue-600" />}
-                {type === "qcm-banque" && <Database className="h-4 w-4 text-blue-600" />}
+              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                {type === "exam-years" && <Calendar className="h-4 w-4 text-primary" />}
+                {type === "par-cours" && <FileText className="h-4 w-4 text-primary" />}
+                {type === "qcm-banque" && <Database className="h-4 w-4 text-primary" />}
               </div>
               <div className="flex-1 min-w-0">
                 <h4 className="font-semibold text-foreground text-sm truncate">{getExamTitle()}</h4>
@@ -496,7 +495,7 @@ const StatisticsPage = () => {
                 <span className="text-muted-foreground">Progression: {percentage}%</span>
                 <span className="text-muted-foreground">{questionsAnswered}/{questionCount}</span>
               </div>
-              <div className="h-2 bg-gray-200 rounded-full overflow-hidden flex">
+              <div className="h-2 bg-muted rounded-full overflow-hidden flex">
                 {correctPercent > 0 && (
                   <div 
                     className="h-full bg-emerald-500 transition-all duration-300"
@@ -529,10 +528,10 @@ const StatisticsPage = () => {
         {/* Desktop Layout */}
         <div className="hidden sm:flex items-center justify-between">
           <div className="flex items-center gap-3 flex-1 min-w-0">
-            <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
-              {type === "exam-years" && <Calendar className="h-5 w-5 text-blue-600" />}
-              {type === "par-cours" && <FileText className="h-5 w-5 text-blue-600" />}
-              {type === "qcm-banque" && <Database className="h-5 w-5 text-blue-600" />}
+            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+              {type === "exam-years" && <Calendar className="h-5 w-5 text-primary" />}
+              {type === "par-cours" && <FileText className="h-5 w-5 text-primary" />}
+              {type === "qcm-banque" && <Database className="h-5 w-5 text-primary" />}
             </div>
             <div className="flex-1 min-w-0">
               <h4 className="font-semibold text-foreground">{getExamTitle()}</h4>
@@ -547,7 +546,7 @@ const StatisticsPage = () => {
                     <span className="text-muted-foreground">Progression: {percentage}%</span>
                     <span className="text-muted-foreground">{questionsAnswered}/{questionCount}</span>
                   </div>
-                  <div className="h-2 bg-gray-200 rounded-full overflow-hidden flex">
+                  <div className="h-2 bg-muted rounded-full overflow-hidden flex">
                     {correctPercent > 0 && (
                       <div 
                         className="h-full bg-emerald-500 transition-all duration-300"
@@ -645,7 +644,7 @@ const StatisticsPage = () => {
       >
         {/* Header */}
         <motion.div variants={itemVariants}>
-          <Card className="border-blue-100 bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
+          <Card className="border-border bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -742,7 +741,7 @@ const StatisticsPage = () => {
             <TabsContent value="overview" className="space-y-4 sm:space-y-6">
               <div className="grid gap-4 sm:gap-6 grid-cols-1 lg:grid-cols-2">
                 {/* Module Progress Chart */}
-                <Card className="border-blue-100 bg-background shadow-lg hover:shadow-xl transition-shadow">
+                <Card className="border-border bg-card shadow-lg hover:shadow-xl transition-shadow">
                   <CardHeader className="pb-3">
                     <CardTitle className="flex items-center gap-2 text-lg">
                       <BarChart3 className="h-5 w-5 text-blue-600" />
@@ -777,7 +776,7 @@ const StatisticsPage = () => {
                 </Card>
 
                 {/* Performance Trend Chart */}
-                <Card className="border-green-100 bg-background shadow-lg hover:shadow-xl transition-shadow">
+                <Card className="border-border bg-card shadow-lg hover:shadow-xl transition-shadow">
                   <CardHeader className="pb-3">
                     <CardTitle className="flex items-center gap-2 text-lg">
                       <LineChartIcon className="h-5 w-5 text-green-600" />
@@ -826,7 +825,7 @@ const StatisticsPage = () => {
             <TabsContent value="detailed" className="space-y-4 sm:space-y-6">
               <div className="grid gap-4 sm:gap-6 grid-cols-1 lg:grid-cols-2">
                 {/* Completion Rate Pie Chart */}
-                <Card className="border-purple-100 bg-background shadow-lg hover:shadow-xl transition-shadow">
+                <Card className="border-border bg-card shadow-lg hover:shadow-xl transition-shadow">
                   <CardHeader className="pb-3">
                     <CardTitle className="flex items-center gap-2 text-lg">
                       <Activity className="h-5 w-5 text-purple-600" />
@@ -867,7 +866,7 @@ const StatisticsPage = () => {
                 </Card>
 
                 {/* Study Time Distribution */}
-                <Card className="border-amber-100 bg-background shadow-lg hover:shadow-xl transition-shadow">
+                <Card className="border-border bg-card shadow-lg hover:shadow-xl transition-shadow">
                   <CardHeader className="pb-3">
                     <CardTitle className="flex items-center gap-2 text-lg">
                       <Clock className="h-5 w-5 text-amber-600" />
@@ -916,28 +915,28 @@ const StatisticsPage = () => {
             className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4"
           >
             <motion.div variants={itemVariants}>
-              <Card className="border-blue-100 bg-gradient-to-br from-blue-50 to-white">
+              <Card className="border-border bg-card hover:shadow-md transition-shadow">
                 <CardContent className="p-4 md:p-6">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-xs md:text-sm text-muted-foreground mb-1">Total Questions</p>
                       <p className="text-xl md:text-3xl font-bold text-blue-600">{overallStats.totalQuestions}</p>
                     </div>
-                    <BookOpen className="h-8 w-8 md:h-12 md:w-12 text-blue-200" />
+                    <BookOpen className="h-8 w-8 md:h-12 md:w-12 text-blue-500/20" />
                   </div>
                 </CardContent>
               </Card>
             </motion.div>
 
             <motion.div variants={itemVariants}>
-              <Card className="border-green-100 bg-gradient-to-br from-green-50 to-white">
+              <Card className="border-border bg-card hover:shadow-md transition-shadow">
                 <CardContent className="p-4 md:p-6">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-xs md:text-sm text-muted-foreground mb-1">Correctes</p>
                       <p className="text-xl md:text-3xl font-bold text-green-600">{overallStats.totalCorrect}</p>
                     </div>
-                    <Award className="h-8 w-8 md:h-12 md:w-12 text-green-200" />
+                    <Award className="h-8 w-8 md:h-12 md:w-12 text-emerald-500/20" />
                   </div>
                 </CardContent>
               </Card>
@@ -945,7 +944,7 @@ const StatisticsPage = () => {
 
             <motion.div variants={itemVariants}>
               <Card 
-                className="border-red-100 bg-gradient-to-br from-red-50 to-white cursor-pointer hover:shadow-lg transition-shadow"
+                className="border-border bg-card cursor-pointer hover:shadow-lg transition-shadow"
                 onClick={() => setShowIncorrectPopup(true)}
               >
                 <CardContent className="p-4 md:p-6">
@@ -954,21 +953,21 @@ const StatisticsPage = () => {
                       <p className="text-xs md:text-sm text-muted-foreground mb-1">Incorrectes</p>
                       <p className="text-xl md:text-3xl font-bold text-red-600">{overallStats.totalIncorrect}</p>
                     </div>
-                    <TrendingUp className="h-8 w-8 md:h-12 md:w-12 text-red-200" />
+                    <TrendingUp className="h-8 w-8 md:h-12 md:w-12 text-rose-500/20" />
                   </div>
                 </CardContent>
               </Card>
             </motion.div>
 
             <motion.div variants={itemVariants}>
-              <Card className="border-purple-100 bg-gradient-to-br from-purple-50 to-white">
+              <Card className="border-border bg-card hover:shadow-md transition-shadow">
                 <CardContent className="p-4 md:p-6">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-xs md:text-sm text-muted-foreground mb-1">Taux Réussite</p>
                       <p className="text-xl md:text-3xl font-bold text-purple-600">{overallStats.avgSuccess}%</p>
                     </div>
-                    <Award className="h-8 w-8 md:h-12 md:w-12 text-purple-200" />
+                    <Award className="h-8 w-8 md:h-12 md:w-12 text-purple-500/20" />
                   </div>
                 </CardContent>
               </Card>
@@ -980,7 +979,7 @@ const StatisticsPage = () => {
         <motion.div variants={itemVariants}>
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0 pb-2 md:pb-0">
-              <TabsList className="inline-flex w-auto min-w-full sm:min-w-0 sm:w-auto lg:inline-flex bg-background border shadow-sm">
+              <TabsList className="inline-flex w-auto min-w-full sm:min-w-0 sm:w-auto lg:inline-flex bg-muted border border-border shadow-sm">
                 <TabsTrigger 
                   value="modules" 
                   className="flex-1 sm:flex-initial text-xs sm:text-sm px-3 sm:px-4 data-[state=active]:bg-blue-600 data-[state=active]:text-white whitespace-nowrap"
@@ -1047,7 +1046,7 @@ const StatisticsPage = () => {
                             exit={{ opacity: 0, height: 0 }}
                             className="mt-6"
                           >
-                            <Card className="border-blue-200 shadow-lg">
+                            <Card className="border-border bg-card shadow-lg">
                               <CardHeader className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-t-lg">
                                 <div className="flex items-center justify-between">
                                   <div className="flex items-center gap-3">
@@ -1214,7 +1213,7 @@ const StatisticsPage = () => {
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95, y: 20 }}
                   onClick={(e) => e.stopPropagation()}
-                  className="bg-background rounded-xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-y-auto"
+                  className="bg-card text-card-foreground border border-border rounded-xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-y-auto"
                 >
                   <div className="sticky top-0 bg-gradient-to-r from-red-600 to-rose-600 text-white p-6 rounded-t-xl">
                     <div className="flex items-center justify-between">
@@ -1238,7 +1237,7 @@ const StatisticsPage = () => {
                   
                   <div className="p-6">
                     {/* Summary */}
-                    <div className="mb-6 p-4 bg-red-50 rounded-lg border border-red-200">
+                    <div className="mb-6 p-4 bg-rose-500/10 rounded-lg border border-rose-500/30">
                       <div className="flex items-center justify-between">
                         <div>
                           <p className="text-sm text-muted-foreground">Total d'erreurs</p>
@@ -1269,14 +1268,14 @@ const StatisticsPage = () => {
                           return (
                             <div 
                               key={module._id || index}
-                              className="p-4 bg-background border border-border rounded-lg hover:shadow-md transition-shadow"
+                              className="p-4 bg-muted/30 border border-border rounded-lg hover:shadow-md transition-shadow"
                             >
                               <div className="flex items-center justify-between mb-3">
                                 <div className="flex-1">
                                   <h3 className="font-semibold text-foreground">{module.name}</h3>
                                   <p className="text-xs text-muted-foreground mt-1">{module.semester}</p>
                                 </div>
-                                <Badge className="bg-red-100 text-red-700 border-red-200">
+                                <Badge className="bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-500/30">
                                   {module.incorrectAnswers} erreurs
                                 </Badge>
                               </div>
@@ -1287,7 +1286,7 @@ const StatisticsPage = () => {
                                   <span>{module.correctAnswers} correctes</span>
                                   <span>{errorRate}% d'erreurs</span>
                                 </div>
-                                <div className="h-2 bg-gray-200 rounded-full overflow-hidden flex">
+                                <div className="h-2 bg-muted rounded-full overflow-hidden flex">
                                   <div 
                                     className="h-full bg-emerald-500"
                                     style={{ 

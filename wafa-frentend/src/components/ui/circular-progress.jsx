@@ -8,7 +8,7 @@ const CircularProgress = ({
   className,
   textClassName,
   color = "#3b82f6",
-  trackColor = "#e5e7eb",
+  trackColor,
   showPercentage = true
 }) => {
   const radius = (size - strokeWidth) / 2;
@@ -28,8 +28,9 @@ const CircularProgress = ({
           cy={size / 2}
           r={radius}
           fill="none"
-          stroke={trackColor}
+          stroke={trackColor || "currentColor"}
           strokeWidth={strokeWidth}
+          className={cn(!trackColor && "text-muted-foreground/20")}
         />
         {/* Progress arc */}
         <circle
