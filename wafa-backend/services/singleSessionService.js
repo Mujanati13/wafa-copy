@@ -2,7 +2,7 @@ import crypto from "crypto";
 import jwt from "jsonwebtoken";
 import User from "../models/userModel.js";
 
-const DEFAULT_SESSION_TTL_MS = 30 * 60 * 1000;
+const DEFAULT_SESSION_TTL_MS = 6 * 60 * 60 * 1000;
 const DEFAULT_REFRESH_WINDOW_MS = 5 * 60 * 1000;
 
 const getSessionTtlMs = () => {

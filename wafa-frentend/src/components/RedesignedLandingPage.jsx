@@ -7,6 +7,7 @@ import {
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { api } from "@/lib/utils";
 import ThemeToggle from "@/components/ui/ThemeToggle";
 import LanguageSwitcher from "@/components/shared/LanguageSwitcher";
 import logo from "@/assets/logo.png";
@@ -72,6 +73,14 @@ const defaultFaqsEn = [
 
 const unwrap = (value) => value?.data?.data || value?.data || value || [];
 
+const getStoredUser = () => {
+  try {
+    return JSON.parse(localStorage.getItem("user") || "null");
+  } catch {
+    return null;
+  }
+};
+
 export default function RedesignedLandingPage() {
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -79,11 +88,37 @@ export default function RedesignedLandingPage() {
   const [plans, setPlans] = useState([]);
   const [loadingPlans, setLoadingPlans] = useState(true);
   const [language, setLanguage] = useState("fr");
+  const [currentUser, setCurrentUser] = useState(getStoredUser);
 
   useEffect(() => {
     const locale = localStorage.getItem("i18nextLng") || navigator.language || "fr";
     setLanguage(locale.startsWith("fr") ? "fr" : "en");
   }, []);
+
+  useEffect(() => {
+    const syncAuthenticatedUser = () => setCurrentUser(getStoredUser());
+    syncAuthenticatedUser();
+    window.addEventListener("storage", syncAuthenticatedUser);
+    window.addEventListener("auth-state-changed", syncAuthenticatedUser);
+    return () => {
+      window.removeEventListener("storage", syncAuthenticatedUser);
+      window.removeEventListener("auth-state-changed", syncAuthenticatedUser);
+    };
+  }, []);
+
+  const hasActiveLogin = Boolean(currentUser && localStorage.getItem("token"));
+  const dashboardPath = currentUser?.isAdmin ? "/admin/analytics" : "/dashboard/home";
+
+  // Public landing requests do not pass through authenticated middleware, so
+  // refresh the active account lease while a signed-in user stays on this page.
+  useEffect(() => {
+    if (!hasActiveLogin) return undefined;
+
+    const refreshSession = () => api.get("/auth/check-auth").catch(() => undefined);
+    refreshSession();
+    const timer = window.setInterval(refreshSession, 4 * 60 * 1000);
+    return () => window.clearInterval(timer);
+  }, [hasActiveLogin]);
 
   useEffect(() => {
     let active = true;
@@ -129,8 +164,11 @@ export default function RedesignedLandingPage() {
           </nav>
           <div className="hidden items-center gap-1 sm:flex">
             <ThemeToggle /><LanguageSwitcher />
-            <Button asChild variant="ghost"><Link to="/login">{text.login}</Link></Button>
-            <Button asChild className="bg-primary shadow-lg shadow-blue-950/15 hover:bg-primary/90"><Link to="/register">{text.create}<ArrowRight className="ml-2 h-4 w-4" /></Link></Button>
+            {hasActiveLogin ? (
+              <Button asChild className="bg-primary shadow-lg shadow-blue-950/15 hover:bg-primary/90"><Link to={dashboardPath}>{language === "fr" ? "Mon espace" : "My dashboard"}<ArrowRight className="ml-2 h-4 w-4" /></Link></Button>
+            ) : (
+              <><Button asChild variant="ghost"><Link to="/login">{text.login}</Link></Button><Button asChild className="bg-primary shadow-lg shadow-blue-950/15 hover:bg-primary/90"><Link to="/register">{text.create}<ArrowRight className="ml-2 h-4 w-4" /></Link></Button></>
+            )}
           </div>
           <button onClick={() => setMenuOpen((open) => !open)} className="imrs-focus-ring rounded-lg p-2 text-primary sm:hidden" aria-label={text.menu} aria-expanded={menuOpen}>
             {menuOpen ? <X /> : <Menu />}
@@ -139,8 +177,7 @@ export default function RedesignedLandingPage() {
         {menuOpen && <div className="border-t border-border bg-card px-4 py-4 sm:hidden">
           <div className="grid gap-1">
             {[["how", text.navigation[0]], ["benefits", text.navigation[1]], ["pricing", text.navigation[2]], ["faq", text.navigation[3]]].map(([id, label]) => <button key={id} onClick={() => { setMenuOpen(false); scrollTo(id); }} className="rounded-lg px-3 py-2 text-left text-sm font-medium hover:bg-muted">{label}</button>)}
-            <Link to="/login" className="rounded-lg px-3 py-2 text-sm font-medium hover:bg-muted">{text.login}</Link>
-            <Button asChild><Link to="/register">{text.create}</Link></Button>
+            {hasActiveLogin ? <Button asChild><Link to={dashboardPath}>{language === "fr" ? "Mon espace" : "My dashboard"}</Link></Button> : <><Link to="/login" className="rounded-lg px-3 py-2 text-sm font-medium hover:bg-muted">{text.login}</Link><Button asChild><Link to="/register">{text.create}</Link></Button></>}
             <div className="flex items-center justify-between px-2 pt-2"><ThemeToggle /><LanguageSwitcher /></div>
           </div>
         </div>}
@@ -156,7 +193,7 @@ export default function RedesignedLandingPage() {
               <p className="mt-5 max-w-2xl text-lg font-medium text-foreground sm:text-xl">{settings.heroSubtitle}</p>
               <p className="mt-3 max-w-xl text-base leading-7 text-muted-foreground">{settings.heroDescription}</p>
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                <Button size="lg" className="h-12 bg-primary px-6 shadow-xl shadow-blue-950/20 hover:bg-primary/90" onClick={() => navigate("/register")}>{text.continue}<ArrowRight className="ml-2 h-4 w-4" /></Button>
+                <Button size="lg" className="h-12 bg-primary px-6 shadow-xl shadow-blue-950/20 hover:bg-primary/90" onClick={() => navigate(hasActiveLogin ? dashboardPath : "/register")}>{hasActiveLogin ? (language === "fr" ? "Mon espace" : "My dashboard") : text.continue}<ArrowRight className="ml-2 h-4 w-4" /></Button>
                 <Button size="lg" variant="outline" className="h-12 px-6" onClick={() => scrollTo("how")}><Play className="mr-2 h-4 w-4 fill-current" />{text.discover}</Button>
               </div>
               <div className="mt-8 flex items-center gap-3 text-sm text-muted-foreground"><ShieldCheck className="h-5 w-5 text-cyan-600" />{text.trusted}</div>
@@ -167,7 +204,7 @@ export default function RedesignedLandingPage() {
                 <div className="rounded-xl bg-gradient-to-br from-[#10235c] to-[#164f93] p-5 text-white sm:p-7">
                   <div className="flex items-center justify-between"><div><p className="text-xs font-semibold tracking-[.16em] text-cyan-200 uppercase">{text.dashboard}</p><h2 className="mt-1 text-xl font-semibold">Bonjour, Sara</h2></div><div className="rounded-xl bg-white/10 p-2"><GraduationCap className="h-6 w-6 text-cyan-200" /></div></div>
                   <div className="mt-7 grid grid-cols-3 gap-3"><MiniStat label={text.qcm} value="24" /><MiniStat label={text.score} value="78%" /><MiniStat label={text.focus} value="3" /></div>
-                  <div className="mt-6 rounded-xl bg-white/10 p-4"><div className="flex items-center justify-between text-sm"><span>Cardiologie</span><span className="font-semibold text-cyan-200">68%</span></div><div className="mt-3 h-2 overflow-hidden rounded-full bg-white/15"><div className="h-full w-[68%] rounded-full bg-cyan-300" /></div><button onClick={() => navigate("/register")} className="mt-4 flex items-center text-sm font-semibold text-cyan-100 hover:text-white">{text.next}<ArrowRight className="ml-1 h-4 w-4" /></button></div>
+                  <div className="mt-6 rounded-xl bg-white/10 p-4"><div className="flex items-center justify-between text-sm"><span>Cardiologie</span><span className="font-semibold text-cyan-200">68%</span></div><div className="mt-3 h-2 overflow-hidden rounded-full bg-white/15"><div className="h-full w-[68%] rounded-full bg-cyan-300" /></div><button onClick={() => navigate(hasActiveLogin ? dashboardPath : "/register")} className="mt-4 flex items-center text-sm font-semibold text-cyan-100 hover:text-white">{text.next}<ArrowRight className="ml-1 h-4 w-4" /></button></div>
                 </div>
                 <div className="grid grid-cols-3 gap-2 px-2 py-4 text-center text-xs text-muted-foreground"><span><TrendingUp className="mx-auto mb-1 h-4 w-4 text-cyan-600" />+12% cette semaine</span><span><Target className="mx-auto mb-1 h-4 w-4 text-cyan-600" />Objectif en cours</span><span><Clock3 className="mx-auto mb-1 h-4 w-4 text-cyan-600" />18 min aujourd'hui</span></div>
               </div>
@@ -181,7 +218,7 @@ export default function RedesignedLandingPage() {
 
         <section id="benefits" className="scroll-mt-24 bg-muted/55 py-20"><div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8"><SectionHeading eyebrow="02 — IMRS" title={text.benefits} copy={text.benefitsCopy} /><div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">{text.features.map(([title, description], index) => <div key={title} className="rounded-2xl border border-border bg-card p-5 transition hover:-translate-y-1 hover:shadow-lg"><div className="grid h-10 w-10 place-items-center rounded-xl bg-primary text-primary-foreground">{[<BookOpenCheck className="h-5 w-5" />, <CircleHelp className="h-5 w-5" />, <Target className="h-5 w-5" />, <Star className="h-5 w-5" />][index]}</div><h3 className="mt-5 font-semibold">{title}</h3><p className="mt-2 text-sm leading-6 text-muted-foreground">{description}</p></div>)}</div></div></section>
 
-        <section id="pricing" className="mx-auto max-w-7xl scroll-mt-24 px-4 py-20 sm:px-6 lg:px-8"><SectionHeading eyebrow={`03 — ${text.plans}`} title={settings.pricingTitle || text.plans} copy={settings.pricingSubtitle || text.plans} centered /><div className="mt-12 grid gap-5 lg:grid-cols-3">{loadingPlans ? <PricingSkeleton /> : displayedPlans.length ? displayedPlans.map((plan, index) => <PricingCard key={plan._id || plan.name} plan={plan} popular={plan.isPopular || index === 1} text={text} onChoose={() => navigate("/register")} />) : <DefaultPlans text={text} onChoose={() => navigate("/register")} />}</div></section>
+        <section id="pricing" className="mx-auto max-w-7xl scroll-mt-24 px-4 py-20 sm:px-6 lg:px-8"><SectionHeading eyebrow={`03 — ${text.plans}`} title={settings.pricingTitle || text.plans} copy={settings.pricingSubtitle || text.plans} centered /><div className="mt-12 grid gap-5 lg:grid-cols-3">{loadingPlans ? <PricingSkeleton /> : displayedPlans.length ? displayedPlans.map((plan, index) => <PricingCard key={plan._id || plan.name} plan={plan} popular={plan.isPopular || index === 1} text={text} onChoose={() => navigate(hasActiveLogin ? dashboardPath : "/register")} />) : <DefaultPlans text={text} onChoose={() => navigate(hasActiveLogin ? dashboardPath : "/register")} />}</div></section>
 
         <section id="faq" className="scroll-mt-24 bg-muted/55 py-20"><div className="mx-auto grid max-w-7xl gap-10 px-4 sm:px-6 lg:grid-cols-[.8fr_1.2fr] lg:px-8"><div><span className="imrs-eyebrow">04 — FAQ</span><h2 className="mt-5 text-3xl font-bold tracking-tight sm:text-4xl">{settings.faqTitle || text.faq}</h2><p className="mt-4 leading-7 text-muted-foreground">{text.faq}</p></div><div className="space-y-3">{faqs.map(([question, answer], index) => <details key={`${question}-${index}`} className="group rounded-2xl border border-border bg-card p-5"><summary className="imrs-focus-ring flex cursor-pointer list-none items-center justify-between gap-4 font-semibold"><span>{question}</span><ChevronDown className="h-5 w-5 shrink-0 text-cyan-600 transition group-open:rotate-180" /></summary><p className="pt-4 leading-7 text-muted-foreground">{answer}</p></details>)}</div></div></section>
 
