@@ -118,16 +118,37 @@ export const examCourseController = {
     getByModuleId: asyncHandler(async (req, res) => {
         const { moduleId } = req.params;
 
-        const courses = await ExamCourse.find({ moduleId })
+        const module = await Module.findById(moduleId).select("_id name").lean();
+        if (!module) {
+            return res.status(404).json({
+                success: false,
+                message: "Module non trouvé",
+            });
+        }
+
+        let courses = await ExamCourse.find({ moduleId: module._id })
             .populate("moduleId", "name")
             .select('name moduleId category subCategory description difficulty color imageUrl status totalQuestions helpText')
             .lean()
             .sort({ createdAt: -1 });
 
+        // Support older imports that stored the module name/string instead of
+        // the current Module ObjectId relation.
+        if (courses.length === 0) {
+            courses = await ExamCourse.collection.find({
+                $or: [
+                    { moduleId: String(module._id) },
+                    { moduleName: module.name },
+                    { module: module.name },
+                ],
+            }).sort({ createdAt: -1 }).toArray();
+        }
+
         // Add question count for each course
         const coursesWithCount = courses.map(course => ({
             ...course,
-            questionCount: course.totalQuestions || 0
+            moduleId: course.moduleId || { _id: module._id, name: module.name },
+            questionCount: course.totalQuestions ?? course.linkedQuestions?.length ?? 0,
         }));
 
         res.status(200).json({

@@ -52,7 +52,7 @@ import {
 } from "@/components/ui/table";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { cn } from "@/lib/utils";
+import { api, cn } from "@/lib/utils";
 import axios from "axios";
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -233,10 +233,7 @@ const ImportExamParCourse = () => {
   const fetchCoursesForModule = async (moduleId) => {
     try {
       setLoadingCourses(true);
-      const response = await axios.get(`${API_URL}/exam-courses`, {
-        params: { moduleId },
-        withCredentials: true,
-      });
+      const response = await api.get(`/exam-courses/module/${moduleId}`);
       if (response.data.success) {
         setExamCourses(response.data.data || []);
       }
