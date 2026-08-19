@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { 
   Crown, 
   Medal, 
@@ -19,7 +19,6 @@ import {
   Target,
   ArrowUpRight,
   ShieldAlert,
-  User,
   GraduationCap
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -58,7 +57,6 @@ function getPodiumStyles(rank) {
       rankBadge: "bg-gradient-to-br from-amber-400 via-amber-500 to-amber-600 text-white shadow-lg shadow-amber-500/40",
       icon: <Crown className="h-6 w-6 text-amber-500 fill-amber-500" />,
       label: "Champion de promotion",
-      height: "h-auto"
     };
   }
   if (rank === 2) {
@@ -70,7 +68,6 @@ function getPodiumStyles(rank) {
       rankBadge: "bg-gradient-to-br from-slate-400 to-slate-600 text-white shadow-md",
       icon: <Medal className="h-5 w-5 text-slate-400 fill-slate-400/30" />,
       label: "2ème Place",
-      height: "h-auto"
     };
   }
   return {
@@ -81,7 +78,6 @@ function getPodiumStyles(rank) {
     rankBadge: "bg-gradient-to-br from-orange-400 to-orange-600 text-white shadow-md shadow-orange-500/30",
     icon: <Trophy className="h-5 w-5 text-orange-500 fill-orange-500/30" />,
     label: "3ème Place",
-    height: "h-auto"
   };
 }
 
@@ -111,7 +107,7 @@ const LeaderboardClient = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [leaderboardData, setLeaderboardData] = useState([]);
-  const [userContext, setUserContext] = useState(null);
+  const [userRank, setUserRank] = useState(null);
   const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState("totalPoints");
   const [totalQuestionsInSystem, setTotalQuestionsInSystem] = useState(0);
@@ -151,13 +147,21 @@ const LeaderboardClient = () => {
   const fetchLeaderboard = async () => {
     try {
       setLoading(true);
-      const data = await userService.getLeaderboard(100, sortBy);
-      if (data.success) {
-        setLeaderboardData(data.data || []);
-        setUserContext(data.userContext || null);
-        setTotalQuestionsInSystem(data.totalQuestionsInSystem || 0);
-        setAcademicYear(data.academicYear || null);
-        setRequiresAcademicYear(false);
+      const res = await userService.getLeaderboard(100, sortBy);
+      if (res?.success) {
+        const payload = res.data;
+        const list = Array.isArray(payload?.leaderboard)
+          ? payload.leaderboard
+          : Array.isArray(payload)
+            ? payload
+            : [];
+        setLeaderboardData(list);
+        setUserRank(payload?.userRank || null);
+        setTotalQuestionsInSystem(payload?.totalQuestionsInSystem || 0);
+        setAcademicYear(payload?.academicYear || null);
+        setRequiresAcademicYear(payload?.requiresAcademicYear || false);
+      } else {
+        setLeaderboardData([]);
       }
     } catch (error) {
       if (error?.response?.data?.code === 'ACADEMIC_YEAR_REQUIRED') {
@@ -166,16 +170,23 @@ const LeaderboardClient = () => {
       } else {
         console.error("Error fetching leaderboard:", error);
         toast.error("Erreur de chargement du classement");
+        setLeaderboardData([]);
       }
     } finally {
       setLoading(false);
     }
   };
 
-  const sorted = [...leaderboardData];
-  const topThree = sorted.slice(0, 3);
+  const sorted = Array.isArray(leaderboardData) ? [...leaderboardData] : [];
+  const topThreeRaw = sorted.slice(0, 3);
   const remainingUsers = sorted.slice(3);
   const maxScore = sorted.length > 0 ? Math.max(...sorted.map((u) => u.totalPoints || 0), 1) : 1;
+
+  // Ensure rank is attached to podium items
+  const topThree = topThreeRaw.map((u, idx) => ({
+    ...u,
+    rank: u.rank || (idx + 1)
+  }));
 
   // Podium reordering for desktop visual hierarchy: [2nd, 1st, 3rd]
   const podiumDisplay = topThree.length === 3 
@@ -220,10 +231,10 @@ const LeaderboardClient = () => {
                     <GraduationCap className="h-4 w-4 text-primary" />
                     <span>Promotion : {academicYear}ème Année</span>
                   </div>
-                  {userContext?.userRank && (
+                  {userRank && (
                     <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-primary/10 border border-primary/20 text-xs font-bold text-primary backdrop-blur-sm">
                       <Award className="h-4 w-4" />
-                      <span>Votre Rang : #{userContext.userRank}</span>
+                      <span>Votre Rang : #{userRank}</span>
                     </div>
                   )}
                 </div>
@@ -436,10 +447,8 @@ const LeaderboardClient = () => {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border/60">
-                      {remainingUsers.map((userData, idx) => {
-                        const rank = userData.rank;
-                        if (!rank) return null;
-                        
+                      {(remainingUsers.length > 0 ? remainingUsers : sorted).map((userData, idx) => {
+                        const rank = userData.rank || (remainingUsers.length > 0 ? idx + 4 : idx + 1);
                         const badge = getScoreBadgeClasses(userData.totalPoints, maxScore);
                         const levelInfo = getUserLevel(userData.totalPoints);
                         const isCurrentUser = user && (userData.odUserIdStr === user._id || userData.email === user.email);
