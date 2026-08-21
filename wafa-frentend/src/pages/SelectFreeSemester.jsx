@@ -3,11 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { motion as Motion } from 'framer-motion';
 import { GraduationCap, BookOpen, Sparkles, ChevronRight, Loader2, Check, Gift, FileQuestion } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { userService } from '@/services/userService';
 import { moduleService } from '@/services/moduleService';
 import logo from '@/assets/logo.png';
+import { cn } from '@/lib/utils';
 
 const getYearText = (semesterId) => {
   const semesterNum = parseInt(semesterId.replace('S', ''), 10);
@@ -69,7 +70,6 @@ const SelectFreeSemester = () => {
           return numA - numB;
         });
         
-        console.log('Available semesters:', semestersList);
         setSemesters(semestersList);
       } catch (error) {
         console.error('Error fetching semesters:', error);
@@ -93,7 +93,6 @@ const SelectFreeSemester = () => {
         }
       } catch (error) {
         console.error('Error checking semester status:', error);
-        // If error, still allow selection (fallback)
       } finally {
         setIsChecking(false);
       }
@@ -162,46 +161,46 @@ const SelectFreeSemester = () => {
 
   if (isChecking || loadingModules) {
     return (
-      <div className="imrs-grid min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin text-blue-600 mx-auto mb-2" />
-          <p className="text-sm text-slate-600">Chargement des semestres...</p>
+      <div className="min-h-screen bg-background text-foreground flex items-center justify-center p-4">
+        <div className="text-center space-y-3">
+          <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
+          <p className="text-sm text-muted-foreground animate-pulse">Chargement des semestres...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="imrs-grid min-h-screen bg-background py-8 px-4">
-      {/* Background Effects */}
+    <div className="min-h-screen bg-background text-foreground py-8 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+      {/* Background Ambient Glows */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 right-1/4 w-64 h-64 bg-blue-100 rounded-full opacity-30 blur-3xl animate-pulse" />
-        <div className="absolute bottom-1/4 left-1/4 w-80 h-80 bg-teal-100 rounded-full opacity-20 blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+        <div className="absolute top-1/4 right-1/4 w-72 h-72 bg-primary/10 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-1/4 left-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
       </div>
 
-      <div className="relative z-10 max-w-4xl mx-auto">
+      <div className="relative z-10 max-w-4xl mx-auto space-y-8">
         {/* Header */}
         <Motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-8"
+          className="text-center"
         >
           <img
             src={logo}
-            alt="Imrs-Qcma Logo"
-            className="h-16 w-auto mx-auto mb-6"
+            alt="WAFA Logo"
+            className="h-16 w-auto mx-auto mb-5 drop-shadow-sm"
           />
           
-          <div className="inline-flex items-center gap-2 bg-gradient-to-r from-amber-100 to-orange-100 text-amber-800 px-4 py-2 rounded-full mb-4">
-            <Gift className="h-5 w-5" />
-            <span className="font-medium">Offre de bienvenue</span>
+          <div className="inline-flex items-center gap-2 bg-amber-500/15 text-amber-800 dark:text-amber-300 border border-amber-500/30 px-4 py-1.5 rounded-full mb-4 text-sm font-semibold backdrop-blur-sm">
+            <Gift className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+            <span>Offre de bienvenue</span>
           </div>
 
-          <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-3">
+          <h1 className="text-3xl sm:text-4xl font-extrabold text-foreground tracking-tight mb-3">
             Choisissez votre examen gratuit
           </h1>
-          <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-            Le plan gratuit donne accès à <span className="font-semibold text-blue-600">un examen dans un seul module</span>. Choisissez votre semestre, votre module, puis votre examen.
+          <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+            Le plan gratuit donne accès à <span className="font-semibold text-primary">un examen dans un seul module</span>. Choisissez votre semestre, votre module, puis votre examen.
           </p>
         </Motion.div>
 
@@ -210,115 +209,147 @@ const SelectFreeSemester = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mb-8"
+          className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4"
         >
           {semesters.length === 0 ? (
-            <div className="col-span-full text-center py-8 text-slate-500">
-              Aucun semestre disponible
+            <div className="col-span-full text-center py-8 text-muted-foreground bg-card border border-border rounded-2xl">
+              Aucun semestre disponible pour le moment
             </div>
           ) : (
-            semesters.map((semester, index) => (
-              <Motion.div
-                key={semester.id}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.1 + index * 0.05 }}
-              >
-                <Card
-                  onClick={() => { setSelectedSemester(semester.id); setSelectedModuleId(null); setSelectedExamId(null); }}
-                  className={`cursor-pointer transition-all duration-300 hover:shadow-lg hover:-translate-y-1 ${
-                    selectedSemester === semester.id
-                      ? 'ring-2 ring-cyan-500 bg-cyan-50 border-cyan-300 dark:bg-cyan-950/30'
-                      : 'hover:border-cyan-300'
-                  }`}
+            semesters.map((semester, index) => {
+              const isSelected = selectedSemester === semester.id;
+              return (
+                <Motion.div
+                  key={semester.id}
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.05 + index * 0.03 }}
                 >
-                  <CardContent className="p-4 text-center">
-                    <div className={`w-12 h-12 mx-auto mb-3 rounded-xl flex items-center justify-center ${
-                      selectedSemester === semester.id
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-muted text-muted-foreground'
-                    }`}>
-                      {selectedSemester === semester.id ? (
-                        <Check className="h-6 w-6" />
-                      ) : (
-                        <BookOpen className="h-6 w-6" />
-                      )}
-                    </div>
-                    <h3 className="font-bold text-lg text-slate-800">{semester.id}</h3>
-                    <p className="text-xs text-slate-500 mt-1">{semester.year}</p>
-                  </CardContent>
-                </Card>
-              </Motion.div>
-            ))
+                  <Card
+                    onClick={() => { setSelectedSemester(semester.id); setSelectedModuleId(null); setSelectedExamId(null); }}
+                    className={cn(
+                      "cursor-pointer transition-all duration-200 rounded-2xl border text-card-foreground hover:shadow-md hover:-translate-y-0.5",
+                      isSelected
+                        ? "ring-2 ring-primary border-primary bg-primary/10 dark:bg-primary/20 shadow-md shadow-primary/10"
+                        : "bg-card border-border hover:border-primary/40 hover:bg-muted/40"
+                    )}
+                  >
+                    <CardContent className="p-4 text-center">
+                      <div className={cn(
+                        "w-12 h-12 mx-auto mb-3 rounded-xl flex items-center justify-center transition-colors",
+                        isSelected
+                          ? "bg-primary text-primary-foreground shadow-sm"
+                          : "bg-muted text-muted-foreground"
+                      )}>
+                        {isSelected ? (
+                          <Check className="h-6 w-6" />
+                        ) : (
+                          <BookOpen className="h-6 w-6" />
+                        )}
+                      </div>
+                      <h3 className="font-bold text-base sm:text-lg text-foreground">{semester.id}</h3>
+                      <p className="text-xs text-muted-foreground mt-0.5">{semester.year}</p>
+                    </CardContent>
+                  </Card>
+                </Motion.div>
+              );
+            })
           )}
         </Motion.div>
 
-        {/* Selected Semester Details */}
+        {/* Selected Semester Details Header */}
         {selectedSemester && (
           <Motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mb-8"
           >
-            <Card className="bg-gradient-to-r from-[#10265f] to-[#12718d] text-white border-0 shadow-xl">
-              <CardContent className="p-6 flex items-center justify-between">
+            <Card className="bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-600 text-white border-0 shadow-xl rounded-2xl overflow-hidden">
+              <CardContent className="p-5 sm:p-6 flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center">
-                    <GraduationCap className="h-8 w-8" />
+                  <div className="w-12 h-12 sm:w-14 sm:h-14 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/20 shrink-0">
+                    <GraduationCap className="h-7 w-7 sm:h-8 sm:w-8" />
                   </div>
                   <div>
-                    <h3 className="text-xl font-bold">
+                    <h3 className="text-lg sm:text-xl font-bold">
                       {semesters.find(s => s.id === selectedSemester)?.name}
                     </h3>
-                    <p className="text-blue-100">
+                    <p className="text-xs sm:text-sm text-blue-100 mt-0.5">
                       {semesters.find(s => s.id === selectedSemester)?.year} • {semesters.find(s => s.id === selectedSemester)?.moduleCount || 0} module(s) disponible(s)
                     </p>
                   </div>
                 </div>
-                <Sparkles className="h-8 w-8 text-amber-300" />
+                <Sparkles className="h-7 w-7 sm:h-8 sm:w-8 text-amber-300 shrink-0" />
               </CardContent>
             </Card>
           </Motion.div>
         )}
 
+        {/* Module and Exam Selection Sections */}
         {selectedSemester && (
-          <Motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mb-8 space-y-5">
+          <Motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+            {/* Step 1: Modules */}
             <div>
-              <h2 className="mb-3 text-lg font-bold text-foreground">1. Choisissez un module</h2>
+              <h2 className="mb-3 text-base sm:text-lg font-bold text-foreground flex items-center gap-2">
+                <span className="w-6 h-6 rounded-full bg-primary/20 text-primary text-xs font-bold flex items-center justify-center">1</span>
+                <span>Choisissez un module</span>
+              </h2>
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {(semesters.find((item) => item.id === selectedSemester)?.modules || []).map((module) => (
-                  <Card
-                    key={module._id}
-                    onClick={() => { setSelectedModuleId(module._id); setSelectedExamId(null); }}
-                    className={`cursor-pointer transition ${selectedModuleId === module._id ? 'border-cyan-500 bg-cyan-50 ring-2 ring-cyan-500 dark:bg-cyan-950/30' : 'hover:border-cyan-300'}`}
-                  >
-                    <CardContent className="flex items-center gap-3 p-4">
-                      <BookOpen className="h-5 w-5 text-cyan-600" />
-                      <span className="font-semibold">{module.name}</span>
-                    </CardContent>
-                  </Card>
-                ))}
+                {(semesters.find((item) => item.id === selectedSemester)?.modules || []).map((module) => {
+                  const isModSelected = selectedModuleId === module._id;
+                  return (
+                    <Card
+                      key={module._id}
+                      onClick={() => { setSelectedModuleId(module._id); setSelectedExamId(null); }}
+                      className={cn(
+                        "cursor-pointer transition-all duration-200 rounded-2xl border text-card-foreground hover:shadow-sm",
+                        isModSelected
+                          ? "border-primary bg-primary/10 dark:bg-primary/20 ring-2 ring-primary"
+                          : "bg-card border-border hover:border-primary/40 hover:bg-muted/40"
+                      )}
+                    >
+                      <CardContent className="flex items-center gap-3 p-4">
+                        <BookOpen className={cn("h-5 w-5 shrink-0", isModSelected ? "text-primary" : "text-muted-foreground")} />
+                        <span className="font-semibold text-sm sm:text-base truncate text-foreground">{module.name}</span>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
               </div>
             </div>
 
+            {/* Step 2: Exam */}
             {selectedModuleId && (
-              <div>
-                <h2 className="mb-3 text-lg font-bold text-foreground">2. Choisissez un examen</h2>
+              <Motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+                <h2 className="mb-3 text-base sm:text-lg font-bold text-foreground flex items-center gap-2">
+                  <span className="w-6 h-6 rounded-full bg-primary/20 text-primary text-xs font-bold flex items-center justify-center">2</span>
+                  <span>Choisissez un examen</span>
+                </h2>
                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                  {(semesters.find((item) => item.id === selectedSemester)?.modules.find((item) => item._id === selectedModuleId)?.exams || []).map((exam) => (
-                    <Card
-                      key={exam._id}
-                      onClick={() => setSelectedExamId(exam._id)}
-                      className={`cursor-pointer transition ${selectedExamId === exam._id ? 'border-cyan-500 bg-cyan-50 ring-2 ring-cyan-500 dark:bg-cyan-950/30' : 'hover:border-cyan-300'}`}
-                    >
-                      <CardContent className="flex items-center gap-3 p-4">
-                        <FileQuestion className="h-5 w-5 text-cyan-600" />
-                        <div><p className="font-semibold">{exam.name}</p>{exam.year && <p className="text-xs text-muted-foreground">{exam.year}</p>}</div>
-                      </CardContent>
-                    </Card>
-                  ))}
+                  {(semesters.find((item) => item.id === selectedSemester)?.modules.find((item) => item._id === selectedModuleId)?.exams || []).map((exam) => {
+                    const isExamSelected = selectedExamId === exam._id;
+                    return (
+                      <Card
+                        key={exam._id}
+                        onClick={() => setSelectedExamId(exam._id)}
+                        className={cn(
+                          "cursor-pointer transition-all duration-200 rounded-2xl border text-card-foreground hover:shadow-sm",
+                          isExamSelected
+                            ? "border-primary bg-primary/10 dark:bg-primary/20 ring-2 ring-primary"
+                            : "bg-card border-border hover:border-primary/40 hover:bg-muted/40"
+                        )}
+                      >
+                        <CardContent className="flex items-center gap-3 p-4">
+                          <FileQuestion className={cn("h-5 w-5 shrink-0", isExamSelected ? "text-primary" : "text-muted-foreground")} />
+                          <div className="min-w-0">
+                            <p className="font-semibold text-sm sm:text-base text-foreground truncate">{exam.name}</p>
+                            {exam.year && <p className="text-xs text-muted-foreground">{exam.year}</p>}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
                 </div>
-              </div>
+              </Motion.div>
             )}
           </Motion.div>
         )}
@@ -327,14 +358,14 @@ const SelectFreeSemester = () => {
         <Motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 0.4 }}
-          className="text-center"
+          transition={{ delay: 0.3 }}
+          className="text-center pt-2"
         >
           <Button
             onClick={handleSelectSemester}
             disabled={!selectedSemester || !selectedModuleId || !selectedExamId || isLoading}
             size="lg"
-            className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-6 text-lg rounded-xl shadow-lg hover:shadow-xl transition-all"
+            className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-6 text-base sm:text-lg rounded-2xl shadow-lg hover:shadow-xl transition-all font-semibold"
           >
             {isLoading ? (
               <>
@@ -349,33 +380,41 @@ const SelectFreeSemester = () => {
             )}
           </Button>
 
-          <p className="text-sm text-slate-500 mt-4">
-            💡 Passez à Premium pour accéder aux autres examens et modules
+          <p className="text-xs sm:text-sm text-muted-foreground mt-4">
+            💡 Passez à Premium pour accéder à l'ensemble des modules et examens
           </p>
         </Motion.div>
 
-        {/* Info Card */}
+        {/* Free Plan Features Info Card */}
         <Motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-          className="mt-12"
+          transition={{ delay: 0.4 }}
+          className="pt-4"
         >
-          <Card className="bg-muted border-border">
+          <Card className="bg-card border-border rounded-2xl shadow-sm">
             <CardContent className="p-6">
-              <h4 className="font-semibold text-slate-800 mb-3">Ce que vous obtenez avec votre compte gratuit :</h4>
-              <ul className="space-y-2 text-slate-600">
-                <li className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-green-500" />
-                  Accès à un examen du module choisi
+              <h4 className="font-bold text-foreground mb-3 text-sm sm:text-base">
+                Ce que vous obtenez avec votre compte gratuit :
+              </h4>
+              <ul className="space-y-2.5 text-xs sm:text-sm text-muted-foreground">
+                <li className="flex items-center gap-2.5">
+                  <div className="w-5 h-5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                    <Check className="h-3.5 w-3.5" />
+                  </div>
+                  <span>Accès complet à l'examen sélectionné</span>
                 </li>
-                <li className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-green-500" />
-                  Questions et exercices de cet examen
+                <li className="flex items-center gap-2.5">
+                  <div className="w-5 h-5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                    <Check className="h-3.5 w-3.5" />
+                  </div>
+                  <span>QCMs corrigés et explications détaillées</span>
                 </li>
-                <li className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-green-500" />
-                  Suivi de votre progression
+                <li className="flex items-center gap-2.5">
+                  <div className="w-5 h-5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                    <Check className="h-3.5 w-3.5" />
+                  </div>
+                  <span>Suivi de votre progression et statistiques</span>
                 </li>
               </ul>
             </CardContent>
