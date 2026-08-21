@@ -538,12 +538,13 @@ const ExamPage = () => {
         setExamDataFetched(true);
         // Note: Keep loading true until progress is restored
       } catch (err) {
-        console.error('=== ERROR FETCHING EXAM ===');
-        console.error('Error:', err);
-        console.error('Error response:', err.response);
-        console.error('Error message:', err.message);
-        setError(t('dashboard:failed_load_exam') || 'Failed to load exam');
-        toast.error(t('dashboard:failed_load_exam') || 'Failed to load exam');
+        if (err.response?.status === 403 && (err.response?.data?.code === 'FREE_PLAN_EXAM_LIMIT' || err.response?.data?.message?.includes('free plan'))) {
+          setError('FREE_PLAN_EXAM_LIMIT');
+          toast.error("Cet examen nécessite un abonnement Premium.");
+        } else {
+          setError(t('dashboard:failed_load_exam') || 'Failed to load exam');
+          toast.error(t('dashboard:failed_load_exam') || 'Failed to load exam');
+        }
         setLoading(false); // Only set loading false on error
       }
     };
@@ -1546,6 +1547,78 @@ const ExamPage = () => {
 
   // Error state
   if (error || !currentQuestionData) {
+    if (error === 'FREE_PLAN_EXAM_LIMIT') {
+      return (
+        <div className="min-h-screen bg-background flex items-center justify-center p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="w-full max-w-lg"
+          >
+            <Card className="shadow-2xl border border-border bg-card text-card-foreground rounded-3xl overflow-hidden">
+              <div className="p-6 bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 text-white">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/20">
+                    <Zap className="h-6 w-6 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold">Examen Réservé aux Membres Premium</h3>
+                    <p className="text-white/90 text-xs">Accès limité avec le plan gratuit</p>
+                  </div>
+                </div>
+              </div>
+
+              <CardContent className="p-6 space-y-6">
+                <div className="space-y-3">
+                  <p className="text-sm text-foreground leading-relaxed">
+                    Votre compte gratuit vous donne accès à <strong>un seul examen</strong> choisi lors de votre inscription. Pour débloquer l'ensemble des examens, modules, banques de QCM et explications détaillées, passez au plan Premium.
+                  </p>
+
+                  <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 space-y-2 text-xs">
+                    <p className="font-bold text-amber-800 dark:text-amber-300">Ce que débloque le plan Premium :</p>
+                    <ul className="space-y-1 text-amber-900/80 dark:text-amber-200/80">
+                      <li>• Accès illimité à tous les modules et examens</li>
+                      <li>• Explications IA et communauté de vote</li>
+                      <li>• Playlists personnalisées & notes illimitées</li>
+                      <li>• Classement général & statistiques avancées</li>
+                    </ul>
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-2.5 pt-2">
+                  <Button
+                    onClick={() => navigate('/dashboard/subscription')}
+                    size="lg"
+                    className="w-full gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-bold shadow-lg shadow-orange-500/20"
+                  >
+                    <Zap className="h-4 w-4" />
+                    Découvrir les offres Premium
+                  </Button>
+
+                  <Button
+                    onClick={() => navigate('/select-semester')}
+                    variant="outline"
+                    className="w-full gap-2 rounded-xl border-border hover:bg-muted"
+                  >
+                    <BookOpen className="h-4 w-4" />
+                    Changer mon examen gratuit
+                  </Button>
+
+                  <Button
+                    onClick={handleGoBack}
+                    variant="ghost"
+                    className="w-full text-xs text-muted-foreground hover:text-foreground"
+                  >
+                    Retour
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </div>
+      );
+    }
+
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <motion.div
