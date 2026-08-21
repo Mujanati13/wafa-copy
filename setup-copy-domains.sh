@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Configure the two public WAFA Copy domains on the VPS that already runs
-# the main WAFA `wafa-nginx` container.
+# Configure the two public WAFA Copy domains. It reuses a running shared
+# `wafa-nginx` container when present, otherwise it configures host Nginx.
 #
 # Usage:
 #   sudo ./setup-copy-domains.sh admin@example.com
@@ -9,7 +9,7 @@
 #   * DNS A records for copy.imrs-qcm.com and backend.copy.imrs-qcm.com point
 #     to this VPS.
 #   * The WAFA Copy stack has been deployed (`./deploy-second-instance.sh`).
-#   * The Copy frontend is connected to the main stack's shared Docker network.
+#   * Port 80/443 is unused if this VPS does not already have `wafa-nginx`.
 
 set -euo pipefail
 
@@ -17,6 +17,8 @@ FRONTEND_DOMAIN="copy.imrs-qcm.com"
 BACKEND_DOMAIN="backend.copy.imrs-qcm.com"
 NGINX_CONTAINER="${NGINX_CONTAINER:-wafa-nginx}"
 COPY_FRONTEND_CONTAINER="${COPY_FRONTEND_CONTAINER:-wafa-copy-frontend-1}"
+COPY_FRONTEND_PORT="${COPY_FRONTEND_PORT:-}"
+PROXY_MODE="${PROXY_MODE:-auto}"
 LETSENCRYPT_EMAIL="${1:-${LETSENCRYPT_EMAIL:-}}"
 
 fail() {
@@ -53,15 +55,18 @@ validate_dns() {
 }
 
 find_copy_frontend() {
-    if docker container inspect "$COPY_FRONTEND_CONTAINER" >/dev/null 2>&1; then
-        return
+    if ! docker container inspect "$COPY_FRONTEND_CONTAINER" >/dev/null 2>&1; then
+        COPY_FRONTEND_CONTAINER="$(docker ps --format '{{.Names}}' | awk '/^wafa-copy-frontend-[0-9]+$/ { print; exit }')"
+        [ -n "$COPY_FRONTEND_CONTAINER" ] || fail "The WAFA Copy frontend container is not running. Run ./deploy-second-instance.sh first."
     fi
 
-    COPY_FRONTEND_CONTAINER="$(docker ps --format '{{.Names}}' | awk '/^wafa-copy-frontend-[0-9]+$/ { print; exit }')"
-    [ -n "$COPY_FRONTEND_CONTAINER" ] || fail "The WAFA Copy frontend container is not running. Run ./deploy-second-instance.sh first."
+    if [ -z "$COPY_FRONTEND_PORT" ]; then
+        COPY_FRONTEND_PORT="$(docker port "$COPY_FRONTEND_CONTAINER" 80 | awk -F: 'NR == 1 { print $NF }')"
+    fi
+    [[ "$COPY_FRONTEND_PORT" =~ ^[0-9]+$ ]] || fail "Could not determine the host port published by $COPY_FRONTEND_CONTAINER. Set COPY_FRONTEND_PORT explicitly."
 }
 
-find_nginx_mounts() {
+configure_docker_nginx() {
     NGINX_CONFIG="$(docker inspect "$NGINX_CONTAINER" --format '{{range .Mounts}}{{if eq .Destination "/etc/nginx/nginx.conf"}}{{.Source}}{{end}}{{end}}')"
     CERTBOT_WEBROOT="$(docker inspect "$NGINX_CONTAINER" --format '{{range .Mounts}}{{if eq .Destination "/var/www/certbot"}}{{.Source}}{{end}}{{end}}')"
 
@@ -69,6 +74,55 @@ find_nginx_mounts() {
     [ -f "$NGINX_CONFIG" ] || fail "Nginx configuration file does not exist: $NGINX_CONFIG"
     [ -n "$CERTBOT_WEBROOT" ] || fail "Could not locate the Certbot webroot mounted by $NGINX_CONTAINER."
     mkdir -p "$CERTBOT_WEBROOT"
+}
+
+ensure_host_nginx() {
+    if ! command -v nginx >/dev/null 2>&1; then
+        if ss -ltn | awk '$4 ~ /:(80|443)$/ { found = 1 } END { exit !found }'; then
+            fail "Ports 80 or 443 are already in use, but no $NGINX_CONTAINER container was found. Configure the existing proxy or run with PROXY_MODE=docker and NGINX_CONTAINER=<name>."
+        fi
+
+        info "Installing host Nginx"
+        apt-get update
+        apt-get install -y nginx
+    fi
+
+    systemctl enable --now nginx
+
+    if [ -d /etc/nginx/sites-available ] && [ -d /etc/nginx/sites-enabled ]; then
+        NGINX_CONFIG="/etc/nginx/sites-available/wafa-copy-domains.conf"
+        ln -sfn "$NGINX_CONFIG" /etc/nginx/sites-enabled/wafa-copy-domains.conf
+    else
+        mkdir -p /etc/nginx/conf.d
+        NGINX_CONFIG="/etc/nginx/conf.d/wafa-copy-domains.conf"
+    fi
+
+    CERTBOT_WEBROOT="/var/www/certbot"
+    mkdir -p "$CERTBOT_WEBROOT"
+}
+
+configure_proxy() {
+    case "$PROXY_MODE" in
+        auto)
+            if docker container inspect "$NGINX_CONTAINER" >/dev/null 2>&1; then
+                PROXY_MODE="docker"
+                configure_docker_nginx
+            else
+                PROXY_MODE="host"
+                ensure_host_nginx
+            fi
+            ;;
+        docker)
+            docker container inspect "$NGINX_CONTAINER" >/dev/null 2>&1 || fail "Container $NGINX_CONTAINER is not running. Set NGINX_CONTAINER to the active proxy name or use PROXY_MODE=host."
+            configure_docker_nginx
+            ;;
+        host)
+            ensure_host_nginx
+            ;;
+        *)
+            fail "PROXY_MODE must be auto, docker, or host."
+            ;;
+    esac
 }
 
 remove_existing_copy_block() {
@@ -82,6 +136,11 @@ remove_existing_copy_block() {
 
 install_proxy_block() {
     local mode="$1" block_file clean_file candidate_file last_brace_line
+
+    if [ "$PROXY_MODE" = "host" ]; then
+        install_host_proxy_block "$mode"
+        return
+    fi
     block_file="$(mktemp)"
     clean_file="$(mktemp)"
     candidate_file="$(mktemp)"
@@ -201,14 +260,121 @@ EOF
     rm -f "$block_file" "$clean_file" "$candidate_file"
 }
 
+install_host_proxy_block() {
+    local mode="$1"
+
+    if [ "$mode" = "http" ]; then
+        cat > "$NGINX_CONFIG" <<'EOF'
+# Managed by /opt/wafa-copy/setup-copy-domains.sh.
+server {
+    listen 80;
+    listen [::]:80;
+    server_name copy.imrs-qcm.com backend.copy.imrs-qcm.com;
+
+    location /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+    }
+
+    location / {
+        return 404;
+    }
+}
+EOF
+        return
+    fi
+
+    cat > "$NGINX_CONFIG" <<'EOF'
+# Managed by /opt/wafa-copy/setup-copy-domains.sh.
+server {
+    listen 80;
+    listen [::]:80;
+    server_name copy.imrs-qcm.com backend.copy.imrs-qcm.com;
+
+    location /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+    }
+
+    location / {
+        return 301 https://$host$request_uri;
+    }
+}
+
+server {
+    listen 443 ssl http2;
+    listen [::]:443 ssl http2;
+    server_name copy.imrs-qcm.com;
+
+    ssl_certificate /etc/letsencrypt/live/copy.imrs-qcm.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/copy.imrs-qcm.com/privkey.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+
+    location / {
+        proxy_pass http://127.0.0.1:__COPY_FRONTEND_PORT__;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_read_timeout 90s;
+    }
+}
+
+server {
+    listen 443 ssl http2;
+    listen [::]:443 ssl http2;
+    server_name backend.copy.imrs-qcm.com;
+
+    ssl_certificate /etc/letsencrypt/live/copy.imrs-qcm.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/copy.imrs-qcm.com/privkey.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+
+    location /api/ {
+        proxy_pass http://127.0.0.1:__COPY_FRONTEND_PORT__;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_read_timeout 90s;
+    }
+
+    location /uploads/ {
+        proxy_pass http://127.0.0.1:__COPY_FRONTEND_PORT__;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location / {
+        return 404;
+    }
+}
+EOF
+    sed -i "s/__COPY_FRONTEND_PORT__/${COPY_FRONTEND_PORT}/g" "$NGINX_CONFIG"
+}
+
 validate_and_reload_nginx() {
-    if ! docker exec "$NGINX_CONTAINER" nginx -t; then
-        cp "$NGINX_BACKUP" "$NGINX_CONFIG"
-        docker exec "$NGINX_CONTAINER" nginx -s reload || true
+    if [ "$PROXY_MODE" = "docker" ]; then
+        nginx_test=(docker exec "$NGINX_CONTAINER" nginx -t)
+        nginx_reload=(docker exec "$NGINX_CONTAINER" nginx -s reload)
+    else
+        nginx_test=(nginx -t)
+        nginx_reload=(systemctl reload nginx)
+    fi
+
+    if ! "${nginx_test[@]}"; then
+        if [ "$NGINX_CONFIG_EXISTED" = "true" ]; then
+            cp "$NGINX_BACKUP" "$NGINX_CONFIG"
+        else
+            rm -f "$NGINX_CONFIG"
+        fi
+        "${nginx_reload[@]}" || true
         fail "Nginx rejected the generated configuration. The backup was restored."
     fi
 
-    docker exec "$NGINX_CONTAINER" nginx -s reload
+    "${nginx_reload[@]}"
 }
 
 install_certbot() {
@@ -228,14 +394,18 @@ main() {
     require_command getent
     validate_email
 
-    docker container inspect "$NGINX_CONTAINER" >/dev/null 2>&1 || fail "Container $NGINX_CONTAINER is not running. Start the main WAFA stack first."
     find_copy_frontend
-    find_nginx_mounts
+    curl -fsS "http://127.0.0.1:${COPY_FRONTEND_PORT}/api/v1/test" >/dev/null || fail "WAFA Copy is not reachable at 127.0.0.1:${COPY_FRONTEND_PORT}. Start the Copy frontend before configuring domains."
+    configure_proxy
     validate_dns
 
-    NGINX_BACKUP="${NGINX_CONFIG}.before-wafa-copy-$(date +%Y%m%d%H%M%S).bak"
-    cp -a "$NGINX_CONFIG" "$NGINX_BACKUP"
-    info "Backed up Nginx configuration to $NGINX_BACKUP"
+    NGINX_CONFIG_EXISTED="false"
+    if [ -f "$NGINX_CONFIG" ]; then
+        NGINX_CONFIG_EXISTED="true"
+        NGINX_BACKUP="${NGINX_CONFIG}.before-wafa-copy-$(date +%Y%m%d%H%M%S).bak"
+        cp -a "$NGINX_CONFIG" "$NGINX_BACKUP"
+        info "Backed up Nginx configuration to $NGINX_BACKUP"
+    fi
 
     info "Installing the HTTP ACME challenge route"
     install_proxy_block http
@@ -252,9 +422,14 @@ main() {
     validate_and_reload_nginx
 
     mkdir -p /etc/letsencrypt/renewal-hooks/deploy
-    printf '#!/usr/bin/env sh\ndocker exec %q nginx -s reload\n' "$NGINX_CONTAINER" \
-        > /etc/letsencrypt/renewal-hooks/deploy/reload-wafa-nginx.sh
-    chmod 755 /etc/letsencrypt/renewal-hooks/deploy/reload-wafa-nginx.sh
+    if [ "$PROXY_MODE" = "docker" ]; then
+        printf '#!/usr/bin/env sh\ndocker exec %q nginx -s reload\n' "$NGINX_CONTAINER" \
+            > /etc/letsencrypt/renewal-hooks/deploy/reload-wafa-copy-proxy.sh
+    else
+        printf '#!/usr/bin/env sh\nsystemctl reload nginx\n' \
+            > /etc/letsencrypt/renewal-hooks/deploy/reload-wafa-copy-proxy.sh
+    fi
+    chmod 755 /etc/letsencrypt/renewal-hooks/deploy/reload-wafa-copy-proxy.sh
 
     curl -fsS --resolve "$FRONTEND_DOMAIN:443:127.0.0.1" "https://$FRONTEND_DOMAIN/api/v1/test" >/dev/null
     curl -fsS --resolve "$BACKEND_DOMAIN:443:127.0.0.1" "https://$BACKEND_DOMAIN/api/v1/test" >/dev/null

@@ -2,13 +2,14 @@
 
 This project no longer uses the old instance's fixed container names, Docker
 volumes, or network. It runs as a fully isolated Compose project on a private
-loopback port (default `127.0.0.1:8081`). The VPS's existing Nginx owns ports
-80/443 and routes `copy.imrs-qcm.com` to this copy. The frontend proxies
+loopback port (default `127.0.0.1:8081`). The setup script configures either
+the VPS's shared Nginx or host Nginx to own ports 80/443 and route
+`copy.imrs-qcm.com` to this copy. The frontend proxies
 `/api` and `/uploads` internally to its own backend.
 
-The frontend also joins the existing `wafa_wafa-network`, allowing the
-already-running `wafa-nginx` Docker container to reach this copy by container
-name without exposing port 8081 publicly.
+When a shared `wafa-nginx` Docker container exists, the frontend also joins
+the `wafa_wafa-network` so that proxy can reach it by container name. On a
+Copy-only VPS, host Nginx instead reaches the private loopback port directly.
 
 ## 1. Copy the project to a new directory on the VPS
 
@@ -52,12 +53,13 @@ IPv4 address:
 | `copy` | `copy.imrs-qcm.com` |
 | `backend.copy` | `backend.copy.imrs-qcm.com` |
 
-The VPS uses the existing `wafa-nginx` Docker container, not host Nginx. Do
-not create another Nginx container or bind this Compose project directly to
-ports 80/443. After the Copy stack is running, use the included idempotent
-setup script. It writes the Copy proxy routes into the Nginx configuration,
-requests one Let's Encrypt certificate covering both domains, validates the
-config, and creates a deploy hook to reload Nginx after future renewals.
+When the VPS already has the main WAFA `wafa-nginx` container, the script adds
+the Copy routes to that shared proxy. On a Copy-only VPS, it instead installs
+and configures host Nginx to route the two domains to Copy's private
+`127.0.0.1:8081` frontend port. Do not add an Nginx service to the Copy Compose
+file or expose the backend directly. The script requests one Let's Encrypt
+certificate covering both domains, validates the config, and creates a deploy
+hook to reload Nginx after future renewals.
 
 ```bash
 cd /opt/wafa-copy
