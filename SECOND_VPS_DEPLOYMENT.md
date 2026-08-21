@@ -44,12 +44,30 @@ openssl rand -hex 32
 
 ## 3. Route the domains through the VPS Nginx
 
-The VPS uses the existing `wafa-nginx` Docker container, not host Nginx. Add
-the copy server blocks to `/root/wafa/nginx/nginx.conf`, proxying the frontend
-hostname to `wafa-copy-frontend-1:80` on `wafa_wafa-network`. Obtain the
-certificate through the existing Certbot webroot volume, then reload with
-`docker exec wafa-nginx nginx -s reload`. Do not create another Nginx
-container or bind this Compose project directly to ports 80/443.
+Create these two DNS `A` records in Hostinger, both pointing to the VPS public
+IPv4 address:
+
+| Host | Domain |
+| --- | --- |
+| `copy` | `copy.imrs-qcm.com` |
+| `backend.copy` | `backend.copy.imrs-qcm.com` |
+
+The VPS uses the existing `wafa-nginx` Docker container, not host Nginx. Do
+not create another Nginx container or bind this Compose project directly to
+ports 80/443. After the Copy stack is running, use the included idempotent
+setup script. It writes the Copy proxy routes into the Nginx configuration,
+requests one Let's Encrypt certificate covering both domains, validates the
+config, and creates a deploy hook to reload Nginx after future renewals.
+
+```bash
+cd /opt/wafa-copy
+chmod +x setup-copy-domains.sh
+sudo ./setup-copy-domains.sh your-email@example.com
+```
+
+The script verifies that both hostnames resolve to the current VPS before it
+requests a certificate, and creates a timestamped backup of the current Nginx
+configuration before every change.
 
 ## 4. Deploy and verify
 
