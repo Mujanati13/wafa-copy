@@ -817,7 +817,7 @@ const LandingPageAdmin = () => {
                   <Input
                     id="contactEmail"
                     type="email"
-                    placeholder="contact@imrs-qcma.ma"
+                    placeholder="contact@atlas-qcm.online"
                     value={settings.contactEmail}
                     onChange={(e) => handleChange("contactEmail", e.target.value)}
                   />

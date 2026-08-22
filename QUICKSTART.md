@@ -88,8 +88,8 @@ docker-compose ps
 ```
 
 Visit:
-- Frontend: https://imrs-qcm.com
-- Backend: https://backend.imrs-qcm.com/api/v1/test
+- Frontend: https://atlas-qcm.online
+- Backend: https://backend.atlas-qcm.online/api/v1/test
 
 ## DNS Configuration (Before Deployment)
 
@@ -105,9 +105,8 @@ A       backend     YOUR_VPS_IP     300
 Wait 5-10 minutes for DNS propagation, then verify:
 
 ```bash
-dig imrs-qcm.com +short
-dig www.imrs-qcm.com +short
-dig backend.imrs-qcm.com +short
+dig atlas-qcm.online +short
+dig backend.atlas-qcm.online +short
 ```
 
 ## Common Issues
@@ -125,7 +124,7 @@ sudo ufw allow 443
 ### Issue: Frontend shows connection refused
 **Solution**: Check CORS settings in backend .env.production
 ```bash
-CORS_ORIGIN=https://imrs-qcm.com,https://www.imrs-qcm.com
+CORS_ORIGIN=https://atlas-qcm.online
 ```
 
 ## Useful Commands

@@ -4,7 +4,7 @@ This project no longer uses the old instance's fixed container names, Docker
 volumes, or network. It runs as a fully isolated Compose project on a private
 loopback port (default `127.0.0.1:8081`). The setup script configures either
 the VPS's shared Nginx or host Nginx to own ports 80/443 and route
-`copy.imrs-qcm.com` to this copy. The frontend proxies
+`atlas-qcm.online` to this copy. The frontend proxies
 `/api` and `/uploads` internally to its own backend.
 
 When a shared `wafa-nginx` Docker container exists, the frontend also joins
@@ -33,8 +33,8 @@ chmod 600 .env
 
 Set `APP_PORT` to an unused port (for example `8081`) and replace every
 `REPLACE_...` value. For this copy, keep `APP_HOST_BIND=127.0.0.1`, set both
-`FRONTEND_URL` and `CORS_ORIGIN` to `https://copy.imrs-qcm.com`, and set
-`COOKIE_SECURE=true`. If the Mongo password has
+`FRONTEND_URL` and `CORS_ORIGIN` to `https://atlas-qcm.online`, and set
+`COOKIE_SECURE=true` and `COOKIE_DOMAIN=.atlas-qcm.online`. If the Mongo password has
 characters such as `@`, `:`, `/`, `?`, or `#`, URL-encode it in `MONGO_URL`.
 
 Generate secrets with:
@@ -50,8 +50,8 @@ IPv4 address:
 
 | Host | Domain |
 | --- | --- |
-| `copy` | `copy.imrs-qcm.com` |
-| `backend.copy` | `backend.copy.imrs-qcm.com` |
+| `@` | `atlas-qcm.online` |
+| `backend` | `backend.atlas-qcm.online` |
 
 When the VPS already has the main WAFA `wafa-nginx` container, the script adds
 the Copy routes to that shared proxy. On a Copy-only VPS, it instead installs
@@ -69,7 +69,9 @@ sudo ./setup-copy-domains.sh your-email@example.com
 
 The script verifies that both hostnames resolve to the current VPS before it
 requests a certificate, and creates a timestamped backup of the current Nginx
-configuration before every change.
+configuration before every change. It also backs up `.env`, updates the
+frontend/CORS/cookie/OAuth URLs, and recreates only the Copy backend and
+frontend containers so generated links and authentication use the new domain.
 
 ## 4. Deploy and verify
 
@@ -80,7 +82,7 @@ curl -fsS http://127.0.0.1:8081/api/v1/test
 docker compose --env-file .env logs --tail=100 backend frontend mongodb
 ```
 
-Open `https://copy.imrs-qcm.com`. Port `8081` does not need a UFW rule because
+Open `https://atlas-qcm.online`. Port `8081` does not need a UFW rule because
 it is bound to loopback only. The backend is deliberately not exposed on its
 own host port; requests at `/api/v1/*` and `/uploads/*` remain within this
 instance's frontend proxy.

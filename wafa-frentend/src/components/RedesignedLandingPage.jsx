@@ -27,7 +27,7 @@ const FALLBACK_SETTINGS = {
   pricingSubtitle: "Commencez gratuitement, passez à l'illimité quand vous êtes prêt.",
   faqTitle: "Questions fréquentes",
   faqItems: [],
-  contactEmail: "contact@imrs.ma",
+  contactEmail: "contact@atlas-qcm.online",
   contactPhone: "+212 6 00 00 00 00",
   whatsappNumber: "",
 };

@@ -4,7 +4,7 @@
 server {
     listen 80;
     listen [::]:80;
-    server_name copy.imrs-qcm.com;
+    server_name atlas-qcm.online;
 
     location / {
         proxy_pass http://127.0.0.1:8081;
@@ -17,11 +17,11 @@ server {
 }
 
 # Optional direct API hostname. The frontend continues to use same-origin
-# /api/v1 through copy.imrs-qcm.com; this host exposes no React application.
+# /api/v1 through atlas-qcm.online; this host exposes no React application.
 server {
     listen 80;
     listen [::]:80;
-    server_name backend.copy.imrs-qcm.com;
+    server_name backend.atlas-qcm.online;
 
     location /api/ {
         proxy_pass http://127.0.0.1:8081;

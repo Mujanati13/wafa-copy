@@ -13,9 +13,8 @@ Complete deployment solution for the WAFA e-learning platform using Docker, Ngin
    - Root or sudo access
 
 2. **Domain Configuration**:
-   - `imrs-qcm.com` → Your VPS IP
-   - `www.imrs-qcm.com` → Your VPS IP
-   - `backend.imrs-qcm.com` → Your VPS IP
+   - `atlas-qcm.online` → Your VPS IP
+   - `backend.atlas-qcm.online` → Your VPS IP
 
 3. **Required Services**:
    - Email service (Gmail recommended for nodemailer)
@@ -183,9 +182,9 @@ docker-compose exec backend wget -qO- http://localhost:5010/api/v1/test
 
 ## 🌐 URLs
 
-- **Frontend**: https://imrs-qcm.com
-- **Backend API**: https://backend.imrs-qcm.com
-- **API Test**: https://backend.imrs-qcm.com/api/v1/test
+- **Frontend**: https://atlas-qcm.online
+- **Backend API**: https://backend.atlas-qcm.online
+- **API Test**: https://backend.atlas-qcm.online/api/v1/test
 
 ## 📊 Monitoring
 
