@@ -87,6 +87,32 @@ it is bound to loopback only. The backend is deliberately not exposed on its
 own host port; requests at `/api/v1/*` and `/uploads/*` remain within this
 instance's frontend proxy.
 
+## 5. Create or reset the administrator
+
+In the server-side `.env`, set a private password of at least 12 characters:
+
+```dotenv
+ADMIN_EMAIL=admin@atlas-qcm.online
+ADMIN_SEED_EMAIL=admin@atlas-qcm.online
+ADMIN_SEED_PASSWORD=REPLACE_WITH_A_LONG_UNIQUE_ADMIN_PASSWORD
+ADMIN_SEED_NAME=Atlas QCM Administrator
+```
+
+Recreate the backend once so Compose loads these variables, then run the
+idempotent seeder:
+
+```bash
+docker compose --env-file .env up -d --build backend
+docker compose --env-file .env exec backend npm run seed:admin
+```
+
+The command creates the account if it is missing. If the email already exists,
+it promotes the user to `super_admin`, resets the password, enables the
+account, and clears any stale active session. Log in at
+`https://atlas-qcm.online/admin/login`. Remove `ADMIN_SEED_PASSWORD` from
+`.env` after a successful seed and recreate the backend if you do not plan to
+run the seeder again.
+
 ## Manage only this copy
 
 Run these from `/opt/wafa-copy`:
