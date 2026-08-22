@@ -2,6 +2,7 @@ import { Router } from "express";
 import { UserController } from "../controllers/userController.js";
 import { isAuthenticated, isAdmin } from "../middleware/authMiddleware.js";
 import { uploadProfilePicture } from "../middleware/uploadMiddleware.js";
+import { getProgressStatistics } from "../controllers/progressStatisticsController.js";
 
 const router = Router();
 
@@ -29,6 +30,7 @@ router.post("/upload-photo", isAuthenticated, uploadProfilePicture, UserControll
 
 // User stats and achievements (authenticated)
 router.get("/my-stats", isAuthenticated, UserController.getMyStats);
+router.get("/progress", isAuthenticated, getProgressStatistics);
 router.post("/study-time", isAuthenticated, UserController.recordStudyTime);
 
 // Get user's subscription info (authenticated)

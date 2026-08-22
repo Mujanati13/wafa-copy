@@ -1,7 +1,7 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { motion, AnimatePresence } from "framer-motion";
-import { X, DollarSign, Package, Check, Plus } from "lucide-react";
+import { motion as Motion, AnimatePresence } from "framer-motion";
+import { X, DollarSign, Package, Check } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -27,11 +27,21 @@ const PlanModal = ({
   React.useEffect(() => {
     if (!open) return;
     const featuresArray = Array.isArray(initialPlan?.features)
-      ? initialPlan.features.map(f => typeof f === 'object' ? f.text : f)
+      ? initialPlan.features
+        .map((feature) => {
+          const text = typeof feature === "object" ? feature?.text : feature;
+          if (!String(text || "").trim()) return null;
+          return {
+            text: String(text).trim(),
+            included: typeof feature === "object" ? feature.included !== false : true,
+          };
+        })
+        .filter(Boolean)
       : (initialPlan?.featuresText || "")
         .split(",")
-        .map((f) => f.trim())
-        .filter(Boolean);
+        .map((text) => text.trim())
+        .filter(Boolean)
+        .map((text) => ({ text, included: true }));
     setForm({
       name: initialPlan?.name ?? "",
       description: initialPlan?.description ?? "",
@@ -49,18 +59,36 @@ const PlanModal = ({
     });
   }, [open, initialPlan]);
 
+  const addFeature = (included) => {
+    const text = form.featuresInput.trim();
+    if (!text) return;
+
+    setForm((currentForm) => {
+      const matchingFeatureIndex = currentForm.features.findIndex(
+        (feature) => feature.text.toLocaleLowerCase() === text.toLocaleLowerCase()
+      );
+      const features = matchingFeatureIndex === -1
+        ? [...currentForm.features, { text, included }]
+        : currentForm.features.map((feature, featureIndex) => (
+          featureIndex === matchingFeatureIndex ? { ...feature, text, included } : feature
+        ));
+
+      return { ...currentForm, features, featuresInput: "" };
+    });
+  };
+
   if (!open) return null;
 
   return (
     <AnimatePresence>
-      <motion.div
+      <Motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         className="flex justify-center items-center min-h-screen bg-black/60 backdrop-blur-sm p-4 z-[99999999999] fixed top-0 left-0 w-full h-full"
         onClick={onCancel}
       >
-        <motion.div
+        <Motion.div
           initial={{ scale: 0.9, opacity: 0, y: 20 }}
           animate={{ scale: 1, opacity: 1, y: 0 }}
           exit={{ scale: 0.9, opacity: 0, y: 20 }}
@@ -197,7 +225,7 @@ const PlanModal = ({
                 <Check className="w-4 h-4 text-green-600" />
                 {t("admin:features")}
               </Label>
-              <div className="flex gap-2">
+              <div className="flex flex-col gap-2 sm:flex-row">
                 <Input
                   placeholder={t("admin:features_placeholder")}
                   value={form.featuresInput}
@@ -207,68 +235,97 @@ const PlanModal = ({
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
                       e.preventDefault();
-                      const value = form.featuresInput.trim();
-                      if (!value) return;
-                      if (form.features.includes(value)) return;
-                      setForm((p) => ({
-                        ...p,
-                        features: [...p.features, value],
-                        featuresInput: "",
-                      }));
+                      addFeature(true);
                     }
                   }}
-                  className="h-11 rounded-lg border-border focus:border-green-500 focus:ring-green-500 transition-all"
+                  className="h-11 flex-1 rounded-lg border-border focus:border-green-500 focus:ring-green-500 transition-all"
                 />
-                <Button
-                  type="button"
-                  className="h-11 px-4 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white shadow-lg hover:shadow-xl transition-all rounded-lg flex items-center gap-2"
-                  onClick={() => {
-                    const value = form.featuresInput.trim();
-                    if (!value) return;
-                    if (form.features.includes(value)) return;
-                    setForm((p) => ({
-                      ...p,
-                      features: [...p.features, value],
-                      featuresInput: "",
-                    }));
-                  }}
-                >
-                  <Plus className="w-4 h-4" />
-                  {t("admin:add")}
-                </Button>
+                <div className="grid grid-cols-2 gap-2 sm:flex">
+                  <Button
+                    type="button"
+                    className="h-11 px-4 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white shadow-lg hover:shadow-xl transition-all rounded-lg flex items-center justify-center gap-2"
+                    onClick={() => addFeature(true)}
+                    disabled={!form.featuresInput.trim()}
+                  >
+                    <Check className="w-4 h-4" />
+                    Inclure
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="h-11 px-4 border-red-300 text-red-700 hover:bg-red-50 hover:text-red-800 rounded-lg flex items-center justify-center gap-2 dark:border-red-800 dark:text-red-300 dark:hover:bg-red-950/40"
+                    onClick={() => addFeature(false)}
+                    disabled={!form.featuresInput.trim()}
+                  >
+                    <X className="w-4 h-4" />
+                    Exclure
+                  </Button>
+                </div>
               </div>
 
               {Array.isArray(form.features) && form.features.length > 0 ? (
-                <motion.div
+                <Motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className="flex flex-wrap gap-2 mt-4 p-4 bg-green-50 rounded-lg border border-green-100"
+                  className="flex flex-wrap gap-2 mt-4 p-4 bg-muted/40 rounded-lg border border-border"
                 >
-                  {form.features.map((f, idx) => (
-                    <motion.span
-                      key={`${f}-${idx}`}
+                  {form.features.map((feature, idx) => (
+                    <Motion.span
+                      key={`${feature.text}-${idx}`}
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
-                      className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-green-100 to-emerald-100 px-3 py-1.5 text-sm text-green-800 border border-green-200 shadow-sm"
+                      className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm border shadow-sm ${
+                        feature.included
+                          ? "bg-green-50 text-green-800 border-green-200 dark:bg-green-950/40 dark:text-green-300 dark:border-green-800"
+                          : "bg-red-50 text-red-800 border-red-200 dark:bg-red-950/40 dark:text-red-300 dark:border-red-800"
+                      }`}
                     >
-                      <Check className="w-3 h-3 text-green-600" />
-                      {f}
+                      {feature.included ? <Check className="w-3 h-3 text-green-600" /> : <X className="w-3 h-3 text-red-600" />}
+                      {feature.text}
+                      <span className="inline-flex overflow-hidden rounded-md border border-current/20" role="group" aria-label={`État de ${feature.text}`}>
+                        <button
+                          type="button"
+                          className={`p-1 transition-colors ${feature.included ? "bg-green-600 text-white" : "hover:bg-green-100 dark:hover:bg-green-950"}`}
+                          onClick={() => setForm((p) => ({
+                            ...p,
+                            features: p.features.map((item, itemIndex) => itemIndex === idx ? { ...item, included: true } : item),
+                          }))}
+                          aria-label={`Activer ${feature.text}`}
+                          aria-pressed={feature.included}
+                          title="Activer"
+                        >
+                          <Check className="w-3 h-3" />
+                        </button>
+                        <button
+                          type="button"
+                          className={`p-1 transition-colors ${!feature.included ? "bg-red-600 text-white" : "hover:bg-red-100 dark:hover:bg-red-950"}`}
+                          onClick={() => setForm((p) => ({
+                            ...p,
+                            features: p.features.map((item, itemIndex) => itemIndex === idx ? { ...item, included: false } : item),
+                          }))}
+                          aria-label={`Désactiver ${feature.text}`}
+                          aria-pressed={!feature.included}
+                          title="Désactiver"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </span>
                       <button
                         type="button"
-                        className="ml-1 text-green-600 hover:text-red-600 transition-colors font-bold"
+                        className="ml-1 text-current hover:text-red-600 transition-colors font-bold"
                         onClick={() =>
                           setForm((p) => ({
                             ...p,
-                            features: p.features.filter((x) => x !== f),
+                            features: p.features.filter((_, itemIndex) => itemIndex !== idx),
                           }))
                         }
-                        aria-label={`Remove ${f}`}
+                        aria-label={`Supprimer ${feature.text}`}
                       >
                         ×
                       </button>
-                    </motion.span>
+                    </Motion.span>
                   ))}
-                </motion.div>
+                </Motion.div>
               ) : null}
             </div>
 
@@ -291,8 +348,8 @@ const PlanModal = ({
               </Button>
             </div>
           </div>
-        </motion.div>
-      </motion.div>
+        </Motion.div>
+      </Motion.div>
     </AnimatePresence>
   );
 };

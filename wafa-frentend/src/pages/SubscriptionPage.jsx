@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { useTranslation } from 'react-i18next';
-import { motion } from "framer-motion";
+import { motion as Motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import PlanModal from "@/components/admin/PlanModal";
-import { DollarSign, SquareChartGantt, UserRoundCheck, Trash2, Edit, Plus, Users, TrendingUp, Loader } from "lucide-react";
+import { DollarSign, SquareChartGantt, UserRoundCheck, Trash2, Edit, Plus, Users, TrendingUp, Loader, Check, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
@@ -17,8 +16,6 @@ import { subscriptionPlanService } from "@/services/subscriptionPlanService";
 import { toast } from "sonner";
 
 const SubscriptionPage = () => {
-  const { t } = useTranslation(['admin', 'common']);
-  
   // Real subscription statistics
   const [subscriptionStats, setSubscriptionStats] = useState({
     free: 0,
@@ -178,7 +175,7 @@ const SubscriptionPage = () => {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50 to-slate-100 p-6">
       <div className="w-full space-y-6">
         {/* Header with gradient background */}
-        <motion.div
+        <Motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
@@ -197,10 +194,10 @@ const SubscriptionPage = () => {
             <Plus className="w-4 h-4 mr-2" />
             Create Plan
           </Button>
-        </motion.div>
+        </Motion.div>
 
         {/* Real Subscription Statistics */}
-        <motion.div
+        <Motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.1 }}
@@ -261,10 +258,10 @@ const SubscriptionPage = () => {
               </div>
             </CardContent>
           </Card>
-        </motion.div>
+        </Motion.div>
 
         {/* Metrics Cards Section */}
-        <motion.div
+        <Motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.2 }}
@@ -327,10 +324,10 @@ const SubscriptionPage = () => {
               </div>
             </CardContent>
           </Card>
-        </motion.div>
+        </Motion.div>
 
         {/* Plans Grid */}
-        <motion.div
+        <Motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
@@ -350,7 +347,7 @@ const SubscriptionPage = () => {
             </div>
           ) : (
             subscriptionPlans.map((plan, index) => (
-            <motion.div
+            <Motion.div
               key={plan._id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -444,7 +441,7 @@ const SubscriptionPage = () => {
                       </p>
                       <div className="space-y-2">
                         {/* Custom features based on plan name */}
-                        {plan.name === 'GRATUIT' && (
+                        {plan.name === 'GRATUIT' && (!Array.isArray(plan.features) || plan.features.length === 0) && (
                           <>
                             <div className="flex items-start gap-2">
                               <span className="text-xs">✔️</span>
@@ -497,7 +494,7 @@ const SubscriptionPage = () => {
                           </>
                         )}
 
-                        {plan.name === 'PREMIUM' && (
+                        {plan.name === 'PREMIUM' && (!Array.isArray(plan.features) || plan.features.length === 0) && (
                           <>
                             <div className="flex items-start gap-2">
                               <span className="text-xs">✔️</span>
@@ -550,7 +547,7 @@ const SubscriptionPage = () => {
                           </>
                         )}
 
-                        {plan.name === 'PREMIUM PRO' && (
+                        {plan.name === 'PREMIUM PRO' && (!Array.isArray(plan.features) || plan.features.length === 0) && (
                           <>
                             <div className="flex items-start gap-2">
                               <span className="text-xs">✔️</span>
@@ -603,23 +600,19 @@ const SubscriptionPage = () => {
                           </>
                         )}
 
-                        {/* Fallback: if none match, show original features */}
-                        {!['GRATUIT', 'PREMIUM', 'PREMIUM PRO'].includes(plan.name) && Array.isArray(plan.features) && plan.features.length > 0 && (
-                          <div className="flex flex-wrap gap-1">
-                            {plan.features.map((f, i) => {
-                              const featureText = typeof f === 'string' ? f : f.text;
-                              return (
-                                <Badge
-                                  key={`${plan.id}-feature-${i}`}
-                                  variant="secondary"
-                                  className="text-xs"
-                                >
-                                  {featureText}
-                                </Badge>
-                              );
-                            })}
-                          </div>
-                        )}
+                        {Array.isArray(plan.features) && plan.features.length > 0 && plan.features.map((feature, index) => {
+                          const featureText = typeof feature === "string" ? feature : feature.text;
+                          const isIncluded = typeof feature === "string" || feature.included !== false;
+
+                          return (
+                            <div key={`${plan._id}-feature-${index}`} className={`flex items-start gap-2 ${!isIncluded ? "opacity-60" : ""}`}>
+                              {isIncluded
+                                ? <Check className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-green-600" />
+                                : <X className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-red-600" />}
+                              <span className={`text-xs ${isIncluded ? "text-foreground" : "text-muted-foreground line-through"}`}>{featureText}</span>
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
 
@@ -638,10 +631,10 @@ const SubscriptionPage = () => {
                   </div>
                 </CardContent>
               </Card>
-            </motion.div>
+            </Motion.div>
             ))
           )}
-        </motion.div>
+        </Motion.div>
 
         <PlanModal
           open={isPlanModalOpen}

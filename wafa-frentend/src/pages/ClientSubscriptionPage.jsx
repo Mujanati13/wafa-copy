@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
-import { motion } from "framer-motion";
+import { motion as Motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { Check, AlertCircle, Zap, Loader2, CreditCard, ShieldCheck, BookOpen, Building2, Clock, MessageCircle, Sparkles } from "lucide-react";
+import { Check, X, AlertCircle, Zap, Loader2, CreditCard, ShieldCheck, BookOpen, Building2, Clock, MessageCircle, Sparkles } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { dashboardService } from "@/services/dashboardService";
 import { subscriptionPlanService } from "@/services/subscriptionPlanService";
@@ -16,13 +15,11 @@ import { api, cn } from "@/lib/utils";
 const API_URL = import.meta.env.VITE_API_URL;
 
 const ClientSubscriptionPage = () => {
-  const { t } = useTranslation(['dashboard', 'common']);
   const location = useLocation();
 
   const [userSubscription, setUserSubscription] = useState(null);
   const [allPlans, setAllPlans] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [paymentLoading, setPaymentLoading] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
   const [selectedSemesters, setSelectedSemesters] = useState([]);
@@ -182,7 +179,7 @@ const ClientSubscriptionPage = () => {
     <div className="min-h-screen bg-background text-foreground p-3 sm:p-4 md:p-6">
       <div className="max-w-6xl mx-auto space-y-8">
         {/* Header */}
-        <motion.div
+        <Motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
@@ -196,7 +193,7 @@ const ClientSubscriptionPage = () => {
           <p className="text-sm sm:text-base text-muted-foreground max-w-2xl mx-auto">
             Gérez votre plan d'abonnement et débloquez l'intégralité des modules, banques de QCM et explications avancées.
           </p>
-        </motion.div>
+        </Motion.div>
 
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -213,7 +210,7 @@ const ClientSubscriptionPage = () => {
         ) : (
           <>
             {/* Current Subscription Status */}
-            <motion.div
+            <Motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3, delay: 0.1 }}
@@ -251,7 +248,7 @@ const ClientSubscriptionPage = () => {
                   )}
                 </CardContent>
               </Card>
-            </motion.div>
+            </Motion.div>
 
             {/* Available Plans */}
             <div>
@@ -262,7 +259,7 @@ const ClientSubscriptionPage = () => {
                   const isFree = plan.price === 0;
 
                   return (
-                    <motion.div
+                    <Motion.div
                       key={plan._id}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
@@ -310,7 +307,7 @@ const ClientSubscriptionPage = () => {
                         <CardContent className="flex-1 space-y-6 flex flex-col justify-between">
                           {/* Features */}
                           <div className="space-y-3">
-                            {plan.name === 'GRATUIT' && (
+                            {plan.name === 'GRATUIT' && (!Array.isArray(plan.features) || plan.features.length === 0) && (
                               <>
                                 <div className="flex items-start gap-2.5">
                                   <span className="text-emerald-500 font-bold text-xs shrink-0 mt-0.5">✔️</span>
@@ -359,7 +356,7 @@ const ClientSubscriptionPage = () => {
                               </>
                             )}
 
-                            {plan.name === 'PREMIUM' && (
+                            {plan.name === 'PREMIUM' && (!Array.isArray(plan.features) || plan.features.length === 0) && (
                               <>
                                 <div className="flex items-start gap-2.5">
                                   <span className="text-emerald-500 font-bold text-xs shrink-0 mt-0.5">✔️</span>
@@ -408,7 +405,7 @@ const ClientSubscriptionPage = () => {
                               </>
                             )}
 
-                            {plan.name === 'PREMIUM PRO' && (
+                            {plan.name === 'PREMIUM PRO' && (!Array.isArray(plan.features) || plan.features.length === 0) && (
                               <>
                                 <div className="flex items-start gap-2.5">
                                   <span className="text-emerald-500 font-bold text-xs shrink-0 mt-0.5">✔️</span>
@@ -461,13 +458,15 @@ const ClientSubscriptionPage = () => {
                               </>
                             )}
 
-                            {!['GRATUIT', 'PREMIUM', 'PREMIUM PRO'].includes(plan.name) && plan.features && plan.features.map((feature, idx) => {
+                            {Array.isArray(plan.features) && plan.features.length > 0 && plan.features.map((feature, idx) => {
                               const featureText = typeof feature === 'string' ? feature : feature.text;
-                              const isIncluded = typeof feature === 'string' ? true : feature.included;
+                              const isIncluded = typeof feature === 'string' || feature.included !== false;
 
                               return (
                                 <div key={idx} className={cn("flex items-start gap-2.5", !isIncluded && "opacity-40")}>
-                                  <Check className={cn("w-4 h-4 shrink-0 mt-0.5", isIncluded ? "text-emerald-500" : "text-muted-foreground")} />
+                                  {isIncluded
+                                    ? <Check className="w-4 h-4 shrink-0 mt-0.5 text-emerald-500" />
+                                    : <X className="w-4 h-4 shrink-0 mt-0.5 text-red-500" />}
                                   <span className={cn("text-xs", isIncluded ? "text-foreground" : "text-muted-foreground line-through")}>{featureText}</span>
                                 </div>
                               );
@@ -509,7 +508,7 @@ const ClientSubscriptionPage = () => {
                           </Button>
                         </CardContent>
                       </Card>
-                    </motion.div>
+                    </Motion.div>
                   );
                 })}
               </div>
@@ -681,7 +680,6 @@ const ClientSubscriptionPage = () => {
                 setSelectedSemesters([]);
                 setPaymentMethod(null);
               }}
-              disabled={paymentLoading}
               className="rounded-xl border-border"
             >
               Annuler
