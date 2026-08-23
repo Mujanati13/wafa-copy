@@ -92,7 +92,7 @@ const ContactPage = () => {
               <CardContent className="pt-6">
                 <Mail className="text-primary h-8 w-8 mb-3" />
                 <h3 className="font-semibold mb-2">Email</h3>
-                <p className="text-sm text-muted-foreground">contact@atlas-qcm.online</p>
+                <p className="text-sm text-muted-foreground">contact@yourqcm.online</p>
               </CardContent>
             </Card>
 

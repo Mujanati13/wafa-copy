@@ -4,7 +4,7 @@ This project no longer uses the old instance's fixed container names, Docker
 volumes, or network. It runs as a fully isolated Compose project on a private
 loopback port (default `127.0.0.1:8081`). The setup script configures either
 the VPS's shared Nginx or host Nginx to own ports 80/443 and route
-`atlas-qcm.online` to this copy. The frontend proxies
+`yourqcm.online` to this copy. The frontend proxies
 `/api` and `/uploads` internally to its own backend.
 
 When a shared `wafa-nginx` Docker container exists, the frontend also joins
@@ -33,8 +33,8 @@ chmod 600 .env
 
 Set `APP_PORT` to an unused port (for example `8081`) and replace every
 `REPLACE_...` value. For this copy, keep `APP_HOST_BIND=127.0.0.1`, set both
-`FRONTEND_URL` and `CORS_ORIGIN` to `https://atlas-qcm.online`, and set
-`COOKIE_SECURE=true` and `COOKIE_DOMAIN=.atlas-qcm.online`. If the Mongo password has
+`FRONTEND_URL` and `CORS_ORIGIN` to `https://yourqcm.online`, and set
+`COOKIE_SECURE=true` and `COOKIE_DOMAIN=.yourqcm.online`. If the Mongo password has
 characters such as `@`, `:`, `/`, `?`, or `#`, URL-encode it in `MONGO_URL`.
 
 Generate secrets with:
@@ -50,8 +50,8 @@ IPv4 address:
 
 | Host | Domain |
 | --- | --- |
-| `@` | `atlas-qcm.online` |
-| `backend` | `backend.atlas-qcm.online` |
+| `@` | `yourqcm.online` |
+| `backend` | `backend.yourqcm.online` |
 
 When the VPS already has the main WAFA `wafa-nginx` container, the script adds
 the Copy routes to that shared proxy. On a Copy-only VPS, it instead installs
@@ -82,7 +82,7 @@ curl -fsS http://127.0.0.1:8081/api/v1/test
 docker compose --env-file .env logs --tail=100 backend frontend mongodb
 ```
 
-Open `https://atlas-qcm.online`. Port `8081` does not need a UFW rule because
+Open `https://yourqcm.online`. Port `8081` does not need a UFW rule because
 it is bound to loopback only. The backend is deliberately not exposed on its
 own host port; requests at `/api/v1/*` and `/uploads/*` remain within this
 instance's frontend proxy.
@@ -92,8 +92,8 @@ instance's frontend proxy.
 In the server-side `.env`, set a private password of at least 12 characters:
 
 ```dotenv
-ADMIN_EMAIL=admin@atlas-qcm.online
-ADMIN_SEED_EMAIL=admin@atlas-qcm.online
+ADMIN_EMAIL=admin@yourqcm.online
+ADMIN_SEED_EMAIL=admin@yourqcm.online
 ADMIN_SEED_PASSWORD=REPLACE_WITH_A_LONG_UNIQUE_ADMIN_PASSWORD
 ADMIN_SEED_NAME=Atlas QCM Administrator
 ```
@@ -109,7 +109,7 @@ docker compose --env-file .env exec backend npm run seed:admin
 The command creates the account if it is missing. If the email already exists,
 it promotes the user to `super_admin`, resets the password, enables the
 account, and clears any stale active session. Log in at
-`https://atlas-qcm.online/admin/login`. Remove `ADMIN_SEED_PASSWORD` from
+`https://yourqcm.online/admin/login`. Remove `ADMIN_SEED_PASSWORD` from
 `.env` after a successful seed and recreate the backend if you do not plan to
 run the seeder again.
 

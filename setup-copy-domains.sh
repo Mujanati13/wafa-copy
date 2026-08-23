@@ -6,15 +6,15 @@
 #   sudo ./setup-copy-domains.sh admin@example.com
 #
 # Prerequisites:
-#   * DNS A records for atlas-qcm.online and backend.atlas-qcm.online point
+#   * DNS A records for yourqcm.online and backend.yourqcm.online point
 #     to this VPS.
 #   * The WAFA Copy stack has been deployed (`./deploy-second-instance.sh`).
 #   * Port 80/443 is unused if this VPS does not already have `wafa-nginx`.
 
 set -euo pipefail
 
-FRONTEND_DOMAIN="atlas-qcm.online"
-BACKEND_DOMAIN="backend.atlas-qcm.online"
+FRONTEND_DOMAIN="yourqcm.online"
+BACKEND_DOMAIN="backend.yourqcm.online"
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 ENV_FILE="${ENV_FILE:-${SCRIPT_DIR}/.env}"
 NGINX_CONTAINER="${NGINX_CONTAINER:-wafa-nginx}"
@@ -80,22 +80,22 @@ update_runtime_domains() {
 
     if grep -Fqx "FRONTEND_URL=https://${FRONTEND_DOMAIN}" "$ENV_FILE" \
         && grep -Fqx "CORS_ORIGIN=https://${FRONTEND_DOMAIN}" "$ENV_FILE" \
-        && grep -Fqx "COOKIE_DOMAIN=.atlas-qcm.online" "$ENV_FILE" \
+        && grep -Fqx "COOKIE_DOMAIN=.yourqcm.online" "$ENV_FILE" \
         && grep -Fqx "GOOGLE_CALLBACK_URL=https://${BACKEND_DOMAIN}/api/v1/auth/google/callback" "$ENV_FILE"; then
         info "Runtime domain settings are already current"
         return
     fi
 
-    local env_backup="${ENV_FILE}.before-atlas-domain-$(date +%Y%m%d%H%M%S).bak"
+    local env_backup="${ENV_FILE}.before-domain-change-$(date +%Y%m%d%H%M%S).bak"
     cp -a "$ENV_FILE" "$env_backup"
     set_env_value FRONTEND_URL "https://${FRONTEND_DOMAIN}"
     set_env_value CORS_ORIGIN "https://${FRONTEND_DOMAIN}"
-    set_env_value COOKIE_DOMAIN ".atlas-qcm.online"
+    set_env_value COOKIE_DOMAIN ".yourqcm.online"
     set_env_value GOOGLE_CALLBACK_URL "https://${BACKEND_DOMAIN}/api/v1/auth/google/callback"
     info "Updated frontend, CORS, cookie, and OAuth domain settings (backup: $env_backup)"
 
     docker compose --env-file "$ENV_FILE" -f "$SCRIPT_DIR/docker-compose.yml" \
-        up -d --force-recreate backend frontend
+        up -d --build --force-recreate backend frontend
 }
 
 find_copy_frontend() {
@@ -196,7 +196,7 @@ install_proxy_block() {
     server {
         listen 80;
         listen [::]:80;
-        server_name atlas-qcm.online backend.atlas-qcm.online;
+        server_name yourqcm.online backend.yourqcm.online;
 
         location /.well-known/acme-challenge/ {
             root /var/www/certbot;
@@ -215,7 +215,7 @@ EOF
     server {
         listen 80;
         listen [::]:80;
-        server_name atlas-qcm.online backend.atlas-qcm.online;
+        server_name yourqcm.online backend.yourqcm.online;
 
         location /.well-known/acme-challenge/ {
             root /var/www/certbot;
@@ -230,10 +230,10 @@ EOF
         listen 443 ssl;
         listen [::]:443 ssl;
         http2 on;
-        server_name atlas-qcm.online;
+        server_name yourqcm.online;
 
-        ssl_certificate /etc/letsencrypt/live/atlas-qcm.online/fullchain.pem;
-        ssl_certificate_key /etc/letsencrypt/live/atlas-qcm.online/privkey.pem;
+        ssl_certificate /etc/letsencrypt/live/yourqcm.online/fullchain.pem;
+        ssl_certificate_key /etc/letsencrypt/live/yourqcm.online/privkey.pem;
         ssl_protocols TLSv1.2 TLSv1.3;
         ssl_session_cache shared:SSL:10m;
         ssl_session_timeout 10m;
@@ -255,10 +255,10 @@ EOF
         listen 443 ssl;
         listen [::]:443 ssl;
         http2 on;
-        server_name backend.atlas-qcm.online;
+        server_name backend.yourqcm.online;
 
-        ssl_certificate /etc/letsencrypt/live/atlas-qcm.online/fullchain.pem;
-        ssl_certificate_key /etc/letsencrypt/live/atlas-qcm.online/privkey.pem;
+        ssl_certificate /etc/letsencrypt/live/yourqcm.online/fullchain.pem;
+        ssl_certificate_key /etc/letsencrypt/live/yourqcm.online/privkey.pem;
         ssl_protocols TLSv1.2 TLSv1.3;
         ssl_session_cache shared:SSL:10m;
         ssl_session_timeout 10m;
@@ -313,7 +313,7 @@ install_host_proxy_block() {
 server {
     listen 80;
     listen [::]:80;
-    server_name atlas-qcm.online backend.atlas-qcm.online;
+    server_name yourqcm.online backend.yourqcm.online;
 
     location /.well-known/acme-challenge/ {
         root /var/www/certbot;
@@ -332,7 +332,7 @@ EOF
 server {
     listen 80;
     listen [::]:80;
-    server_name atlas-qcm.online backend.atlas-qcm.online;
+    server_name yourqcm.online backend.yourqcm.online;
 
     location /.well-known/acme-challenge/ {
         root /var/www/certbot;
@@ -346,10 +346,10 @@ server {
 server {
     listen 443 ssl http2;
     listen [::]:443 ssl http2;
-    server_name atlas-qcm.online;
+    server_name yourqcm.online;
 
-    ssl_certificate /etc/letsencrypt/live/atlas-qcm.online/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/atlas-qcm.online/privkey.pem;
+    ssl_certificate /etc/letsencrypt/live/yourqcm.online/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/yourqcm.online/privkey.pem;
     ssl_protocols TLSv1.2 TLSv1.3;
 
     location / {
@@ -366,10 +366,10 @@ server {
 server {
     listen 443 ssl http2;
     listen [::]:443 ssl http2;
-    server_name backend.atlas-qcm.online;
+    server_name backend.yourqcm.online;
 
-    ssl_certificate /etc/letsencrypt/live/atlas-qcm.online/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/atlas-qcm.online/privkey.pem;
+    ssl_certificate /etc/letsencrypt/live/yourqcm.online/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/yourqcm.online/privkey.pem;
     ssl_protocols TLSv1.2 TLSv1.3;
 
     location /api/ {

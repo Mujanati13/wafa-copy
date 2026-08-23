@@ -88,8 +88,8 @@ docker-compose ps
 ```
 
 Visit:
-- Frontend: https://atlas-qcm.online
-- Backend: https://backend.atlas-qcm.online/api/v1/test
+- Frontend: https://yourqcm.online
+- Backend: https://backend.yourqcm.online/api/v1/test
 
 ## DNS Configuration (Before Deployment)
 
@@ -105,8 +105,8 @@ A       backend     YOUR_VPS_IP     300
 Wait 5-10 minutes for DNS propagation, then verify:
 
 ```bash
-dig atlas-qcm.online +short
-dig backend.atlas-qcm.online +short
+dig yourqcm.online +short
+dig backend.yourqcm.online +short
 ```
 
 ## Common Issues
@@ -124,7 +124,7 @@ sudo ufw allow 443
 ### Issue: Frontend shows connection refused
 **Solution**: Check CORS settings in backend .env.production
 ```bash
-CORS_ORIGIN=https://atlas-qcm.online
+CORS_ORIGIN=https://yourqcm.online
 ```
 
 ## Useful Commands
