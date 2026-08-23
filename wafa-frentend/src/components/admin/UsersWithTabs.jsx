@@ -225,7 +225,7 @@ const UsersWithTabs = () => {
       // Title
       doc.setFontSize(20);
       doc.setTextColor(40, 40, 40);
-      doc.text("Liste des Utilisateurs - WAFA", 14, 20);
+      doc.text("Liste des Utilisateurs - YourQCM", 14, 20);
 
       // Subtitle with date
       doc.setFontSize(10);

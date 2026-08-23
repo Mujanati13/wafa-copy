@@ -472,7 +472,7 @@ test('User Export - CSV generation produces valid format', () => {
 
 test('User Export - PDF structure is correct', () => {
   const pdfStructure = {
-    title: 'Liste des Utilisateurs - WAFA',
+    title: 'Liste des Utilisateurs - YourQCM',
     generatedAt: new Date().toISOString(),
     columns: ['Nom', 'Email', 'Plan', 'Statut', "Date d'inscription"],
     data: [],

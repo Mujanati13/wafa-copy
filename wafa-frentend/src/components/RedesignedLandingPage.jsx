@@ -21,7 +21,7 @@ import { getLandingPageSettings } from "@/services/landingPageService";
 import { subscriptionPlanService } from "@/services/subscriptionPlanService";
 
 const FALLBACK_SETTINGS = {
-  siteName: "Atlas QCM",
+  siteName: "YourQCM",
   heroTitle: "Révisez avec méthode. Réussissez avec confiance.",
   heroSubtitle: "La plateforme de préparation médicale pensée pour votre rythme.",
   heroDescription: "QCM ciblés, examens corrigés, statistiques et ressources dans un seul espace.",
@@ -33,7 +33,7 @@ const FALLBACK_SETTINGS = {
 
 const copy = {
   fr: {
-    login: "Se connecter", create: "Créer mon compte", discover: "Découvrir Atlas QCM",
+    login: "Se connecter", create: "Créer mon compte", discover: "Découvrir YourQCM",
     navigation: ["Avantages", "Abonnements", "FAQ"],
     eyebrow: "Préparation médicale, sans dispersion", continue: "Commencer gratuitement",
     seePlans: "Voir les abonnements", trusted: "Pensé pour les étudiants en médecine au Maroc",
@@ -42,11 +42,11 @@ const copy = {
     benefits: "Tout ce qu'il faut pour réviser avec régularité", benefitsCopy: "Moins d'onglets, plus de clarté sur ce qui compte aujourd'hui.",
     features: [["QCM et examens", "Entraînez-vous sur les thèmes importants."], ["Explications utiles", "Comprenez chaque réponse, pas seulement votre score."], ["Progression visible", "Identifiez vos acquis et vos priorités."], ["Révision organisée", "Notes et playlists au même endroit."]],
     plans: "Abonnements", popular: "Le plus choisi", perSemester: "/ semestre", choose: "Choisir ce plan", includes: "Ce qui est inclus", faq: "Réponses claires avant de commencer",
-    footer: "Révisez avec intention. Progressez avec Atlas QCM.", product: "Produit", support: "Support", social: "Suivez-nous", privacy: "Confidentialité", terms: "Conditions",
+    footer: "Révisez avec intention. Progressez avec YourQCM.", product: "Produit", support: "Support", social: "Suivez-nous", privacy: "Confidentialité", terms: "Conditions",
     menu: "Ouvrir le menu",
   },
   en: {
-    login: "Log in", create: "Create my account", discover: "Explore Atlas QCM",
+    login: "Log in", create: "Create my account", discover: "Explore YourQCM",
     navigation: ["Benefits", "Plans", "FAQ"],
     eyebrow: "Medical preparation, without the noise", continue: "Start for free",
     seePlans: "View plans", trusted: "Built for medical students in Morocco",
@@ -55,7 +55,7 @@ const copy = {
     benefits: "Everything you need to study consistently", benefitsCopy: "Fewer tabs, more clarity on what matters today.",
     features: [["QCMs and exams", "Practise the topics that matter."], ["Useful explanations", "Understand every answer, not only your score."], ["Visible progress", "Identify strengths and priorities."], ["Organised study", "Keep notes and playlists in one place."]],
     plans: "Plans", popular: "Most popular", perSemester: "/ semester", choose: "Choose this plan", includes: "What's included", faq: "Clear answers before you begin",
-    footer: "Study with intention. Progress with Atlas QCM.", product: "Product", support: "Support", social: "Follow us", privacy: "Privacy", terms: "Terms",
+    footer: "Study with intention. Progress with YourQCM.", product: "Product", support: "Support", social: "Follow us", privacy: "Privacy", terms: "Terms",
     menu: "Open menu",
   },
 };
@@ -225,9 +225,9 @@ export default function RedesignedLandingPage() {
 
       <header className="sticky top-0 z-50 border-b border-border/70 bg-background/95 shadow-sm backdrop-blur-xl">
         <div className="mx-auto flex h-18 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-          <Link to="/" className="imrs-focus-ring flex items-center gap-3 rounded-lg" aria-label="Atlas QCM">
-            <img src={settings.logoUrl || logo} alt="Atlas QCM" className="h-10 w-10 rounded-xl object-contain" />
-            <span className="text-lg font-bold tracking-tight text-primary">Atlas QCM</span>
+          <Link to="/" className="imrs-focus-ring flex items-center gap-3 rounded-lg" aria-label="YourQCM">
+            <img src={settings.logoUrl || logo} alt="YourQCM" className="h-10 w-10 rounded-xl object-contain" />
+            <span className="text-lg font-bold tracking-tight text-primary">YourQCM</span>
           </Link>
           <nav className="hidden items-center gap-6 lg:flex" aria-label="Navigation principale">
             {[["benefits", text.navigation[0]], ["pricing", text.navigation[1]], ["faq", text.navigation[2]]].map(([id, label]) => (
@@ -286,7 +286,7 @@ export default function RedesignedLandingPage() {
 
         <section id="benefits" className="scroll-mt-24 bg-muted/55 py-20">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <SectionHeading eyebrow="01 — Atlas QCM" title={text.benefits} copy={text.benefitsCopy} />
+            <SectionHeading eyebrow="01 — YourQCM" title={text.benefits} copy={text.benefitsCopy} />
             <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
               {text.features.map(([title, description], index) => {
                 const visual = benefitVisuals[index % benefitVisuals.length];
@@ -551,7 +551,7 @@ function LandingFooter({ settings, text }) {
           <div className="xs:col-span-2 md:col-span-1">
             <h2 className="mb-4 flex items-center gap-2 text-xl font-bold">
               <GraduationCap className="h-6 w-6" aria-hidden="true" />
-              Atlas QCM
+              YourQCM
             </h2>
             <p className="text-sm leading-relaxed text-slate-400">{text.footer}</p>
           </div>
@@ -569,7 +569,7 @@ function LandingFooter({ settings, text }) {
           </div>
         </div>
         <div className="flex flex-col items-center justify-between gap-4 border-t border-slate-800 pt-8 text-sm text-slate-400 sm:flex-row">
-          <p>© {new Date().getFullYear()} Atlas QCM. Tous droits réservés.</p>
+          <p>© {new Date().getFullYear()} YourQCM. Tous droits réservés.</p>
           <div className="flex gap-6">
             <Link className="transition hover:text-white" to="/privacy-policy">{text.privacy}</Link>
             <Link className="transition hover:text-white" to="/terms-of-use">{text.terms}</Link>
@@ -593,7 +593,7 @@ function PricingCard({ plan, popular, text, onChoose }) {
   return (
     <article className={`relative rounded-2xl border bg-card p-6 ${popular ? "border-cyan-400 shadow-xl shadow-cyan-950/10" : "border-border"}`}>
       {popular && <span className="absolute -top-3 left-6 rounded-full bg-cyan-500 px-3 py-1 text-xs font-bold text-white">{text.popular}</span>}
-      <p className="text-sm font-semibold text-cyan-700 dark:text-cyan-300">{plan.name || "Atlas QCM Premium"}</p>
+      <p className="text-sm font-semibold text-cyan-700 dark:text-cyan-300">{plan.name || "YourQCM Premium"}</p>
       <div className="mt-5 flex items-baseline gap-1">
         <span className="text-4xl font-bold">{plan.price ?? plan.monthlyPrice ?? "—"}</span>
         {Number(plan.price) > 0 && <span className="text-sm text-muted-foreground">MAD {text.perSemester}</span>}

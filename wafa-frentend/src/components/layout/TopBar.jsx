@@ -36,12 +36,21 @@ const parseStorageJSON = (key, fallback = null) => {
   }
 };
 
-const TopBar = ({ onMenuClick, sidebarOpen }) => {
+const normalizeLandingSettings = (settings) => {
+  const currentSettings = settings || {};
+  const siteName = /^(atlas\s*qcm|wafa)$/i.test(currentSettings.siteName?.trim() || '')
+    ? 'YourQCM'
+    : currentSettings.siteName || 'YourQCM';
+
+  return { ...currentSettings, siteName };
+};
+
+const TopBar = ({ onMenuClick }) => {
   const { t } = useTranslation(['dashboard', 'common']);
   const [user, setUser] = useState(() => parseStorageJSON('userProfile', parseStorageJSON('user', null)));
-  const [landingSettings, setLandingSettings] = useState(() =>
-    parseStorageJSON('landingSettings', { siteName: 'WAFA', siteVersion: 'v1.1', logoUrl: '' })
-  );
+  const [landingSettings, setLandingSettings] = useState(() => normalizeLandingSettings(
+    parseStorageJSON('landingSettings', { siteName: 'YourQCM', siteVersion: 'v1.1', logoUrl: '' })
+  ));
   const navigate = useNavigate();
 
   // Fetch landing settings
@@ -50,8 +59,9 @@ const TopBar = ({ onMenuClick, sidebarOpen }) => {
       try {
         const { data } = await api.get('/landing-settings');
         if (data.success && data.data) {
-          setLandingSettings(data.data);
-          localStorage.setItem('landingSettings', JSON.stringify(data.data));
+          const normalizedSettings = normalizeLandingSettings(data.data);
+          setLandingSettings(normalizedSettings);
+          localStorage.setItem('landingSettings', JSON.stringify(normalizedSettings));
         }
       } catch (error) {
         console.error('Failed to fetch landing settings:', error);
@@ -144,7 +154,7 @@ const TopBar = ({ onMenuClick, sidebarOpen }) => {
             {landingSettings.logoUrl ? (
               <img 
                 src={landingSettings.logoUrl} 
-                alt={landingSettings.siteName || 'WAFA'} 
+                alt={landingSettings.siteName || 'YourQCM'}
                 className="h-8 w-8 rounded-lg object-cover"
               />
             ) : (
@@ -153,7 +163,7 @@ const TopBar = ({ onMenuClick, sidebarOpen }) => {
               </div>
             )}
             <div className="hidden sm:flex flex-col">
-              <span className="text-sm font-bold text-foreground leading-none">{landingSettings.siteName || 'WAFA'}</span>
+              <span className="text-sm font-bold text-foreground leading-none">{landingSettings.siteName || 'YourQCM'}</span>
               <span className="text-xs text-muted-foreground">{landingSettings.siteVersion || 'v1.1'}</span>
             </div>
           </div>

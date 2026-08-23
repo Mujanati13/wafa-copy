@@ -9,7 +9,7 @@ const TestimonialsSection = () => {
 const testimonials = [
   {
     name: "Sara B.",
-    text: "WAFA m'a aidée à réussir mes examens avec moins de stress! Les QCM sont excellents.",
+    text: "YourQCM m'a aidée à réussir mes examens avec moins de stress! Les QCM sont excellents.",
     icon: FaUserGraduate,
     rating: 5,
     role: "Étudiante en médecine",
@@ -93,7 +93,7 @@ const titleVariants = {
            Ce que disent nos <span className="text-blue-600 dark:text-blue-400">étudiants</span>
          </h2>
          <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-           Découvrez comment WAFA transforme l'expérience d'apprentissage de milliers d'étudiants en médecine
+           Découvrez comment YourQCM transforme l'expérience d'apprentissage de milliers d'étudiants en médecine
          </p>
        </motion.div>
 

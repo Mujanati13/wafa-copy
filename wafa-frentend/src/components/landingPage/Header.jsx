@@ -114,7 +114,7 @@ const Header = ({ settings }) => {
             {settings?.logoUrl ? (
               <img
                 src={settings.logoUrl}
-                alt={settings?.siteName || "Atlas QCM"}
+                alt={settings?.siteName || "YourQCM"}
                 className="h-10 w-10 object-contain rounded-lg shadow-lg"
               />
             ) : (
@@ -123,7 +123,7 @@ const Header = ({ settings }) => {
               </div>
             )}
             <div className="hidden sm:flex flex-col">
-              <span className="text-lg font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent leading-none">{settings?.siteName || "Atlas QCM"}</span>
+              <span className="text-lg font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent leading-none">{settings?.siteName || "YourQCM"}</span>
               <span className="text-xs text-gray-500">{settings?.siteVersion || "v1.1"}</span>
             </div>
           </Link>
@@ -191,7 +191,7 @@ const Header = ({ settings }) => {
                   {settings?.logoUrl ? (
                     <img
                       src={settings.logoUrl}
-                      alt={settings?.siteName || "Atlas QCM"}
+                      alt={settings?.siteName || "YourQCM"}
                       className="h-10 w-10 object-contain rounded-lg shadow-lg"
                     />
                   ) : (
@@ -200,7 +200,7 @@ const Header = ({ settings }) => {
                     </div>
                   )}
                   <div className="flex flex-col">
-                    <span className="text-lg font-bold text-foreground leading-none">{settings?.siteName || "Atlas QCM"}</span>
+                    <span className="text-lg font-bold text-foreground leading-none">{settings?.siteName || "YourQCM"}</span>
                     <span className="text-xs text-muted-foreground">{settings?.siteVersion || "v1.1"}</span>
                   </div>
                 </div>

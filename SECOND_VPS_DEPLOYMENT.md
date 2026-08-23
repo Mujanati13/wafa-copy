@@ -95,7 +95,7 @@ In the server-side `.env`, set a private password of at least 12 characters:
 ADMIN_EMAIL=admin@yourqcm.online
 ADMIN_SEED_EMAIL=admin@yourqcm.online
 ADMIN_SEED_PASSWORD=REPLACE_WITH_A_LONG_UNIQUE_ADMIN_PASSWORD
-ADMIN_SEED_NAME=Atlas QCM Administrator
+ADMIN_SEED_NAME=YourQCM Administrator
 ```
 
 Recreate the backend once so Compose loads these variables, then run the

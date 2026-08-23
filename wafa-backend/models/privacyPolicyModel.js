@@ -28,12 +28,32 @@ const privacyPolicySchema = new mongoose.Schema({
   timestamps: true
 });
 
+const migrateLegacyBrandText = (value) => {
+  if (typeof value !== 'string') return value;
+
+  return value
+    .replace(/@(wafa[.](ma|com)|atlas-qcm[.]online)/gi, '@yourqcm.online')
+    .replace(/atlas\s*qcm/gi, 'YourQCM')
+    .replace(/\bwafa\b/gi, 'YourQCM');
+};
+
 // Ensure only one document exists
 privacyPolicySchema.statics.getPolicy = async function() {
   let policy = await this.findOne();
   if (!policy) {
     policy = await this.create({ content: '' });
+    return policy;
   }
+
+  const content = migrateLegacyBrandText(policy.content);
+  const termsOfUse = migrateLegacyBrandText(policy.termsOfUse);
+
+  if (content !== policy.content || termsOfUse !== policy.termsOfUse) {
+    policy.content = content;
+    policy.termsOfUse = termsOfUse;
+    await policy.save();
+  }
+
   return policy;
 };
 

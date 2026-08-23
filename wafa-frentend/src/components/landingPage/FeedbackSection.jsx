@@ -162,7 +162,7 @@ const FeedbackSection = () => {
           variants={itemVariants}
           className="text-xl text-muted-foreground mb-12 max-w-2xl mx-auto leading-relaxed"
         >
-          Aidez-nous à améliorer WAFA en partageant vos pensées et suggestions.
+          Aidez-nous à améliorer YourQCM en partageant vos pensées et suggestions.
           Votre contribution alimente notre innovation.
         </motion.p>
 

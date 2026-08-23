@@ -58,7 +58,7 @@ router.post("/create-samples", async (req, res) => {
       {
         type: "system",
         title: "Mise à jour disponible",
-        message: "Une nouvelle version de WAFA est disponible avec de nouvelles fonctionnalités",
+        message: "Une nouvelle version de YourQCM est disponible avec de nouvelles fonctionnalités",
         link: "/dashboard/home"
       }
     ];

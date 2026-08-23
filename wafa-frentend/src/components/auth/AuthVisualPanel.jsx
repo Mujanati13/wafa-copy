@@ -49,7 +49,7 @@ const AuthVisualPanel = ({ variant = "login", className = "" }) => {
   return (
     <aside
       className={`relative min-h-[430px] overflow-hidden bg-white px-6 py-8 text-center dark:bg-slate-950 sm:min-h-[500px] lg:min-h-[720px] lg:px-10 lg:py-12 ${className}`}
-      aria-label={isRegistration ? "Présentation de l'inscription Atlas QCM" : "Présentation de la connexion Atlas QCM"}
+      aria-label={isRegistration ? "Présentation de l'inscription YourQCM" : "Présentation de la connexion YourQCM"}
     >
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(20,184,166,0.13),transparent_34%),radial-gradient(circle_at_75%_70%,rgba(59,130,246,0.08),transparent_25%)]" />
       <div className="absolute inset-0 opacity-40 [background-image:linear-gradient(rgba(14,165,233,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(14,165,233,0.05)_1px,transparent_1px)] [background-size:32px_32px]" />
@@ -57,15 +57,15 @@ const AuthVisualPanel = ({ variant = "login", className = "" }) => {
       <div className="relative z-10 mx-auto flex h-full max-w-md flex-col items-center">
         <div className="flex items-center gap-2 text-2xl font-medium uppercase tracking-[0.18em] text-teal-700 dark:text-teal-300 sm:text-3xl">
           <Stethoscope className="h-8 w-8" strokeWidth={1.5} aria-hidden="true" />
-          <span>Atlas QCM</span>
+          <span>YourQCM</span>
         </div>
 
         <div className="mt-9 sm:mt-12">
           <h1 className="bg-gradient-to-r from-teal-700 to-blue-700 bg-clip-text text-2xl font-bold leading-tight text-transparent sm:text-3xl">
             {isRegistration ? (
-              <>Créer un compte<br />Atlas QCM</>
+              <>Créer un compte<br />YourQCM</>
             ) : (
-              <>Bienvenue sur<br />Atlas QCM</>
+              <>Bienvenue sur<br />YourQCM</>
             )}
           </h1>
           <p className="mt-3 text-sm tracking-[0.08em] text-slate-400 sm:text-base">

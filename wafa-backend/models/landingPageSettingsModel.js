@@ -5,7 +5,7 @@ const landingPageSettingsSchema = new mongoose.Schema(
         // Branding
         siteName: {
             type: String,
-            default: "WAFA",
+            default: "YourQCM",
         },
         siteVersion: {
             type: String,
@@ -19,7 +19,7 @@ const landingPageSettingsSchema = new mongoose.Schema(
         // Hero Section
         heroTitle: {
             type: String,
-            default: "Préparez vos examens avec WAFA",
+            default: "Préparez vos examens avec YourQCM",
         },
         heroSubtitle: {
             type: String,
@@ -87,7 +87,7 @@ const landingPageSettingsSchema = new mongoose.Schema(
                 answer: String,
             }],
             default: [
-                { question: "Comment fonctionne WAFA?", answer: "WAFA est une plateforme d'apprentissage..." },
+                { question: "Comment fonctionne YourQCM?", answer: "YourQCM est une plateforme d'apprentissage..." },
                 { question: "Puis-je annuler mon abonnement?", answer: "Oui, vous pouvez annuler à tout moment..." },
             ],
         },
@@ -95,7 +95,7 @@ const landingPageSettingsSchema = new mongoose.Schema(
         // Contact Section
         contactEmail: {
             type: String,
-            default: "contact@wafa.ma",
+            default: "contact@yourqcm.online",
         },
         contactPhone: {
             type: String,
@@ -137,12 +137,64 @@ const landingPageSettingsSchema = new mongoose.Schema(
     { timestamps: true }
 );
 
+const migrateLegacyBrandText = (value) => {
+    if (typeof value !== "string") return value;
+
+    return value
+        .replace(/atlas\s*qcm/gi, "YourQCM")
+        .replace(/\bwafa\b/gi, "YourQCM");
+};
+
 // Ensure only one settings document exists
 landingPageSettingsSchema.statics.getSettings = async function () {
     let settings = await this.findOne();
     if (!settings) {
         settings = await this.create({});
+        return settings;
     }
+
+    let changed = false;
+    const brandedFields = [
+        "siteName",
+        "heroTitle",
+        "heroSubtitle",
+        "heroDescription",
+        "timerTitle",
+        "pricingTitle",
+        "pricingSubtitle",
+        "faqTitle",
+        "promotionText",
+    ];
+
+    brandedFields.forEach((field) => {
+        const migratedValue = migrateLegacyBrandText(settings[field]);
+        if (migratedValue !== settings[field]) {
+            settings[field] = migratedValue;
+            changed = true;
+        }
+    });
+
+    settings.faqItems?.forEach((item) => {
+        const question = migrateLegacyBrandText(item.question);
+        const answer = migrateLegacyBrandText(item.answer);
+
+        if (question !== item.question) {
+            item.question = question;
+            changed = true;
+        }
+        if (answer !== item.answer) {
+            item.answer = answer;
+            changed = true;
+        }
+    });
+
+    if (/@(atlas-qcm[.]online|wafa[.]ma)$/i.test(settings.contactEmail || "")) {
+        settings.contactEmail = "contact@yourqcm.online";
+        changed = true;
+    }
+
+    if (changed) await settings.save();
+
     return settings;
 };
 

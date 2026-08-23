@@ -108,7 +108,7 @@ const SupportPage = () => {
         },
         {
           question: 'Je ne reçois pas les emails de confirmation',
-          answer: 'Vérifiez votre dossier spam/courrier indésirable. Ajoutez contact@wafa.com à vos contacts pour éviter ce problème.',
+          answer: 'Vérifiez votre dossier spam/courrier indésirable. Ajoutez contact@yourqcm.online à vos contacts pour éviter ce problème.',
         },
         {
           question: 'Mon score ne s\'affiche pas correctement',

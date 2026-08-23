@@ -175,11 +175,11 @@ const createOrder = asyncHandler(async (req, res) => {
           currency_code: "USD",
           value: amount.toFixed(2),
         },
-        description: `WAFA ${selectedPlan.name} - ${duration}`,
+        description: `YourQCM ${selectedPlan.name} - ${duration}`,
       },
     ],
     application_context: {
-      brand_name: "WAFA Medical Education",
+      brand_name: "YourQCM Medical Education",
       landing_page: "NO_PREFERENCE",
       user_action: "PAY_NOW",
       return_url: `${process.env.FRONTEND_URL}/payment/success`,

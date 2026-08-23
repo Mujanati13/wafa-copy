@@ -12,7 +12,7 @@ const TermsOfUsePage = () => {
     {
       icon: FileText,
       title: "1. Acceptation des Conditions",
-      content: `En accédant à la plateforme WAFA et en l'utilisant, vous acceptez d'être lié par ces conditions d'utilisation. Si vous n'acceptez pas ces conditions, veuillez ne pas utiliser nos services.
+      content: `En accédant à la plateforme YourQCM et en l'utilisant, vous acceptez d'être lié par ces conditions d'utilisation. Si vous n'acceptez pas ces conditions, veuillez ne pas utiliser nos services.
 
 Ces conditions s'appliquent à tous les utilisateurs de la plateforme, y compris les visiteurs, les utilisateurs enregistrés et les abonnés premium.
 
@@ -21,7 +21,7 @@ Nous nous réservons le droit de modifier ces conditions à tout moment. Les mod
     {
       icon: BookOpen,
       title: "2. Description des Services",
-      content: `WAFA est une plateforme d'apprentissage en ligne dédiée aux étudiants en médecine. Nos services incluent :
+      content: `YourQCM est une plateforme d'apprentissage en ligne dédiée aux étudiants en médecine. Nos services incluent :
 
 • Accès à des QCM et examens blancs par module
 • Suivi de progression et statistiques personnalisées
@@ -49,7 +49,7 @@ Un compte est strictement personnel et ne peut être partagé. Nous nous réserv
     {
       icon: CheckCircle,
       title: "4. Utilisation Acceptable",
-      content: `En utilisant WAFA, vous vous engagez à :
+      content: `En utilisant YourQCM, vous vous engagez à :
 
 ✓ Utiliser la plateforme uniquement à des fins éducatives personnelles
 ✓ Respecter les droits de propriété intellectuelle
@@ -93,11 +93,11 @@ Politique de remboursement :
     {
       icon: Scale,
       title: "7. Propriété Intellectuelle",
-      content: `Tous les contenus de la plateforme WAFA sont protégés :
+      content: `Tous les contenus de la plateforme YourQCM sont protégés :
 
 • Les questions, réponses et explications sont notre propriété exclusive
 • Les résumés et fiches de cours sont protégés par le droit d'auteur
-• Le logo, le design et la marque WAFA sont des marques déposées
+• Le logo, le design et la marque YourQCM sont des marques déposées
 • Les algorithmes et le code source sont propriétaires
 
 Vous bénéficiez d'une licence personnelle, non-exclusive et non-transférable pour utiliser le contenu à des fins d'apprentissage personnel uniquement.`
@@ -105,13 +105,13 @@ Vous bénéficiez d'une licence personnelle, non-exclusive et non-transférable 
     {
       icon: AlertTriangle,
       title: "8. Limitation de Responsabilité",
-      content: `WAFA fournit ses services "en l'état" :
+      content: `YourQCM fournit ses services "en l'état" :
 
 • Nous ne garantissons pas que le service sera ininterrompu ou sans erreur
 • Le contenu est fourni à titre informatif et ne remplace pas l'enseignement officiel
 • Nous ne sommes pas responsables des résultats à vos examens réels
 • Nous nous efforçons de maintenir des contenus à jour mais ne garantissons pas leur exactitude à 100%
-• En aucun cas, WAFA ne sera responsable des dommages indirects
+• En aucun cas, YourQCM ne sera responsable des dommages indirects
 
 Nous nous réservons le droit de modifier, suspendre ou interrompre tout aspect du service.`
     },
@@ -152,7 +152,7 @@ Nous nous réservons le droit de modifier, suspendre ou interrompre tout aspect 
                   <p className="text-amber-700 text-sm">
                     En créant un compte ou en utilisant nos services, vous confirmez avoir lu, compris 
                     et accepté ces conditions d'utilisation dans leur intégralité. Ces conditions 
-                    constituent un accord juridiquement contraignant entre vous et WAFA.
+                    constituent un accord juridiquement contraignant entre vous et YourQCM.
                   </p>
                 </div>
               </div>
@@ -201,7 +201,7 @@ Nous nous réservons le droit de modifier, suspendre ou interrompre tout aspect 
                 <CheckCircle className="w-12 h-12 mx-auto mb-4" />
                 <h3 className="font-bold text-xl mb-2">Accord Final</h3>
                 <p className="text-indigo-100 max-w-2xl mx-auto">
-                  En utilisant WAFA, vous reconnaissez avoir lu et accepté ces conditions d'utilisation 
+                  En utilisant YourQCM, vous reconnaissez avoir lu et accepté ces conditions d'utilisation
                   ainsi que notre politique de confidentialité. Pour toute question, contactez-nous à{' '}
                   <a href="mailto:legal@wafa.com" className="underline font-semibold text-white">
                     legal@wafa.com
@@ -220,13 +220,13 @@ Nous nous réservons le droit de modifier, suspendre ou interrompre tout aspect 
           className="mt-8 text-center space-y-2"
         >
           <p className="text-sm text-muted-foreground">
-            <strong>WAFA</strong> - Plateforme d'apprentissage médical
+            <strong>YourQCM</strong> - Plateforme d'apprentissage médical
           </p>
           <p className="text-sm text-gray-500">
-            Email : contact@wafa.com | Support : support@wafa.com
+            Email : contact@yourqcm.online | Support : support@yourqcm.online
           </p>
           <p className="text-sm text-gray-500">
-            © {new Date().getFullYear()} WAFA. Tous droits réservés.
+            © {new Date().getFullYear()} YourQCM. Tous droits réservés.
           </p>
         </motion.div>
       </div>
