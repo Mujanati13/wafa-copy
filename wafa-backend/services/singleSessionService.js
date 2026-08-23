@@ -5,6 +5,58 @@ import User from "../models/userModel.js";
 const DEFAULT_SESSION_TTL_MS = 6 * 60 * 60 * 1000;
 const DEFAULT_REFRESH_WINDOW_MS = 5 * 60 * 1000;
 
+const cleanValue = (value, maxLength = 160) => String(value || "")
+  .replace(/[\u0000-\u001f\u007f]/g, "")
+  .trim()
+  .slice(0, maxLength);
+
+const firstHeader = (req, names) => {
+  for (const name of names) {
+    const value = req.headers?.[name];
+    if (value) return cleanValue(Array.isArray(value) ? value[0] : value);
+  }
+  return "";
+};
+
+const describeDevice = (userAgent = "") => {
+  const ua = cleanValue(userAgent, 500);
+  const browser = /Edg\//i.test(ua) ? "Microsoft Edge"
+    : /OPR\//i.test(ua) ? "Opera"
+      : /SamsungBrowser\//i.test(ua) ? "Samsung Internet"
+        : /Chrome\//i.test(ua) ? "Chrome"
+          : /Firefox\//i.test(ua) ? "Firefox"
+            : /Safari\//i.test(ua) ? "Safari"
+              : "Navigateur inconnu";
+  const os = /Android/i.test(ua) ? "Android"
+    : /iPhone|iPad|iPod/i.test(ua) ? "iOS/iPadOS"
+      : /Windows NT/i.test(ua) ? "Windows"
+        : /Mac OS X/i.test(ua) ? "macOS"
+          : /Linux/i.test(ua) ? "Linux"
+            : "système inconnu";
+  const type = /iPad|Tablet/i.test(ua) ? "tablette"
+    : /Mobile|Android|iPhone|iPod/i.test(ua) ? "mobile"
+      : "ordinateur";
+
+  return `${browser} sur ${os} (${type})`;
+};
+
+export const getSessionMetadata = (req = {}) => {
+  const forwardedIp = firstHeader(req, ["cf-connecting-ip", "x-real-ip", "x-forwarded-for"])
+    .split(",")[0]
+    .trim();
+  const socketIp = cleanValue(req.socket?.remoteAddress || req.connection?.remoteAddress, 64);
+  const ip = cleanValue(forwardedIp || req.ip || socketIp, 64).replace(/^::ffff:/, "");
+  const city = firstHeader(req, ["cf-ipcity", "x-vercel-ip-city", "x-geo-city"]);
+  const region = firstHeader(req, ["cf-region", "x-vercel-ip-country-region", "x-geo-region"]);
+  const country = firstHeader(req, ["cf-ipcountry", "x-vercel-ip-country", "x-geo-country"]);
+
+  return {
+    ip: ip || null,
+    device: describeDevice(req.headers?.["user-agent"]),
+    location: [...new Set([city, region, country].filter(Boolean))].join(", ") || null,
+  };
+};
+
 const getSessionTtlMs = () => {
   const configuredTtl = Number.parseInt(process.env.SINGLE_SESSION_TTL_MS || "", 10);
   return Number.isFinite(configuredTtl) && configuredTtl > 0
@@ -25,14 +77,15 @@ const getRefreshWindowMs = () => {
 };
 
 export class ActiveSessionError extends Error {
-  constructor() {
+  constructor(activeSession = {}) {
     super("This account is already active in another session. Please log out there or try again after it becomes inactive.");
     this.name = "ActiveSessionError";
     this.code = "ACCOUNT_ALREADY_ACTIVE";
+    this.activeSession = activeSession;
   }
 }
 
-export const claimSingleSession = async (userId, sessionId) => {
+export const claimSingleSession = async (userId, sessionId, metadata = {}) => {
   const now = new Date();
   const user = await User.findOneAndUpdate(
     {
@@ -50,6 +103,10 @@ export const claimSingleSession = async (userId, sessionId) => {
       $set: {
         activeSessionId: sessionId,
         activeSessionExpiresAt: nextExpiry(),
+        activeSessionIp: metadata.ip || null,
+        activeSessionDevice: metadata.device || null,
+        activeSessionLocation: metadata.location || null,
+        activeSessionStartedAt: new Date(),
       },
     },
     { new: true }
@@ -60,10 +117,19 @@ export const claimSingleSession = async (userId, sessionId) => {
 
 export const establishSingleSession = async (req, user) => {
   const sessionId = req.session?.singleSessionId || crypto.randomUUID();
-  const claimed = await claimSingleSession(user._id, sessionId);
+  const claimed = await claimSingleSession(user._id, sessionId, getSessionMetadata(req));
 
   if (!claimed) {
-    throw new ActiveSessionError();
+    const activeUser = await User.findById(user._id)
+      .select("+activeSessionIp +activeSessionDevice +activeSessionLocation +activeSessionStartedAt +activeSessionExpiresAt")
+      .lean();
+    throw new ActiveSessionError({
+      ip: activeUser?.activeSessionIp || null,
+      device: activeUser?.activeSessionDevice || null,
+      location: activeUser?.activeSessionLocation || null,
+      startedAt: activeUser?.activeSessionStartedAt || null,
+      expiresAt: activeUser?.activeSessionExpiresAt || null,
+    });
   }
 
   req.session.singleSessionId = sessionId;
@@ -117,6 +183,15 @@ export const releaseSingleSession = async (userId, sessionId) => {
 
   await User.updateOne(
     { _id: userId, activeSessionId: sessionId },
-    { $unset: { activeSessionId: 1, activeSessionExpiresAt: 1 } }
+    {
+      $unset: {
+        activeSessionId: 1,
+        activeSessionExpiresAt: 1,
+        activeSessionIp: 1,
+        activeSessionDevice: 1,
+        activeSessionLocation: 1,
+        activeSessionStartedAt: 1,
+      },
+    }
   );
 };

@@ -31,6 +31,7 @@ const sendSessionError = (res, error) => {
       success: false,
       code: error.code,
       message: error.message,
+      activeSession: error.activeSession,
     });
   }
 

@@ -38,6 +38,26 @@ const userSchema = new mongoose.Schema(
       default: null,
       select: false,
     },
+    activeSessionIp: {
+      type: String,
+      default: null,
+      select: false,
+    },
+    activeSessionDevice: {
+      type: String,
+      default: null,
+      select: false,
+    },
+    activeSessionLocation: {
+      type: String,
+      default: null,
+      select: false,
+    },
+    activeSessionStartedAt: {
+      type: Date,
+      default: null,
+      select: false,
+    },
     blockedAt: {
       type: Date,
       default: null,

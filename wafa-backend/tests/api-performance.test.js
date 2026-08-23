@@ -12,7 +12,7 @@ import Question from "../models/questionModule.js";
 import Transaction from "../models/transactionModel.js";
 import User from "../models/userModel.js";
 import UserStats from "../models/userStatsModel.js";
-import { refreshSingleSession } from "../services/singleSessionService.js";
+import { claimSingleSession, getSessionMetadata, refreshSingleSession } from "../services/singleSessionService.js";
 
 const createResponse = () => ({
   statusCode: 200,
@@ -125,6 +125,52 @@ test("category list replaces N+1 counts with one aggregate", { concurrency: fals
     CourseCategory.find = originals.categoryFind;
     ExamCourse.aggregate = originals.courseAggregate;
     ExamCourse.countDocuments = originals.courseCount;
+  }
+});
+
+test("single-session metadata extracts proxy IP, location, and device", () => {
+  const metadata = getSessionMetadata({
+    headers: {
+      "x-forwarded-for": "197.12.34.56, 10.0.0.2",
+      "cf-ipcity": "Rabat",
+      "cf-ipcountry": "MA",
+      "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/126.0 Safari/537.36",
+    },
+    socket: { remoteAddress: "::ffff:10.0.0.2" },
+  });
+
+  assert.deepEqual(metadata, {
+    ip: "197.12.34.56",
+    location: "Rabat, MA",
+    device: "Chrome sur Windows (ordinateur)",
+  });
+});
+
+test("single-session claim persists identifying metadata", { concurrency: false }, async () => {
+  const originalFindOneAndUpdate = User.findOneAndUpdate;
+  let captured;
+
+  try {
+    User.findOneAndUpdate = (...args) => {
+      captured = args;
+      return { _id: args[0]._id };
+    };
+
+    const userId = new mongoose.Types.ObjectId();
+    const claimed = await claimSingleSession(userId, "new-session", {
+      ip: "197.12.34.56",
+      location: "Rabat, MA",
+      device: "Chrome sur Windows (ordinateur)",
+    });
+    const [, update] = captured;
+
+    assert.equal(claimed, true);
+    assert.equal(update.$set.activeSessionIp, "197.12.34.56");
+    assert.equal(update.$set.activeSessionLocation, "Rabat, MA");
+    assert.equal(update.$set.activeSessionDevice, "Chrome sur Windows (ordinateur)");
+    assert.ok(update.$set.activeSessionStartedAt instanceof Date);
+  } finally {
+    User.findOneAndUpdate = originalFindOneAndUpdate;
   }
 });
 

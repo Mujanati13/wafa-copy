@@ -320,7 +320,11 @@ const handleAuthError = (error) => {
     // Backend returned an error response
     const message = error.response.data?.message || error.response.data?.error;
     if (message) {
-      return new Error(message);
+      const authError = new Error(message);
+      authError.code = error.response.data?.code;
+      authError.activeSession = error.response.data?.activeSession;
+      authError.status = error.response.status;
+      return authError;
     }
   }
 

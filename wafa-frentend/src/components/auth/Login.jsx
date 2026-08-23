@@ -39,6 +39,37 @@ const Login = () => {
     }));
   };
 
+  const showLoginError = (error) => {
+    if (error.code === 'ACCOUNT_ALREADY_ACTIVE') {
+      const session = error.activeSession || {};
+      const startedAtDate = session.startedAt ? new Date(session.startedAt) : null;
+      const startedAt = startedAtDate && !Number.isNaN(startedAtDate.getTime())
+        ? startedAtDate.toLocaleString()
+        : t('auth:concurrent_session_unknown');
+      const unknown = t('auth:concurrent_session_unknown');
+
+      toast.error(t('auth:concurrent_session_title'), {
+        description: (
+          <div className="mt-2 space-y-2 text-sm">
+            <p>{t('auth:concurrent_session_message')}</p>
+            <div className="space-y-1 rounded-md bg-muted/70 p-2">
+              <p><strong>{t('auth:concurrent_session_ip')}:</strong> {session.ip || unknown}</p>
+              <p><strong>{t('auth:concurrent_session_location')}:</strong> {session.location || unknown}</p>
+              <p><strong>{t('auth:concurrent_session_device')}:</strong> {session.device || unknown}</p>
+              <p><strong>{t('auth:concurrent_session_since')}:</strong> {startedAt}</p>
+            </div>
+          </div>
+        ),
+        duration: 12000,
+      });
+      return;
+    }
+
+    toast.error(t('auth:authentication_error'), {
+      description: error.message || t('auth:invalid_credentials'),
+    });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
@@ -105,9 +136,7 @@ const Login = () => {
         }
       }, 1000);
     } catch (error) {
-      toast.error(t('auth:authentication_error'), {
-        description: error.message || t('auth:invalid_credentials'),
-      });
+      showLoginError(error);
     } finally {
       setIsLoading(false);
     }
@@ -167,9 +196,7 @@ const Login = () => {
         }
       }, 1000);
     } catch (error) {
-      toast.error(t('auth:authentication_error'), {
-        description: error.message || t('auth:authentication_error'),
-      });
+      showLoginError(error);
     } finally {
       setIsLoading(false);
     }

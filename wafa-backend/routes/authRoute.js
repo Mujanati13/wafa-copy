@@ -13,10 +13,6 @@ import {
 const router = express.Router();
 
 router.post("/login", (req, res, next) => {
-  console.log("📨 Login request body:", req.body);
-  console.log("📨 Email:", req.body.email);
-  console.log("📨 Password:", req.body.password ? "Present (length: " + req.body.password.length + ")" : "Missing");
-  
   passport.authenticate("local", async (err, user, info) => {
     if (err) return res.status(500).json({ message: err.message });
     if (!user) return res.status(401).json({ message: info.message });
@@ -46,6 +42,7 @@ router.post("/login", (req, res, next) => {
           success: false,
           code: loginError.code,
           message: loginError.message,
+          activeSession: loginError.activeSession,
         });
       }
       console.error("Failed to establish login session:", loginError);
