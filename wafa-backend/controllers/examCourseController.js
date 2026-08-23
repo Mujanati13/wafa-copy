@@ -4,6 +4,14 @@ import Question from "../models/questionModule.js";
 import ExamParYear from "../models/examParYearModel.js";
 import Module from "../models/moduleModel.js";
 
+const buildExactNamePattern = (name = "") => {
+    const escapedName = name
+        .trim()
+        .replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+        .replace(/\s+/g, "\\s+");
+    return new RegExp(`^\\s*${escapedName}\\s*$`, "i");
+};
+
 export const examCourseController = {
     // Create a new exam course
     create: asyncHandler(async (req, res) => {
@@ -126,7 +134,17 @@ export const examCourseController = {
             });
         }
 
-        let courses = await ExamCourse.find({ moduleId: module._id })
+        // Include historical duplicate module records with the same display
+        // name. Older imports may point at one of those IDs instead of the
+        // currently selected module record.
+        const equivalentModules = await Module.find({
+            name: buildExactNamePattern(module.name),
+        }).select("_id").lean();
+        const equivalentModuleIds = equivalentModules.length > 0
+            ? equivalentModules.map(item => item._id)
+            : [module._id];
+
+        let courses = await ExamCourse.find({ moduleId: { $in: equivalentModuleIds } })
             .populate("moduleId", "name")
             .select('name moduleId category subCategory description difficulty color imageUrl status totalQuestions helpText')
             .lean()
@@ -137,9 +155,9 @@ export const examCourseController = {
         if (courses.length === 0) {
             courses = await ExamCourse.collection.find({
                 $or: [
-                    { moduleId: String(module._id) },
-                    { moduleName: module.name },
-                    { module: module.name },
+                    { moduleId: { $in: equivalentModuleIds.map(String) } },
+                    { moduleName: buildExactNamePattern(module.name) },
+                    { module: buildExactNamePattern(module.name) },
                 ],
             }).sort({ createdAt: -1 }).toArray();
         }

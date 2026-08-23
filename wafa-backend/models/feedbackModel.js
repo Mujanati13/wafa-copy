@@ -7,6 +7,22 @@ const feedbackSchema = new mongoose.Schema(
       required: [true, "Name is required"],
       trim: true,
     },
+    email: {
+      type: String,
+      trim: true,
+      lowercase: true,
+      default: "",
+    },
+    subject: {
+      type: String,
+      enum: [
+        "Expérience générale",
+        "Qualité de contenu",
+        "Interface & navigation",
+        "Idées d'amélioration",
+      ],
+      default: "Expérience générale",
+    },
     role: {
       type: String,
       default: "Étudiant en médecine",
@@ -31,6 +47,11 @@ const feedbackSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    moderationStatus: {
+      type: String,
+      enum: ["pending", "approved", "rejected"],
+      default: "pending",
+    },
     isFeatured: {
       type: Boolean,
       default: false,
@@ -45,5 +66,6 @@ const feedbackSchema = new mongoose.Schema(
 
 // Index for faster queries
 feedbackSchema.index({ isApproved: 1, isFeatured: 1, order: 1 });
+feedbackSchema.index({ moderationStatus: 1, createdAt: -1 });
 
 export default mongoose.model("Feedback", feedbackSchema);

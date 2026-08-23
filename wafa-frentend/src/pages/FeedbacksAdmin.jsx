@@ -46,6 +46,8 @@ import {
 import { api } from "@/lib/utils";
 
 const BASE_URL = (import.meta.env.VITE_API_URL || "").replace("/api/v1", "");
+const REVIEW_SUBJECTS = ["Expérience générale", "Qualité de contenu", "Interface & navigation", "Idées d'amélioration"];
+const getModerationStatus = (feedback) => feedback.moderationStatus || (feedback.isApproved ? "approved" : "pending");
 const getImageSrc = (url) => {
   if (!url) return "";
   return url.startsWith("http") ? url : `${BASE_URL}${url}`;
@@ -63,6 +65,8 @@ const FeedbacksAdmin = () => {
   const fileInputRef = useRef(null);
   const [formData, setFormData] = useState({
     name: "",
+    email: "",
+    subject: "Expérience générale",
     role: "Étudiant en médecine",
     message: "",
     rating: 5,
@@ -99,6 +103,8 @@ const FeedbacksAdmin = () => {
       setImagePreview(getImageSrc(feedback.imageUrl || ""));
       setFormData({
         name: feedback.name,
+        email: feedback.email || "",
+        subject: feedback.subject || "Expérience générale",
         role: feedback.role,
         message: feedback.message,
         rating: feedback.rating,
@@ -114,6 +120,8 @@ const FeedbacksAdmin = () => {
       setImagePreview("");
       setFormData({
         name: "",
+        email: "",
+        subject: "Expérience générale",
         role: "Étudiant en médecine",
         message: "",
         rating: 5,
@@ -134,6 +142,8 @@ const FeedbacksAdmin = () => {
     setImagePreview("");
     setFormData({
       name: "",
+      email: "",
+      subject: "Expérience générale",
       role: "Étudiant en médecine",
       message: "",
       rating: 5,
@@ -220,15 +230,15 @@ const FeedbacksAdmin = () => {
     }
   };
 
-  const handleToggleApproval = async (id) => {
+  const handleModeration = async (id, status) => {
     try {
-      const response = await api.patch(`/feedbacks/${id}/approve`);
+      const response = await api.patch(`/feedbacks/${id}/moderation`, { status });
       if (response.data.success) {
         toast.success(response.data.message);
         fetchFeedbacks();
       }
     } catch (error) {
-      console.error("Error toggling approval:", error);
+      console.error("Error moderating feedback:", error);
       toast.error("Erreur lors de la modification du statut");
     }
   };
@@ -309,19 +319,19 @@ const FeedbacksAdmin = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-orange-600">
-                {feedbacks.filter((f) => !f.isApproved).length}
+                {feedbacks.filter((f) => getModerationStatus(f) === "pending").length}
               </div>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium text-muted-foreground">
-                En vedette
+                Rejetés
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-blue-600">
-                {feedbacks.filter((f) => f.isFeatured).length}
+              <div className="text-2xl font-bold text-red-600">
+                {feedbacks.filter((f) => getModerationStatus(f) === "rejected").length}
               </div>
             </CardContent>
           </Card>
@@ -341,7 +351,7 @@ const FeedbacksAdmin = () => {
                 <TableHeader>
                   <TableRow>
                     <TableHead className="w-[200px]">Nom</TableHead>
-                    <TableHead>Rôle</TableHead>
+                    <TableHead>Sujet / rôle</TableHead>
                     <TableHead className="max-w-xs">Message</TableHead>
                     <TableHead className="text-center">Note</TableHead>
                     <TableHead className="text-center">Statuts</TableHead>
@@ -375,11 +385,14 @@ const FeedbacksAdmin = () => {
                                 <User className="h-4 w-4 text-blue-600" />
                               </div>
                             )}
-                            <span className="font-medium">{feedback.name}</span>
+                            <span>
+                              <span className="block font-medium">{feedback.name}</span>
+                              {feedback.email && <span className="block text-xs text-muted-foreground">{feedback.email}</span>}
+                            </span>
                           </div>
                         </TableCell>
                         <TableCell className="text-sm text-muted-foreground">
-                          {feedback.role}
+                          {feedback.subject || feedback.role}
                         </TableCell>
                         <TableCell className="max-w-xs truncate text-sm">
                           {feedback.message}
@@ -392,23 +405,7 @@ const FeedbacksAdmin = () => {
                         </TableCell>
                         <TableCell>
                           <div className="flex flex-col gap-2 items-center">
-                            <Badge
-                              variant={feedback.isApproved ? "success" : "secondary"}
-                              className="cursor-pointer"
-                              onClick={() => handleToggleApproval(feedback._id)}
-                            >
-                              {feedback.isApproved ? (
-                                <>
-                                  <CheckCircle className="h-3 w-3 mr-1" />
-                                  Approuvé
-                                </>
-                              ) : (
-                                <>
-                                  <XCircle className="h-3 w-3 mr-1" />
-                                  En attente
-                                </>
-                              )}
-                            </Badge>
+                            <ModerationBadge status={getModerationStatus(feedback)} />
                             {feedback.isFeatured && (
                               <Badge
                                 variant="default"
@@ -426,6 +423,30 @@ const FeedbacksAdmin = () => {
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex items-center justify-end gap-2">
+                            {getModerationStatus(feedback) !== "approved" && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleModeration(feedback._id, "approved")}
+                                className="text-green-600 hover:bg-green-50 hover:text-green-700"
+                                aria-label={`Approuver l'avis de ${feedback.name}`}
+                                title="Approuver"
+                              >
+                                <CheckCircle className="h-4 w-4" />
+                              </Button>
+                            )}
+                            {getModerationStatus(feedback) !== "rejected" && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleModeration(feedback._id, "rejected")}
+                                className="text-orange-600 hover:bg-orange-50 hover:text-orange-700"
+                                aria-label={`Rejeter l'avis de ${feedback.name}`}
+                                title="Rejeter"
+                              >
+                                <XCircle className="h-4 w-4" />
+                              </Button>
+                            )}
                             <Button
                               variant="ghost"
                               size="icon"
@@ -491,6 +512,29 @@ const FeedbacksAdmin = () => {
                   placeholder="Ex: Étudiant en 3ème année"
                   required
                 />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="email">E-mail</Label>
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  placeholder="etudiant@exemple.com"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="subject">Sujet</Label>
+                <Select value={formData.subject} onValueChange={(value) => setFormData((prev) => ({ ...prev, subject: value }))}>
+                  <SelectTrigger id="subject"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {REVIEW_SUBJECTS.map((subject) => <SelectItem key={subject} value={subject}>{subject}</SelectItem>)}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
@@ -649,5 +693,15 @@ const FeedbacksAdmin = () => {
     </div>
   );
 };
+
+function ModerationBadge({ status }) {
+  if (status === "approved") {
+    return <Badge className="bg-green-100 text-green-800 hover:bg-green-100"><CheckCircle className="mr-1 h-3 w-3" />Approuvé</Badge>;
+  }
+  if (status === "rejected") {
+    return <Badge className="bg-red-100 text-red-800 hover:bg-red-100"><XCircle className="mr-1 h-3 w-3" />Rejeté</Badge>;
+  }
+  return <Badge variant="secondary"><MessageSquare className="mr-1 h-3 w-3" />En attente</Badge>;
+}
 
 export default FeedbacksAdmin;

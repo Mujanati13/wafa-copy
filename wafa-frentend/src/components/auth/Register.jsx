@@ -779,7 +779,7 @@ const Register = () => {
                     setShowAccountWarning(false);
                     
                     toast.success('Compte créé avec succès', {
-                      description: 'Bienvenue sur imrs Qcm !',
+                      description: 'Bienvenue sur Atlas QCM !',
                     });
 
                     // Check if user needs to select free semester

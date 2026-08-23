@@ -6,11 +6,13 @@ import { fileURLToPath } from "url";
 import {
   getAllFeedbacks,
   getApprovedFeedbacks,
+  submitPublicReview,
   getFeedbackById,
   createFeedback,
   updateFeedback,
   deleteFeedback,
   toggleApproval,
+  setModerationStatus,
   toggleFeatured,
 } from "../controllers/feedbackController.js";
 import { isAuthenticated, isAdmin } from "../middleware/authMiddleware.js";
@@ -51,6 +53,7 @@ const router = Router();
 
 // Public route - get approved feedbacks for landing page
 router.get("/", getApprovedFeedbacks);
+router.post("/submit", submitPublicReview);
 
 // Admin routes (protected)
 router.get("/admin", isAuthenticated, isAdmin, getAllFeedbacks);
@@ -59,6 +62,7 @@ router.post("/", isAuthenticated, isAdmin, withImageUpload(createFeedback));
 router.put("/:id", isAuthenticated, isAdmin, withImageUpload(updateFeedback));
 router.delete("/:id", isAuthenticated, isAdmin, deleteFeedback);
 router.patch("/:id/approve", isAuthenticated, isAdmin, toggleApproval);
+router.patch("/:id/moderation", isAuthenticated, isAdmin, setModerationStatus);
 router.patch("/:id/feature", isAuthenticated, isAdmin, toggleFeatured);
 
 export default router;

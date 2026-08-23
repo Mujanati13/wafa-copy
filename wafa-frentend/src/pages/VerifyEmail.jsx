@@ -164,7 +164,7 @@ const VerifyEmail = () => {
         {/* Logo */}
         <div className="text-center mb-4">
           <Link to="/" className="inline-block">
-            <img src={logo} alt="Imrs-Qcma Logo" className="h-16 w-auto mx-auto object-contain" />
+            <img src={logo} alt="Atlas QCM Logo" className="h-16 w-auto mx-auto object-contain" />
           </Link>
         </div>
         <div className="flex justify-center mb-4">

@@ -335,22 +335,26 @@ const ImportExamParYears = () => {
                   className="space-y-2"
                 >
                   <Label className="font-semibold text-foreground">Examen par Année</Label>
-                  <Select
+                  <select
                     value={selectedExam}
-                    onValueChange={setSelectedExam}
+                    onChange={(event) => setSelectedExam(event.target.value)}
                     disabled={!selectedModule}
+                    aria-label="Examen par Année"
+                    className="h-9 w-full rounded-md border border-indigo-200 bg-background px-3 py-1 text-sm shadow-xs outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50"
                   >
-                    <SelectTrigger className="border-indigo-200">
-                      <SelectValue placeholder={selectedModule ? "Choisir un examen" : "Sélectionnez d'abord un module"} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {examOptions.map((ex) => (
-                        <SelectItem key={ex._id} value={ex._id}>
-                          {ex.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    <option value="" disabled>
+                      {!selectedModule
+                        ? "Sélectionnez d'abord un module"
+                        : examOptions.length > 0
+                          ? "Choisir un examen"
+                          : "Aucun examen disponible"}
+                    </option>
+                    {examOptions.map((ex) => (
+                      <option key={ex._id} value={ex._id}>
+                        {ex.name}
+                      </option>
+                    ))}
+                  </select>
                 </motion.div>
 
                 <motion.div

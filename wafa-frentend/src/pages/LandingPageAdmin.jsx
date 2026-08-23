@@ -379,7 +379,7 @@ const LandingPageAdmin = () => {
                   <Label htmlFor="siteName">Nom du Site</Label>
                   <Input
                     id="siteName"
-                    placeholder="Imrs-Qcma"
+                    placeholder="Atlas QCM"
                     value={settings.siteName}
                     onChange={(e) => handleChange("siteName", e.target.value)}
                   />
@@ -418,7 +418,7 @@ const LandingPageAdmin = () => {
                       className="h-12 w-12 object-contain rounded-lg"
                       onError={(e) => { e.target.style.display = 'none'; }}
                     />
-                    <span className="text-lg font-bold">{settings.siteName || "Imrs-Qcma"}</span>
+                    <span className="text-lg font-bold">{settings.siteName || "Atlas QCM"}</span>
                     <span className="text-sm text-muted-foreground">{settings.siteVersion || "v1.1"}</span>
                   </div>
                 </div>
@@ -450,7 +450,7 @@ const LandingPageAdmin = () => {
                 <Label htmlFor="heroTitle">Titre Principal</Label>
                 <Input
                   id="heroTitle"
-                  placeholder="Préparez vos examens avec Imrs-Qcma"
+                  placeholder="Préparez vos examens avec Atlas QCM"
                   value={settings.heroTitle}
                   onChange={(e) => handleChange("heroTitle", e.target.value)}
                 />

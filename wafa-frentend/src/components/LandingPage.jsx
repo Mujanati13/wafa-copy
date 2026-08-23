@@ -1448,7 +1448,7 @@ const FeedbackSection = ({ settings }) => {
           </h2>
 
           <p className="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto">
-            Aidez-nous à améliorer Imrs-Qcma en partageant vos pensées et suggestions.
+            Aidez-nous à améliorer Atlas QCM en partageant vos pensées et suggestions.
             Votre contribution alimente notre innovation.
           </p>
 
@@ -1704,7 +1704,7 @@ const Footer = ({ settings }) => {
         <Separator className="bg-slate-800 mb-8" />
 
         <div className="flex flex-col sm:flex-row justify-between items-center gap-4 text-xs md:text-sm text-slate-400">
-          <p>© 2026 Imrs-Qcm. Tous les droits réservés.</p>
+          <p>© 2026 Atlas QCM. Tous les droits réservés.</p>
           <div className="flex gap-4 md:gap-6">
             <a href="/privacy-policy" className="hover:text-white transition-colors">{t("footer_terms")}</a>
             <a href="/privacy-policy" className="hover:text-white transition-colors">{t("footer_privacy")}</a>

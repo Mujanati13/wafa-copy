@@ -2,7 +2,7 @@
   "hero_badge": "#1 Platform for Medical Students",
   "hero_title_part1": "Excel in your",
   "hero_title_highlight": "exams",
-  "hero_title_part2": "with Imrs-Qcma",
+  "hero_title_part2": "with Atlas QCM",
   "hero_description": "Prepare effectively for exams without stress with our platform of exams by years and courses, designed for medical students.",
   "hero_benefit_1": "No commitment",
   "hero_benefit_2": "Free trial",
@@ -78,7 +78,7 @@
   
   "testimonial_1_author": "Ahmed Hassan",
   "testimonial_1_role": "Medical Student",
-  "testimonial_1_content": "Imrs-Qcma helped me score 95% on my final exams. The explanations are incredibly detailed!",
+  "testimonial_1_content": "Atlas QCM helped me score 95% on my final exams. The explanations are incredibly detailed!",
   
   "testimonial_2_author": "Fatima Mohamed",
   "testimonial_2_role": "Medical Student",
@@ -91,8 +91,8 @@
   "faq_badge": "FAQ",
   "faq_title": "Frequently Asked Questions",
   
-  "faq_1_question": "What is Imrs-Qcma?",
-  "faq_1_answer": "Imrs-Qcma is an online exam preparation platform designed specifically for medical students. It offers thousands of practice questions, detailed explanations, and performance analytics.",
+  "faq_1_question": "What is Atlas QCM?",
+  "faq_1_answer": "Atlas QCM is an online exam preparation platform designed specifically for medical students. It offers thousands of practice questions, detailed explanations, and performance analytics.",
   
   "faq_2_question": "Do you offer a free trial?",
   "faq_2_answer": "Yes! We offer a 7-day free trial with access to all Pro features. No credit card required.",
@@ -134,7 +134,7 @@
   "contact_form_submit": "Send Message",
   "contact_success_message": "Message sent successfully! We'll get back to you soon.",
   
-  "footer_brand": "Imrs-Qcma",
+  "footer_brand": "Atlas QCM",
   "footer_brand_description": "Your ultimate platform for exam preparation and success.",
   
   "footer_product_title": "Product",

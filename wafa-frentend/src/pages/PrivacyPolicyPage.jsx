@@ -114,7 +114,7 @@ Vous pouvez gérer vos préférences de cookies dans les paramètres de votre na
           <Card className="mb-8">
             <CardContent className="pt-6">
               <p className="text-foreground leading-relaxed">
-                Chez <strong>Imrs-Qcm</strong>, nous accordons une importance primordiale à la protection de vos données 
+                Chez <strong>Atlas QCM</strong>, nous accordons une importance primordiale à la protection de vos données
                 personnelles. Cette politique de confidentialité explique comment nous collectons, utilisons, 
                 stockons et protégeons vos informations lorsque vous utilisez notre plateforme d'apprentissage 
                 médical.
@@ -171,7 +171,7 @@ Vous pouvez gérer vos préférences de cookies dans les paramètres de votre na
           transition={{ delay: 0.6 }}
           className="text-center text-sm text-gray-500 mt-8"
         >
-          © {new Date().getFullYear()} Imrs-Qcm. Tous droits réservés.
+          © {new Date().getFullYear()} Atlas QCM. Tous droits réservés.
         </motion.p>
       </div>
     </div>

@@ -71,7 +71,7 @@ export default function LearnerExperienceLayout() {
       <header className="sticky top-0 z-40 flex h-16 items-center justify-between border-b border-border bg-background/90 px-3 backdrop-blur-xl sm:px-5">
         <div className="flex min-w-0 items-center gap-2 sm:gap-3">
           <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setDrawerOpen(true)} aria-label="Ouvrir la navigation"><Menu className="h-5 w-5" /></Button>
-          <Link to="/dashboard/home" className="imrs-focus-ring flex min-w-0 items-center gap-2 rounded-lg"><img src={logo} alt="IMRS" className="h-9 w-9 rounded-lg object-contain" /><span className="hidden text-base font-bold text-primary xs:inline">IMRS</span></Link>
+          <Link to="/dashboard/home" className="imrs-focus-ring flex min-w-0 items-center gap-2 rounded-lg"><img src={logo} alt="Atlas QCM" className="h-9 w-9 rounded-lg object-contain" /><span className="hidden text-base font-bold text-primary xs:inline">Atlas QCM</span></Link>
           <div className="hidden h-6 w-px bg-border sm:block" />
           <p className="hidden truncate text-sm text-muted-foreground sm:block">Bonjour, <span className="font-semibold text-foreground">{firstName}</span></p>
         </div>
@@ -79,7 +79,7 @@ export default function LearnerExperienceLayout() {
           <div className="hidden lg:block"><LanguageSwitcher /></div>
           <ThemeToggle />
           <NotificationDropdown />
-          <NavLink to="/dashboard/profile" className="imrs-focus-ring grid h-9 w-9 place-items-center rounded-full bg-primary text-xs font-bold text-primary-foreground" aria-label="Profil">{initials || "IM"}</NavLink>
+          <NavLink to="/dashboard/profile" className="imrs-focus-ring grid h-9 w-9 place-items-center rounded-full bg-primary text-xs font-bold text-primary-foreground" aria-label="Profil">{initials || "AQ"}</NavLink>
         </div>
       </header>
 

@@ -57,6 +57,25 @@ import axios from "axios";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
+const normalizeModuleName = (value = "") => value
+  .normalize("NFD")
+  .replace(/[\u0300-\u036f]/g, "")
+  .trim()
+  .toLowerCase()
+  .replace(/[^a-z0-9]+/g, " ")
+  .trim();
+
+const courseMatchesModule = (course, moduleId, moduleName) => {
+  const courseModuleId = course.moduleId?._id || course.moduleId;
+  if (courseModuleId?.toString() === moduleId) return true;
+
+  const courseModuleName = course.moduleId?.name || course.moduleName || course.module;
+  return Boolean(
+    courseModuleName &&
+    normalizeModuleName(courseModuleName) === normalizeModuleName(moduleName)
+  );
+};
+
 const ImportExamParCourse = () => {
   const { t } = useTranslation(['admin', 'common']);
 
@@ -77,6 +96,7 @@ const ImportExamParCourse = () => {
   // Loading states
   const [loadingModules, setLoadingModules] = useState(true);
   const [loadingCourses, setLoadingCourses] = useState(false);
+  const [courseLoadError, setCourseLoadError] = useState("");
   const [loadingExamYears, setLoadingExamYears] = useState(false);
   const [loadingQuestions, setLoadingQuestions] = useState(false);
   const [linking, setLinking] = useState(false);
@@ -233,13 +253,33 @@ const ImportExamParCourse = () => {
   const fetchCoursesForModule = async (moduleId) => {
     try {
       setLoadingCourses(true);
+      setCourseLoadError("");
       const response = await api.get(`/exam-courses/module/${moduleId}`);
-      if (response.data.success) {
-        setExamCourses(response.data.data || []);
+      let courses = response.data.success ? response.data.data || [] : [];
+
+      // Recover courses linked to an older/duplicate Module record. The main
+      // course list returns the populated module name, allowing a safe match
+      // even when the stored module ObjectId differs from the selected one.
+      if (courses.length === 0) {
+        const [allCoursesResponse, modulesResponse] = await Promise.all([
+          api.get("/exam-courses"),
+          api.get("/modules"),
+        ]);
+        const selectedModuleRecord = (modulesResponse.data?.data || [])
+          .find(item => item._id === moduleId);
+        const allCourses = allCoursesResponse.data?.data || [];
+        courses = allCourses.filter(course => courseMatchesModule(
+          course,
+          moduleId,
+          selectedModuleRecord?.name || ""
+        ));
       }
+
+      setExamCourses(courses);
     } catch (error) {
       console.error("Error fetching courses:", error);
       setExamCourses([]);
+      setCourseLoadError("Impossible de charger les cours. Veuillez réessayer.");
     } finally {
       setLoadingCourses(false);
     }
@@ -499,6 +539,13 @@ const ImportExamParCourse = () => {
                       <Loader2 className="w-6 h-6 animate-spin text-rose-500" />
                       <span className="ml-2 text-muted-foreground">Chargement des cours...</span>
                     </div>
+                  ) : courseLoadError ? (
+                    <div className="p-4 bg-red-50 rounded-lg border border-red-200">
+                      <div className="flex items-center gap-2 text-red-800">
+                        <AlertCircle className="w-4 h-4" />
+                        <span className="text-sm">{courseLoadError}</span>
+                      </div>
+                    </div>
                   ) : filteredCourses.length === 0 ? (
                     <div className="p-4 bg-amber-50 rounded-lg border border-amber-200">
                       <div className="flex items-center gap-2 text-amber-800">
@@ -646,22 +693,29 @@ const ImportExamParCourse = () => {
                   >
                     <div className="sm:col-span-2 space-y-1">
                       <Label className="text-xs font-semibold">Examen par Année</Label>
-                      <Select
+                      <select
                         value={row.examYearId}
-                        onValueChange={(value) => handleYearMappingChange(row.id, "examYearId", value)}
-                        disabled={!selectedModule || loadingExamYears}
+                        onChange={(event) =>
+                          handleYearMappingChange(row.id, "examYearId", event.target.value)
+                        }
+                        disabled={!selectedModule}
+                        aria-label="Examen par Année"
+                        aria-busy={loadingExamYears}
+                        className="h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-xs shadow-xs outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50"
                       >
-                        <SelectTrigger className="text-xs">
-                          <SelectValue placeholder="Sélectionner..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {examYears.map((exam) => (
-                            <SelectItem key={exam._id} value={exam._id}>
-                              {exam.name} ({exam.year})
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                        <option value="" disabled>
+                          {loadingExamYears
+                            ? "Chargement..."
+                            : examYears.length > 0
+                              ? "Sélectionner..."
+                              : "Aucun examen disponible"}
+                        </option>
+                        {examYears.map((exam) => (
+                          <option key={exam._id} value={exam._id}>
+                            {exam.name} ({exam.year})
+                          </option>
+                        ))}
+                      </select>
                     </div>
                     <div className="sm:col-span-2 space-y-1">
                       <Label className="text-xs font-semibold">Numéros de Questions</Label>
