@@ -1,16 +1,12 @@
 import React from "react";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { createPortal } from "react-dom";
-import { Link, useNavigate } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
-import { Lock, HelpCircle, X, BookOpen, Info, CheckCircle, Image as ImageIcon, FileText, File } from "lucide-react";
+import { motion as Motion, AnimatePresence } from "framer-motion";
+import { HelpCircle, X, BookOpen, Info, Image as ImageIcon, FileText, File } from "lucide-react";
 
-import { api } from "@/lib/utils";
-import { moduleService } from "@/services/moduleService";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -21,14 +17,14 @@ const API_URL = import.meta.env.VITE_API_URL || "";
 
 // Color schemes for modules (based on https://e-qe.online/dashboard)
 const moduleColors = [
-  { gradient: "from-blue-500 to-indigo-600", bg: "bg-blue-50", border: "border-blue-200", ring: "ring-blue-300" },
-  { gradient: "from-purple-500 to-pink-600", bg: "bg-purple-50", border: "border-purple-200", ring: "ring-purple-300" },
-  { gradient: "from-green-500 to-teal-600", bg: "bg-green-50", border: "border-green-200", ring: "ring-green-300" },
-  { gradient: "from-orange-500 to-red-600", bg: "bg-orange-50", border: "border-orange-200", ring: "ring-orange-300" },
-  { gradient: "from-cyan-500 to-blue-600", bg: "bg-cyan-50", border: "border-cyan-200", ring: "ring-cyan-300" },
-  { gradient: "from-pink-500 to-rose-600", bg: "bg-pink-50", border: "border-pink-200", ring: "ring-pink-300" },
-  { gradient: "from-yellow-500 to-orange-600", bg: "bg-yellow-50", border: "border-yellow-200", ring: "ring-yellow-300" },
-  { gradient: "from-indigo-500 to-purple-600", bg: "bg-indigo-50", border: "border-indigo-200", ring: "ring-indigo-300" },
+  { gradient: "from-blue-500 to-indigo-600" },
+  { gradient: "from-purple-500 to-pink-600" },
+  { gradient: "from-green-500 to-teal-600" },
+  { gradient: "from-orange-500 to-red-600" },
+  { gradient: "from-cyan-500 to-blue-600" },
+  { gradient: "from-pink-500 to-rose-600" },
+  { gradient: "from-yellow-500 to-orange-600" },
+  { gradient: "from-indigo-500 to-purple-600" },
 ];
 
 const ModuleCard = ({ course, handleCourseClick, index }) => {
@@ -39,11 +35,7 @@ const ModuleCard = ({ course, handleCourseClick, index }) => {
   const [imageError, setImageError] = useState(false);
 
   const colorScheme = moduleColors[index % moduleColors.length];
-  const progress = course.progress || 0;
-  const totalQuestions = course.totalQuestions || 0;
-  const questionsAttempted = course.questionsAttempted || Math.round((progress / 100) * totalQuestions);
-  const correctAnswers = course.correctAnswers || 0;
-  const wrongAnswers = questionsAttempted - correctAnswers;
+  const progress = Math.min(100, Math.max(0, Number(course.progress) || 0));
 
   // Construct proper URL for imageUrl
   const getFullImageUrl = (url) => {
@@ -61,9 +53,6 @@ const ModuleCard = ({ course, handleCourseClick, index }) => {
     fullImageUrl !== 'null' &&
     fullImageUrl !== 'undefined' &&
     (fullImageUrl.startsWith('http') || fullImageUrl.startsWith('/') || fullImageUrl.startsWith('data:'));
-
-  // Show fallback if no valid URL, or if image failed to load
-  const showFallback = !hasValidImageUrl || imageError;
 
   // Use custom color from module if available
   const moduleColor = course.color || null;
@@ -83,108 +72,92 @@ const ModuleCard = ({ course, handleCourseClick, index }) => {
 
   return (
     <>
-      <motion.div
+      <Motion.div
         key={course._id}
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: index * 0.1 }}
-        whileHover={{ scale: 1.03, y: -5 }}
-        className={`relative bg-background backdrop-blur-sm rounded-2xl border-2 ${colorScheme.border} shadow-lg p-3 sm:p-4 md:p-5 cursor-pointer hover:shadow-2xl hover:ring-2 ${colorScheme.ring} transition-all duration-300 overflow-hidden group w-full`}
+        transition={{ delay: index * 0.06 }}
+        whileHover={{ y: -4 }}
+        className="group relative flex min-h-[230px] w-full cursor-pointer flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-md transition-shadow duration-300 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:ring-offset-2 dark:border-slate-700 dark:bg-slate-950"
         onClick={() => handleCourseClick(course._id)}
+        onKeyDown={(event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            handleCourseClick(course._id);
+          }
+        }}
+        role="button"
+        tabIndex={0}
+        aria-label={`Ouvrir le module ${course.name}`}
       >
-        {/* Animated background gradient */}
-        <div className={`absolute inset-0 bg-gradient-to-br ${colorScheme.bg} opacity-0 group-hover:opacity-100 transition-opacity duration-300`}></div>
+        <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-cyan-500 via-sky-500 to-teal-400" />
 
-        {/* Help Button - Top Left - Always visible */}
-        <motion.button
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="absolute top-2 left-2 z-20 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-background shadow-lg flex items-center justify-center text-blue-600 hover:text-blue-700 hover:bg-blue-50 hover:shadow-xl transition-all border-2 border-blue-100"
-          onClick={(e) => {
-            e.stopPropagation();
-            setShowHelpModal(true);
-          }}
-          whileHover={{ scale: 1.15 }}
-          whileTap={{ scale: 0.9 }}
-          title="Aide et informations"
-        >
-          <HelpCircle className="w-4 h-4 sm:w-5 sm:h-5" />
-        </motion.button>
-
-        {/* Course Image with gradient overlay */}
-        <div className="relative mb-3 sm:mb-4 overflow-hidden rounded-xl h-32 sm:h-36 md:h-40 lg:h-44">
-          {/* Always render the fallback gradient - it's the base layer */}
+        <div className="flex items-start justify-between gap-4 pt-2">
+          {/* Admin-managed module image */}
           <div
-            className={`absolute inset-0 w-full h-full flex flex-col items-center justify-center rounded-xl ${!customStyle ? `bg-gradient-to-br ${colorScheme.gradient}` : ''}`}
-            style={customStyle ? {
-              background: `linear-gradient(135deg, ${course.color}, ${adjustColor(course.color, -30)})`
-            } : undefined}
+            className={`relative h-16 w-16 shrink-0 overflow-hidden rounded-lg shadow-sm sm:h-20 sm:w-20 ${!customStyle ? `bg-gradient-to-br ${colorScheme.gradient}` : ""}`}
+            style={customStyle || undefined}
           >
-            <div className="p-4 flex flex-col items-center justify-center">
-              <ImageIcon className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 text-white" />
-              <span className="text-white text-sm sm:text-base md:text-lg font-bold text-center line-clamp-2 mt-2 px-2 drop-shadow-lg">
-                {course.name}
-              </span>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <ImageIcon className="h-8 w-8 text-white/90" aria-hidden="true" />
             </div>
-          </div>
-
-          {/* Only attempt to load image if URL is valid */}
-          {hasValidImageUrl && !imageError && (
-            <>
+            {hasValidImageUrl && !imageError && (
               <img
                 src={fullImageUrl}
                 alt={course.name}
-                className={`absolute inset-0 w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
+                className={`absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-105 ${imageLoaded ? "opacity-100" : "opacity-0"}`}
                 onLoad={() => setImageLoaded(true)}
                 onError={() => setImageError(true)}
               />
-              {/* Image overlay gradient - only show when image is loaded */}
-              {imageLoaded && (
-                <div
-                  className={`absolute inset-0 opacity-30 group-hover:opacity-20 transition-opacity duration-300 ${!customStyle ? `bg-gradient-to-t ${colorScheme.gradient}` : ''}`}
-                  style={customStyle ? { background: `linear-gradient(to top, ${course.color}99, transparent)` } : undefined}
-                ></div>
-              )}
-            </>
-          )}
-
-          {/* Progress badge on image */}
-          <div className="absolute top-1.5 sm:top-2 right-1.5 sm:right-2 z-10">
-            <motion.div
-              className="bg-background/90 backdrop-blur-sm rounded-full px-2 sm:px-3 py-0.5 sm:py-1 shadow-lg"
-              whileHover={{ scale: 1.1 }}
-            >
-              <span
-                className={`text-xs sm:text-sm font-bold ${!customStyle ? `bg-gradient-to-r ${colorScheme.gradient} text-transparent bg-clip-text` : ''}`}
-                style={customStyle ? { color: course.color } : undefined}
-              >
-                {progress}%
-              </span>
-            </motion.div>
+            )}
           </div>
+
+          {/* Legacy module help: text, image and PDF */}
+          <Motion.button
+            type="button"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-sky-200 bg-sky-50 text-sky-600 shadow-sm transition-colors hover:border-sky-300 hover:bg-sky-100 hover:text-sky-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 dark:border-sky-800 dark:bg-sky-950/60 dark:text-sky-300"
+            onClick={(event) => {
+              event.stopPropagation();
+              setShowHelpModal(true);
+            }}
+            onKeyDown={(event) => event.stopPropagation()}
+            whileHover={{ scale: 1.08 }}
+            whileTap={{ scale: 0.94 }}
+            aria-label={`Afficher l'aide du module ${course.name}`}
+            title="Aide et informations"
+          >
+            <HelpCircle className="h-5 w-5" aria-hidden="true" />
+          </Motion.button>
         </div>
 
-        {/* Course Title */}
-        <h3 className="relative text-sm sm:text-base md:text-lg font-bold text-foreground mb-2 sm:mb-3 line-clamp-2 min-h-[2rem] sm:min-h-[2.5rem] group-hover:text-muted-foreground transition-colors">
+        {/* Module name */}
+        <h3 className="my-5 line-clamp-2 flex min-h-12 flex-1 items-center justify-center text-center text-lg font-bold text-slate-900 dark:text-white">
           {course.name}
         </h3>
 
-        {/* Course Stats */}
-        <div className="relative flex flex-col items-stretch justify-between pt-2 sm:pt-3 border-t border-border gap-2">
-          <motion.button
-            className={`flex-1 px-3 py-1.5 rounded-md text-white text-xs font-semibold shadow-md hover:shadow-lg transition-all whitespace-nowrap ${!customStyle ? `bg-gradient-to-r ${colorScheme.gradient}` : ''}`}
-            style={customStyle || undefined}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={(e) => {
-              e.stopPropagation();
-              handleCourseClick(course._id);
-            }}
+        {/* Module progress */}
+        <div className="rounded-lg bg-slate-950 px-3 py-2.5 text-white dark:bg-slate-900">
+          <div className="mb-2 flex items-center justify-between gap-3 text-[11px] font-semibold uppercase tracking-wide">
+            <span className="text-slate-400">Progression</span>
+            <span className="text-cyan-300">{progress}%</span>
+          </div>
+          <div
+            className="h-2 overflow-hidden rounded-full bg-slate-800"
+            role="progressbar"
+            aria-label={`Progression du module ${course.name}`}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={progress}
           >
-            Commencer
-          </motion.button>
+            <Motion.div
+              className="h-full rounded-full bg-gradient-to-r from-cyan-500 to-sky-400"
+              initial={{ width: 0 }}
+              animate={{ width: `${progress}%` }}
+              transition={{ duration: 0.8, ease: "easeOut", delay: index * 0.04 }}
+            />
+          </div>
         </div>
-      </motion.div>
+      </Motion.div>
 
       {/* Help Modal */}
       <Dialog open={showHelpModal} onOpenChange={setShowHelpModal}>
@@ -383,14 +356,14 @@ const ModuleCard = ({ course, handleCourseClick, index }) => {
       {createPortal(
         <AnimatePresence>
           {showImageModal && (course.helpImage || course.imageUrl) && (
-            <motion.div
+            <Motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 backdrop-blur-sm p-4"
               onClick={() => setShowImageModal(false)}
             >
-              <motion.div
+              <Motion.div
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.9, opacity: 0 }}
@@ -421,8 +394,8 @@ const ModuleCard = ({ course, handleCourseClick, index }) => {
                     className="max-w-full h-auto object-contain rounded-lg shadow-lg"
                   />
                 </div>
-              </motion.div>
-            </motion.div>
+              </Motion.div>
+            </Motion.div>
           )}
         </AnimatePresence>,
         document.body
@@ -432,14 +405,14 @@ const ModuleCard = ({ course, handleCourseClick, index }) => {
       {createPortal(
         <AnimatePresence>
           {showPdfModal && course.helpPdf && (
-            <motion.div
+            <Motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 backdrop-blur-sm p-4"
               onClick={() => setShowPdfModal(false)}
             >
-              <motion.div
+              <Motion.div
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.9, opacity: 0 }}
@@ -468,8 +441,8 @@ const ModuleCard = ({ course, handleCourseClick, index }) => {
                     title="PDF Viewer"
                   />
                 </div>
-              </motion.div>
-            </motion.div>
+              </Motion.div>
+            </Motion.div>
           )}
         </AnimatePresence>,
         document.body

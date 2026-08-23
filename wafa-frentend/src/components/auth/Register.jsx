@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion as Motion, AnimatePresence } from 'framer-motion';
 import { Eye, EyeOff, ArrowLeft, Loader2, Check, X, FileText, Shield } from 'lucide-react';
 import { FcGoogle } from 'react-icons/fc';
 import { Button } from '@/components/ui/button';
-import logo from '@/assets/logo.png';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -15,6 +14,7 @@ import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
 import { registerWithEmail, loginWithGoogle } from '@/services/authService';
 import { userService } from '@/services/userService';
+import AuthVisualPanel from './AuthVisualPanel';
 
 const Register = () => {
   const { t } = useTranslation(['auth', 'common']);
@@ -157,12 +157,6 @@ const Register = () => {
     }
   };
 
-  const getPasswordStrengthColor = () => {
-    if (passwordStrength <= 2) return 'bg-red-500';
-    if (passwordStrength <= 3) return 'bg-yellow-500';
-    return 'bg-green-500';
-  };
-
   const getPasswordStrengthText = () => {
     if (passwordStrength === 0) return '';
     if (passwordStrength <= 2) return t('auth:weak');
@@ -179,7 +173,7 @@ const Register = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center px-4 py-8">
+    <div className="min-h-screen bg-background flex items-center justify-center px-3 py-4 sm:px-4 sm:py-8">
       {/* Background Effects */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/4 right-1/4 w-64 h-64 bg-blue-100 rounded-full opacity-30 blur-3xl animate-pulse" />
@@ -187,12 +181,13 @@ const Register = () => {
         <div className="absolute top-1/2 left-1/2 w-32 h-32 bg-blue-200 rounded-full opacity-25 blur-2xl animate-pulse" style={{ animationDelay: '0.5s' }} />
       </div>
 
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="relative z-10 w-full max-w-2xl"
-      >
+      <div className="relative z-10 grid w-full max-w-7xl overflow-hidden rounded-3xl border border-border bg-card shadow-2xl lg:grid-cols-[minmax(520px,1.15fr)_minmax(0,0.85fr)]">
+        <Motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="order-2 w-full self-center p-4 sm:p-8 lg:order-1 lg:p-10"
+        >
         {/* Back Button - Top Left */}
         <Link
           to="/"
@@ -201,22 +196,6 @@ const Register = () => {
           <ArrowLeft className="mr-2 h-4 w-4" />
           {t('common:back')}
         </Link>
-
-        {/* Logo & Language Switcher */}
-        <div className="text-center mb-8">
-          <Link to="/" className="inline-block group">
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              transition={{ duration: 0.2 }}
-            >
-              <img
-                src={logo}
-                alt="WAFA Logo"
-                className="h-16 w-auto mx-auto object-contain"
-              />
-            </motion.div>
-          </Link>
-        </div>
 
         {/* Register Card */}
         <Card className="shadow-2xl border-primary/10">
@@ -492,19 +471,21 @@ const Register = () => {
             </div>
           </CardFooter>
         </Card>
-      </motion.div>
+        </Motion.div>
+        <AuthVisualPanel variant="register" className="order-1 lg:order-2" />
+      </div>
 
       {/* Terms of Service Modal */}
       <AnimatePresence>
         {showTermsModal && (
-          <motion.div
+          <Motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
             onClick={() => setShowTermsModal(false)}
           >
-            <motion.div
+            <Motion.div
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
@@ -599,22 +580,22 @@ const Register = () => {
                   </Button>
                 </div>
               </div>
-            </motion.div>
-          </motion.div>
+            </Motion.div>
+          </Motion.div>
         )}
       </AnimatePresence>
 
       {/* Privacy Policy Modal */}
       <AnimatePresence>
         {showPrivacyModal && (
-          <motion.div
+          <Motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
             onClick={() => setShowPrivacyModal(false)}
           >
-            <motion.div
+            <Motion.div
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
@@ -723,21 +704,21 @@ const Register = () => {
                   </Button>
                 </div>
               </div>
-            </motion.div>
-          </motion.div>
+            </Motion.div>
+          </Motion.div>
         )}
       </AnimatePresence>
 
       {/* Account Sharing Warning Modal */}
       <AnimatePresence>
         {showAccountWarning && (
-          <motion.div
+          <Motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
           >
-            <motion.div
+            <Motion.div
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
@@ -805,8 +786,8 @@ const Register = () => {
                   J'ai compris, continuer
                 </Button>
               </div>
-            </motion.div>
-          </motion.div>
+            </Motion.div>
+          </Motion.div>
         )}
       </AnimatePresence>
     </div>

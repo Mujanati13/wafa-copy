@@ -1,6 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { Menu, GraduationCap } from "lucide-react";
+import {
+  Menu,
+  GraduationCap,
+  UserRound,
+  Settings,
+  CreditCard,
+  LogOut,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -171,7 +178,12 @@ const TopBar = ({ onMenuClick, sidebarOpen }) => {
                 </Avatar>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-72 sm:w-80 max-h-[500px] overflow-y-auto" align="end" forceMount>
+            <DropdownMenuContent
+              className="w-72 sm:w-80 max-h-[500px] overflow-y-auto rounded-md border border-slate-200 bg-white p-0 text-slate-900 shadow-lg dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100"
+              align="end"
+              sideOffset={8}
+              forceMount
+            >
               <DropdownMenuLabel className="font-normal p-3 sm:p-4">
                 <div className="flex flex-col space-y-2">
                   <p className="text-sm sm:text-base font-semibold leading-none">{user?.name || t('common:user')}</p>
@@ -244,19 +256,35 @@ const TopBar = ({ onMenuClick, sidebarOpen }) => {
                   </div>
                 </div>
               </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => navigate("/dashboard/profile")} className="cursor-pointer">
-                {t('dashboard:profile')}
+              <DropdownMenuSeparator className="m-0 bg-slate-200 dark:bg-slate-700" />
+              <DropdownMenuItem
+                onClick={() => navigate("/dashboard/profile")}
+                className="cursor-pointer gap-3 rounded-none px-4 py-3 text-sm focus:bg-slate-100 dark:focus:bg-slate-800"
+              >
+                <UserRound className="h-4 w-4 text-slate-500" aria-hidden="true" />
+                <span>Profil</span>
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => navigate("/dashboard/settings")} className="cursor-pointer">
-                {t('dashboard:settings')}
+              <DropdownMenuItem
+                onClick={() => navigate("/dashboard/settings")}
+                className="cursor-pointer gap-3 rounded-none px-4 py-3 text-sm focus:bg-slate-100 dark:focus:bg-slate-800"
+              >
+                <Settings className="h-4 w-4 text-slate-500" aria-hidden="true" />
+                <span>Paramètres</span>
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => navigate("/dashboard/subscription")} className="cursor-pointer">
-                {t('dashboard:subscription')}
+              <DropdownMenuItem
+                onClick={() => navigate("/dashboard/subscription")}
+                className="cursor-pointer gap-3 rounded-none px-4 py-3 text-sm focus:bg-slate-100 dark:focus:bg-slate-800"
+              >
+                <CreditCard className="h-4 w-4 text-slate-500" aria-hidden="true" />
+                <span>L&apos;abonnement</span>
               </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleLogout} className="text-red-600 cursor-pointer">
-                {t('common:logout')}
+              <DropdownMenuSeparator className="m-0 bg-slate-200 dark:bg-slate-700" />
+              <DropdownMenuItem
+                onClick={handleLogout}
+                className="cursor-pointer gap-3 rounded-none px-4 py-3 text-sm text-red-600 focus:bg-red-50 focus:text-red-700 dark:text-red-400 dark:focus:bg-red-950/40 dark:focus:text-red-300"
+              >
+                <LogOut className="h-4 w-4" aria-hidden="true" />
+                <span>{t('common:logout')}</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

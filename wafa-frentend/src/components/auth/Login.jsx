@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { motion } from 'framer-motion';
+import { motion as Motion } from 'framer-motion';
 import { Eye, EyeOff, ArrowLeft, Loader2 } from 'lucide-react';
 import { FcGoogle } from 'react-icons/fc';
 import { Button } from '@/components/ui/button';
-import logo from '@/assets/logo.png';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -15,6 +14,7 @@ import { toast } from 'sonner';
 import { loginWithEmail, loginWithGoogle } from '@/services/authService';
 import { userService } from '@/services/userService';
 import LanguageSwitcher from '@/components/shared/LanguageSwitcher';
+import AuthVisualPanel from './AuthVisualPanel';
 
 const Login = () => {
   const { t } = useTranslation(['auth', 'common']);
@@ -203,7 +203,7 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center px-4 py-8">
+    <div className="min-h-screen bg-background flex items-center justify-center px-3 py-4 sm:px-4 sm:py-8">
       {/* Background Effects */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/4 right-1/4 w-64 h-64 bg-blue-100 rounded-full opacity-30 blur-3xl animate-pulse" />
@@ -211,12 +211,14 @@ const Login = () => {
         <div className="absolute top-1/2 left-1/2 w-32 h-32 bg-blue-200 rounded-full opacity-25 blur-2xl animate-pulse" style={{ animationDelay: '0.5s' }} />
       </div>
 
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="relative z-10 w-full max-w-md"
-      >
+      <div className="relative z-10 grid w-full max-w-6xl overflow-hidden rounded-3xl border border-border bg-card shadow-2xl lg:grid-cols-[minmax(0,0.95fr)_minmax(420px,0.8fr)]">
+        <AuthVisualPanel variant="login" />
+        <Motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="w-full self-center p-4 sm:p-8 lg:p-10"
+        >
         {/* Back Button - Top Left */}
         <Link
           to="/"
@@ -226,23 +228,8 @@ const Login = () => {
           {t('common:back')}
         </Link>
 
-        {/* Logo & Language Switcher */}
-        <div className="text-center mb-8">
-          <Link to="/" className="inline-block group">
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              transition={{ duration: 0.2 }}
-            >
-              <img
-                src={logo}
-                alt="WAFA Logo"
-                className="h-16 w-auto mx-auto object-contain"
-              />
-            </motion.div>
-          </Link>
-          <div className="flex justify-center mt-4">
+        <div className="mb-4 flex justify-end">
             <LanguageSwitcher />
-          </div>
         </div>
 
         {/* Login Card */}
@@ -384,7 +371,8 @@ const Login = () => {
             </div>
           </CardFooter>
         </Card>
-      </motion.div>
+        </Motion.div>
+      </div>
     </div>
   );
 };

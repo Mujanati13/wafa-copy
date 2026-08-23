@@ -12,6 +12,7 @@ import LanguageSwitcher from "@/components/shared/LanguageSwitcher";
 import NotificationDropdown from "@/components/layout/NotificationDropdown";
 import logo from "@/assets/logo.png";
 import { cn } from "@/lib/utils";
+import { signOut } from "@/services/authService";
 
 const navGroups = [
   { label: "Accueil", items: [{ to: "/dashboard/home", label: "Vue d'ensemble", icon: Home, exact: true }] },
@@ -60,9 +61,8 @@ export default function LearnerExperienceLayout() {
   const initials = useMemo(() => String(user?.name || `${user?.firstName || ""} ${user?.lastName || ""}` || "IM").split(" ").filter(Boolean).slice(0, 2).map((part) => part[0]).join("").toUpperCase(), [user]);
   const isActive = (to) => location.pathname === to || (!to.endsWith("home") && location.pathname.startsWith(`${to}/`));
 
-  const logout = () => {
-    ["token", "user", "userProfile"].forEach((key) => localStorage.removeItem(key));
-    window.dispatchEvent(new Event("auth-state-changed"));
+  const logout = async () => {
+    await signOut();
     navigate("/");
   };
 
