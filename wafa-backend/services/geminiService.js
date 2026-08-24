@@ -2,12 +2,15 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import dotenv from 'dotenv';
 import fs from 'fs';
 import { createRequire } from 'module';
+import { fileURLToPath } from 'url';
 
 // Import CommonJS PDF helper
 const require = createRequire(import.meta.url);
 const { extractPdfText } = require('./pdfHelper.cjs');
 
-dotenv.config();
+// Resolve the backend environment file from this module instead of relying on
+// the shell's working directory (the app can be started from the repository root).
+dotenv.config({ path: fileURLToPath(new URL('../.env', import.meta.url)) });
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
