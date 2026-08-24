@@ -25,6 +25,7 @@ import {
   PopoverTrigger,
 } from "../ui/popover";
 import { api } from "@/lib/utils";
+import { moduleService } from "@/services/moduleService";
 
 const API_URL = import.meta.env.VITE_API_URL || "";
 
@@ -194,16 +195,24 @@ const EditModuleForm = ({ module, setShowEditForm, onModuleUpdated }) => {
         formData.append("existingHelpPdf", module.helpPdf);
       }
 
-      await api.put(`/modules/update-with-image/${module.id || module._id}`, formData, {
-        headers: { "Content-Type": "multipart/form-data" }
-      });
+      const response = await api.put(`/modules/update-with-image/${module.id || module._id}`, formData);
+      const savedModule = response.data?.data;
+      const expectedGradientColor = useGradient ? gradientColor : "";
+      if (
+        String(savedModule?.color || "").toLowerCase() !== selectedColor.toLowerCase()
+        || String(savedModule?.gradientColor || "").toLowerCase() !== expectedGradientColor.toLowerCase()
+        || String(savedModule?.gradientDirection || "") !== gradientDirection
+      ) {
+        throw new Error("Le module a été modifié, mais ses paramètres d'apparence n'ont pas été enregistrés correctement.");
+      }
+      moduleService.clearCache();
 
       setShowEditForm(false);
       toast.success(t("admin:module_updated_success"));
       if (onModuleUpdated) onModuleUpdated();
     } catch (e) {
       console.error(e);
-      toast.error(e.response?.data?.message || t("admin:failed_update_module"));
+      toast.error(e.response?.data?.message || e.message || t("admin:failed_update_module"));
     } finally {
       setIsSubmitting(false);
     }

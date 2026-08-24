@@ -4,6 +4,7 @@ import {
   BrowserRouter as Router,
   Routes,
   Route,
+  Navigate,
   Outlet,
 } from "react-router-dom";
 import { Toaster } from "@/components/ui/sonner";
@@ -101,11 +102,11 @@ export default function App() {
           <Route path="leaderboard" element={<LeaderboardClient />} />
           <Route path="subscription" element={<ClientSubscriptionPage />} />
           <Route path="statistics" element={<StatisticsPage />} />
-          <Route path="exams" element={<SubjectsPage />} />
+          <Route path="exams" element={<Navigate to="/dashboard/home#modules" replace />} />
           {/* <Route path="exam/:examId" element={<ExamPage />} /> */}
           <Route path="results" element={<ResultsPage />} />
           <Route path="progress" element={<ProgressPage />} />
-          <Route path="subjects" element={<SubjectsPage />} />
+          <Route path="subjects" element={<Navigate to="/dashboard/home#modules" replace />} />
           <Route path="subjects/:courseId" element={<SubjectsPage />} />
           <Route
             path="calendar"

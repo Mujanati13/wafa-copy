@@ -34,6 +34,28 @@ const moduleSchema = new mongoose.Schema(
                 type: [String],
                 default: [],
         },
+        // Stable content types keep their internal keys while admins can
+        // customize the labels displayed for each individual module.
+        categoryLabels: {
+                examByYears: {
+                        type: String,
+                        trim: true,
+                        maxlength: 60,
+                        default: "Exam par years",
+                },
+                examByCourses: {
+                        type: String,
+                        trim: true,
+                        maxlength: 60,
+                        default: "Exam par courses",
+                },
+                qcmBank: {
+                        type: String,
+                        trim: true,
+                        maxlength: 60,
+                        default: "QCM banque",
+                },
+        },
         imageUrl: {
                 type: String,
         },

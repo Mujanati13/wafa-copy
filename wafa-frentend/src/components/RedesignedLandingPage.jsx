@@ -2,9 +2,10 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion as Motion } from "framer-motion";
 import {
-  AlertCircle, ArrowRight, BookOpenCheck, Check, CheckCircle2,
-  CircleHelp, Clock3, Facebook, GraduationCap, HelpCircle, Instagram,
-  Loader2, Menu, MessageCircle, Play, Send, ShieldCheck, Sparkles, Star, Target, TrendingUp, X,
+  AlertCircle, ArrowRight, BadgeCheck, BookOpenCheck, Check, CheckCircle2,
+  CircleHelp, Facebook, GraduationCap, HelpCircle, Instagram,
+  Highlighter, Loader2, Menu, MessageCircle, Send, Shield, ShieldCheck,
+  Sparkles, Star, Target, TrendingUp, X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -17,14 +18,15 @@ import { toast } from "sonner";
 import ThemeToggle from "@/components/ui/ThemeToggle";
 import LanguageSwitcher from "@/components/shared/LanguageSwitcher";
 import logo from "@/assets/logo.png";
+import heroMedicalStudy from "@/assets/yourqcm-hero-medical-study.png";
 import { getLandingPageSettings } from "@/services/landingPageService";
 import { subscriptionPlanService } from "@/services/subscriptionPlanService";
 
 const FALLBACK_SETTINGS = {
   siteName: "YourQCM",
-  heroTitle: "Révisez avec méthode. Réussissez avec confiance.",
-  heroSubtitle: "La plateforme de préparation médicale pensée pour votre rythme.",
-  heroDescription: "QCM ciblés, examens corrigés, statistiques et ressources dans un seul espace.",
+  heroTitle: "Faciliter votre préparation avec YourQCM",
+  heroSubtitle: "Révisez mieux. En moins de temps.",
+  heroDescription: "Préparez-vous efficacement pour les examens avec notre plateforme d'exam, conçue pour les étudiants en médecine de FMPM.",
   pricingTitle: "Choisissez votre rythme de révision",
   pricingSubtitle: "Commencez gratuitement, passez à l'illimité quand vous êtes prêt.",
   faqTitle: "Questions fréquentes",
@@ -33,27 +35,45 @@ const FALLBACK_SETTINGS = {
 
 const copy = {
   fr: {
-    login: "Se connecter", create: "Créer mon compte", discover: "Découvrir YourQCM",
+    login: "Se connecter", create: "Créer mon compte", subscriptionCta: "Voir l'abonnement",
     navigation: ["Avantages", "Abonnements", "FAQ"],
     eyebrow: "Préparation médicale, sans dispersion", continue: "Commencer gratuitement",
     seePlans: "Voir les abonnements", trusted: "Pensé pour les étudiants en médecine au Maroc",
     dashboard: "Votre espace de révision", ready: "Prêt à apprendre", qcm: "QCM du jour",
     score: "Score moyen", focus: "À réviser", next: "Continuer",
-    benefits: "Tout ce qu'il faut pour réviser avec régularité", benefitsCopy: "Moins d'onglets, plus de clarté sur ce qui compte aujourd'hui.",
-    features: [["QCM et examens", "Entraînez-vous sur les thèmes importants."], ["Explications utiles", "Comprenez chaque réponse, pas seulement votre score."], ["Progression visible", "Identifiez vos acquis et vos priorités."], ["Révision organisée", "Notes et playlists au même endroit."]],
+    benefits: "Comment YourQCM vous aide à valider", benefitsCopy: "Des outils puissants pour optimiser votre apprentissage",
+    features: [
+      ["QCM et examens", "Entraînez-vous sur les thèmes importants."],
+      ["Explications utiles", "Comprenez chaque réponse, pas seulement votre score."],
+      ["Progression visible", "Identifiez vos acquis et vos priorités."],
+      ["Révision organisée", "Notes et playlists au même endroit."],
+      ["Plateforme stable", "Une plateforme sécurisée et fiable. Vos données restent privées."],
+      ["Classement direct", "Suivez vos performances et évaluez votre niveau parmi les meilleurs."],
+      ["Amélioration continue", "À l'écoute de nos utilisateurs pour constamment améliorer la plateforme."],
+      ["Surligneur", "Mettez en évidence ce qui est important dans vos révisions."],
+    ],
     plans: "Abonnements", popular: "Le plus choisi", perSemester: "/ semestre", choose: "Choisir ce plan", includes: "Ce qui est inclus", faq: "Réponses claires avant de commencer",
     footer: "Révisez avec intention. Progressez avec YourQCM.", product: "Produit", support: "Support", social: "Suivez-nous", privacy: "Confidentialité", terms: "Conditions",
     menu: "Ouvrir le menu",
   },
   en: {
-    login: "Log in", create: "Create my account", discover: "Explore YourQCM",
+    login: "Log in", create: "Create my account", subscriptionCta: "View subscription",
     navigation: ["Benefits", "Plans", "FAQ"],
     eyebrow: "Medical preparation, without the noise", continue: "Start for free",
     seePlans: "View plans", trusted: "Built for medical students in Morocco",
     dashboard: "Your study space", ready: "Ready to learn", qcm: "Today's QCM",
     score: "Average score", focus: "To review", next: "Continue",
-    benefits: "Everything you need to study consistently", benefitsCopy: "Fewer tabs, more clarity on what matters today.",
-    features: [["QCMs and exams", "Practise the topics that matter."], ["Useful explanations", "Understand every answer, not only your score."], ["Visible progress", "Identify strengths and priorities."], ["Organised study", "Keep notes and playlists in one place."]],
+    benefits: "How YourQCM helps you succeed", benefitsCopy: "Powerful tools to optimise your learning",
+    features: [
+      ["QCMs and exams", "Practise the topics that matter."],
+      ["Useful explanations", "Understand every answer, not only your score."],
+      ["Visible progress", "Identify strengths and priorities."],
+      ["Organised study", "Keep notes and playlists in one place."],
+      ["Stable platform", "A secure and reliable platform. Your data stays private."],
+      ["Live ranking", "Track your performance and assess your level among the best."],
+      ["Continuous improvement", "We listen to our users to continuously improve the platform."],
+      ["Highlighter", "Highlight what matters most in your revision."],
+    ],
     plans: "Plans", popular: "Most popular", perSemester: "/ semester", choose: "Choose this plan", includes: "What's included", faq: "Clear answers before you begin",
     footer: "Study with intention. Progress with YourQCM.", product: "Product", support: "Support", social: "Follow us", privacy: "Privacy", terms: "Terms",
     menu: "Open menu",
@@ -61,19 +81,17 @@ const copy = {
 };
 
 const defaultFaqs = [
-  ["Pour quelle faculté sont destinés ces QCMs ?", "Les QCMs sont spécifiquement conçus pour les étudiants de la FMPR (Faculté de Médecine et de Pharmacie de Rabat)."],
+  ["Pour quelle faculté sont destinés ces QCMs ?", "Les QCMs sont spécifiquement conçus pour les étudiants de la FMPM (Faculté de Médecine et de Pharmacie de Marrakech)."],
   ["Dois-je créer un compte ?", "Oui, la création d'un compte gratuit est nécessaire pour accéder aux QCMs et sauvegarder votre progression."],
   ["Puis-je suivre ma progression ?", "Oui, votre progression est automatiquement sauvegardée et vous pouvez la consulter à tout moment."],
-  ["Mes informations bancaires sont-elles sécurisées ?", "Absolument. Nous ne conservons aucune information concernant votre carte bancaire. Tous les paiements sont traités par PayPal qui garantit la sécurité de vos transactions."],
   ["Puis-je être remboursé ?", "Les remboursements ne sont accordés que dans des cas exceptionnels. Pour toute demande, contactez-nous sur WhatsApp."],
   ["Puis-je personnaliser mon parcours d'études ?", "Bien sûr ! Vous pouvez organiser votre plan d'études par création des playlists, des examens et des exercices spécifiques afin de personnaliser votre expérience d'apprentissage."],
 ];
 
 const defaultFaqsEn = [
-  ["Which faculty are these QCMs for?", "The QCMs are specifically designed for students at the Faculty of Medicine and Pharmacy of Rabat."],
+  ["Which faculty are these QCMs for?", "The QCMs are specifically designed for FMPM students (Faculty of Medicine and Pharmacy of Marrakech)."],
   ["Do I need to create an account?", "Yes. A free account is required to access QCMs and save your progress."],
   ["Can I track my progress?", "Yes. Your progress is saved automatically and is available from your dashboard."],
-  ["Is my payment information secure?", "Yes. We do not store card information, and payments are processed securely by PayPal."],
   ["Can I request a refund?", "Refunds are granted only in exceptional circumstances. Contact us on WhatsApp for assistance."],
   ["Can I customise my study journey?", "Yes. Create playlists, exams, and focused exercises to personalise your learning experience."],
 ];
@@ -115,6 +133,26 @@ const benefitVisuals = [
   {
     icon: Star,
     iconColor: "from-amber-400 to-orange-500",
+    cardColor: "from-amber-50/90 to-white hover:border-amber-300 dark:from-amber-950/25 dark:to-card dark:hover:border-amber-700",
+  },
+  {
+    icon: Shield,
+    iconColor: "from-blue-500 to-blue-600",
+    cardColor: "from-blue-50/90 to-white hover:border-blue-300 dark:from-blue-950/25 dark:to-card dark:hover:border-blue-700",
+  },
+  {
+    icon: TrendingUp,
+    iconColor: "from-emerald-500 to-teal-500",
+    cardColor: "from-emerald-50/90 to-white hover:border-emerald-300 dark:from-emerald-950/25 dark:to-card dark:hover:border-emerald-700",
+  },
+  {
+    icon: BadgeCheck,
+    iconColor: "from-violet-500 to-indigo-600",
+    cardColor: "from-violet-50/90 to-white hover:border-violet-300 dark:from-violet-950/25 dark:to-card dark:hover:border-violet-700",
+  },
+  {
+    icon: Highlighter,
+    iconColor: "from-amber-400 to-yellow-500",
     cardColor: "from-amber-50/90 to-white hover:border-amber-300 dark:from-amber-950/25 dark:to-card dark:hover:border-amber-700",
   },
 ];
@@ -266,27 +304,26 @@ export default function RedesignedLandingPage() {
               <p className="mt-3 max-w-xl text-base leading-7 text-muted-foreground">{settings.heroDescription}</p>
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                 <Button size="lg" className="h-12 bg-primary px-6 shadow-xl shadow-blue-950/20 hover:bg-primary/90" onClick={() => navigate(hasActiveLogin ? dashboardPath : "/register")}>{hasActiveLogin ? (language === "fr" ? "Mon espace" : "My dashboard") : text.continue}<ArrowRight className="ml-2 h-4 w-4" /></Button>
-                <Button size="lg" variant="outline" className="h-12 px-6" onClick={() => scrollTo("benefits")}><Play className="mr-2 h-4 w-4 fill-current" />{text.discover}</Button>
+                <Button size="lg" variant="outline" className="h-12 px-6" onClick={() => scrollTo("pricing")}>{text.subscriptionCta}<ArrowRight className="ml-2 h-4 w-4" /></Button>
               </div>
               <div className="mt-8 flex items-center gap-3 text-sm text-muted-foreground"><ShieldCheck className="h-5 w-5 text-cyan-600" />{text.trusted}</div>
             </Motion.div>
             <Motion.div initial={{ opacity: 0, scale: .96 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: .55, delay: .08 }} className="relative mx-auto w-full max-w-xl">
-              <div className="absolute -inset-5 -z-10 rounded-[2rem] bg-gradient-to-br from-cyan-300/30 via-blue-400/10 to-transparent blur-2xl" />
-              <div className="imrs-surface overflow-hidden border-white/70 bg-card/95 p-3 shadow-2xl shadow-blue-950/15 dark:border-white/10">
-                <div className="rounded-xl bg-gradient-to-br from-[#10235c] to-[#164f93] p-5 text-white sm:p-7">
-                  <div className="flex items-center justify-between"><div><p className="text-xs font-semibold tracking-[.16em] text-cyan-200 uppercase">{text.dashboard}</p><h2 className="mt-1 text-xl font-semibold">Bonjour, Sara</h2></div><div className="rounded-xl bg-white/10 p-2"><GraduationCap className="h-6 w-6 text-cyan-200" /></div></div>
-                  <div className="mt-7 grid grid-cols-3 gap-3"><MiniStat label={text.qcm} value="24" /><MiniStat label={text.score} value="78%" /><MiniStat label={text.focus} value="3" /></div>
-                  <div className="mt-6 rounded-xl bg-white/10 p-4"><div className="flex items-center justify-between text-sm"><span>Cardiologie</span><span className="font-semibold text-cyan-200">68%</span></div><div className="mt-3 h-2 overflow-hidden rounded-full bg-white/15"><div className="h-full w-[68%] rounded-full bg-cyan-300" /></div><button onClick={() => navigate(hasActiveLogin ? dashboardPath : "/register")} className="mt-4 flex items-center text-sm font-semibold text-cyan-100 hover:text-white">{text.next}<ArrowRight className="ml-1 h-4 w-4" /></button></div>
-                </div>
-                <div className="grid grid-cols-3 gap-2 px-2 py-4 text-center text-xs text-muted-foreground"><span><TrendingUp className="mx-auto mb-1 h-4 w-4 text-cyan-600" />+12% cette semaine</span><span><Target className="mx-auto mb-1 h-4 w-4 text-cyan-600" />Objectif en cours</span><span><Clock3 className="mx-auto mb-1 h-4 w-4 text-cyan-600" />18 min aujourd'hui</span></div>
-              </div>
+              <div className="absolute -inset-7 -z-10 rounded-[3rem] bg-gradient-to-br from-cyan-300/35 via-blue-400/15 to-amber-200/20 blur-3xl" />
+              <img
+                src={heroMedicalStudy}
+                alt={language === "fr" ? "Illustration de révision médicale avec livres, tablette et stéthoscope" : "Medical study illustration with books, tablet and stethoscope"}
+                className="aspect-[4/3] w-full rounded-[2rem] object-cover shadow-2xl shadow-blue-950/20 ring-1 ring-white/80 dark:ring-white/10"
+                loading="eager"
+                fetchPriority="high"
+              />
             </Motion.div>
           </div>
         </section>
 
         <section id="benefits" className="scroll-mt-24 bg-muted/55 py-20">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <SectionHeading eyebrow="01 — YourQCM" title={text.benefits} copy={text.benefitsCopy} />
+            <SectionHeading eyebrow={language === "fr" ? "01 — Avantages" : "01 — Benefits"} title={text.benefits} copy={text.benefitsCopy} />
             <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
               {text.features.map(([title, description], index) => {
                 const visual = benefitVisuals[index % benefitVisuals.length];
@@ -375,8 +412,6 @@ export default function RedesignedLandingPage() {
 }
 
 function SectionHeading({ eyebrow, title, copy: description, centered = false }) { return <div className={centered ? "mx-auto max-w-2xl text-center" : "max-w-2xl"}><span className="imrs-eyebrow">{eyebrow}</span><h2 className="mt-5 text-3xl font-bold tracking-tight sm:text-4xl">{title}</h2><p className="mt-4 leading-7 text-muted-foreground">{description}</p></div>; }
-function MiniStat({ label, value }) { return <div className="rounded-xl bg-white/10 p-3"><p className="text-[11px] text-blue-100">{label}</p><p className="mt-1 text-lg font-bold">{value}</p></div>; }
-
 function ApprovedReviewsSection({ reviews, language }) {
   if (!reviews.length) return null;
   const apiOrigin = api.defaults.baseURL?.replace(/\/api\/v1\/?$/, "") || "";

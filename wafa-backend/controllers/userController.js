@@ -7,6 +7,10 @@ import asyncHandler from "../handlers/asyncHandler.js";
 import { NotificationController } from "./notificationController.js";
 import admin from "../config/firebase.js";
 import bcrypt from "bcrypt";
+import {
+    getAcademicYearFromSemesters,
+    withAcademicYear,
+} from "../utils/academicYear.js";
 
 const getPagination = (query, defaultLimit = 10, maxLimit = 100) => {
     const page = Math.max(Number.parseInt(query.page, 10) || 1, 1);
@@ -26,13 +30,8 @@ const getAcademicYear = (user, queryYear = null) => {
         }
     }
 
-    const semesterNumbers = (user?.semesters || [])
-        .map((semester) => Number.parseInt(String(semester).replace(/\D/g, ""), 10))
-        .filter((semester) => Number.isInteger(semester) && semester >= 1 && semester <= 12);
-
-    if (semesterNumbers.length > 0) {
-        return Math.ceil(Math.max(...semesterNumbers) / 2);
-    }
+    const semesterYear = getAcademicYearFromSemesters(user?.semesters);
+    if (semesterYear) return Number.parseInt(semesterYear, 10);
 
     const rawYear = String(user?.currentYear || "").trim();
     if (!rawYear) return null;
@@ -258,7 +257,7 @@ export const UserController = {
                 password: hashedPassword,
                 phone: phone || null,
                 plan,
-                currentYear: currentYear || null,
+                currentYear: currentYear || getAcademicYearFromSemesters(semesters),
                 semesters: semesters || [],
                 emailVerified: true, // Admin-created users are pre-verified
                 isAactive: true,
@@ -337,7 +336,7 @@ export const UserController = {
             const usersWithPasswordFlag = users.map(user => {
                 const { password, ...safeUser } = user;
                 return {
-                    ...safeUser,
+                    ...withAcademicYear(safeUser),
                     hasPassword: Boolean(password)
                 };
             });
@@ -386,7 +385,7 @@ export const UserController = {
             res.status(200).json({
                 success: true,
                 data: {
-                    users,
+                    users: users.map(withAcademicYear),
                     pagination: {
                         currentPage: page,
                         totalPages,
@@ -448,7 +447,7 @@ export const UserController = {
                 ])
             );
             const usersWithPayment = users.map(user => ({
-                ...user,
+                ...withAcademicYear(user),
                 paymentMethod: user.paymentMode
                     || paymentMethodByUser.get(user._id.toString())
                     || 'Contact'
@@ -621,6 +620,13 @@ export const UserController = {
                     updates[field] = updateData[field];
                 }
             });
+
+            if (
+                Object.prototype.hasOwnProperty.call(updates, 'semesters')
+                && !String(updates.currentYear ?? "").trim()
+            ) {
+                updates.currentYear = getAcademicYearFromSemesters(updates.semesters);
+            }
 
             console.log('📝 Fields to update:', Object.keys(updates));
 
@@ -1174,6 +1180,7 @@ export const UserController = {
 
         // Keep the semester for navigation, but grant content access only to this exam.
         user.semesters = [semester];
+        user.currentYear = getAcademicYearFromSemesters(user.semesters);
         user.freeModules = [selectedModule.name];
         user.freeModule = selectedModule._id;
         user.freeExam = selectedExam._id;
@@ -1201,6 +1208,7 @@ export const UserController = {
             data: {
                 user: {
                     _id: user._id,
+                    currentYear: user.currentYear,
                     semesters: user.semesters,
                     freeModule: user.freeModule,
                     freeExam: user.freeExam,

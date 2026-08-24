@@ -2,7 +2,7 @@ import { Router } from "express"
 import validate from "../middleware/validateSchema.js"
 import moduleSchema from "../validators/ModuleSchema.js"
 import { moduleController } from "../controllers/moduleController.js"
-import { isAuthenticated } from "../middleware/authMiddleware.js"
+import { isAdmin, isAuthenticated } from "../middleware/authMiddleware.js"
 import multer from "multer"
 import path from "path"
 import fs from "fs"
@@ -157,6 +157,9 @@ router.delete("/:id/ai-context/:fileId", isAuthenticated, moduleController.delet
 
 // Update AI prompt for a module
 router.put("/:id/ai-prompt", isAuthenticated, moduleController.updateAiPrompt)
+
+// Customize the three display labels without changing their stable content types
+router.patch("/:id/category-labels", isAuthenticated, isAdmin, moduleController.updateCategoryLabels)
 
 // Get module AI configuration (prompt + context files)
 router.get("/:id/ai-config", moduleController.getAiConfig)

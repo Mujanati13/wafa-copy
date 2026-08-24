@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
-  ArrowLeft, BookOpen, CalendarDays, ChevronRight, FileQuestion,
-  HelpCircle, Library, LockKeyhole, Play, Search, SlidersHorizontal,
+  ArrowLeft, BookOpen, CalendarDays, FileQuestion,
+  HelpCircle, Library, Play,
 } from "lucide-react";
 import { moduleService } from "@/services/moduleService";
 import { api, cn } from "@/lib/utils";
@@ -11,7 +11,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -20,6 +19,16 @@ const labels = {
   course: { title: "Examens par cours", description: "Ciblez un chapitre ou une notion précise.", icon: BookOpen },
   qcm: { title: "Banque de QCM", description: "Révisez librement avec des questions variées.", icon: Library },
 };
+
+const categoryLabelKeys = {
+  year: "examByYears",
+  course: "examByCourses",
+  qcm: "qcmBank",
+};
+
+const getSectionTitle = (module, type) => (
+  module?.categoryLabels?.[categoryLabelKeys[type]]?.trim() || labels[type].title
+);
 
 const normalizeModule = (module) => ({
   id: module?._id || module?.id,
@@ -30,9 +39,8 @@ const normalizeModule = (module) => ({
   questions: module?.totalQuestions || module?.questionCount || 0,
   progress: Math.min(100, Math.max(0, Number(module?.progress ?? module?.percentage) || 0)),
   questionsAnswered: Math.max(0, Number(module?.questionsAnswered) || 0),
+  categoryLabels: module?.categoryLabels || {},
 });
-
-const isPremiumPlan = (plan) => String(plan || "Free").toLowerCase().includes("premium");
 
 const getThemeTextColor = (color) => {
   const hex = String(color || "").trim().replace("#", "");
@@ -48,29 +56,29 @@ const getThemeTextColor = (color) => {
     : "#ffffff";
 };
 
-function ModuleCard({ module, locked, onOpen }) {
-  return <Card className="group overflow-hidden border-border bg-card shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg">
-    <div className="h-1.5" style={{ backgroundColor: module.color }} />
-    <CardContent className="p-5">
-      <div className="mb-5 flex items-start justify-between gap-3">
-        <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl text-white shadow-sm" style={{ backgroundColor: module.color }}>
-          <BookOpen className="h-6 w-6" />
-        </div>
-        {locked ? <Badge variant="outline" className="gap-1 border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300"><LockKeyhole className="h-3 w-3" />Premium</Badge> : <Badge variant="outline" className="border-cyan-600/20 bg-cyan-500/10 text-cyan-700 dark:text-cyan-300">{module.semester}</Badge>}
-      </div>
-      <p className="mb-1 text-xs font-semibold uppercase tracking-[.12em] text-muted-foreground">{module.semester}</p>
-      <h2 className="line-clamp-2 text-lg font-bold tracking-tight text-foreground">{module.name}</h2>
-      <p className="mt-2 line-clamp-2 min-h-10 text-sm leading-5 text-muted-foreground">{module.description}</p>
-      <div className="mt-5 flex items-center justify-between border-t border-border pt-4 text-sm text-muted-foreground">
-        <span className="flex items-center gap-1.5"><FileQuestion className="h-4 w-4" />{module.questions ? `${module.questions} questions` : "Examens disponibles"}</span>
-        <Button onClick={onOpen} size="sm" className="gap-1.5"><span>{locked ? "Voir l’accès" : "Étudier"}</span><ChevronRight className="h-4 w-4" /></Button>
-      </div>
-    </CardContent>
-  </Card>;
-}
+const formatSemesterLabel = (semester) => {
+  const value = String(semester || "").trim();
+  if (!value || value === "—") return "";
+  if (/^s\d+$/i.test(value)) return value.toUpperCase();
+  if (/^\d+$/.test(value)) return `S${value}`;
+  return value;
+};
 
-function ExamCard({ exam, type, moduleColor, onStart, onHelp }) {
+const getExamDisplayName = (examName, moduleName) => {
+  const title = String(examName || "Examen sans titre").trim();
+  const moduleTitle = String(moduleName || "").trim();
+  if (!moduleTitle || !title.toLocaleLowerCase().startsWith(moduleTitle.toLocaleLowerCase())) return title;
+
+  const remainder = title.slice(moduleTitle.length);
+  const separator = remainder.match(/^\s*(?:—|–|-|:)\s*/);
+  if (!separator) return title;
+
+  return remainder.slice(separator[0].length).trim() || title;
+};
+
+function ExamCard({ exam, type, moduleColor, moduleName, onStart, onHelp }) {
   const Icon = labels[type].icon;
+  const displayName = type === "year" ? getExamDisplayName(exam.name, moduleName) : exam.name;
   const totalQuestions = Math.max(0, Number(exam.questions) || 0);
   const providedProgress = Math.min(100, Math.max(0, Number(exam.progress) || 0));
   const answeredQuestions = Math.min(
@@ -95,7 +103,7 @@ function ExamCard({ exam, type, moduleColor, onStart, onHelp }) {
   if (type === "year") {
     return (
       <Card
-        className="group min-h-[210px] cursor-pointer overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-md transition hover:-translate-y-0.5 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:ring-offset-2 dark:border-slate-700 dark:bg-slate-950"
+        className="group mx-auto w-full max-w-[400px] cursor-pointer overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-md transition hover:-translate-y-0.5 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:ring-offset-2 dark:border-slate-700 dark:bg-slate-950"
         onClick={() => onStart(exam.id, type)}
         onKeyDown={(event) => {
           if (event.key === "Enter" || event.key === " ") {
@@ -105,23 +113,24 @@ function ExamCard({ exam, type, moduleColor, onStart, onHelp }) {
         }}
         role="button"
         tabIndex={0}
-        aria-label={`Commencer ${exam.name}`}
+        aria-label={`Commencer ${displayName}`}
       >
-        <CardContent className="flex min-h-[210px] flex-col p-5">
-          <div className="flex items-start justify-between gap-4">
-            <div className="relative grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-xl bg-sky-50 text-blue-700 dark:bg-sky-950/60 dark:text-sky-300">
-              <BookOpen className="h-10 w-10" strokeWidth={1.6} aria-hidden="true" />
+        <div className="h-1 w-full shrink-0" style={{ backgroundColor: moduleColor }} aria-hidden="true" />
+        <CardContent className="flex flex-col px-4 pb-4 pt-3.5 sm:px-5">
+          <div className="flex items-start justify-between gap-3">
+            <div className="relative grid h-13 w-13 shrink-0 place-items-center overflow-hidden rounded-xl bg-sky-50 text-blue-700 dark:bg-sky-950/60 dark:text-sky-300">
+              <BookOpen className="h-8 w-8" strokeWidth={1.6} aria-hidden="true" />
               {imageUrl && (
                 <img
                   src={imageUrl}
-                  alt={exam.name}
+                  alt={displayName}
                   className="absolute inset-0 h-full w-full object-contain"
                   onError={(event) => { event.currentTarget.style.display = "none"; }}
                 />
               )}
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="mr-1 flex items-center gap-1.5 sm:mr-2">
               <Button
                 type="button"
                 variant="ghost"
@@ -132,7 +141,7 @@ function ExamCard({ exam, type, moduleColor, onStart, onHelp }) {
                   onHelp(exam);
                 }}
                 onKeyDown={(event) => event.stopPropagation()}
-                aria-label={`Informations sur ${exam.name}`}
+                aria-label={`Informations sur ${displayName}`}
               >
                 <HelpCircle className="h-4 w-4" aria-hidden="true" />
               </Button>
@@ -144,24 +153,24 @@ function ExamCard({ exam, type, moduleColor, onStart, onHelp }) {
             </div>
           </div>
 
-          <h2 className="my-5 line-clamp-2 flex min-h-12 flex-1 items-center justify-center text-center text-base font-bold text-slate-950 dark:text-white">
-            {exam.name}
+          <h2 className="mb-3 mt-3 line-clamp-2 text-left text-base font-bold leading-snug text-slate-950 dark:text-white">
+            {displayName}
           </h2>
 
           <div>
-            <div className="mb-2 flex items-center justify-between gap-3 text-sm">
+            <div className="mb-1.5 flex items-center justify-between gap-3 text-sm">
               <span className="flex items-center gap-2 font-medium text-slate-500 dark:text-slate-400">
                 <span className="grid h-6 w-9 place-items-center rounded-full bg-cyan-50 text-cyan-500 dark:bg-cyan-950/60 dark:text-cyan-300">
                   <FileQuestion className="h-3.5 w-3.5" aria-hidden="true" />
                 </span>
                 {answeredQuestions} / {totalQuestions}
               </span>
-              <span className="font-semibold text-slate-800 dark:text-slate-100">{progress}%</span>
+              <span className="mr-1 font-semibold text-slate-800 dark:text-slate-100 sm:mr-2">{progress}%</span>
             </div>
             <div
-              className="h-2 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800"
+              className="h-1.5 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800"
               role="progressbar"
-              aria-label={`Progression de ${exam.name}`}
+              aria-label={`Progression de ${displayName}`}
               aria-valuemin={0}
               aria-valuemax={100}
               aria-valuenow={progress}
@@ -201,36 +210,14 @@ function LoadingLibrary() {
 export default function SubjectsPage() {
   const navigate = useNavigate();
   const { courseId } = useParams();
-  const { selectedSemester, userSemesters, setSelectedSemester } = useSemester();
-  const [modules, setModules] = useState([]);
+  const { selectedSemester } = useSemester();
   const [module, setModule] = useState(null);
   const [examsByType, setExamsByType] = useState({ year: [], course: [], qcm: [] });
   const [activeType, setActiveType] = useState("year");
   const [category, setCategory] = useState("all");
-  const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [helpExam, setHelpExam] = useState(null);
-  const [user] = useState(() => {
-    try { return JSON.parse(localStorage.getItem("userProfile") || localStorage.getItem("user") || "{}"); } catch { return {}; }
-  });
-
-  useEffect(() => {
-    let cancelled = false;
-    const loadModules = async () => {
-      if (courseId) return;
-      setLoading(true); setError("");
-      try {
-        const response = await moduleService.getAllmodules();
-        if (!cancelled) setModules((response.data?.data || response.data || []).map(normalizeModule));
-      } catch {
-        if (!cancelled) setError("Impossible de charger les modules. Vérifiez votre connexion puis réessayez.");
-      } finally { if (!cancelled) setLoading(false); }
-    };
-    loadModules();
-    return () => { cancelled = true; };
-  }, [courseId]);
-
   useEffect(() => {
     let cancelled = false;
     const loadModule = async () => {
@@ -276,36 +263,25 @@ export default function SubjectsPage() {
     return () => { cancelled = true; };
   }, [courseId]);
 
-  const availableSemesters = userSemesters.length ? userSemesters : [...new Set(modules.map((item) => item.semester).filter(Boolean))];
-  const filteredModules = useMemo(() => modules.filter((item) => {
-    const matchesSemester = !selectedSemester || item.semester === selectedSemester;
-    return matchesSemester && `${item.name} ${item.description}`.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase());
-  }), [modules, query, selectedSemester]);
   const categories = useMemo(() => ["all", ...new Set(examsByType.course.map((item) => item.category).filter(Boolean))], [examsByType.course]);
   const currentExams = (examsByType[activeType] || []).filter((item) => activeType !== "course" || category === "all" || item.category === category);
   const moduleThemeColor = module?.color || "#0e2854";
+  const moduleSemesterLabel = formatSemesterLabel(module?.semester || selectedSemester);
   const activeThemeStyle = {
     backgroundColor: moduleThemeColor,
     borderColor: moduleThemeColor,
     color: getThemeTextColor(moduleThemeColor),
   };
-  const locked = (item) => !isPremiumPlan(user.plan) && Array.isArray(user.freeModules) && user.freeModules.length > 0 && !user.freeModules.some((name) => item.name.toLowerCase().includes(String(name).toLowerCase()));
   const startExam = (id, type) => navigate(`/exam/${id}?type=${type === "year" ? "exam" : type}`);
 
   if (loading) return <LoadingLibrary />;
   if (error) return <div className="imrs-surface mx-auto max-w-xl p-8 text-center"><BookOpen className="mx-auto h-10 w-10 text-destructive" /><h1 className="mt-4 text-xl font-bold">Contenu indisponible</h1><p className="mt-2 text-sm text-muted-foreground">{error}</p><Button className="mt-5" onClick={() => window.location.reload()}>Réessayer</Button></div>;
 
-  if (!courseId) return <section className="space-y-6">
-    <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-end"><div><p className="imrs-eyebrow">Bibliothèque d’étude</p><h1 className="imrs-page-title">Choisissez un module</h1><p className="imrs-page-copy">Retrouvez vos cours, examens et banques de QCM au même endroit.</p></div><div className="flex flex-wrap items-center gap-2">{availableSemesters.map((semester) => <Button key={semester} size="sm" variant={semester === selectedSemester ? "default" : "outline"} onClick={() => setSelectedSemester(semester)}>{semester}</Button>)}</div></div>
-    <div className="imrs-surface flex flex-col gap-3 p-3 sm:flex-row sm:items-center"><div className="relative flex-1"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Rechercher un module" className="pl-9" /></div><span className="flex items-center gap-2 px-2 text-sm text-muted-foreground"><SlidersHorizontal className="h-4 w-4" />{filteredModules.length} module{filteredModules.length > 1 ? "s" : ""}</span></div>
-    {filteredModules.length ? <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">{filteredModules.map((item) => <ModuleCard key={item.id} module={item} locked={locked(item)} onOpen={() => navigate(`/dashboard/subjects/${item.id}`)} />)}</div> : <div className="imrs-surface p-10 text-center"><Search className="mx-auto h-9 w-9 text-muted-foreground" /><h2 className="mt-4 font-bold">Aucun module trouvé</h2><p className="mt-1 text-sm text-muted-foreground">Essayez un autre semestre ou une autre recherche.</p></div>}
-  </section>;
-
   const TypeIcon = labels[activeType].icon;
   return <section className="space-y-6">
     <div
-      className="overflow-hidden rounded-3xl bg-primary px-4 py-4 text-primary-foreground shadow-lg sm:px-6 sm:py-5"
-      style={{ background: `linear-gradient(135deg, ${moduleThemeColor}, #0e2854)` }}
+      className="imrs-module-hero overflow-hidden rounded-3xl px-4 py-4 shadow-lg sm:px-6 sm:py-5"
+      style={{ "--module-color": moduleThemeColor }}
     >
       <div className="flex min-w-0 items-center gap-3">
         <Button
@@ -313,29 +289,36 @@ export default function SubjectsPage() {
           variant="ghost"
           size="icon"
           className="h-9 w-9 shrink-0 rounded-lg bg-white/95 text-slate-800 shadow-sm hover:bg-white hover:text-slate-950"
-          onClick={() => navigate("/dashboard/subjects")}
-          aria-label="Retour à tous les modules"
-          title="Tous les modules"
+          onClick={() => navigate("/dashboard/home#modules")}
+          aria-label="Retour au tableau de bord"
+          title="Tableau de bord"
         >
           <ArrowLeft className="h-5 w-5" aria-hidden="true" />
         </Button>
         <div className="min-w-0">
-          <p className="text-[10px] font-semibold uppercase tracking-[.16em] text-white/65 sm:text-xs">{module?.semester}</p>
+          {moduleSemesterLabel && (
+            <p
+              className="mb-0.5 text-[10px] font-bold uppercase tracking-[.16em] text-blue-600/80 sm:text-xs dark:text-white/75"
+              aria-label={`Semestre ${moduleSemesterLabel}`}
+            >
+              {moduleSemesterLabel}
+            </p>
+          )}
           <h1 className="truncate text-2xl font-bold tracking-tight sm:text-3xl">{module?.name}</h1>
         </div>
       </div>
 
-      <p className="mt-2 max-w-3xl text-sm leading-5 text-white/80 sm:text-base">
+      <p className="mt-2 max-w-3xl text-sm leading-5 text-slate-600 sm:text-base dark:text-white/80">
         Choisissez un format d’entraînement puis avancez à votre rythme. Chaque réponse est sauvegardée pendant votre session.
       </p>
 
       <div className="mt-3 max-w-3xl">
-        <div className="mb-1.5 flex items-center justify-between text-xs text-white/75">
+        <div className="mb-1.5 flex items-center justify-between text-xs text-slate-600 dark:text-white/75">
           <span>{module?.questionsAnswered || 0} / {module?.questions || 0} questions</span>
-          <span className="font-semibold text-white">{module?.progress || 0}%</span>
+          <span className="font-semibold text-slate-800 dark:text-white">{module?.progress || 0}%</span>
         </div>
         <div
-          className="h-2 overflow-hidden rounded-full bg-black/20"
+          className="h-2 overflow-hidden rounded-full bg-blue-100 dark:bg-black/20"
           role="progressbar"
           aria-label={`Progression du module ${module?.name || ""}`}
           aria-valuemin={0}
@@ -343,7 +326,7 @@ export default function SubjectsPage() {
           aria-valuenow={module?.progress || 0}
         >
           <div
-            className="h-full rounded-full bg-white/80 transition-[width] duration-500"
+            className="h-full rounded-full bg-primary transition-[width] duration-500 dark:bg-white/80"
             style={{ width: `${module?.progress || 0}%` }}
           />
         </div>
@@ -367,7 +350,7 @@ export default function SubjectsPage() {
           >
             <Icon className="h-5 w-5" />
             <span className="text-left">
-              <span className="block font-semibold">{config.title}</span>
+              <span className="block font-semibold">{getSectionTitle(module, type)}</span>
               <span className="block text-xs opacity-75">
                 {examsByType[type].length} disponible{examsByType[type].length > 1 ? "s" : ""}
               </span>
@@ -380,7 +363,7 @@ export default function SubjectsPage() {
       <div>
         <div className="flex items-center gap-2">
           <TypeIcon className="h-5 w-5" style={{ color: moduleThemeColor }} />
-          <h2 className="text-xl font-bold">{labels[activeType].title}</h2>
+          <h2 className="text-xl font-bold">{getSectionTitle(module, activeType)}</h2>
         </div>
         <p className="mt-1 text-sm text-muted-foreground">{labels[activeType].description}</p>
       </div>
@@ -405,7 +388,7 @@ export default function SubjectsPage() {
         </div>
       )}
     </div>
-    {currentExams.length ? <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">{currentExams.map((exam) => <ExamCard key={exam.id} exam={exam} type={activeType} moduleColor={module?.color || "#0891b2"} onStart={startExam} onHelp={setHelpExam} />)}</div> : <div className="imrs-surface p-10 text-center"><TypeIcon className="mx-auto h-10 w-10 text-muted-foreground" /><h2 className="mt-4 font-bold">Aucun contenu disponible</h2><p className="mt-1 text-sm text-muted-foreground">Les examens ajoutés à ce module apparaîtront ici.</p></div>}
+    {currentExams.length ? <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">{currentExams.map((exam) => <ExamCard key={exam.id} exam={exam} type={activeType} moduleColor={module?.color || "#0891b2"} moduleName={module?.name} onStart={startExam} onHelp={setHelpExam} />)}</div> : <div className="imrs-surface p-10 text-center"><TypeIcon className="mx-auto h-10 w-10 text-muted-foreground" /><h2 className="mt-4 font-bold">Aucun contenu disponible</h2><p className="mt-1 text-sm text-muted-foreground">Les examens ajoutés à ce module apparaîtront ici.</p></div>}
     <Dialog open={Boolean(helpExam)} onOpenChange={(open) => !open && setHelpExam(null)}><DialogContent><DialogHeader><DialogTitle>{helpExam?.name}</DialogTitle><DialogDescription>Informations avant de commencer l’examen</DialogDescription></DialogHeader><p className="whitespace-pre-wrap rounded-xl bg-muted p-4 text-sm leading-6 text-foreground">{helpExam?.helpText || "Aucune information supplémentaire n’est disponible pour cet examen."}</p></DialogContent></Dialog>
   </section>;
 }

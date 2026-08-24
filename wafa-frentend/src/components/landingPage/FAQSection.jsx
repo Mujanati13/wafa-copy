@@ -1,13 +1,13 @@
 import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { GraduationCap, UserPlus, BarChart3, Shield, RefreshCcw, Settings2 } from 'lucide-react'
+import { GraduationCap, UserPlus, BarChart3, RefreshCcw, Settings2 } from 'lucide-react'
 
 const FAQSection = () => {
   
 const faqs = [
   {
     q: "Pour quelle faculté sont destinés ces QCMs ?",
-    a: "Les QCMs sont spécifiquement conçus pour les étudiants de la FMPR (Faculté de Médecine et de Pharmacie de Rabat).",
+    a: "Les QCMs sont spécifiquement conçus pour les étudiants de la FMPM (Faculté de Médecine et de Pharmacie de Marrakech).",
     icon: GraduationCap,
     color: "blue"
   },
@@ -22,12 +22,6 @@ const faqs = [
     a: "Oui, votre progression est automatiquement sauvegardée et vous pouvez la consulter à tout moment.",
     icon: BarChart3,
     color: "purple"
-  },
-  {
-    q: "Mes informations bancaires sont-elles sécurisées ?",
-    a: "Absolument. Nous ne conservons aucune information concernant votre carte bancaire. Tous les paiements sont traités par PayPal qui garantit la sécurité de vos transactions.",
-    icon: Shield,
-    color: "teal"
   },
   {
     q: "Puis-je être remboursé ?",

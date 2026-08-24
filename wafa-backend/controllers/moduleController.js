@@ -6,6 +6,18 @@ import questionModule from "../models/questionModule.js";
 import UserStats from "../models/userStatsModel.js";
 import examCourseModel from "../models/examCourseModel.js";
 import qcmBanqueModel from "../models/qcmBanqueModel.js";
+import { buildModulePayload, ModulePayloadError } from "../utils/modulePayload.js";
+import {
+    CategoryLabelsError,
+    DEFAULT_CATEGORY_LABELS,
+    validateCategoryLabelPatch,
+} from "../utils/categoryLabels.js";
+
+const sendModulePayloadError = (res, error) => res.status(error.statusCode).json({
+    success: false,
+    message: error.message,
+    errors: { [error.field]: error.message }
+});
 
 const MODULE_LIST_CACHE_TTL_MS = 60 * 1000;
 let moduleListCache = null;
@@ -17,33 +29,62 @@ const clearModuleListCache = () => {
 };
 
 export const moduleController = {
-    create: asyncHandler(async (req, res) => {
-        const { name, semester, imageUrl, infoText, color, helpContent, helpImage, helpPdf, difficulty, contentType, textContent, availableInAllSemesters } = req.body;
-        // FormData sends booleans as strings; parse correctly
-        const isAvailableInAllSems = availableInAllSemesters === true || availableInAllSemesters === 'true';
+    updateCategoryLabels: asyncHandler(async (req, res) => {
+        const { id } = req.params;
+        let labels;
 
-        // Validate: semester required when not available in all semesters
-        if (!isAvailableInAllSems && !semester) {
-            return res.status(400).json({
+        try {
+            labels = validateCategoryLabelPatch(req.body?.labels);
+        } catch (error) {
+            if (error instanceof CategoryLabelsError) {
+                return res.status(error.statusCode).json({
+                    success: false,
+                    message: error.message,
+                    errors: { labels: error.message },
+                });
+            }
+            throw error;
+        }
+
+        const module = await moduleSchema.findById(id);
+        if (!module) {
+            return res.status(404).json({
                 success: false,
-                message: "Un semestre est requis lorsque le module n'est pas disponible pour tous les semestres."
+                message: "Module non trouvé",
             });
         }
 
-        const newModule = await moduleSchema.create({
-            name,
-            semester: isAvailableInAllSems ? "" : semester,
-            availableInAllSemesters: isAvailableInAllSems,
-            imageUrl,
-            infoText,
-            color: color || "#6366f1",
-            helpContent,
-            helpImage,
-            helpPdf,
-            difficulty: difficulty || "medium",
-            contentType: contentType || "url",
-            textContent
+        const currentLabels = module.categoryLabels?.toObject?.()
+            || module.categoryLabels
+            || DEFAULT_CATEGORY_LABELS;
+        module.categoryLabels = {
+            ...DEFAULT_CATEGORY_LABELS,
+            ...currentLabels,
+            ...labels,
+        };
+        await module.save();
+        clearModuleListCache();
+
+        return res.status(200).json({
+            success: true,
+            data: {
+                moduleId: module._id,
+                categoryLabels: module.categoryLabels,
+            },
+            message: "Libellé de catégorie mis à jour avec succès",
         });
+    }),
+
+    create: asyncHandler(async (req, res) => {
+        let createData;
+        try {
+            createData = buildModulePayload(req.body, { partial: false });
+        } catch (error) {
+            if (error instanceof ModulePayloadError) return sendModulePayloadError(res, error);
+            throw error;
+        }
+
+        const newModule = await moduleSchema.create(createData);
         clearModuleListCache();
         res.status(201).json({
             success: true,
@@ -53,56 +94,34 @@ export const moduleController = {
 
     update: asyncHandler(async (req, res) => {
         const { id } = req.params;
-        const updateData = {};
-
-        // Only include fields that are provided in the request
-        if (req.body.name !== undefined) updateData.name = req.body.name;
-        if (req.body.semester !== undefined) updateData.semester = req.body.semester;
-        if (req.body.availableInAllSemesters !== undefined) {
-            // FormData sends booleans as strings; parse correctly
-            const isAvailable = req.body.availableInAllSemesters === true || req.body.availableInAllSemesters === 'true';
-            updateData.availableInAllSemesters = isAvailable;
-            // If setting to all semesters, clear the specific semester
-            if (isAvailable) {
-                updateData.semester = "";
-            }
-        }
-        if (req.body.order !== undefined) updateData.order = req.body.order;
-        if (req.body.imageUrl !== undefined) updateData.imageUrl = req.body.imageUrl;
-        if (req.body.infoText !== undefined) updateData.infoText = req.body.infoText;
-        if (req.body.color !== undefined) updateData.color = req.body.color;
-        if (req.body.helpContent !== undefined) updateData.helpContent = req.body.helpContent;
-        if (req.body.helpImage !== undefined) updateData.helpImage = req.body.helpImage;
-        if (req.body.helpPdf !== undefined) updateData.helpPdf = req.body.helpPdf;
-        if (req.body.difficulty !== undefined) updateData.difficulty = req.body.difficulty;
-        if (req.body.contentType !== undefined) updateData.contentType = req.body.contentType;
-        if (req.body.textContent !== undefined) updateData.textContent = req.body.textContent;
-
-        console.log(`Updating module ${id} with data:`, updateData);
-
-        // Manual guard: if not available in all semesters, a semester must be provided
-        const finalAvailable = updateData.availableInAllSemesters !== undefined
-            ? updateData.availableInAllSemesters
-            : undefined; // will be resolved from existing doc if not provided
-        if (finalAvailable === false && updateData.semester !== undefined && !updateData.semester) {
-            return res.status(400).json({
-                success: false,
-                message: "Un semestre est requis lorsque le module n'est pas disponible pour tous les semestres."
-            });
+        let updateData;
+        try {
+            updateData = buildModulePayload(req.body, { partial: true });
+        } catch (error) {
+            if (error instanceof ModulePayloadError) return sendModulePayloadError(res, error);
+            throw error;
         }
 
-        const updatedModule = await moduleSchema.findByIdAndUpdate(
-            id,
-            updateData,
-            { new: true, runValidators: true, context: 'query' }
-        );
-
-        if (!updatedModule) {
+        const existingModule = await moduleSchema.findById(id);
+        if (!existingModule) {
             return res.status(404).json({
                 success: false,
                 message: "Module not found"
             });
         }
+
+        const finalAvailable = updateData.availableInAllSemesters ?? existingModule.availableInAllSemesters;
+        const finalSemester = updateData.semester ?? existingModule.semester;
+        if (!finalAvailable && !finalSemester) {
+            return res.status(422).json({
+                success: false,
+                message: "Un semestre est requis lorsque le module n'est pas disponible pour tous les semestres.",
+                errors: { semester: "Un semestre est requis lorsque le module n'est pas disponible pour tous les semestres." }
+            });
+        }
+
+        existingModule.set(updateData);
+        const updatedModule = await existingModule.save();
 
         clearModuleListCache();
 

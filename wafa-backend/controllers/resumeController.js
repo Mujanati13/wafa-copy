@@ -2,23 +2,21 @@ import resumeModel from "../models/resumeModel.js";
 import asyncHandler from '../handlers/asyncHandler.js';
 import fs from 'fs';
 import path from 'path';
+import mongoose from "mongoose";
+import Module from "../models/moduleModel.js";
 
-// Helper function to save document locally (PDF, images, Word)
-const saveDocumentLocally = async (buffer, originalName) => {
-    const uploadDir = path.join(process.cwd(), 'uploads', 'resumes');
-    if (!fs.existsSync(uploadDir)) {
-        fs.mkdirSync(uploadDir, { recursive: true });
+const removeUploadedFile = async (filePath) => {
+    if (!filePath) return;
+    try {
+        await fs.promises.unlink(filePath);
+    } catch (error) {
+        if (error.code !== "ENOENT") console.error("Error removing résumé upload:", error);
     }
-    
-    const filename = `resume-${Date.now()}-${originalName.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
-    const filePath = path.join(uploadDir, filename);
-    
-    await fs.promises.writeFile(filePath, buffer);
-    
-    return {
-        url: `/uploads/resumes/${filename}`,
-        filename: filename
-    };
+};
+
+const getStoredResumePath = (pdfUrl) => {
+    if (!String(pdfUrl || "").startsWith("/uploads/resumes/")) return "";
+    return path.join(process.cwd(), "uploads", "resumes", path.basename(pdfUrl));
 };
 
 export const resumeController = {
@@ -74,6 +72,8 @@ export const resumeController = {
                 message: "Resume not found"
             });
         }
+
+        await removeUploadedFile(getStoredResumePath(deletedResume.pdfUrl));
 
         res.status(200).json({
             success: true,
@@ -186,12 +186,15 @@ export const resumeController = {
 
     // Admin upload - create resume with module and course
     adminUpload: asyncHandler(async (req, res) => {
-        const { moduleId, courseName, title } = req.body;
+        const moduleId = String(req.body?.moduleId || "").trim();
+        const courseName = String(req.body?.courseName || "").trim();
+        const title = String(req.body?.title || "").trim();
 
         if (!moduleId || !courseName || !title) {
+            await removeUploadedFile(req.file?.path);
             return res.status(400).json({
                 success: false,
-                message: "Module, course name, and title are required"
+                message: "Le module, le nom du cours et le titre sont requis."
             });
         }
 
@@ -199,31 +202,33 @@ export const resumeController = {
         if (!req.file) {
             return res.status(400).json({
                 success: false,
-                message: "File is required (PDF, Image, or Word document)"
+                message: "Un fichier PDF, Word ou image est requis."
             });
         }
 
-        // Save document locally
-        let pdfUrl;
-        try {
-            const uploadResult = await saveDocumentLocally(req.file.buffer, req.file.originalname);
-            pdfUrl = uploadResult.url;
-        } catch (error) {
-            console.error("Error saving document:", error);
-            return res.status(500).json({
+        if (!mongoose.isValidObjectId(moduleId) || !(await Module.exists({ _id: moduleId }))) {
+            await removeUploadedFile(req.file.path);
+            return res.status(422).json({
                 success: false,
-                message: "Failed to upload document"
+                message: "Le module sélectionné n'existe plus. Actualisez la page puis réessayez."
             });
         }
 
-        const newResume = await resumeModel.create({
-            moduleId,
-            courseName,
-            title,
-            pdfUrl,
-            status: "approved",
-            isAdminUpload: true
-        });
+        const pdfUrl = "/uploads/resumes/" + req.file.filename;
+        let newResume;
+        try {
+            newResume = await resumeModel.create({
+                moduleId,
+                courseName,
+                title,
+                pdfUrl,
+                status: "approved",
+                isAdminUpload: true
+            });
+        } catch (error) {
+            await removeUploadedFile(req.file.path);
+            throw error;
+        }
 
         const populated = await resumeModel.findById(newResume._id)
             .populate('moduleId', 'name semester');

@@ -3,14 +3,10 @@ import ExamCourse from "../models/examCourseModel.js";
 import Question from "../models/questionModule.js";
 import ExamParYear from "../models/examParYearModel.js";
 import Module from "../models/moduleModel.js";
-
-const buildExactNamePattern = (name = "") => {
-    const escapedName = name
-        .trim()
-        .replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
-        .replace(/\s+/g, "\\s+");
-    return new RegExp(`^\\s*${escapedName}\\s*$`, "i");
-};
+import {
+    findEquivalentModules,
+    moduleNamesAreEquivalent,
+} from "../utils/moduleIdentity.js";
 
 export const examCourseController = {
     // Create a new exam course
@@ -126,7 +122,7 @@ export const examCourseController = {
     getByModuleId: asyncHandler(async (req, res) => {
         const { moduleId } = req.params;
 
-        const module = await Module.findById(moduleId).select("_id name").lean();
+        const module = await Module.findById(moduleId).select("_id name semester").lean();
         if (!module) {
             return res.status(404).json({
                 success: false,
@@ -134,36 +130,62 @@ export const examCourseController = {
             });
         }
 
-        // Include historical duplicate module records with the same display
-        // name. Older imports may point at one of those IDs instead of the
-        // currently selected module record.
-        const equivalentModules = await Module.find({
-            name: buildExactNamePattern(module.name),
-        }).select("_id").lean();
+        // Historical datasets use equivalent labels such as "Anatomie 1" and
+        // "Anatomie I". Resolve those aliases inside the same semester before
+        // querying courses so older links remain usable.
+        const moduleCandidateFilter = module.semester
+            ? {
+                $or: [
+                    { semester: module.semester },
+                    { semester: "" },
+                    { semester: null },
+                ],
+            }
+            : {};
+        const moduleCandidates = await Module.find(moduleCandidateFilter)
+            .select("_id name semester")
+            .lean();
+        const equivalentModules = findEquivalentModules(module, moduleCandidates);
         const equivalentModuleIds = equivalentModules.length > 0
             ? equivalentModules.map(item => item._id)
             : [module._id];
 
-        let courses = await ExamCourse.find({ moduleId: { $in: equivalentModuleIds } })
+        const equivalentNames = [...new Set([
+            module.name,
+            ...equivalentModules.map(item => item.name),
+        ].filter(Boolean))];
+
+        const courses = await ExamCourse.find({ moduleId: { $in: equivalentModuleIds } })
             .populate("moduleId", "name")
             .select('name moduleId category subCategory description difficulty color imageUrl status totalQuestions helpText')
             .lean()
             .sort({ createdAt: -1 });
 
-        // Support older imports that stored the module name/string instead of
-        // the current Module ObjectId relation.
-        if (courses.length === 0) {
-            courses = await ExamCourse.collection.find({
+        // Support older imports that stored a string moduleId/module name.
+        // The raw compatibility scan is only needed when the indexed ObjectId
+        // query found nothing, keeping the normal route fast.
+        let resolvedCourses = courses;
+        if (resolvedCourses.length === 0) {
+            const equivalentModuleIdStrings = equivalentModuleIds.map(String);
+            const legacyCandidates = await ExamCourse.collection.find({
                 $or: [
-                    { moduleId: { $in: equivalentModuleIds.map(String) } },
-                    { moduleName: buildExactNamePattern(module.name) },
-                    { module: buildExactNamePattern(module.name) },
+                    { moduleId: { $in: equivalentModuleIdStrings } },
+                    { moduleName: { $exists: true, $ne: "" } },
+                    { module: { $exists: true, $ne: "" } },
                 ],
             }).sort({ createdAt: -1 }).toArray();
+
+            resolvedCourses = legacyCandidates.filter((course) => {
+                if (equivalentModuleIdStrings.includes(String(course.moduleId))) return true;
+                const legacyModuleName = course.moduleName || course.module;
+                return equivalentNames.some((name) => (
+                    moduleNamesAreEquivalent(legacyModuleName, name)
+                ));
+            });
         }
 
         // Add question count for each course
-        const coursesWithCount = courses.map(course => ({
+        const coursesWithCount = resolvedCourses.map(course => ({
             ...course,
             moduleId: course.moduleId || { _id: module._id, name: module.name },
             questionCount: course.totalQuestions ?? course.linkedQuestions?.length ?? 0,

@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
-  BarChart3, BookOpen, ChevronLeft, CircleHelp, CreditCard, Crown,
-  FileText, GraduationCap, Home, Library, LogOut, Menu, NotebookPen,
-  Settings, Trophy, UserRound, X,
+  BarChart3, BookOpen, ChevronDown, ChevronLeft, CircleHelp, Crown,
+  Home, Library, Loader2, LogOut, Menu, NotebookPen, Trophy, UserRound, X,
 } from "lucide-react";
 import { SemesterProvider } from "@/context/SemesterContext";
+import { useSemester } from "@/context/SemesterContext";
 import { Button } from "@/components/ui/button";
 import ThemeToggle from "@/components/ui/ThemeToggle";
 import LanguageSwitcher from "@/components/shared/LanguageSwitcher";
@@ -13,17 +13,18 @@ import NotificationDropdown from "@/components/layout/NotificationDropdown";
 import logo from "@/assets/logo.png";
 import { cn } from "@/lib/utils";
 import { signOut } from "@/services/authService";
+import { moduleService } from "@/services/moduleService";
 
 const navGroups = [
   { label: "Accueil", items: [{ to: "/dashboard/home", label: "Vue d'ensemble", icon: Home, exact: true }] },
-  { label: "Étudier", items: [{ to: "/dashboard/subjects", label: "Mes modules", icon: BookOpen }, { to: "/dashboard/exams", label: "Examens", icon: GraduationCap }] },
+  { label: "Étudier", modules: true },
   { label: "Progression", items: [{ to: "/dashboard/progress", label: "Mes progrès", icon: BarChart3 }, { to: "/dashboard/statistics", label: "Statistiques", icon: Trophy, premium: true }, { to: "/dashboard/leaderboard", label: "Classement", icon: Trophy, premium: true }] },
   { label: "Bibliothèque", items: [{ to: "/dashboard/playlist", label: "Playlists", icon: Library, premiumPro: true }, { to: "/dashboard/note", label: "Mes notes", icon: NotebookPen, premiumPro: true }] },
 ];
 
 const bottomItems = [
   { to: "/dashboard/home", label: "Accueil", icon: Home },
-  { to: "/dashboard/subjects", label: "Étudier", icon: BookOpen },
+  { action: "modules", label: "Modules", icon: BookOpen },
   { to: "/dashboard/progress", label: "Progrès", icon: BarChart3 },
   { to: "/dashboard/profile", label: "Profil", icon: UserRound },
 ];
@@ -86,12 +87,23 @@ export default function LearnerExperienceLayout() {
       <div className="flex min-h-[calc(100vh-4rem)]">
         {drawerOpen && <button aria-label="Fermer la navigation" onClick={() => setDrawerOpen(false)} className="fixed inset-0 z-40 bg-slate-950/45 lg:hidden" />}
         <aside className={cn("fixed inset-y-16 left-0 z-50 flex w-72 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground transition-transform duration-200 lg:sticky lg:top-16 lg:h-[calc(100vh-4rem)] lg:translate-x-0", drawerOpen ? "translate-x-0" : "-translate-x-full", collapsed && "lg:w-20")}>
-          <div className="flex h-14 items-center justify-between border-b border-sidebar-border px-4"><span className={cn("text-xs font-semibold tracking-[.14em] text-cyan-200 uppercase", collapsed && "lg:hidden")}>Espace étudiant</span><Button variant="ghost" size="icon" className="text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" onClick={() => { if (window.innerWidth < 1024) setDrawerOpen(false); else setCollapsed((value) => !value); }} aria-label="Réduire la navigation">{drawerOpen ? <X className="lg:hidden" /> : <ChevronLeft className={cn("hidden lg:block transition-transform", collapsed && "rotate-180")} />}</Button></div>
+          <div className="flex h-14 items-center justify-between border-b border-sidebar-border px-4"><span className={cn("text-xs font-semibold tracking-[.14em] text-blue-600 uppercase dark:text-cyan-200", collapsed && "lg:hidden")}>Espace étudiant</span><Button variant="ghost" size="icon" className="text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" onClick={() => { if (window.innerWidth < 1024) setDrawerOpen(false); else setCollapsed((value) => !value); }} aria-label="Réduire la navigation">{drawerOpen ? <X className="lg:hidden" /> : <ChevronLeft className={cn("hidden lg:block transition-transform", collapsed && "rotate-180")} />}</Button></div>
           <nav className="flex-1 overflow-y-auto px-3 py-4" aria-label="Navigation étudiant">
-            {navGroups.map((group) => <div key={group.label} className="mb-5"><p className={cn("mb-2 px-2 text-[10px] font-bold tracking-[.14em] text-cyan-100/55 uppercase", collapsed && "lg:sr-only")}>{group.label}</p><div className="space-y-1">{group.items.map((item) => <NavigationItem key={item.to} item={item} active={isActive(item.to)} collapsed={collapsed} locked={!planAllows(user, item)} />)}</div></div>)}
+            {navGroups.map((group) => (
+              <div key={group.label} className="mb-5">
+                <p className={cn("mb-2 px-2 text-[10px] font-bold tracking-[.14em] text-blue-500/70 uppercase dark:text-cyan-100/55", collapsed && "lg:sr-only")}>{group.label}</p>
+                {group.modules ? (
+                  <ModuleNavigation collapsed={collapsed} setCollapsed={setCollapsed} />
+                ) : (
+                  <div className="space-y-1">
+                    {group.items.map((item) => <NavigationItem key={item.to} item={item} active={isActive(item.to)} collapsed={collapsed} locked={!planAllows(user, item)} />)}
+                  </div>
+                )}
+              </div>
+            ))}
           </nav>
           <div className="border-t border-sidebar-border p-3">
-            <NavLink to="/dashboard/subscription" className={cn("mb-2 flex items-center gap-3 rounded-xl bg-cyan-300/12 p-3 text-sm text-cyan-50 transition hover:bg-cyan-300/20", collapsed && "lg:justify-center lg:px-2")}><Crown className="h-5 w-5 shrink-0 text-cyan-300" /><span className={cn("min-w-0", collapsed && "lg:hidden")}><span className="block font-semibold">{user?.plan || "Plan gratuit"}</span><span className="block text-xs text-cyan-100/70">Voir mon abonnement</span></span></NavLink>
+            <NavLink to="/dashboard/subscription" className={cn("mb-2 flex items-center gap-3 rounded-xl bg-blue-100/80 p-3 text-sm text-blue-800 transition hover:bg-blue-200/80 dark:bg-cyan-300/12 dark:text-cyan-50 dark:hover:bg-cyan-300/20", collapsed && "lg:justify-center lg:px-2")}><Crown className="h-5 w-5 shrink-0 text-blue-600 dark:text-cyan-300" /><span className={cn("min-w-0", collapsed && "lg:hidden")}><span className="block font-semibold">{user?.plan || "Plan gratuit"}</span><span className="block text-xs text-blue-600/80 dark:text-cyan-100/70">Voir mon abonnement</span></span></NavLink>
             <NavLink to="/dashboard/support" className={cn("flex items-center gap-3 rounded-xl px-3 py-2 text-sm text-sidebar-foreground/85 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground", collapsed && "lg:justify-center lg:px-2")}><CircleHelp className="h-5 w-5 shrink-0" /><span className={collapsed ? "lg:hidden" : ""}>Support</span></NavLink>
             <button onClick={logout} className={cn("mt-1 flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-sm text-sidebar-foreground/85 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground", collapsed && "lg:justify-center lg:px-2")}><LogOut className="h-5 w-5 shrink-0" /><span className={collapsed ? "lg:hidden" : ""}>Déconnexion</span></button>
           </div>
@@ -99,12 +111,123 @@ export default function LearnerExperienceLayout() {
 
         <main className="min-w-0 flex-1 pb-20 lg:pb-8"><div className="mx-auto w-full max-w-[1600px] p-4 sm:p-6 lg:p-8"><Outlet /></div></main>
       </div>
-      <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-4 border-t border-border bg-card/95 px-2 pb-[max(.4rem,env(safe-area-inset-bottom))] pt-2 backdrop-blur lg:hidden" aria-label="Navigation rapide">{bottomItems.map((item) => { const Icon = item.icon; const active = isActive(item.to); return <NavLink key={item.to} to={item.to} className={cn("imrs-focus-ring flex flex-col items-center gap-1 rounded-lg py-1 text-[10px] font-medium", active ? "text-primary" : "text-muted-foreground")}><Icon className="h-5 w-5" /><span>{item.label}</span></NavLink>; })}</nav>
+      <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-4 border-t border-border bg-card/95 px-2 pb-[max(.4rem,env(safe-area-inset-bottom))] pt-2 backdrop-blur lg:hidden" aria-label="Navigation rapide">{bottomItems.map((item) => { const Icon = item.icon; const active = item.to ? isActive(item.to) : location.pathname.startsWith("/dashboard/subjects/"); return item.action === "modules" ? <button key={item.action} type="button" onClick={() => setDrawerOpen(true)} className={cn("imrs-focus-ring flex flex-col items-center gap-1 rounded-lg py-1 text-[10px] font-medium", active ? "text-primary" : "text-muted-foreground")} aria-label="Ouvrir mes modules"><Icon className="h-5 w-5" /><span>{item.label}</span></button> : <NavLink key={item.to} to={item.to} className={cn("imrs-focus-ring flex flex-col items-center gap-1 rounded-lg py-1 text-[10px] font-medium", active ? "text-primary" : "text-muted-foreground")}><Icon className="h-5 w-5" /><span>{item.label}</span></NavLink>; })}</nav>
     </div>
   </SemesterProvider>;
 }
 
 function NavigationItem({ item, active, collapsed, locked }) {
   const Icon = item.icon;
-  return <NavLink to={item.to} title={collapsed ? item.label : undefined} className={cn("group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition", active ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-sm" : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground", collapsed && "lg:justify-center lg:px-2")}><Icon className="h-5 w-5 shrink-0" /><span className={cn("truncate", collapsed && "lg:hidden")}>{item.label}</span>{locked && <Crown className={cn("ml-auto h-3.5 w-3.5 text-cyan-200", collapsed && "lg:absolute lg:-right-1 lg:-top-1")} aria-label="Fonctionnalité premium" />}</NavLink>;
+  return <NavLink to={item.to} title={collapsed ? item.label : undefined} className={cn("group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition", active ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-sm" : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground", collapsed && "lg:justify-center lg:px-2")}><Icon className="h-5 w-5 shrink-0" /><span className={cn("truncate", collapsed && "lg:hidden")}>{item.label}</span>{locked && <Crown className={cn("ml-auto h-3.5 w-3.5 text-blue-500 dark:text-cyan-200", collapsed && "lg:absolute lg:-right-1 lg:-top-1")} aria-label="Fonctionnalité premium" />}</NavLink>;
+}
+
+function ModuleNavigation({ collapsed, setCollapsed }) {
+  const location = useLocation();
+  const { selectedSemester, userSemesters } = useSemester();
+  const moduleRouteActive = location.pathname.startsWith("/dashboard/subjects/");
+  const [open, setOpen] = useState(moduleRouteActive);
+  const [modules, setModules] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
+
+  useEffect(() => {
+    if (moduleRouteActive) setOpen(true);
+  }, [location.pathname, moduleRouteActive]);
+
+  useEffect(() => {
+    let active = true;
+    setLoading(true);
+    setError(false);
+
+    moduleService.getAllmodules(reloadKey > 0)
+      .then((response) => {
+        if (!active) return;
+        setModules(response.data?.data || []);
+      })
+      .catch(() => {
+        if (active) setError(true);
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+
+    return () => { active = false; };
+  }, [reloadKey]);
+
+  const visibleModules = useMemo(() => modules
+    .filter((module) => {
+      if (module.availableInAllSemesters) return true;
+      if (selectedSemester) return module.semester === selectedSemester;
+      if (userSemesters.length) return userSemesters.includes(module.semester);
+      return module.semester === "S1";
+    })
+    .sort((first, second) => {
+      const orderDifference = (Number(first.order) || 0) - (Number(second.order) || 0);
+      return orderDifference || String(first.name || "").localeCompare(String(second.name || ""), "fr");
+    }), [modules, selectedSemester, userSemesters]);
+
+  const toggleModules = () => {
+    if (collapsed) {
+      setCollapsed(false);
+      setOpen(true);
+      return;
+    }
+    setOpen((value) => !value);
+  };
+
+  return (
+    <div>
+      <button
+        type="button"
+        onClick={toggleModules}
+        className={cn(
+          "imrs-focus-ring flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition",
+          moduleRouteActive
+            ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-sm"
+            : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+          collapsed && "lg:justify-center lg:px-2",
+        )}
+        aria-expanded={open}
+        aria-controls="learner-sidebar-modules"
+        title={collapsed ? "Mes modules" : undefined}
+      >
+        <BookOpen className="h-5 w-5 shrink-0" aria-hidden="true" />
+        <span className={cn("min-w-0 flex-1 truncate text-left", collapsed && "lg:hidden")}>Mes modules</span>
+        {!collapsed && !loading && (
+          <span className="rounded-full bg-blue-100 px-1.5 text-[10px] font-semibold text-blue-700 dark:bg-white/10 dark:text-inherit" aria-label={`${visibleModules.length} modules`}>{visibleModules.length}</span>
+        )}
+        <ChevronDown className={cn("h-4 w-4 shrink-0 transition-transform", open && "rotate-180", collapsed && "lg:hidden")} aria-hidden="true" />
+      </button>
+
+      <div id="learner-sidebar-modules" hidden={!open || collapsed} className="ml-5 mt-1 space-y-1 border-l border-blue-200 pl-2 dark:border-cyan-200/20">
+        {loading ? (
+          <div className="flex items-center gap-2 px-3 py-3 text-xs text-sidebar-foreground/60"><Loader2 className="h-4 w-4 animate-spin" />Chargement des modules…</div>
+        ) : error ? (
+          <div className="px-3 py-3 text-xs text-sidebar-foreground/65">
+            <p>Modules indisponibles.</p>
+            <button type="button" onClick={() => setReloadKey((value) => value + 1)} className="mt-1 font-semibold text-blue-600 underline underline-offset-2 dark:text-cyan-200">Réessayer</button>
+          </div>
+        ) : visibleModules.length ? visibleModules.map((module) => (
+          <NavLink
+            key={module._id || module.id}
+            to={`/dashboard/subjects/${module._id || module.id}`}
+            title={module.name}
+            className={({ isActive }) => cn(
+              "imrs-focus-ring flex min-h-10 items-center gap-2 rounded-lg px-2.5 py-2 text-xs transition",
+              isActive
+                ? "bg-sidebar-accent font-semibold text-sidebar-accent-foreground"
+                : "text-sidebar-foreground/70 hover:bg-sidebar-accent/70 hover:text-sidebar-accent-foreground",
+            )}
+          >
+            <span className="h-2.5 w-2.5 shrink-0 rounded-full ring-2 ring-blue-200 dark:ring-white/10" style={{ backgroundColor: module.color || "#22d3ee" }} aria-hidden="true" />
+            <span className="min-w-0 flex-1 truncate">{module.name}</span>
+            {module.semester && <span className="shrink-0 text-[9px] font-bold text-blue-500/70 dark:text-cyan-100/50">{module.semester}</span>}
+          </NavLink>
+        )) : (
+          <p className="px-3 py-3 text-xs leading-5 text-sidebar-foreground/60">Aucun module disponible pour {selectedSemester || "ce semestre"}.</p>
+        )}
+      </div>
+    </div>
+  );
 }

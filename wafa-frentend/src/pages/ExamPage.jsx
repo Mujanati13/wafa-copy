@@ -3471,7 +3471,7 @@ const ExamPage = () => {
         />
       )}
 
-      {/* Vue d'ensemble Modal - Shows all questions with their choices */}
+      {/* Vue d'ensemble Modal - Shows the question list with result status colors */}
       <AnimatePresence>
         {showVueEnsemble && (
           <motion.div
@@ -3508,15 +3508,14 @@ const ExamPage = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {questions.map((q, index) => {
                     const { status } = getQuestionStatus(index);
-                    const selectedOpts = selectedAnswers[index] || [];
-                    const verifiedData = verifiedQuestions[index];
-                    const isVerified = (verifiedData?.verified || verifiedData === true) || showResults;
+                    const questionText = q.question || q.text || "Question sans texte";
 
                     return (
-                      <div
-                        key={index}
+                      <button
+                        key={q._id || index}
+                        type="button"
                         className={cn(
-                          "p-4 rounded-lg border-2 cursor-pointer transition-all hover:shadow-lg",
+                          "imrs-focus-ring min-h-20 w-full rounded-lg border-2 p-4 text-left transition-all hover:shadow-lg",
                           status === 'correct' && "border-emerald-500/50 bg-emerald-500/10",
                           status === 'incorrect' && "border-rose-500/50 bg-rose-500/10",
                           status === 'answered' && "border-primary/50 bg-primary/10",
@@ -3530,66 +3529,15 @@ const ExamPage = () => {
                           setShowVueEnsemble(false);
                         }}
                       >
-                        {/* Question Header */}
-                        <div className="flex items-start justify-between mb-3">
-                          <span className="font-semibold text-foreground text-sm">
-                            {index + 1}.) {q.question?.substring(0, 80)}{q.question?.length > 80 ? '...' : ''}
+                        <div className="flex items-start gap-2.5 sm:gap-3">
+                          <span className="shrink-0 text-sm font-bold text-foreground sm:text-base">
+                            {index + 1}.
+                          </span>
+                          <span className="min-w-0 whitespace-pre-wrap break-words text-sm font-medium leading-relaxed text-foreground sm:text-base">
+                            {questionText}
                           </span>
                         </div>
-
-                        {/* Answer Options */}
-                        <div className="space-y-2">
-                          {q.options?.map((option, optIdx) => {
-                            const isSelected = selectedOpts.includes(optIdx);
-                            const isCorrect = option.isCorrect;
-                            const showResult = isVerified;
-
-                            return (
-                              <div
-                                key={optIdx}
-                                className={cn(
-                                  "flex items-center gap-2 p-2 rounded-lg border text-sm transition-colors",
-                                  !showResult && !isSelected && "border-border bg-card text-foreground",
-                                  !showResult && isSelected && "border-primary bg-primary/10 text-foreground",
-                                  showResult && isCorrect && "border-emerald-500 bg-emerald-500/15 text-emerald-950 dark:text-emerald-200",
-                                  showResult && isSelected && !isCorrect && "border-rose-500 bg-rose-500/15 text-rose-950 dark:text-rose-200"
-                                )}
-                              >
-                                {/* Checkbox */}
-                                <div className={cn(
-                                  "w-5 h-5 rounded border-2 flex items-center justify-center shrink-0",
-                                  !showResult && !isSelected && "border-border bg-muted",
-                                  !showResult && isSelected && "border-primary bg-primary",
-                                  showResult && isCorrect && "border-emerald-500 bg-emerald-500",
-                                  showResult && isSelected && !isCorrect && "border-rose-500 bg-rose-500"
-                                )}>
-                                  {(isSelected || (showResult && isCorrect)) && (
-                                    <Check className="h-3 w-3 text-white" />
-                                  )}
-                                </div>
-
-                                {/* Option Label */}
-                                <span className={cn(
-                                  "font-medium",
-                                  showResult && isCorrect && "text-emerald-700 dark:text-emerald-300",
-                                  showResult && isSelected && !isCorrect && "text-rose-700 dark:text-rose-300"
-                                )}>
-                                  {String.fromCharCode(65 + optIdx)}-
-                                </span>
-
-                                {/* Option Text */}
-                                <span className={cn(
-                                  "flex-1 truncate",
-                                  showResult && isCorrect && "text-emerald-700 dark:text-emerald-300",
-                                  showResult && isSelected && !isCorrect && "text-rose-700 dark:text-rose-300 line-through"
-                                )}>
-                                  {option.text}
-                                </span>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
+                      </button>
                     );
                   })}
                 </div>

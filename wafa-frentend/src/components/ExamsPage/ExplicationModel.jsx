@@ -20,6 +20,7 @@ const ExplicationModel = ({ question, setShowExplanation, userPlan = "Free" }) =
   const [uploadedPdf, setUploadedPdf] = useState(null); // Max 1 PDF
   const imageInputRef = useRef(null);
   const pdfInputRef = useRef(null);
+  const uploadedImagesRef = useRef([]);
   
   // State for fetched user explanations
   const [fetchedExplanations, setFetchedExplanations] = useState([]);
@@ -31,6 +32,31 @@ const ExplicationModel = ({ question, setShowExplanation, userPlan = "Free" }) =
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
   const [aiExplanationData, setAiExplanationData] = useState(null);
   const [isDeletingAI, setIsDeletingAI] = useState(false);
+
+  useEffect(() => () => {
+    uploadedImagesRef.current.forEach(({ previewUrl }) => {
+      URL.revokeObjectURL(previewUrl);
+    });
+  }, []);
+
+  const updateUploadedImages = (updater) => {
+    setUploadedImages((currentImages) => {
+      const nextImages = typeof updater === "function"
+        ? updater(currentImages)
+        : updater;
+      uploadedImagesRef.current = nextImages;
+      return nextImages;
+    });
+  };
+
+  const clearUploadedImages = () => {
+    updateUploadedImages((currentImages) => {
+      currentImages.forEach(({ previewUrl }) => {
+        URL.revokeObjectURL(previewUrl);
+      });
+      return [];
+    });
+  };
 
   // Check access levels - AI explanations only for PREMIUM PRO
   const hasPremiumAccess = userPlan === "PREMIUM" || userPlan === "PREMIUM PRO" || userPlan === "Premium" || userPlan === "Premium Annuel";
@@ -265,9 +291,9 @@ const ExplicationModel = ({ question, setShowExplanation, userPlan = "Free" }) =
 
       // Add images (max 5)
       console.log("Uploading images count:", uploadedImages.length);
-      uploadedImages.forEach((img, idx) => {
-        console.log(`Adding image ${idx + 1}:`, img.name, img.size, img.type);
-        formData.append('images', img);
+      uploadedImages.forEach(({ file }, idx) => {
+        console.log(`Adding image ${idx + 1}:`, file.name, file.size, file.type);
+        formData.append('images', file);
       });
 
       // Add PDF (max 1)
@@ -294,7 +320,7 @@ const ExplicationModel = ({ question, setShowExplanation, userPlan = "Free" }) =
         description: "Elle sera publiée après validation par notre équipe. Vous gagnerez 1 point bleu si approuvée!"
       });
       setSubmissionText("");
-      setUploadedImages([]);
+      clearUploadedImages();
       setUploadedPdf(null);
       setShowSubmitForm(false);
     } catch (error) {
@@ -354,7 +380,12 @@ const ExplicationModel = ({ question, setShowExplanation, userPlan = "Free" }) =
       }
     }
 
-    setUploadedImages(prev => [...prev, ...toAdd]);
+    const newImages = toAdd.map((file) => ({
+      file,
+      previewUrl: URL.createObjectURL(file),
+    }));
+
+    updateUploadedImages((currentImages) => [...currentImages, ...newImages]);
     toast.success(`${toAdd.length} image(s) ajoutée(s)`);
     e.target.value = ''; // Reset input
   };
@@ -376,7 +407,11 @@ const ExplicationModel = ({ question, setShowExplanation, userPlan = "Free" }) =
   };
 
   const removeImage = (index) => {
-    setUploadedImages(prev => prev.filter((_, i) => i !== index));
+    updateUploadedImages((currentImages) => {
+      const removedImage = currentImages[index];
+      if (removedImage) URL.revokeObjectURL(removedImage.previewUrl);
+      return currentImages.filter((_, imageIndex) => imageIndex !== index);
+    });
   };
 
   const currentUserExplanation = userExplanations[activeExplanationIndex];
@@ -855,11 +890,11 @@ const ExplicationModel = ({ question, setShowExplanation, userPlan = "Free" }) =
                       </div>
                       {uploadedImages.length > 0 && (
                         <div className="grid grid-cols-5 gap-2">
-                          {uploadedImages.map((img, idx) => (
-                            <div key={idx} className="relative aspect-square rounded-lg overflow-hidden border border-purple-200 bg-white dark:bg-slate-900">
+                          {uploadedImages.map(({ file, previewUrl }, idx) => (
+                            <div key={previewUrl} className="relative aspect-square rounded-lg overflow-hidden border border-purple-200 bg-white dark:bg-slate-900">
                               <img
-                                src={URL.createObjectURL(img)}
-                                alt={`Upload ${idx + 1}`}
+                                src={previewUrl}
+                                alt={file.name || `Upload ${idx + 1}`}
                                 className="w-full h-full object-cover"
                               />
                               <button
@@ -915,7 +950,7 @@ const ExplicationModel = ({ question, setShowExplanation, userPlan = "Free" }) =
                       variant="ghost"
                       onClick={() => {
                         setShowSubmitForm(false);
-                        setUploadedImages([]);
+                        clearUploadedImages();
                         setUploadedPdf(null);
                       }}
                     >

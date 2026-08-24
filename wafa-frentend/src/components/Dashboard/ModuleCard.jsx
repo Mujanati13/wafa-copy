@@ -15,18 +15,6 @@ import { Badge } from "@/components/ui/badge";
 
 const API_URL = import.meta.env.VITE_API_URL || "";
 
-// Color schemes for modules (based on https://e-qe.online/dashboard)
-const moduleColors = [
-  { gradient: "from-blue-500 to-indigo-600" },
-  { gradient: "from-purple-500 to-pink-600" },
-  { gradient: "from-green-500 to-teal-600" },
-  { gradient: "from-orange-500 to-red-600" },
-  { gradient: "from-cyan-500 to-blue-600" },
-  { gradient: "from-pink-500 to-rose-600" },
-  { gradient: "from-yellow-500 to-orange-600" },
-  { gradient: "from-indigo-500 to-purple-600" },
-];
-
 const ModuleCard = ({ course, handleCourseClick, index }) => {
   const [showHelpModal, setShowHelpModal] = useState(false);
   const [showImageModal, setShowImageModal] = useState(false);
@@ -34,7 +22,6 @@ const ModuleCard = ({ course, handleCourseClick, index }) => {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
 
-  const colorScheme = moduleColors[index % moduleColors.length];
   const progress = Math.min(100, Math.max(0, Number(course.progress) || 0));
 
   // Construct proper URL for imageUrl
@@ -54,11 +41,11 @@ const ModuleCard = ({ course, handleCourseClick, index }) => {
     fullImageUrl !== 'undefined' &&
     (fullImageUrl.startsWith('http') || fullImageUrl.startsWith('/') || fullImageUrl.startsWith('data:'));
 
-  // Use custom color from module if available
-  const moduleColor = course.color || null;
-  const customStyle = moduleColor ? {
+  // Keep every visual progress cue aligned with the admin-managed module theme.
+  const moduleColor = course.color || "#0891b2";
+  const customStyle = {
     background: `linear-gradient(135deg, ${moduleColor}, ${adjustColor(moduleColor, -30)})`
-  } : null;
+  };
 
   // Helper function to darken/lighten color
   function adjustColor(color, amount) {
@@ -90,13 +77,13 @@ const ModuleCard = ({ course, handleCourseClick, index }) => {
         tabIndex={0}
         aria-label={`Ouvrir le module ${course.name}`}
       >
-        <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-cyan-500 via-sky-500 to-teal-400" />
+        <div className="absolute inset-x-0 top-0 h-1.5" style={{ backgroundColor: moduleColor }} aria-hidden="true" />
 
         <div className="flex items-start justify-between gap-4 pt-2">
           {/* Admin-managed module image */}
           <div
-            className={`relative h-16 w-16 shrink-0 overflow-hidden rounded-lg shadow-sm sm:h-20 sm:w-20 ${!customStyle ? `bg-gradient-to-br ${colorScheme.gradient}` : ""}`}
-            style={customStyle || undefined}
+            className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg shadow-sm sm:h-20 sm:w-20"
+            style={customStyle}
           >
             <div className="absolute inset-0 flex items-center justify-center">
               <ImageIcon className="h-8 w-8 text-white/90" aria-hidden="true" />
@@ -136,13 +123,13 @@ const ModuleCard = ({ course, handleCourseClick, index }) => {
         </h3>
 
         {/* Module progress */}
-        <div className="rounded-lg bg-slate-950 px-3 py-2.5 text-white dark:bg-slate-900">
+        <div className="rounded-lg border border-blue-100 bg-blue-50/80 px-3 py-2.5 text-slate-800 dark:border-slate-800 dark:bg-slate-900 dark:text-white">
           <div className="mb-2 flex items-center justify-between gap-3 text-[11px] font-semibold uppercase tracking-wide">
-            <span className="text-slate-400">Progression</span>
-            <span className="text-cyan-300">{progress}%</span>
+            <span className="text-slate-500 dark:text-slate-400">Progression</span>
+            <span style={{ color: moduleColor }}>{progress}%</span>
           </div>
           <div
-            className="h-2 overflow-hidden rounded-full bg-slate-800"
+            className="h-2 overflow-hidden rounded-full bg-blue-100 dark:bg-slate-800"
             role="progressbar"
             aria-label={`Progression du module ${course.name}`}
             aria-valuemin={0}
@@ -150,7 +137,8 @@ const ModuleCard = ({ course, handleCourseClick, index }) => {
             aria-valuenow={progress}
           >
             <Motion.div
-              className="h-full rounded-full bg-gradient-to-r from-cyan-500 to-sky-400"
+              className="h-full rounded-full"
+              style={{ backgroundColor: moduleColor }}
               initial={{ width: 0 }}
               animate={{ width: `${progress}%` }}
               transition={{ duration: 0.8, ease: "easeOut", delay: index * 0.04 }}
@@ -165,8 +153,8 @@ const ModuleCard = ({ course, handleCourseClick, index }) => {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-3">
               <div
-                className={`w-12 h-12 rounded-xl flex items-center justify-center text-white ${!customStyle ? `bg-gradient-to-r ${colorScheme.gradient}` : ''}`}
-                style={customStyle || undefined}
+                className="flex h-12 w-12 items-center justify-center rounded-xl text-white"
+                style={customStyle}
               >
                 <BookOpen className="w-6 h-6" />
               </div>

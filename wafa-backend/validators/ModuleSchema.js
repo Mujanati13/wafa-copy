@@ -10,8 +10,8 @@ const moduleSchema = joi.object({
             'any.required': 'Name is required'
         }),
     semester: joi.string()
-        .valid('S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8', 'S9', 'S10')
-        .required()
+        .valid('S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8', 'S9', 'S10', '')
+        .optional()
         .messages({
             'string.empty': 'Semester cannot be empty',
             'any.required': 'Semester is required',
@@ -30,14 +30,29 @@ const moduleSchema = joi.object({
             'string.base': 'Info text must be a string'
         }),
     color: joi.string()
-        .allow('')
+        .pattern(/^(?:#(?:[0-9a-f]{3}|[0-9a-f]{6})|[a-z]{3,20})$/i)
         .optional(),
+    gradientColor: joi.string()
+        .allow('')
+        .pattern(/^(?:#(?:[0-9a-f]{3}|[0-9a-f]{6})|[a-z]{3,20})$/i)
+        .optional(),
+    gradientDirection: joi.string()
+        .valid('to-br', 'to-tr', 'to-bl', 'to-tl', 'to-r', 'to-l', 'to-b', 'to-t')
+        .optional(),
+    availableInAllSemesters: joi.boolean().optional(),
+    order: joi.number().integer().min(0).optional(),
+    category: joi.string()
+        .valid('Exam par years', 'Exam par courses', 'Résumé et cours', 'QCM banque')
+        .optional(),
+    courseNames: joi.array().items(joi.string()).optional(),
     helpContent: joi.string()
         .allow('')
         .optional(),
+    helpImage: joi.string().allow('').optional(),
+    helpPdf: joi.string().allow('').optional(),
     difficulty: joi.string()
-        .valid('easy', 'medium', 'hard')
-        .default('medium')
+        .valid('QE', 'easy', 'medium', 'hard')
+        .default('QE')
         .optional(),
     contentType: joi.string()
         .valid('url', 'text')

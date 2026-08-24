@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useTranslation } from 'react-i18next';
-import { motion, AnimatePresence } from "framer-motion";
+import { motion as Motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
@@ -60,10 +59,23 @@ const API_URL = import.meta.env.VITE_API_URL;
 const normalizeModuleName = (value = "") => value
   .normalize("NFD")
   .replace(/[\u0300-\u036f]/g, "")
-  .trim()
   .toLowerCase()
   .replace(/[^a-z0-9]+/g, " ")
-  .trim();
+  .trim()
+  .split(/\s+/)
+  .filter(Boolean)
+  .map((token) => {
+    const romanNumerals = {
+      i: "1", ii: "2", iii: "3", iv: "4", v: "5",
+      vi: "6", vii: "7", viii: "8", ix: "9", x: "10",
+    };
+    const normalized = (romanNumerals[token] || token)
+      .replace(/ives?$/, "if")
+      .replace(/ales$/, "al")
+      .replace(/aux$/, "al");
+    return normalized.length > 4 ? normalized.replace(/[sx]$/, "") : normalized;
+  })
+  .join(" ");
 
 const courseMatchesModule = (course, moduleId, moduleName) => {
   const courseModuleId = course.moduleId?._id || course.moduleId;
@@ -77,8 +89,6 @@ const courseMatchesModule = (course, moduleId, moduleName) => {
 };
 
 const ImportExamParCourse = () => {
-  const { t } = useTranslation(['admin', 'common']);
-
   // State for modules and courses
   const [modules, setModules] = useState([]);
   const [examCourses, setExamCourses] = useState([]);
@@ -423,7 +433,7 @@ const ImportExamParCourse = () => {
         </div>
 
         {/* Selection Section */}
-        <motion.div
+        <Motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
@@ -593,7 +603,7 @@ const ImportExamParCourse = () => {
                           {/* Courses List */}
                           <AnimatePresence>
                             {expandedCourses.has(category) && (
-                              <motion.div
+                              <Motion.div
                                 initial={{ height: 0, opacity: 0 }}
                                 animate={{ height: "auto", opacity: 1 }}
                                 exit={{ height: 0, opacity: 0 }}
@@ -652,7 +662,7 @@ const ImportExamParCourse = () => {
                                     </button>
                                   ))}
                                 </div>
-                              </motion.div>
+                              </Motion.div>
                             )}
                           </AnimatePresence>
                         </div>
@@ -663,10 +673,10 @@ const ImportExamParCourse = () => {
               )}
             </CardContent>
           </Card>
-        </motion.div>
+        </Motion.div>
 
         {/* Question Linking Section */}
-        <motion.div
+        <Motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
@@ -684,7 +694,7 @@ const ImportExamParCourse = () => {
             <CardContent className="p-6">
               <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
                 {yearMappings.map((row, idx) => (
-                  <motion.div
+                  <Motion.div
                     key={row.id}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -750,7 +760,7 @@ const ImportExamParCourse = () => {
                         <Trash2 className="w-4 h-4" />
                       </Button>
                     </div>
-                  </motion.div>
+                  </Motion.div>
                 ))}
               </div>
 
@@ -778,10 +788,10 @@ const ImportExamParCourse = () => {
               </Button>
             </CardFooter>
           </Card>
-        </motion.div>
+        </Motion.div>
 
         {/* Image Attachment Section */}
-        <motion.div
+        <Motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.3 }}
@@ -799,7 +809,7 @@ const ImportExamParCourse = () => {
             <CardContent className="p-6">
               <div className="space-y-3 max-h-80 overflow-y-auto pr-2">
                 {imageMappings.map((row, idx) => (
-                  <motion.div
+                  <Motion.div
                     key={row.id}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -864,7 +874,7 @@ const ImportExamParCourse = () => {
                         </div>
                       </div>
                     )}
-                  </motion.div>
+                  </Motion.div>
                 ))}
               </div>
 
@@ -892,11 +902,11 @@ const ImportExamParCourse = () => {
               </div>
             </CardContent>
           </Card>
-        </motion.div>
+        </Motion.div>
 
         {/* Selected Course Summary */}
         {selectedCourse && (
-          <motion.div
+          <Motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.3 }}
@@ -925,7 +935,7 @@ const ImportExamParCourse = () => {
                 ))}
               </CardContent>
             </Card>
-          </motion.div>
+          </Motion.div>
         )}
 
         {/* Questions Preview Dialog */}

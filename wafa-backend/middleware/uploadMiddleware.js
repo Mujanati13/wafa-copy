@@ -1,6 +1,11 @@
 import multer from "multer";
 import fs from "fs";
 import path from "path";
+import {
+  isAllowedResumeFile,
+  MAX_RESUME_FILE_SIZE,
+  sanitizeResumeFilename,
+} from "../utils/resumeUpload.js";
 
 // Configure Multer to use memory storage
 const storage = multer.memoryStorage();
@@ -25,17 +30,7 @@ const pdfFilter = (req, file, cb) => {
 
 // File filter for documents (PDF, Images, Word)
 const documentFilter = (req, file, cb) => {
-  const allowedMimes = [
-    "application/pdf", // PDF
-    "image/jpeg", // JPEG
-    "image/jpg", // JPG
-    "image/png", // PNG
-    "image/gif", // GIF
-    "image/webp", // WebP
-    "application/msword", // .doc
-    "application/vnd.openxmlformats-officedocument.wordprocessingml.document", // .docx
-  ];
-  if (allowedMimes.includes(file.mimetype)) {
+  if (isAllowedResumeFile(file)) {
     cb(null, true);
   } else {
     cb(new Error("Veuillez télécharger un fichier valide (PDF, Image, ou Word)"), false);
@@ -74,11 +69,20 @@ export const uploadPDF = multer({
   fileFilter: pdfFilter,
 });
 
-// Upload middleware for documents (PDF, Images, Word)
+const resumeStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const uploadDir = path.join(process.cwd(), "uploads", "resumes");
+    fs.mkdirSync(uploadDir, { recursive: true });
+    cb(null, uploadDir);
+  },
+  filename: (req, file, cb) => cb(null, sanitizeResumeFilename(file.originalname)),
+});
+
+// Disk-backed upload keeps large study documents out of Node's heap.
 export const uploadDocument = multer({
-  storage: storage,
+  storage: resumeStorage,
   limits: {
-    fileSize: 10 * 1024 * 1024, // 10MB max
+    fileSize: MAX_RESUME_FILE_SIZE,
   },
   fileFilter: documentFilter,
 });

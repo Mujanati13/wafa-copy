@@ -91,6 +91,7 @@ export const moduleService = {
     clearCache: () => {
         moduleCache = null;
         moduleCacheTime = null;
+        localStorage.removeItem(MODULE_CACHE_KEY);
         localStorage.removeItem(MODULE_CACHE_TIME_KEY);
     },
 

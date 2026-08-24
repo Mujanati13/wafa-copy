@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useTranslation } from 'react-i18next';
-import { motion, AnimatePresence } from "framer-motion";
+import { motion as Motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, ChevronRight, Loader2, Upload, ArrowRight, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,8 +9,24 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { api } from "@/lib/utils";
 import { toast } from "sonner";
 
+const MAX_RESUME_FILE_SIZE = 50 * 1024 * 1024;
+const ALLOWED_RESUME_EXTENSIONS = new Set([
+  "pdf", "doc", "docx", "jpg", "jpeg", "png", "gif", "webp",
+]);
+
+const getResumeFileError = (selectedFile) => {
+  if (!selectedFile) return "Aucun fichier sélectionné.";
+  const extension = selectedFile.name.split(".").pop()?.toLowerCase();
+  if (!extension || !ALLOWED_RESUME_EXTENSIONS.has(extension)) {
+    return "Format non pris en charge. Utilisez un PDF, Word ou une image.";
+  }
+  if (selectedFile.size > MAX_RESUME_FILE_SIZE) {
+    return "Le fichier dépasse la limite autorisée de 50 Mo.";
+  }
+  return "";
+};
+
 const ImportResumes = () => {
-  const { t } = useTranslation(['admin', 'common']);
 
   const [modules, setModules] = useState([]);
   const [resumes, setResumes] = useState([]);
@@ -24,6 +39,7 @@ const ImportResumes = () => {
   const [courseName, setCourseName] = useState("");
   const [resumeName, setResumeName] = useState("");
   const [file, setFile] = useState(null);
+  const [uploadError, setUploadError] = useState("");
 
   useEffect(() => {
     fetchData();
@@ -72,20 +88,27 @@ const ImportResumes = () => {
     return courses.filter(Boolean);
   };
 
-  const handleFileChange = (e) => {
-    const selectedFile = e.target.files?.[0];
-    if (selectedFile) {
-      setFile(selectedFile);
+  const selectFile = (selectedFile) => {
+    const error = getResumeFileError(selectedFile);
+    setUploadError(error);
+    if (error) {
+      setFile(null);
+      toast.error(error);
+      return false;
     }
+    setFile(selectedFile);
+    return true;
+  };
+
+  const handleFileChange = (e) => {
+    if (!selectFile(e.target.files?.[0])) e.target.value = "";
   };
 
   const handleDrop = (e) => {
     e.preventDefault();
     e.stopPropagation();
     const droppedFile = e.dataTransfer.files?.[0];
-    if (droppedFile) {
-      setFile(droppedFile);
-    }
+    if (droppedFile) selectFile(droppedFile);
   };
 
   const handleDragOver = (e) => {
@@ -101,17 +124,14 @@ const ImportResumes = () => {
 
     try {
       setUploading(true);
+      setUploadError("");
       const formData = new FormData();
       formData.append('file', file);
       formData.append('moduleId', selectedModule);
       formData.append('courseName', courseName.trim());
       formData.append('title', resumeName.trim());
 
-      const response = await api.post("/resumes/admin-upload", formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
+      await api.post("/resumes/admin-upload", formData);
 
       toast.success("Résumé importé avec succès !");
       
@@ -120,12 +140,19 @@ const ImportResumes = () => {
       setCourseName("");
       setResumeName("");
       setFile(null);
+      const fileInput = document.getElementById("file-upload");
+      if (fileInput) fileInput.value = "";
       
       // Refresh data
       fetchData();
     } catch (error) {
       console.error("Error uploading resume:", error);
-      toast.error("Erreur lors de l'import du résumé");
+      const message = error.response?.data?.message
+        || (error.response?.status === 413
+          ? "Le fichier dépasse la limite autorisée de 50 Mo."
+          : "Erreur lors de l'import du résumé. Veuillez réessayer.");
+      setUploadError(message);
+      toast.error(message);
     } finally {
       setUploading(false);
     }
@@ -225,7 +252,7 @@ const ImportResumes = () => {
                     Drop your file here or click to browse
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    Supports PDF, Word (.doc, .docx), and Images (.jpg, .png, .gif, .webp)
+                    PDF, Word ou image — 50 Mo maximum
                   </p>
                 </div>
                 <Input
@@ -253,8 +280,14 @@ const ImportResumes = () => {
             {file && (
               <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
                 <p className="text-sm font-medium text-green-900">
-                  Selected file: {file.name}
+                  Selected file: {file.name} ({(file.size / (1024 * 1024)).toFixed(1)} Mo)
                 </p>
+              </div>
+            )}
+
+            {uploadError && (
+              <div role="alert" className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm font-medium text-red-800">
+                {uploadError}
               </div>
             )}
 
@@ -337,7 +370,7 @@ const ImportResumes = () => {
                   {/* Expanded Content */}
                   <AnimatePresence>
                     {isExpanded && (
-                      <motion.div
+                      <Motion.div
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: "auto", opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
@@ -392,7 +425,7 @@ const ImportResumes = () => {
                             </div>
                           )}
                         </div>
-                      </motion.div>
+                      </Motion.div>
                     )}
                   </AnimatePresence>
                 </div>

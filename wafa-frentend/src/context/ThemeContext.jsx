@@ -5,12 +5,12 @@ const ThemeContext = createContext();
 export const themes = {
   light: {
     name: "Light",
-    primary: "#007bff",
-    secondary: "#6c757d",
-    background: "#ffffff",
-    text: "#212529",
-    cardBg: "#f8f9fa",
-    border: "#dee2e6",
+    primary: "#1677e8",
+    secondary: "#e8eef6",
+    background: "#fbfaf6",
+    text: "#24324a",
+    cardBg: "#fffefd",
+    border: "#dbe4ee",
     error: "#dc3545",
   },
   dark: {

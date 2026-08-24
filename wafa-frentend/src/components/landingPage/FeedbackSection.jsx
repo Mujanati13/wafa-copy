@@ -155,15 +155,14 @@ const FeedbackSection = () => {
           variants={itemVariants}
           className="text-4xl md:text-6xl font-bold mb-6 text-foreground"
         >
-          Nous voulons vos <span className="text-blue-600 dark:text-blue-400">retours</span>
+          On grandit ensemble
         </motion.h2>
 
         <motion.p
           variants={itemVariants}
           className="text-xl text-muted-foreground mb-12 max-w-2xl mx-auto leading-relaxed"
         >
-          Aidez-nous à améliorer YourQCM en partageant vos pensées et suggestions.
-          Votre contribution alimente notre innovation.
+          YourQCM est né récemment. Et on veut le rendre meilleur grâce à VOUS. Vous avez des idées ? Des remarques ? Des souhaits ? Écrivez-nous. Votre voix est essentielle pour améliorer YourQCM.
         </motion.p>
 
         {/* Form or Buttons */}
@@ -192,7 +191,7 @@ const FeedbackSection = () => {
                 >
                   <FiSend className="text-xl" />
                 </motion.div>
-                <span>Donner votre avis</span>
+                <span>Partager mon avis</span>
 
                 <motion.div
                   className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"

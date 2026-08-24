@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useTranslation } from "react-i18next";
 import { Palette, X, Check, BookOpen, AlertCircle, Loader2, Image, FileText, CircleDot, HelpCircle, Upload, File } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion as Motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 
 import {
@@ -32,6 +32,7 @@ import {
   PopoverTrigger,
 } from "../ui/popover";
 import { api } from "@/lib/utils";
+import { moduleService } from "@/services/moduleService";
 
 // Simple color choices
 const SIMPLE_COLORS = [
@@ -150,7 +151,17 @@ const NewModuleForm = ({ setShowNewModuleForm, onModuleCreated }) => {
       if (helpImageFile) formData.append("helpImage", helpImageFile);
       if (helpPdfFile) formData.append("helpPdf", helpPdfFile);
 
-      await api.post("/modules/create-with-image", formData);
+      const response = await api.post("/modules/create-with-image", formData);
+      const savedModule = response.data?.data;
+      const expectedGradientColor = useGradient ? gradientColor : "";
+      if (
+        String(savedModule?.color || "").toLowerCase() !== selectedColor.toLowerCase()
+        || String(savedModule?.gradientColor || "").toLowerCase() !== expectedGradientColor.toLowerCase()
+        || String(savedModule?.gradientDirection || "") !== gradientDirection
+      ) {
+        throw new Error("Le module a été créé, mais ses paramètres d'apparence n'ont pas été enregistrés correctement.");
+      }
+      moduleService.clearCache();
 
       form.reset();
       setModuleImageFile(null);
@@ -163,7 +174,7 @@ const NewModuleForm = ({ setShowNewModuleForm, onModuleCreated }) => {
       if (onModuleCreated) onModuleCreated();
     } catch (e) {
       console.error(e);
-      toast.error(e.response?.data?.message || t("admin:failed_create_module"));
+      toast.error(e.response?.data?.message || e.message || t("admin:failed_create_module"));
     } finally {
       setIsSubmitting(false);
     }
@@ -171,14 +182,14 @@ const NewModuleForm = ({ setShowNewModuleForm, onModuleCreated }) => {
 
   return (
     <AnimatePresence>
-      <motion.div
+      <Motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-[99999]"
         onClick={() => setShowNewModuleForm(false)}
       >
-        <motion.div
+        <Motion.div
           initial={{ scale: 0.95, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.95, opacity: 0 }}
@@ -683,8 +694,8 @@ const NewModuleForm = ({ setShowNewModuleForm, onModuleCreated }) => {
               )}
             </Button>
           </div>
-        </motion.div>
-      </motion.div>
+        </Motion.div>
+      </Motion.div>
     </AnimatePresence>
   );
 };

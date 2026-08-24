@@ -1126,7 +1126,7 @@ const FAQSection = ({ settings }) => {
   const defaultFaqItems = [
     {
       question: "Pour quelle faculté sont destinés ces QCMs ?",
-      answer: "Les QCMs sont spécifiquement conçus pour les étudiants de la FMPR (Faculté de Médecine et de Pharmacie de Rabat)."
+      answer: "Les QCMs sont spécifiquement conçus pour les étudiants de la FMPM (Faculté de Médecine et de Pharmacie de Marrakech)."
     },
     {
       question: "Dois-je créer un compte ?",
@@ -1135,10 +1135,6 @@ const FAQSection = ({ settings }) => {
     {
       question: "Puis-je suivre ma progression ?",
       answer: "Oui, votre progression est automatiquement sauvegardée et vous pouvez la consulter à tout moment."
-    },
-    {
-      question: "Mes informations bancaires sont-elles sécurisées ?",
-      answer: "Absolument. Nous ne conservons aucune information concernant votre carte bancaire. Tous les paiements sont traités par PayPal qui garantit la sécurité de vos transactions."
     },
     {
       question: "Puis-je être remboursé ?",
@@ -1444,12 +1440,11 @@ const FeedbackSection = ({ settings }) => {
           </div>
 
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-            Nous voulons vos <span className="text-blue-600 dark:text-blue-400">retours</span>
+            On grandit ensemble
           </h2>
 
           <p className="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto">
-            Aidez-nous à améliorer YourQCM en partageant vos pensées et suggestions.
-            Votre contribution alimente notre innovation.
+            YourQCM est né récemment. Et on veut le rendre meilleur grâce à VOUS. Vous avez des idées ? Des remarques ? Des souhaits ? Écrivez-nous. Votre voix est essentielle pour améliorer YourQCM.
           </p>
 
           <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
@@ -1459,7 +1454,7 @@ const FeedbackSection = ({ settings }) => {
               size="lg"
             >
               <Send className="w-5 h-5 mr-2" />
-              Nous envoyer un message
+              Partager mon avis
             </Button>
             <Button 
               variant="outline"
@@ -1468,7 +1463,7 @@ const FeedbackSection = ({ settings }) => {
               size="lg"
             >
               <Home className="w-5 h-5 mr-2" />
-              Retour à l'accueil
+              Retourner à l'accueil
             </Button>
           </div>
         </motion.div>

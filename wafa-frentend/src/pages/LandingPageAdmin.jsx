@@ -450,7 +450,7 @@ const LandingPageAdmin = () => {
                 <Label htmlFor="heroTitle">Titre Principal</Label>
                 <Input
                   id="heroTitle"
-                  placeholder="Préparez vos examens avec YourQCM"
+                  placeholder="Faciliter votre préparation avec YourQCM"
                   value={settings.heroTitle}
                   onChange={(e) => handleChange("heroTitle", e.target.value)}
                 />
@@ -460,7 +460,7 @@ const LandingPageAdmin = () => {
                 <Label htmlFor="heroSubtitle">Sous-titre</Label>
                 <Input
                   id="heroSubtitle"
-                  placeholder="La plateforme #1 pour les étudiants en médecine"
+                  placeholder="Révisez mieux. En moins de temps."
                   value={settings.heroSubtitle}
                   onChange={(e) => handleChange("heroSubtitle", e.target.value)}
                 />
@@ -470,7 +470,7 @@ const LandingPageAdmin = () => {
                 <Label htmlFor="heroDescription">Description</Label>
                 <Textarea
                   id="heroDescription"
-                  placeholder="Accédez à des milliers de QCM..."
+                  placeholder="Préparez-vous efficacement pour les examens avec notre plateforme d'exam, conçue pour les étudiants en médecine de FMPM."
                   value={settings.heroDescription}
                   onChange={(e) => handleChange("heroDescription", e.target.value)}
                   rows={3}

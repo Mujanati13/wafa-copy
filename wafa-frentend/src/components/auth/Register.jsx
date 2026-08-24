@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
-import { Eye, EyeOff, ArrowLeft, Loader2, Check, X, FileText, Shield } from 'lucide-react';
+import { Eye, EyeOff, ArrowLeft, Loader2, Check, X, FileText } from 'lucide-react';
 import { FcGoogle } from 'react-icons/fc';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -36,7 +36,24 @@ const Register = () => {
   const [passwordStrength, setPasswordStrength] = useState(0);
   const [showTermsModal, setShowTermsModal] = useState(false);
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
-  const [showAccountWarning, setShowAccountWarning] = useState(false);
+
+  const completeRegistration = async () => {
+    toast.success('Compte créé avec succès', {
+      description: 'Bienvenue sur YourQCM !',
+    });
+
+    try {
+      const semesterStatus = await userService.checkFreeSemesterStatus();
+      if (semesterStatus.data?.needsToSelectSemester) {
+        navigate('/select-semester');
+        return;
+      }
+    } catch (error) {
+      console.error('Error checking semester status:', error);
+    }
+
+    navigate('/dashboard/home');
+  };
 
   const checkPasswordStrength = (password) => {
     let strength = 0;
@@ -108,8 +125,7 @@ const Register = () => {
         // Redirect to Firebase email verification page
         navigate('/verify-email-firebase', { state: { email: formData.email } });
       } else {
-        // Show account sharing warning before redirecting
-        setShowAccountWarning(true);
+        await completeRegistration();
       }
     } catch (error) {
       const errorMessage = error.message || 'Une erreur est survenue. Veuillez réessayer.';
@@ -146,8 +162,7 @@ const Register = () => {
       }
       window.dispatchEvent(new Event('auth-state-changed'));
 
-      // Show account sharing warning
-      setShowAccountWarning(true);
+      await completeRegistration();
     } catch (error) {
       toast.error(t('auth:authentication_error'), {
         description: error.message || t('auth:authentication_error'),
@@ -709,87 +724,6 @@ const Register = () => {
         )}
       </AnimatePresence>
 
-      {/* Account Sharing Warning Modal */}
-      <AnimatePresence>
-        {showAccountWarning && (
-          <Motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
-          >
-            <Motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-card text-card-foreground rounded-2xl shadow-2xl w-full max-w-md"
-            >
-              {/* Header */}
-              <div className="flex items-center justify-between p-6 border-b bg-gradient-to-r from-amber-600 to-orange-600 text-white rounded-t-2xl">
-                <div className="flex items-center gap-3">
-                  <Shield className="h-6 w-6" />
-                  <h2 className="text-xl font-bold">Important</h2>
-                </div>
-              </div>
-
-              {/* Content */}
-              <div className="p-6">
-                <div className="text-center space-y-4">
-                  <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto">
-                    <Shield className="h-8 w-8 text-amber-600" />
-                  </div>
-                  <h3 className="text-xl font-bold text-foreground">
-                    Avertissement de sécurité
-                  </h3>
-                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-                    <p className="text-foreground font-semibold text-lg">
-                      ⚠️ Vous ne devez pas partager votre compte avec d'autres personnes
-                    </p>
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    Votre compte est personnel et confidentiel. Le partage de compte viole nos conditions d'utilisation et peut entraîner la suspension de votre accès.
-                  </p>
-                </div>
-              </div>
-
-              {/* Footer */}
-              <div className="p-4 border-t bg-muted rounded-b-2xl">
-                <Button
-                  className="w-full bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700"
-                  onClick={async () => {
-                    setShowAccountWarning(false);
-                    
-                    toast.success('Compte créé avec succès', {
-                      description: 'Bienvenue sur YourQCM !',
-                    });
-
-                    // Check if user needs to select free semester
-                    try {
-                      const semesterStatus = await userService.checkFreeSemesterStatus();
-                      if (semesterStatus.data?.needsToSelectSemester) {
-                        setTimeout(() => {
-                          navigate('/select-semester');
-                        }, 1000);
-                        return;
-                      }
-                    } catch (error) {
-                      console.error('Error checking semester status:', error);
-                    }
-
-                    // Redirect to dashboard
-                    setTimeout(() => {
-                      navigate('/dashboard/home');
-                    }, 1000);
-                  }}
-                >
-                  <Check className="h-4 w-4 mr-2" />
-                  J'ai compris, continuer
-                </Button>
-              </div>
-            </Motion.div>
-          </Motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 };
