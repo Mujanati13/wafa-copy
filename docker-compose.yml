@@ -24,9 +24,6 @@ services:
       context: ./wafa-backend
       dockerfile: Dockerfile
     restart: unless-stopped
-    # The backend .env is excluded from the image and injected only at runtime.
-    env_file:
-      - ./wafa-backend/.env
     environment:
       NODE_ENV: production
       PORT: 5010
@@ -61,6 +58,7 @@ services:
       CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME:-}
       CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY:-}
       CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET:-}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:?Set GEMINI_API_KEY in the root .env}
     volumes:
       - ./wafa-backend/uploads:/app/uploads
       - ./wafa-backend/firebase-service-account.json:/app/firebase-service-account.json:ro
