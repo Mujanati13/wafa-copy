@@ -1,6 +1,4 @@
 import {
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
   signInWithPopup,
   GoogleAuthProvider,
   sendEmailVerification,
@@ -15,6 +13,21 @@ import { userService } from '@/services/userService';
 import { dashboardService } from '@/services/dashboardService';
 
 const API_URL = import.meta.env.VITE_API_URL;
+const AUTH_CLIENT_ID_KEY = 'authClientId';
+
+const getAuthClientId = () => {
+  const existingId = localStorage.getItem(AUTH_CLIENT_ID_KEY);
+  if (/^[a-zA-Z0-9_-]{8,128}$/.test(existingId || '')) return existingId;
+
+  const clientId = globalThis.crypto?.randomUUID?.()
+    || `browser_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+  localStorage.setItem(AUTH_CLIENT_ID_KEY, clientId);
+  return clientId;
+};
+
+const getAuthClientHeaders = () => ({
+  'X-Auth-Client-Id': getAuthClientId(),
+});
 
 // Google Auth Provider
 const googleProvider = new GoogleAuthProvider();
@@ -47,7 +60,8 @@ export const registerWithEmail = async (email, password, userData) => {
       lastName: userData.lastName,
       newsletter: userData.newsletter
     }, {
-      withCredentials: true
+      withCredentials: true,
+      headers: getAuthClientHeaders()
     });
 
     return {
@@ -78,7 +92,8 @@ export const loginWithEmail = async (email, password) => {
       email,
       password
     }, {
-      withCredentials: true
+      withCredentials: true,
+      headers: getAuthClientHeaders()
     });
 
     // Store JWT token
@@ -117,7 +132,8 @@ export const loginWithGoogle = async () => {
     const response = await axios.post(`${API_URL}/auth/firebase`, {
       idToken
     }, {
-      withCredentials: true
+      withCredentials: true,
+      headers: getAuthClientHeaders()
     });
 
     // Store JWT token
@@ -242,16 +258,28 @@ export const confirmPasswordResetService = async (oobCode, newPassword) => {
 export const signOut = async () => {
   try {
     // Call backend logout endpoint to destroy session
-    try {
-      await axios.post(`${API_URL}/auth/logout`, {}, {
-        withCredentials: true,
-        headers: localStorage.getItem('token')
-          ? { Authorization: `Bearer ${localStorage.getItem('token')}` }
-          : undefined
-      });
-    } catch (logoutError) {
-      console.error('Backend logout error:', logoutError);
-      // Continue with local cleanup even if backend logout fails
+    const token = localStorage.getItem('token');
+    let logoutError = null;
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      try {
+        await axios.post(`${API_URL}/auth/logout`, {}, {
+          withCredentials: true,
+          timeout: 10000,
+          headers: {
+            ...getAuthClientHeaders(),
+            ...(token ? { Authorization: `Bearer ${token}` } : {})
+          }
+        });
+        logoutError = null;
+        break;
+      } catch (error) {
+        logoutError = error;
+        if (attempt === 0) await new Promise(resolve => setTimeout(resolve, 250));
+      }
+    }
+    if (logoutError) {
+      console.error('Backend logout error after retry:', logoutError);
+      // The stable browser ID lets the next verified login recover this lease.
     }
 
     // Also attempt Firebase sign out if user has a Firebase session

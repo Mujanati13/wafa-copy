@@ -12,7 +12,7 @@ import Question from "../models/questionModule.js";
 import Transaction from "../models/transactionModel.js";
 import User from "../models/userModel.js";
 import UserStats from "../models/userStatsModel.js";
-import { claimSingleSession, getSessionMetadata, refreshSingleSession } from "../services/singleSessionService.js";
+import { claimSingleSession, getSessionMetadata, refreshSingleSession, releaseSingleSession } from "../services/singleSessionService.js";
 
 const createResponse = () => ({
   statusCode: 200,
@@ -134,6 +134,7 @@ test("single-session metadata extracts proxy IP, location, and device", () => {
       "x-forwarded-for": "197.12.34.56, 10.0.0.2",
       "cf-ipcity": "Rabat",
       "cf-ipcountry": "MA",
+      "x-auth-client-id": "browser-client-123",
       "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/126.0 Safari/537.36",
     },
     socket: { remoteAddress: "::ffff:10.0.0.2" },
@@ -143,6 +144,7 @@ test("single-session metadata extracts proxy IP, location, and device", () => {
     ip: "197.12.34.56",
     location: "Rabat, MA",
     device: "Chrome sur Windows (ordinateur)",
+    clientId: "browser-client-123",
   });
 });
 
@@ -161,6 +163,7 @@ test("single-session claim persists identifying metadata", { concurrency: false 
       ip: "197.12.34.56",
       location: "Rabat, MA",
       device: "Chrome sur Windows (ordinateur)",
+      clientId: "browser-client-123",
     });
     const [, update] = captured;
 
@@ -168,9 +171,33 @@ test("single-session claim persists identifying metadata", { concurrency: false 
     assert.equal(update.$set.activeSessionIp, "197.12.34.56");
     assert.equal(update.$set.activeSessionLocation, "Rabat, MA");
     assert.equal(update.$set.activeSessionDevice, "Chrome sur Windows (ordinateur)");
+    assert.equal(update.$set.activeSessionClientId, "browser-client-123");
+    assert.ok(captured[0].$or.some(condition => condition.activeSessionClientId === "browser-client-123"));
     assert.ok(update.$set.activeSessionStartedAt instanceof Date);
   } finally {
     User.findOneAndUpdate = originalFindOneAndUpdate;
+  }
+});
+
+test("logout clears every lease field for the authenticated account", { concurrency: false }, async () => {
+  const originalUpdateOne = User.updateOne;
+  let captured;
+
+  try {
+    User.updateOne = (...args) => {
+      captured = args;
+      return { acknowledged: true, modifiedCount: 1 };
+    };
+
+    const userId = new mongoose.Types.ObjectId();
+    await releaseSingleSession(userId, "stale-session-id");
+    const [filter, update] = captured;
+
+    assert.deepEqual(filter, { _id: userId });
+    assert.equal(update.$unset.activeSessionId, 1);
+    assert.equal(update.$unset.activeSessionClientId, 1);
+  } finally {
+    User.updateOne = originalUpdateOne;
   }
 });
 

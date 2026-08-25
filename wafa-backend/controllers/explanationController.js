@@ -4,6 +4,9 @@ import Point from "../models/pointModel.js";
 import UserStats from "../models/userStatsModel.js";
 import geminiService from '../services/geminiService.js';
 import Question from "../models/questionModule.js";
+import ExamCourse from "../models/examCourseModel.js";
+import ExamParYear from "../models/examParYearModel.js";
+import QCMBanque from "../models/qcmBanqueModel.js";
 
 // Constants
 const MAX_EXPLANATIONS_PER_QUESTION = 3;
@@ -1027,7 +1030,11 @@ export const explanationController = {
             title, 
             contentText,
             imageUrls: bodyImageUrls,
-            pdfUrl: bodyPdfUrl
+            pdfUrl: bodyPdfUrl,
+            examType,
+            courseId,
+            qcmBanqueId,
+            yearName
         } = req.body;
         const userId = req.user._id;
 
@@ -1080,11 +1087,91 @@ export const explanationController = {
             }
         }
 
-        // Import Question model to find questions by position (1-indexed)
-        const Question = (await import('../models/questionModule.js')).default;
+        if (!String(contentText || "").trim() && imageUrls.length === 0 && !pdfUrl) {
+            return res.status(400).json({
+                success: false,
+                message: "Ajoutez un texte, au moins une image ou un document.",
+            });
+        }
 
-        // Get all questions for this exam sorted by creation order
-        const allQuestions = await Question.find({ examId }).sort({ createdAt: 1 }).lean();
+        let allQuestions = [];
+
+        if (examType === "courses") {
+            if (!courseId) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Veuillez sélectionner un cours.",
+                });
+            }
+
+            const course = await ExamCourse.findById(courseId)
+                .select("moduleId linkedQuestions questionSources")
+                .lean();
+            if (!course) {
+                return res.status(404).json({ success: false, message: "Cours non trouvé." });
+            }
+            if (moduleId && String(course.moduleId) !== String(moduleId)) {
+                return res.status(422).json({
+                    success: false,
+                    message: "Le cours sélectionné n'appartient pas au module choisi.",
+                });
+            }
+
+            let linkedQuestionIds = course.linkedQuestions || [];
+            if (yearName) {
+                const matchingSourceIds = (course.questionSources || [])
+                    .filter(source => String(source.yearName || "").includes(String(yearName)))
+                    .map(source => source.questionId)
+                    .filter(Boolean);
+                if (matchingSourceIds.length > 0) linkedQuestionIds = matchingSourceIds;
+            }
+
+            const linkedQuestions = await Question.find({ _id: { $in: linkedQuestionIds } }).lean();
+            const questionById = new Map(linkedQuestions.map(question => [String(question._id), question]));
+            allQuestions = linkedQuestionIds
+                .map(questionId => questionById.get(String(questionId)))
+                .filter(Boolean);
+        } else if (examType === "qcm") {
+            if (!qcmBanqueId) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Veuillez sélectionner une banque QCM.",
+                });
+            }
+            const qcmBanque = await QCMBanque.findById(qcmBanqueId).select("moduleId").lean();
+            if (!qcmBanque) {
+                return res.status(404).json({ success: false, message: "Banque QCM non trouvée." });
+            }
+            if (moduleId && String(qcmBanque.moduleId) !== String(moduleId)) {
+                return res.status(422).json({
+                    success: false,
+                    message: "La banque QCM sélectionnée n'appartient pas au module choisi.",
+                });
+            }
+            allQuestions = await Question.find({ qcmBanqueId })
+                .sort({ questionNumber: 1, createdAt: 1 })
+                .lean();
+        } else {
+            if (!examId) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Veuillez sélectionner un examen.",
+                });
+            }
+            const exam = await ExamParYear.findById(examId).select("moduleId").lean();
+            if (!exam) {
+                return res.status(404).json({ success: false, message: "Examen non trouvé." });
+            }
+            if (moduleId && String(exam.moduleId) !== String(moduleId)) {
+                return res.status(422).json({
+                    success: false,
+                    message: "L'examen sélectionné n'appartient pas au module choisi.",
+                });
+            }
+            allQuestions = await Question.find({ examId })
+                .sort({ questionNumber: 1, createdAt: 1 })
+                .lean();
+        }
 
         if (allQuestions.length === 0) {
             return res.status(404).json({
@@ -1096,7 +1183,7 @@ export const explanationController = {
         // Get questions by their position (1-indexed numbers from user input)
         const questions = parsedQuestionNumbers
             .filter(num => num > 0 && num <= allQuestions.length)
-            .map(num => allQuestions[num - 1]); // Convert to 0-indexed
+            .map(num => ({ question: allQuestions[num - 1], questionNumber: num }));
 
         if (questions.length === 0) {
             return res.status(404).json({
@@ -1110,8 +1197,7 @@ export const explanationController = {
         const errors = [];
 
         for (let i = 0; i < questions.length; i++) {
-            const question = questions[i];
-            const questionNum = parsedQuestionNumbers[i]; // Keep track of original question number
+            const { question, questionNumber: questionNum } = questions[i];
             
             try {
                 // Check if explanation already exists for this question by this admin

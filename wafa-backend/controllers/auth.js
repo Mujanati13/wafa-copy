@@ -471,7 +471,9 @@ export const AuthController = {
    * @param {Response} res - Express response object
    */
   logout: async (req, res) => {
-    await releaseSingleSession(req.user?._id, req.authSessionId);
+    // Authentication already proved ownership of the account. Clear every
+    // lease field instead of depending on a potentially stale session ID.
+    await releaseSingleSession(req.user?._id);
 
     req.logout((err) => {
       if (err) {

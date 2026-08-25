@@ -995,6 +995,7 @@ export const UserController = {
             rank: ranking.rank,
             rankedUsers: ranking.totalUsers,
             academicYear: ranking.academicYear,
+            totalPoints: userStats.totalPoints || 0,
             achievements: userStats.achievements || [],
             moduleProgress: consolidatedProgress,
             questionsAnswered: userStats.questionsAnswered || 0,

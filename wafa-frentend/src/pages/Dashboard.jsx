@@ -481,7 +481,7 @@ ${selectedModule.exams?.length ? `\n📋 Examens disponibles:\n${selectedModule.
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 shadow-2xl">
+          <Card className="relative overflow-hidden border-0 bg-[linear-gradient(115deg,#2563eb_0%,#4f46e5_52%,#7e22ce_100%)] shadow-2xl">
             {/* Animated Background Pattern */}
             <div className="absolute inset-0 opacity-10">
               <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.4)_0%,transparent_50%)]" />
@@ -497,9 +497,9 @@ ${selectedModule.exams?.length ? `\n📋 Examens disponibles:\n${selectedModule.
                     <motion.div
                       animate={{ rotate: [0, 10, -10, 0] }}
                       transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
-                      className="p-2 sm:p-2.5 bg-background/20 backdrop-blur-sm rounded-xl sm:rounded-2xl shadow-lg flex-shrink-0"
+                      className="flex-shrink-0 rounded-xl border border-white/15 bg-blue-400/35 p-2 shadow-lg shadow-blue-950/15 backdrop-blur-sm sm:rounded-2xl sm:p-2.5"
                     >
-                      <Sparkles className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 text-yellow-300" />
+                      <Sparkles className="h-6 w-6 text-yellow-300 sm:h-7 sm:w-7 md:h-8 md:w-8" aria-hidden="true" />
                     </motion.div>
                     <div className="min-w-0 flex-1">
                       <h1 className="text-base xs:text-lg sm:text-xl lg:text-2xl font-bold text-white leading-tight">

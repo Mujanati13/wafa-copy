@@ -14,7 +14,8 @@
     "seed:admin": "node scripts/seed-admin.js",
     "test:performance": "node --test --test-concurrency=1 tests/api-performance.test.js",
     "test:progress": "node --test tests/progress-statistics.test.js",
-    "db:indexes": "node scripts/sync-performance-indexes.js"
+    "db:indexes": "node scripts/sync-performance-indexes.js",
+    "session:clear": "node scripts/clear-user-session.js"
   },
   "author": "",
   "license": "ISC",

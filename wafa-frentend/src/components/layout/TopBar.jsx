@@ -271,27 +271,33 @@ const TopBar = ({ onMenuClick }) => {
                 onClick={() => navigate("/dashboard/profile")}
                 className="cursor-pointer gap-3 rounded-none px-4 py-3 text-sm focus:bg-slate-100 dark:focus:bg-slate-800"
               >
-                <UserRound className="h-4 w-4 text-slate-500" aria-hidden="true" />
-                <span>Profil</span>
+                <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-blue-50 text-blue-600 dark:bg-blue-950/50 dark:text-blue-300">
+                  <UserRound className="h-4 w-4" aria-hidden="true" />
+                </span>
+                <span>{t('dashboard:profile', 'Profil')}</span>
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => navigate("/dashboard/settings")}
                 className="cursor-pointer gap-3 rounded-none px-4 py-3 text-sm focus:bg-slate-100 dark:focus:bg-slate-800"
               >
-                <Settings className="h-4 w-4 text-slate-500" aria-hidden="true" />
-                <span>Paramètres</span>
+                <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-violet-50 text-violet-600 dark:bg-violet-950/50 dark:text-violet-300">
+                  <Settings className="h-4 w-4" aria-hidden="true" />
+                </span>
+                <span>{t('dashboard:settings', 'Paramètres')}</span>
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => navigate("/dashboard/subscription")}
                 className="cursor-pointer gap-3 rounded-none px-4 py-3 text-sm focus:bg-slate-100 dark:focus:bg-slate-800"
               >
-                <CreditCard className="h-4 w-4 text-slate-500" aria-hidden="true" />
-                <span>L&apos;abonnement</span>
+                <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-300">
+                  <CreditCard className="h-4 w-4" aria-hidden="true" />
+                </span>
+                <span>{t('dashboard:subscription', 'Abonnement')}</span>
               </DropdownMenuItem>
               <DropdownMenuSeparator className="m-0 bg-slate-200 dark:bg-slate-700" />
               <DropdownMenuItem
                 onClick={handleLogout}
-                className="cursor-pointer gap-3 rounded-none px-4 py-3 text-sm text-red-600 focus:bg-red-50 focus:text-red-700 dark:text-red-400 dark:focus:bg-red-950/40 dark:focus:text-red-300"
+                className="cursor-pointer justify-center gap-2 rounded-none px-4 py-3 text-center text-sm font-medium text-red-600 focus:bg-red-50 focus:text-red-700 dark:text-red-400 dark:focus:bg-red-950/40 dark:focus:text-red-300"
               >
                 <LogOut className="h-4 w-4" aria-hidden="true" />
                 <span>{t('common:logout')}</span>

@@ -74,7 +74,7 @@ export default function LearnerExperienceLayout() {
           <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setDrawerOpen(true)} aria-label="Ouvrir la navigation"><Menu className="h-5 w-5" /></Button>
           <Link to="/dashboard/home" className="imrs-focus-ring flex min-w-0 items-center gap-2 rounded-lg"><img src={logo} alt="YourQCM" className="h-9 w-9 rounded-lg object-contain" /><span className="hidden text-base font-bold text-primary xs:inline">YourQCM</span></Link>
           <div className="hidden h-6 w-px bg-border sm:block" />
-          <p className="hidden truncate text-sm text-muted-foreground sm:block">Bonjour, <span className="font-semibold text-foreground">{firstName}</span></p>
+          <p className="hidden truncate text-sm text-muted-foreground sm:block">Bienvenue, <span className="font-semibold text-foreground">{firstName}</span></p>
         </div>
         <div className="flex items-center gap-1 sm:gap-2">
           <div className="hidden lg:block"><LanguageSwitcher /></div>
@@ -87,11 +87,11 @@ export default function LearnerExperienceLayout() {
       <div className="flex min-h-[calc(100vh-4rem)]">
         {drawerOpen && <button aria-label="Fermer la navigation" onClick={() => setDrawerOpen(false)} className="fixed inset-0 z-40 bg-slate-950/45 lg:hidden" />}
         <aside className={cn("fixed inset-y-16 left-0 z-50 flex w-72 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground transition-transform duration-200 lg:sticky lg:top-16 lg:h-[calc(100vh-4rem)] lg:translate-x-0", drawerOpen ? "translate-x-0" : "-translate-x-full", collapsed && "lg:w-20")}>
-          <div className="flex h-14 items-center justify-between border-b border-sidebar-border px-4"><span className={cn("text-xs font-semibold tracking-[.14em] text-blue-600 uppercase dark:text-cyan-200", collapsed && "lg:hidden")}>Espace étudiant</span><Button variant="ghost" size="icon" className="text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" onClick={() => { if (window.innerWidth < 1024) setDrawerOpen(false); else setCollapsed((value) => !value); }} aria-label="Réduire la navigation">{drawerOpen ? <X className="lg:hidden" /> : <ChevronLeft className={cn("hidden lg:block transition-transform", collapsed && "rotate-180")} />}</Button></div>
+          <div className="flex h-14 items-center justify-between border-b border-sidebar-border px-4"><span className={cn("text-xs font-semibold tracking-[.14em] text-indigo-700 uppercase dark:text-indigo-300", collapsed && "lg:hidden")}>Espace étudiant</span><Button variant="ghost" size="icon" className="text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" onClick={() => { if (window.innerWidth < 1024) setDrawerOpen(false); else setCollapsed((value) => !value); }} aria-label="Réduire la navigation">{drawerOpen ? <X className="lg:hidden" /> : <ChevronLeft className={cn("hidden lg:block transition-transform", collapsed && "rotate-180")} />}</Button></div>
           <nav className="flex-1 overflow-y-auto px-3 py-4" aria-label="Navigation étudiant">
             {navGroups.map((group) => (
               <div key={group.label} className="mb-5">
-                <p className={cn("mb-2 px-2 text-[10px] font-bold tracking-[.14em] text-blue-500/70 uppercase dark:text-cyan-100/55", collapsed && "lg:sr-only")}>{group.label}</p>
+                <p className={cn("mb-2 px-2 text-[10px] font-bold tracking-[.14em] text-slate-500 uppercase dark:text-slate-400", collapsed && "lg:sr-only")}>{group.label}</p>
                 {group.modules ? (
                   <ModuleNavigation collapsed={collapsed} setCollapsed={setCollapsed} />
                 ) : (
@@ -103,7 +103,7 @@ export default function LearnerExperienceLayout() {
             ))}
           </nav>
           <div className="border-t border-sidebar-border p-3">
-            <NavLink to="/dashboard/subscription" className={cn("mb-2 flex items-center gap-3 rounded-xl bg-blue-100/80 p-3 text-sm text-blue-800 transition hover:bg-blue-200/80 dark:bg-cyan-300/12 dark:text-cyan-50 dark:hover:bg-cyan-300/20", collapsed && "lg:justify-center lg:px-2")}><Crown className="h-5 w-5 shrink-0 text-blue-600 dark:text-cyan-300" /><span className={cn("min-w-0", collapsed && "lg:hidden")}><span className="block font-semibold">{user?.plan || "Plan gratuit"}</span><span className="block text-xs text-blue-600/80 dark:text-cyan-100/70">Voir mon abonnement</span></span></NavLink>
+            <NavLink to="/dashboard/subscription" className={cn("mb-2 flex items-center gap-3 rounded-xl border border-indigo-200/80 bg-indigo-50/80 p-3 text-sm text-indigo-950 transition hover:bg-indigo-100 dark:border-indigo-400/15 dark:bg-indigo-400/10 dark:text-indigo-100 dark:hover:bg-indigo-400/15", collapsed && "lg:justify-center lg:px-2")}><Crown className="h-5 w-5 shrink-0 text-amber-500 dark:text-amber-300" /><span className={cn("min-w-0", collapsed && "lg:hidden")}><span className="block font-semibold">{user?.plan || "Plan gratuit"}</span><span className="block text-xs text-indigo-700/75 dark:text-indigo-200/70">Voir mon abonnement</span></span></NavLink>
             <NavLink to="/dashboard/support" className={cn("flex items-center gap-3 rounded-xl px-3 py-2 text-sm text-sidebar-foreground/85 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground", collapsed && "lg:justify-center lg:px-2")}><CircleHelp className="h-5 w-5 shrink-0" /><span className={collapsed ? "lg:hidden" : ""}>Support</span></NavLink>
             <button onClick={logout} className={cn("mt-1 flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-sm text-sidebar-foreground/85 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground", collapsed && "lg:justify-center lg:px-2")}><LogOut className="h-5 w-5 shrink-0" /><span className={collapsed ? "lg:hidden" : ""}>Déconnexion</span></button>
           </div>
@@ -118,7 +118,7 @@ export default function LearnerExperienceLayout() {
 
 function NavigationItem({ item, active, collapsed, locked }) {
   const Icon = item.icon;
-  return <NavLink to={item.to} title={collapsed ? item.label : undefined} className={cn("group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition", active ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-sm" : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground", collapsed && "lg:justify-center lg:px-2")}><Icon className="h-5 w-5 shrink-0" /><span className={cn("truncate", collapsed && "lg:hidden")}>{item.label}</span>{locked && <Crown className={cn("ml-auto h-3.5 w-3.5 text-blue-500 dark:text-cyan-200", collapsed && "lg:absolute lg:-right-1 lg:-top-1")} aria-label="Fonctionnalité premium" />}</NavLink>;
+  return <NavLink to={item.to} title={collapsed ? item.label : undefined} className={cn("group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition", active ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-sm shadow-indigo-950/10" : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground", collapsed && "lg:justify-center lg:px-2")}><Icon className="h-5 w-5 shrink-0" /><span className={cn("truncate", collapsed && "lg:hidden")}>{item.label}</span>{locked && <Crown className={cn("ml-auto h-3.5 w-3.5 text-amber-500 dark:text-amber-300", collapsed && "lg:absolute lg:-right-1 lg:-top-1")} aria-label="Fonctionnalité premium" />}</NavLink>;
 }
 
 function ModuleNavigation({ collapsed, setCollapsed }) {
@@ -184,7 +184,7 @@ function ModuleNavigation({ collapsed, setCollapsed }) {
         className={cn(
           "imrs-focus-ring flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition",
           moduleRouteActive
-            ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-sm"
+            ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-sm shadow-indigo-950/10"
             : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
           collapsed && "lg:justify-center lg:px-2",
         )}
@@ -195,18 +195,18 @@ function ModuleNavigation({ collapsed, setCollapsed }) {
         <BookOpen className="h-5 w-5 shrink-0" aria-hidden="true" />
         <span className={cn("min-w-0 flex-1 truncate text-left", collapsed && "lg:hidden")}>Mes modules</span>
         {!collapsed && !loading && (
-          <span className="rounded-full bg-blue-100 px-1.5 text-[10px] font-semibold text-blue-700 dark:bg-white/10 dark:text-inherit" aria-label={`${visibleModules.length} modules`}>{visibleModules.length}</span>
+          <span className="rounded-full bg-indigo-100 px-1.5 text-[10px] font-semibold text-indigo-700 dark:bg-indigo-300/15 dark:text-indigo-200" aria-label={`${visibleModules.length} modules`}>{visibleModules.length}</span>
         )}
         <ChevronDown className={cn("h-4 w-4 shrink-0 transition-transform", open && "rotate-180", collapsed && "lg:hidden")} aria-hidden="true" />
       </button>
 
-      <div id="learner-sidebar-modules" hidden={!open || collapsed} className="ml-5 mt-1 space-y-1 border-l border-blue-200 pl-2 dark:border-cyan-200/20">
+      <div id="learner-sidebar-modules" hidden={!open || collapsed} className="ml-5 mt-1 space-y-1 border-l border-indigo-200 pl-2 dark:border-indigo-300/20">
         {loading ? (
           <div className="flex items-center gap-2 px-3 py-3 text-xs text-sidebar-foreground/60"><Loader2 className="h-4 w-4 animate-spin" />Chargement des modules…</div>
         ) : error ? (
           <div className="px-3 py-3 text-xs text-sidebar-foreground/65">
             <p>Modules indisponibles.</p>
-            <button type="button" onClick={() => setReloadKey((value) => value + 1)} className="mt-1 font-semibold text-blue-600 underline underline-offset-2 dark:text-cyan-200">Réessayer</button>
+            <button type="button" onClick={() => setReloadKey((value) => value + 1)} className="mt-1 font-semibold text-indigo-600 underline underline-offset-2 dark:text-indigo-300">Réessayer</button>
           </div>
         ) : visibleModules.length ? visibleModules.map((module) => (
           <NavLink
@@ -222,7 +222,7 @@ function ModuleNavigation({ collapsed, setCollapsed }) {
           >
             <span className="h-2.5 w-2.5 shrink-0 rounded-full ring-2 ring-blue-200 dark:ring-white/10" style={{ backgroundColor: module.color || "#22d3ee" }} aria-hidden="true" />
             <span className="min-w-0 flex-1 truncate">{module.name}</span>
-            {module.semester && <span className="shrink-0 text-[9px] font-bold text-blue-500/70 dark:text-cyan-100/50">{module.semester}</span>}
+            {module.semester && <span className="shrink-0 text-[9px] font-bold text-indigo-600/70 dark:text-indigo-200/55">{module.semester}</span>}
           </NavLink>
         )) : (
           <p className="px-3 py-3 text-xs leading-5 text-sidebar-foreground/60">Aucun module disponible pour {selectedSemester || "ce semestre"}.</p>

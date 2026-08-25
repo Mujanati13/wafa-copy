@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useTranslation } from 'react-i18next';
-import { motion } from "framer-motion";
+import { motion as Motion } from "framer-motion";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
@@ -28,10 +27,10 @@ const MAX_IMAGES = 5;
 const MAX_PDF = 1;
 
 const ImportExplications = () => {
-  const { t } = useTranslation(['admin', 'common']);
-
   const [modules, setModules] = useState([]);
   const [exams, setExams] = useState([]);
+  const [examCourses, setExamCourses] = useState([]);
+  const [qcmBanques, setQcmBanques] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -41,12 +40,16 @@ const ImportExplications = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [modulesRes, examsRes] = await Promise.all([
+      const [modulesRes, examsRes, coursesRes, qcmRes] = await Promise.all([
         api.get("/modules"),
-        api.get("/exams/all")
+        api.get("/exams/all"),
+        api.get("/exam-courses"),
+        api.get("/qcm-banque/all")
       ]);
       setModules(modulesRes.data?.data || []);
       setExams(examsRes.data?.data || []);
+      setExamCourses(coursesRes.data?.data || []);
+      setQcmBanques(qcmRes.data?.data || []);
     } catch (err) {
       console.error("Error fetching data:", err);
       toast.error("Erreur lors du chargement");
@@ -62,7 +65,7 @@ const ImportExplications = () => {
 
   // Base selections
   const [selectedModule, setSelectedModule] = useState("");
-  const [examType, setExamType] = useState(""); // years | courses | tp | qcm
+  const [examType, setExamType] = useState(""); // years | courses | qcm
 
   // years
   const [selectedExamNameYears, setSelectedExamNameYears] = useState("");
@@ -72,8 +75,6 @@ const ImportExplications = () => {
   const [selectedCourse, setSelectedCourse] = useState("");
   const [selectedYearName, setSelectedYearName] = useState("");
 
-  // tp
-  const [selectedTPName, setSelectedTPName] = useState("");
   // qcm
   const [selectedQCMName, setSelectedQCMName] = useState("");
 
@@ -84,30 +85,31 @@ const ImportExplications = () => {
   const [pdfFile, setPdfFile] = useState(null);
   const [explicationName, setExplicationName] = useState("");
   const [uploading, setUploading] = useState(false);
-  const [questions, setQuestions] = useState([]);
   const pdfInputRef = useRef(null);
 
   // Derived lists
   const examsForModule = selectedModule ? getExamsForModule(selectedModule) : [];
-  const categoryOptions = examType === "courses" 
-    ? [...new Set(examsForModule.map(e => e.category))].filter(Boolean)
+  const coursesForModule = selectedModule
+    ? examCourses.filter(course => (course.moduleId?._id || course.moduleId) === selectedModule)
+    : [];
+  const qcmForModule = selectedModule
+    ? qcmBanques.filter(qcm => (qcm.moduleId?._id || qcm.moduleId) === selectedModule)
+    : [];
+  const categoryOptions = examType === "courses"
+    ? [...new Set(coursesForModule.map(course => course.category))].filter(Boolean)
     : [];
   const courseOptions = selectedCategory
-    ? examsForModule
-        .filter(e => e.category === selectedCategory)
-        .map(e => e.courseName)
-        .filter(Boolean)
+    ? coursesForModule.filter(course => course.category === selectedCategory)
     : [];
   
-  // Year options for courses
-  const yearNames = ["2020", "2021", "2022", "2023", "2024", "2025"];
+  // Keep course-year choices aligned with the years that actually exist.
+  const yearNames = [...new Set(examsForModule.map(exam => String(exam.year)).filter(Boolean))]
+    .sort((a, b) => Number(b) - Number(a));
 
   const hasContextSelected = (() => {
     if (!selectedModule || !examType) return false;
     if (examType === "years") return !!selectedExamNameYears;
-    if (examType === "courses")
-      return !!(selectedCategory && selectedCourse && selectedYearName);
-    if (examType === "tp") return !!selectedTPName;
+    if (examType === "courses") return !!(selectedCategory && selectedCourse);
     if (examType === "qcm") return !!selectedQCMName;
     return false;
   })();
@@ -126,62 +128,34 @@ const ImportExplications = () => {
     // Determine examId based on exam type
     let examId = null;
     if (examType === "years") examId = selectedExamNameYears;
-    else if (examType === "tp") examId = selectedTPName;
-    else if (examType === "qcm") examId = selectedQCMName;
-    
-    if (!examId && examType !== "courses") {
-      toast.error("Veuillez sélectionner un examen");
+    const hasTarget = examId
+      || (examType === "courses" && selectedCourse)
+      || (examType === "qcm" && selectedQCMName);
+
+    if (!hasTarget) {
+      toast.error("Veuillez sélectionner un examen, un cours ou une banque QCM");
       return;
     }
     
     try {
       setUploading(true);
       
-      // For bulk explanation import, we'll use a different approach
-      // First, upload images to get URLs if any
-      let uploadedImageUrls = [];
-      let uploadedPdfUrl = null;
-      
-      if (imageFiles.length > 0) {
-        const imgFormData = new FormData();
-        imageFiles.forEach(file => {
-          imgFormData.append('images', file);
-        });
-        
-        // Don't set Content-Type manually - axios handles it for FormData
-        const uploadRes = await api.post('/questions/upload-images', imgFormData);
-        
-        if (uploadRes.data.success) {
-          uploadedImageUrls = uploadRes.data.data.map(img => img.url);
-        }
-      }
-      
-      // Upload PDF if any
-      if (pdfFile) {
-        const pdfFormData = new FormData();
-        pdfFormData.append('pdf', pdfFile);
-        
-        // Don't set Content-Type manually - axios handles it for FormData
-        const pdfRes = await api.post('/explanations/upload-pdf', pdfFormData);
-        
-        if (pdfRes.data.success) {
-          uploadedPdfUrl = pdfRes.data.data.url;
-        }
-      }
-      
-      // Create explanation with bulk data
-      const payload = {
-        title: explicationName,
-        contentText: explicationText.trim() || '',
-        examId,
-        questionNumbers,
-        imageUrls: uploadedImageUrls,
-        pdfUrl: uploadedPdfUrl,
-        moduleId: selectedModule,
-        examType
-      };
-      
-      await api.post('/explanations/admin-create', payload);
+      // Send content and attachments together so creation cannot become
+      // disconnected from a preceding temporary upload.
+      const formData = new FormData();
+      formData.append('title', explicationName.trim());
+      formData.append('contentText', explicationText.trim());
+      formData.append('examId', examId || '');
+      formData.append('questionNumbers', questionNumbers.trim());
+      formData.append('moduleId', selectedModule);
+      formData.append('examType', examType);
+      if (selectedCourse) formData.append('courseId', selectedCourse);
+      if (selectedYearName) formData.append('yearName', selectedYearName);
+      if (selectedQCMName) formData.append('qcmBanqueId', selectedQCMName);
+      imageFiles.forEach(file => formData.append('images', file));
+      if (pdfFile) formData.append('pdf', pdfFile);
+
+      await api.post('/explanations/admin-create', formData, { timeout: 180000 });
       
       toast.success("Explication importée avec succès!");
       
@@ -203,9 +177,10 @@ const ImportExplications = () => {
     const file = e.target.files[0];
     if (!file) return;
     
-    const validTypes = ['application/pdf', 'application/vnd.ms-powerpoint', 'application/vnd.openxmlformats-officedocument.presentationml.presentation', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
-    
-    if (!validTypes.includes(file.type)) {
+    const validExtensions = new Set(['pdf', 'ppt', 'pptx', 'doc', 'docx']);
+    const extension = file.name.split('.').pop()?.toLowerCase();
+
+    if (!extension || !validExtensions.has(extension)) {
       toast.error("Acceptés: PDF, PPTX, DOC, DOCX");
       return;
     }
@@ -246,6 +221,14 @@ const ImportExplications = () => {
     setPdfFile(null);
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-card flex items-center justify-center">
+        <Loader2 className="h-10 w-10 animate-spin text-primary" aria-label="Chargement" />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-card">
       <div className="max-w-7xl mx-auto px-6 py-8 space-y-6">
@@ -258,7 +241,7 @@ const ImportExplications = () => {
         </div>
 
         {/* Main Form */}
-        <motion.div
+        <Motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
@@ -271,7 +254,7 @@ const ImportExplications = () => {
                 Exam Context
               </CardTitle>
               <CardDescription>
-                Choose the exam context: par years, par courses, TP or QCM
+                Choose the exam context: par years, par courses or QCM
               </CardDescription>
             </CardHeader>
             <CardContent className="pt-6">
@@ -286,7 +269,6 @@ const ImportExplications = () => {
                     setSelectedCategory("");
                     setSelectedCourse("");
                     setSelectedYearName("");
-                    setSelectedTPName("");
                     setSelectedQCMName("");
                   }}>
                     <SelectTrigger className="border-gray-300 h-10">
@@ -311,7 +293,6 @@ const ImportExplications = () => {
                     setSelectedCategory("");
                     setSelectedCourse("");
                     setSelectedYearName("");
-                    setSelectedTPName("");
                     setSelectedQCMName("");
                   }} disabled={!selectedModule}>
                     <SelectTrigger className="border-gray-300 h-10 disabled:bg-muted">
@@ -320,7 +301,6 @@ const ImportExplications = () => {
                     <SelectContent>
                       <SelectItem value="years">Exam Par Years</SelectItem>
                       <SelectItem value="courses">Exam Par Courses</SelectItem>
-                      <SelectItem value="tp">Exam TP</SelectItem>
                       <SelectItem value="qcm">Exam QCM</SelectItem>
                     </SelectContent>
                   </Select>
@@ -376,14 +356,14 @@ const ImportExplications = () => {
                           <SelectValue placeholder="Choose a course" />
                         </SelectTrigger>
                         <SelectContent>
-                          {courseOptions.map((c) => (
-                            <SelectItem key={c} value={c}>{c}</SelectItem>
+                          {courseOptions.map((course) => (
+                            <SelectItem key={course._id} value={course._id}>{course.name}</SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
                     </div>
                     <div className="space-y-2">
-                      <Label className="font-semibold text-foreground">Year *</Label>
+                      <Label className="font-semibold text-foreground">Year (optional)</Label>
                       <Select value={selectedYearName} onValueChange={setSelectedYearName} disabled={!selectedCourse}>
                         <SelectTrigger className="border-gray-300 h-10 disabled:bg-muted">
                           <SelectValue placeholder="Choose a year" />
@@ -398,26 +378,6 @@ const ImportExplications = () => {
                   </>
                 )}
 
-                {examType === "tp" && (
-                  <div className="space-y-2 md:col-span-2">
-                    <Label className="font-semibold text-foreground">TP Name *</Label>
-                    <Select value={selectedTPName} onValueChange={setSelectedTPName}>
-                      <SelectTrigger className="border-gray-300 h-10">
-                        <SelectValue placeholder="Choose a TP name" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {examsForModule
-                          .filter(e => e.examType === "tp" || e.contentType === "tp")
-                          .map((exam) => (
-                            <SelectItem key={exam._id} value={exam._id}>
-                              {exam.name}
-                            </SelectItem>
-                          ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
-
                 {examType === "qcm" && (
                   <div className="space-y-2 md:col-span-2">
                     <Label className="font-semibold text-foreground">QCM Name *</Label>
@@ -426,11 +386,10 @@ const ImportExplications = () => {
                         <SelectValue placeholder="Choose a QCM name" />
                       </SelectTrigger>
                       <SelectContent>
-                        {examsForModule
-                          .filter(e => e.examType === "qcm" || e.contentType === "qcm")
-                          .map((exam) => (
-                            <SelectItem key={exam._id} value={exam._id}>
-                              {exam.name}
+                        {qcmForModule
+                          .map((qcm) => (
+                            <SelectItem key={qcm._id} value={qcm._id}>
+                              {qcm.name}
                             </SelectItem>
                           ))}
                       </SelectContent>
@@ -540,13 +499,13 @@ const ImportExplications = () => {
 
                   {/* Image Preview */}
                   {imageFiles.length > 0 && (
-                    <motion.div
+                    <Motion.div
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       className="grid grid-cols-2 md:grid-cols-5 gap-3 mt-3"
                     >
                       {imageFiles.map((file, index) => (
-                        <motion.div
+                        <Motion.div
                           key={index}
                           initial={{ opacity: 0, scale: 0.8 }}
                           animate={{ opacity: 1, scale: 1 }}
@@ -568,9 +527,9 @@ const ImportExplications = () => {
                           >
                             <X className="w-3 h-3" />
                           </Button>
-                        </motion.div>
+                        </Motion.div>
                       ))}
-                    </motion.div>
+                    </Motion.div>
                   )}
 
                   {imageFiles.length > 0 && (
@@ -654,7 +613,7 @@ const ImportExplications = () => {
               </Button>
             </CardFooter>
           </Card>
-        </motion.div>
+        </Motion.div>
       </div>
     </div>
   );

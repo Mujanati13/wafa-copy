@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { motion as Motion } from "framer-motion";
+import { motion as Motion, useReducedMotion } from "framer-motion";
 import {
   AlertCircle, ArrowRight, BadgeCheck, BookOpenCheck, Check, CheckCircle2,
   CircleHelp, Facebook, GraduationCap, HelpCircle, Instagram,
@@ -18,7 +18,6 @@ import { toast } from "sonner";
 import ThemeToggle from "@/components/ui/ThemeToggle";
 import LanguageSwitcher from "@/components/shared/LanguageSwitcher";
 import logo from "@/assets/logo.png";
-import heroMedicalStudy from "@/assets/yourqcm-hero-medical-study.png";
 import { getLandingPageSettings } from "@/services/landingPageService";
 import { subscriptionPlanService } from "@/services/subscriptionPlanService";
 
@@ -41,6 +40,10 @@ const copy = {
     seePlans: "Voir les abonnements", trusted: "Pensé pour les étudiants en médecine au Maroc",
     dashboard: "Votre espace de révision", ready: "Prêt à apprendre", qcm: "QCM du jour",
     score: "Score moyen", focus: "À réviser", next: "Continuer",
+    previewKicker: "Cardiologie • QCM du jour", previewTitle: "Entraînement en cours",
+    previewQuestion: "Quel signe clinique oriente vers une insuffisance cardiaque gauche ?",
+    previewAnswers: ["Œdèmes des membres inférieurs", "Dyspnée d'effort", "Douleur abdominale"],
+    previewCorrect: "Bonne réponse", previewProgress: "Progression du module", previewWeek: "+18% cette semaine", previewLive: "Session active",
     benefits: "Comment YourQCM vous aide à valider", benefitsCopy: "Des outils puissants pour optimiser votre apprentissage",
     features: [
       ["QCM et examens", "Entraînez-vous sur les thèmes importants."],
@@ -63,6 +66,10 @@ const copy = {
     seePlans: "View plans", trusted: "Built for medical students in Morocco",
     dashboard: "Your study space", ready: "Ready to learn", qcm: "Today's QCM",
     score: "Average score", focus: "To review", next: "Continue",
+    previewKicker: "Cardiology • QCM of the day", previewTitle: "Practice in progress",
+    previewQuestion: "Which clinical sign suggests left-sided heart failure?",
+    previewAnswers: ["Lower limb oedema", "Exertional dyspnoea", "Abdominal pain"],
+    previewCorrect: "Correct answer", previewProgress: "Module progress", previewWeek: "+18% this week", previewLive: "Live session",
     benefits: "How YourQCM helps you succeed", benefitsCopy: "Powerful tools to optimise your learning",
     features: [
       ["QCMs and exams", "Practise the topics that matter."],
@@ -164,6 +171,106 @@ const getStoredUser = () => {
     return null;
   }
 };
+
+function HeroStudyPreview({ text, language }) {
+  const reduceMotion = useReducedMotion();
+  const floatTransition = reduceMotion ? undefined : { duration: 4.5, repeat: Infinity, ease: "easeInOut" };
+  const pulseTransition = reduceMotion ? undefined : { duration: 2.8, repeat: Infinity, ease: "easeInOut" };
+
+  return (
+    <div
+      className="relative mx-auto w-full max-w-xl pb-7 pt-3 sm:px-3"
+      role="img"
+      aria-label={language === "fr" ? "Aperçu animé d'une session de révision YourQCM" : "Animated preview of a YourQCM study session"}
+    >
+      <div className="absolute -inset-7 -z-10 rounded-[3rem] bg-gradient-to-br from-cyan-300/35 via-blue-400/15 to-amber-200/20 blur-3xl" />
+
+      <Motion.div
+        animate={reduceMotion ? undefined : { y: [0, -5, 0] }}
+        transition={floatTransition}
+        className="overflow-hidden rounded-[2rem] border border-white/90 bg-white shadow-2xl shadow-blue-950/20 ring-1 ring-blue-100 dark:border-white/10 dark:bg-slate-950 dark:ring-slate-800"
+      >
+        <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/90 px-4 py-3 sm:px-6 dark:border-slate-800 dark:bg-slate-900/90">
+          <div className="flex items-center gap-3">
+            <div className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 text-white shadow-md shadow-blue-500/20">
+              <GraduationCap className="h-5 w-5" aria-hidden="true" />
+            </div>
+            <div>
+              <p className="text-sm font-bold text-slate-900 dark:text-white">YourQCM</p>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">{text.previewTitle}</p>
+            </div>
+          </div>
+          <span className="flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300">
+            <Motion.span
+              animate={reduceMotion ? undefined : { opacity: [1, .35, 1], scale: [1, .8, 1] }}
+              transition={pulseTransition}
+              className="h-2 w-2 rounded-full bg-emerald-500"
+            />
+            {text.previewLive}
+          </span>
+        </div>
+
+        <div className="grid gap-5 p-4 sm:p-6 md:grid-cols-[1fr_9.5rem]">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[.14em] text-blue-600 dark:text-cyan-400">
+              <BookOpenCheck className="h-4 w-4" aria-hidden="true" />
+              {text.previewKicker}
+            </div>
+            <p className="mt-4 text-base font-bold leading-6 text-slate-900 dark:text-white sm:text-lg">{text.previewQuestion}</p>
+            <div className="mt-4 grid gap-2.5">
+              {text.previewAnswers.map((answer, index) => {
+                const correct = index === 1;
+                return (
+                  <Motion.div
+                    key={answer}
+                    initial={{ opacity: 0, x: 12 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: .3 + index * .12, duration: .35 }}
+                    className={`flex items-center gap-3 rounded-xl border px-3 py-2.5 text-xs font-medium sm:text-sm ${correct ? "border-emerald-300 bg-emerald-50 text-emerald-900 dark:border-emerald-800 dark:bg-emerald-950/45 dark:text-emerald-200" : "border-slate-200 bg-white text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"}`}
+                  >
+                    <span className={`grid h-6 w-6 shrink-0 place-items-center rounded-lg text-[11px] font-bold ${correct ? "bg-emerald-500 text-white" : "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-300"}`}>{String.fromCharCode(65 + index)}</span>
+                    <span className="min-w-0 flex-1">{answer}</span>
+                    {correct && <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" aria-label={text.previewCorrect} />}
+                  </Motion.div>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="flex flex-col justify-between rounded-2xl bg-gradient-to-b from-blue-600 to-blue-700 p-4 text-white shadow-lg shadow-blue-700/20">
+            <div>
+              <p className="text-[11px] font-medium text-blue-100">{text.previewProgress}</p>
+              <div className="mt-3 flex items-end gap-1">
+                <span className="text-3xl font-bold">72</span><span className="pb-1 text-sm text-blue-100">%</span>
+              </div>
+              <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-white/20">
+                <Motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: "72%" }}
+                  transition={{ duration: reduceMotion ? 0 : 1.1, delay: .45, ease: "easeOut" }}
+                  className="h-full rounded-full bg-cyan-300"
+                />
+              </div>
+            </div>
+            <div className="mt-5 rounded-xl bg-white/12 p-3 backdrop-blur-sm">
+              <TrendingUp className="h-5 w-5 text-cyan-200" aria-hidden="true" />
+              <p className="mt-2 text-xs font-semibold">{text.previewWeek}</p>
+            </div>
+          </div>
+        </div>
+      </Motion.div>
+
+      <Motion.div
+        animate={reduceMotion ? undefined : { y: [0, 7, 0], rotate: [0, 1, 0] }}
+        transition={reduceMotion ? undefined : { duration: 5.2, repeat: Infinity, ease: "easeInOut", delay: .5 }}
+        className="absolute -bottom-1 left-0 flex items-center gap-2 rounded-2xl border border-white/80 bg-white/95 px-3 py-2.5 shadow-xl backdrop-blur dark:border-slate-700 dark:bg-slate-900/95 sm:-left-3"
+      >
+        <div className="grid h-8 w-8 place-items-center rounded-xl bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300"><Target className="h-4 w-4" aria-hidden="true" /></div>
+        <div><p className="text-[10px] text-slate-500 dark:text-slate-400">{text.focus}</p><p className="text-xs font-bold text-slate-900 dark:text-white">Cardiologie</p></div>
+      </Motion.div>
+    </div>
+  );
+}
 
 export default function RedesignedLandingPage() {
   const navigate = useNavigate();
@@ -309,14 +416,7 @@ export default function RedesignedLandingPage() {
               <div className="mt-8 flex items-center gap-3 text-sm text-muted-foreground"><ShieldCheck className="h-5 w-5 text-cyan-600" />{text.trusted}</div>
             </Motion.div>
             <Motion.div initial={{ opacity: 0, scale: .96 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: .55, delay: .08 }} className="relative mx-auto w-full max-w-xl">
-              <div className="absolute -inset-7 -z-10 rounded-[3rem] bg-gradient-to-br from-cyan-300/35 via-blue-400/15 to-amber-200/20 blur-3xl" />
-              <img
-                src={heroMedicalStudy}
-                alt={language === "fr" ? "Illustration de révision médicale avec livres, tablette et stéthoscope" : "Medical study illustration with books, tablet and stethoscope"}
-                className="aspect-[4/3] w-full rounded-[2rem] object-cover shadow-2xl shadow-blue-950/20 ring-1 ring-white/80 dark:ring-white/10"
-                loading="eager"
-                fetchPriority="high"
-              />
+              <HeroStudyPreview text={text} language={language} />
             </Motion.div>
           </div>
         </section>

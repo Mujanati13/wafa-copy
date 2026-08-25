@@ -58,6 +58,11 @@ const userSchema = new mongoose.Schema(
       default: null,
       select: false,
     },
+    activeSessionClientId: {
+      type: String,
+      default: null,
+      select: false,
+    },
     blockedAt: {
       type: Date,
       default: null,

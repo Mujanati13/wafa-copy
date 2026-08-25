@@ -86,7 +86,7 @@ app.use((req, res, next) => cors({
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-Auth-Client-Id'],
   exposedHeaders: ['set-cookie'],
   preflightContinue: false,
   optionsSuccessStatus: 204
