@@ -62,7 +62,7 @@ const ClientSubscriptionPage = () => {
       const subResponse = await dashboardService.getUserSubscriptionInfo();
       setUserSubscription(subResponse.data || {});
 
-      const plansResponse = await subscriptionPlanService.getAllPlans();
+      const plansResponse = await subscriptionPlanService.getAvailablePlans();
       const plansData = Array.isArray(plansResponse.data)
         ? plansResponse.data
         : plansResponse.data?.data || [];
@@ -297,9 +297,9 @@ const ClientSubscriptionPage = () => {
                                 {plan.oldPrice} MAD
                               </span>
                             )}
-                            {plan.duration && !isFree && (
+                            {plan.period && !isFree && (
                               <span className="text-xs text-muted-foreground ml-2">
-                                / {plan.duration}
+                                / {isYearlyPlan(plan) ? 'an' : 'semestre'}
                               </span>
                             )}
                           </div>

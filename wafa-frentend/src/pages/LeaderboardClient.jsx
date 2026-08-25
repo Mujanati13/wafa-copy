@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from "react";
-import { useTranslation } from "react-i18next";
+import React, { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion as Motion, AnimatePresence } from "framer-motion";
 import { Card } from "@/components/ui/card";
 import { 
   Crown, 
@@ -45,6 +44,20 @@ function getScoreBadgeClasses(score, maxScore) {
   if (ratio >= 0.45) return "bg-amber-500/15 text-amber-800 dark:text-amber-300 border-amber-500/30";
   if (ratio >= 0.25) return "bg-orange-500/15 text-orange-700 dark:text-orange-300 border-orange-500/30";
   return "bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-500/30";
+}
+
+function ScoreBadge({ points = 0, maxScore }) {
+  return (
+    <span
+      className={cn(
+        "inline-flex min-h-7 min-w-[76px] shrink-0 items-center justify-center whitespace-nowrap rounded-full border px-3 py-1 text-xs font-bold leading-none tabular-nums",
+        getScoreBadgeClasses(points, maxScore),
+      )}
+    >
+      <span>{points}</span>
+      <span className="ml-1">pts</span>
+    </span>
+  );
 }
 
 function getPodiumStyles(rank) {
@@ -103,23 +116,53 @@ const SORT_OPTIONS = [
 ];
 
 const LeaderboardClient = () => {
-  const { t } = useTranslation();
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [leaderboardData, setLeaderboardData] = useState([]);
   const [userRank, setUserRank] = useState(null);
   const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState("totalPoints");
-  const [totalQuestionsInSystem, setTotalQuestionsInSystem] = useState(0);
   const [academicYear, setAcademicYear] = useState(null);
   const [requiresAcademicYear, setRequiresAcademicYear] = useState(false);
+
+  const fetchLeaderboard = useCallback(async () => {
+    try {
+      setLoading(true);
+      const res = await userService.getLeaderboard(100, sortBy);
+      if (res?.success) {
+        const payload = res.data;
+        const list = Array.isArray(payload?.leaderboard)
+          ? payload.leaderboard
+          : Array.isArray(payload)
+            ? payload
+            : [];
+        setLeaderboardData(list);
+        setUserRank(payload?.userRank || null);
+        setAcademicYear(payload?.academicYear || null);
+        setRequiresAcademicYear(payload?.requiresAcademicYear || false);
+      } else {
+        setLeaderboardData([]);
+      }
+    } catch (error) {
+      if (error?.response?.data?.code === 'ACADEMIC_YEAR_REQUIRED') {
+        setRequiresAcademicYear(true);
+        setLeaderboardData([]);
+      } else {
+        console.error("Error fetching leaderboard:", error);
+        toast.error("Erreur de chargement du classement");
+        setLeaderboardData([]);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, [sortBy]);
 
   useEffect(() => {
     const fetchUser = async () => {
       try {
         const userData = await userService.getUserProfile();
         setUser(userData);
-        
+
         const userPlan = userData?.plan || 'Free';
         if (userPlan === 'Free') {
           toast.error('Cette fonctionnalité est réservée aux abonnés Premium', {
@@ -142,40 +185,7 @@ const LeaderboardClient = () => {
 
   useEffect(() => {
     if (user) fetchLeaderboard();
-  }, [sortBy, user]);
-
-  const fetchLeaderboard = async () => {
-    try {
-      setLoading(true);
-      const res = await userService.getLeaderboard(100, sortBy);
-      if (res?.success) {
-        const payload = res.data;
-        const list = Array.isArray(payload?.leaderboard)
-          ? payload.leaderboard
-          : Array.isArray(payload)
-            ? payload
-            : [];
-        setLeaderboardData(list);
-        setUserRank(payload?.userRank || null);
-        setTotalQuestionsInSystem(payload?.totalQuestionsInSystem || 0);
-        setAcademicYear(payload?.academicYear || null);
-        setRequiresAcademicYear(payload?.requiresAcademicYear || false);
-      } else {
-        setLeaderboardData([]);
-      }
-    } catch (error) {
-      if (error?.response?.data?.code === 'ACADEMIC_YEAR_REQUIRED') {
-        setRequiresAcademicYear(true);
-        setLeaderboardData([]);
-      } else {
-        console.error("Error fetching leaderboard:", error);
-        toast.error("Erreur de chargement du classement");
-        setLeaderboardData([]);
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [fetchLeaderboard, user]);
 
   const sorted = Array.isArray(leaderboardData) ? [...leaderboardData] : [];
   const topThreeRaw = sorted.slice(0, 3);
@@ -207,7 +217,7 @@ const LeaderboardClient = () => {
       <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8">
         
         {/* Top Hero Banner */}
-        <motion.div
+        <Motion.div
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           className="relative overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-amber-500/15 via-card to-card p-6 sm:p-8 shadow-sm"
@@ -269,7 +279,7 @@ const LeaderboardClient = () => {
               </div>
             </div>
           </div>
-        </motion.div>
+        </Motion.div>
 
         {/* Academic Year Warning If Missing */}
         {requiresAcademicYear ? (
@@ -311,12 +321,11 @@ const LeaderboardClient = () => {
                   {podiumDisplay.map((userItem) => {
                     const rank = userItem.rank;
                     const styles = getPodiumStyles(rank);
-                    const badge = getScoreBadgeClasses(userItem.totalPoints, maxScore);
                     const levelInfo = getUserLevel(userItem.totalPoints);
                     const isMe = user && (userItem.odUserIdStr === user._id || userItem.email === user.email);
 
                     return (
-                      <motion.div
+                      <Motion.div
                         key={userItem._id || userItem.odUserId}
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -335,9 +344,7 @@ const LeaderboardClient = () => {
                                 <span>{styles.label}</span>
                               </span>
                             </div>
-                            <span className={cn("text-xs px-2.5 py-0.5 rounded-full border font-bold", badge)}>
-                              {userItem.totalPoints} pts
-                            </span>
+                            <ScoreBadge points={userItem.totalPoints} maxScore={maxScore} />
                           </div>
 
                           {/* Profile Body */}
@@ -395,7 +402,7 @@ const LeaderboardClient = () => {
                             </div>
                           </div>
                         </Card>
-                      </motion.div>
+                      </Motion.div>
                     );
                   })}
                 </div>
@@ -429,7 +436,7 @@ const LeaderboardClient = () => {
                       <tr className="bg-muted/40 text-muted-foreground text-[11px] font-bold uppercase tracking-wider text-left border-b border-border">
                         <th className="py-4 px-6 w-20">Rang</th>
                         <th className="py-4 px-4 min-w-[220px]">Étudiant</th>
-                        <th className="py-4 px-4 text-center">Score Total</th>
+                        <th className="min-w-[112px] px-4 py-4 text-center">Score Total</th>
                         <th className="py-4 px-4 text-center">
                           <div className="flex items-center justify-center gap-1">
                             <Zap className="h-3 w-3 text-blue-500" />
@@ -449,7 +456,6 @@ const LeaderboardClient = () => {
                     <tbody className="divide-y divide-border/60">
                       {(remainingUsers.length > 0 ? remainingUsers : sorted).map((userData, idx) => {
                         const rank = userData.rank || (remainingUsers.length > 0 ? idx + 4 : idx + 1);
-                        const badge = getScoreBadgeClasses(userData.totalPoints, maxScore);
                         const levelInfo = getUserLevel(userData.totalPoints);
                         const isCurrentUser = user && (userData.odUserIdStr === user._id || userData.email === user.email);
                         
@@ -509,9 +515,7 @@ const LeaderboardClient = () => {
                             </td>
 
                             <td className="py-3.5 px-4 text-center">
-                              <span className={cn("text-xs px-2.5 py-1 rounded-full border font-bold", badge)}>
-                                {userData.totalPoints} pts
-                              </span>
+                              <ScoreBadge points={userData.totalPoints} maxScore={maxScore} />
                             </td>
 
                             <td className="py-3.5 px-4 text-center">

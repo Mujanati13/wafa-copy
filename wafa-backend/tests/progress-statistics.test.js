@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import mongoose from "mongoose";
 import { buildProgressStatistics } from "../services/progressStatisticsService.js";
 
 test("calculates module/course progress and deterministic highlights", () => {
@@ -46,3 +47,27 @@ test("does not count unverified answers and de-duplicates linked questions at mo
   assert.equal(result.modules[0].completionPercentage, 33);
 });
 
+test("handles MongoDB ObjectIds without recursive stack overflow", () => {
+  const moduleId = new mongoose.Types.ObjectId();
+  const courseId = new mongoose.Types.ObjectId();
+  const questionId = new mongoose.Types.ObjectId();
+
+  const result = buildProgressStatistics({
+    modules: [{ _id: moduleId, name: "Neurologie", semester: "S5" }],
+    courses: [{
+      _id: courseId,
+      name: "Système nerveux",
+      moduleId,
+      linkedQuestions: [questionId],
+    }],
+    answeredQuestions: new Map([[
+      questionId.toHexString(),
+      { isVerified: true, isCorrect: true, answeredAt: "2026-08-25T10:00:00.000Z" },
+    ]]),
+  });
+
+  assert.equal(result.modules[0].moduleId, moduleId.toHexString());
+  assert.equal(result.modules[0].courses[0].courseId, courseId.toHexString());
+  assert.equal(result.modules[0].answeredQuestions, 1);
+  assert.equal(result.summary.successRate, 100);
+});

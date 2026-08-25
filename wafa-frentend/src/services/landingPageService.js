@@ -9,6 +9,8 @@ export const getLandingPageSettings = async () => {
   try {
     const response = await axios.get(`${API_URL}/landing-settings`, {
       withCredentials: true,
+      params: { _ts: Date.now() },
+      headers: { 'Cache-Control': 'no-cache' },
     });
     return response.data;
   } catch (error) {

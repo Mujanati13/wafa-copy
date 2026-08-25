@@ -594,7 +594,7 @@ const PricingSection = ({ settings }) => {
     const fetchPlans = async () => {
       try {
         setLoading(true);
-        const response = await subscriptionPlanService.getAllPlans();
+        const response = await subscriptionPlanService.getAvailablePlans();
         // Handle both nested (response.data) and array structures
         const plansData = Array.isArray(response.data) ? response.data : response.data?.data || [];
         

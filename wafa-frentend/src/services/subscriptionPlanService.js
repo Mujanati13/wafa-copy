@@ -25,6 +25,12 @@ export const subscriptionPlanService = {
     const response = await api.get('/subscription-plans');
     return response.data;
   },
+
+  // Single source for public and authenticated customer pricing surfaces.
+  getAvailablePlans: async () => {
+    const response = await api.get('/subscription-plans/available');
+    return response.data;
+  },
   
   // Get single plan
   getPlanById: async (planId) => {

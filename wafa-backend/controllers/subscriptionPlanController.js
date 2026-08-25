@@ -26,6 +26,20 @@ const getAllPlans = asyncHandler(async (req, res) => {
     .sort({ order: 1, createdAt: 1 })
     .lean();
 
+  res.set("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+  res.status(200).json({
+    success: true,
+    data: plans,
+  });
+});
+
+// Public catalogue used by every customer-facing pricing surface.
+const getAvailablePlans = asyncHandler(async (req, res) => {
+  const plans = await SubscriptionPlan.find({ status: "Active" })
+    .sort({ order: 1, createdAt: 1 })
+    .lean();
+
+  res.set("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
   res.status(200).json({
     success: true,
     data: plans,
@@ -154,6 +168,7 @@ const deletePlan = asyncHandler(async (req, res) => {
 
 export {
   getAllPlans,
+  getAvailablePlans,
   getPlanById,
   createPlan,
   updatePlan,

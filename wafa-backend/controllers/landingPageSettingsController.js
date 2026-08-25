@@ -5,6 +5,7 @@ export const landingPageSettingsController = {
     // Get current settings
     getSettings: asyncHandler(async (req, res) => {
         const settings = await LandingPageSettings.getSettings();
+        res.set("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
         res.status(200).json({
             success: true,
             data: settings
@@ -56,9 +57,9 @@ export const landingPageSettingsController = {
         const { heroTitle, heroSubtitle, heroDescription } = req.body;
 
         const settings = await LandingPageSettings.getSettings();
-        if (heroTitle) settings.heroTitle = heroTitle;
-        if (heroSubtitle) settings.heroSubtitle = heroSubtitle;
-        if (heroDescription) settings.heroDescription = heroDescription;
+        if (heroTitle !== undefined) settings.heroTitle = heroTitle;
+        if (heroSubtitle !== undefined) settings.heroSubtitle = heroSubtitle;
+        if (heroDescription !== undefined) settings.heroDescription = heroDescription;
         await settings.save();
 
         res.status(200).json({
@@ -72,10 +73,20 @@ export const landingPageSettingsController = {
     updateTimer: asyncHandler(async (req, res) => {
         const { timerEnabled, timerEndDate, timerTitle } = req.body;
 
+        if (timerEnabled === true) {
+            const parsedEndDate = new Date(timerEndDate);
+            if (!timerEndDate || Number.isNaN(parsedEndDate.getTime()) || parsedEndDate.getTime() <= Date.now()) {
+                return res.status(400).json({
+                    success: false,
+                    error: "La date de fin du timer doit être une date future valide"
+                });
+            }
+        }
+
         const settings = await LandingPageSettings.getSettings();
         if (timerEnabled !== undefined) settings.timerEnabled = timerEnabled;
         if (timerEndDate !== undefined) settings.timerEndDate = timerEndDate;
-        if (timerTitle) settings.timerTitle = timerTitle;
+        if (timerTitle !== undefined) settings.timerTitle = timerTitle;
         await settings.save();
 
         res.status(200).json({
@@ -99,13 +110,13 @@ export const landingPageSettingsController = {
 
         const settings = await LandingPageSettings.getSettings();
 
-        if (pricingTitle) settings.pricingTitle = pricingTitle;
-        if (pricingSubtitle) settings.pricingSubtitle = pricingSubtitle;
-        if (freePlanFeatures) settings.freePlanFeatures = freePlanFeatures;
+        if (pricingTitle !== undefined) settings.pricingTitle = pricingTitle;
+        if (pricingSubtitle !== undefined) settings.pricingSubtitle = pricingSubtitle;
+        if (freePlanFeatures !== undefined) settings.freePlanFeatures = freePlanFeatures;
         if (premiumMonthlyPrice !== undefined) settings.premiumMonthlyPrice = premiumMonthlyPrice;
-        if (premiumMonthlyFeatures) settings.premiumMonthlyFeatures = premiumMonthlyFeatures;
+        if (premiumMonthlyFeatures !== undefined) settings.premiumMonthlyFeatures = premiumMonthlyFeatures;
         if (premiumAnnualPrice !== undefined) settings.premiumAnnualPrice = premiumAnnualPrice;
-        if (premiumAnnualFeatures) settings.premiumAnnualFeatures = premiumAnnualFeatures;
+        if (premiumAnnualFeatures !== undefined) settings.premiumAnnualFeatures = premiumAnnualFeatures;
 
         await settings.save();
 
@@ -121,8 +132,8 @@ export const landingPageSettingsController = {
         const { faqTitle, faqItems } = req.body;
 
         const settings = await LandingPageSettings.getSettings();
-        if (faqTitle) settings.faqTitle = faqTitle;
-        if (faqItems) settings.faqItems = faqItems;
+        if (faqTitle !== undefined) settings.faqTitle = faqTitle;
+        if (faqItems !== undefined) settings.faqItems = faqItems;
         await settings.save();
 
         res.status(200).json({
@@ -137,9 +148,9 @@ export const landingPageSettingsController = {
         const { contactEmail, contactPhone, whatsappNumber, facebookUrl, instagramUrl, youtubeUrl } = req.body;
 
         const settings = await LandingPageSettings.getSettings();
-        if (contactEmail) settings.contactEmail = contactEmail;
-        if (contactPhone) settings.contactPhone = contactPhone;
-        if (whatsappNumber) settings.whatsappNumber = whatsappNumber;
+        if (contactEmail !== undefined) settings.contactEmail = contactEmail;
+        if (contactPhone !== undefined) settings.contactPhone = contactPhone;
+        if (whatsappNumber !== undefined) settings.whatsappNumber = whatsappNumber;
         if (facebookUrl !== undefined) settings.facebookUrl = facebookUrl;
         if (instagramUrl !== undefined) settings.instagramUrl = instagramUrl;
         if (youtubeUrl !== undefined) settings.youtubeUrl = youtubeUrl;
@@ -158,8 +169,8 @@ export const landingPageSettingsController = {
 
         const settings = await LandingPageSettings.getSettings();
         if (promotionEnabled !== undefined) settings.promotionEnabled = promotionEnabled;
-        if (promotionText) settings.promotionText = promotionText;
-        if (promotionLink) settings.promotionLink = promotionLink;
+        if (promotionText !== undefined) settings.promotionText = promotionText;
+        if (promotionLink !== undefined) settings.promotionLink = promotionLink;
         await settings.save();
 
         res.status(200).json({

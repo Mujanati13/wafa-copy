@@ -28,6 +28,13 @@ import {
 import axios from "axios";
 
 const API_URL = import.meta.env.VITE_API_URL;
+const LANDING_SETTINGS_SYNC_KEY = "landing-settings-updated-at";
+
+const announceLandingSettingsChange = () => {
+  const updatedAt = String(Date.now());
+  localStorage.setItem(LANDING_SETTINGS_SYNC_KEY, updatedAt);
+  window.dispatchEvent(new CustomEvent("landing-settings-changed", { detail: { updatedAt } }));
+};
 
 const LandingPageAdmin = () => {
   const [loading, setLoading] = useState(true);
@@ -131,6 +138,14 @@ const LandingPageAdmin = () => {
   };
 
   const handleSave = async (section) => {
+    if (section === "timer" && settings.timerEnabled) {
+      const timerEndTimestamp = new Date(settings.timerEndDate).getTime();
+      if (!settings.timerEndDate || Number.isNaN(timerEndTimestamp) || timerEndTimestamp <= Date.now()) {
+        toast.error("Choisissez une date de fin future pour activer le timer");
+        return;
+      }
+    }
+
     try {
       setSaving(true);
       let endpoint = "/landing-settings";
@@ -215,6 +230,7 @@ const LandingPageAdmin = () => {
       );
 
       if (response.data.success) {
+        announceLandingSettingsChange();
         toast.success(response.data.message || "Paramètres enregistrés avec succès");
       }
     } catch (error) {
@@ -302,6 +318,7 @@ const LandingPageAdmin = () => {
           timerEndDate: "",
           timerTitle: "",
         }));
+        announceLandingSettingsChange();
         toast.success("Timer supprimé avec succès");
       }
     } catch (error) {

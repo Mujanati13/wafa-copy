@@ -1,9 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion as Motion, useReducedMotion } from "framer-motion";
 import {
   AlertCircle, ArrowRight, BadgeCheck, BookOpenCheck, Check, CheckCircle2,
-  CircleHelp, Facebook, GraduationCap, HelpCircle, Instagram,
+  CircleHelp, Clock3, Facebook, GraduationCap, HelpCircle, Home, Instagram,
   Highlighter, Loader2, Menu, MessageCircle, Send, Shield, ShieldCheck,
   Sparkles, Star, Target, TrendingUp, X,
 } from "lucide-react";
@@ -30,6 +30,24 @@ const FALLBACK_SETTINGS = {
   pricingSubtitle: "Commencez gratuitement, passez à l'illimité quand vous êtes prêt.",
   faqTitle: "Questions fréquentes",
   faqItems: [],
+  timerEnabled: false,
+  timerEndDate: null,
+  timerTitle: "Offre spéciale se termine dans",
+};
+
+const LANDING_SETTINGS_SYNC_KEY = "landing-settings-updated-at";
+
+const calculateLandingCountdown = (enabled, endDate) => {
+  if (!enabled || !endDate) return null;
+  const remaining = new Date(endDate).getTime() - Date.now();
+  if (!Number.isFinite(remaining) || remaining <= 0) return null;
+  const totalSeconds = Math.floor(remaining / 1000);
+  return {
+    days: Math.floor(totalSeconds / 86400),
+    hours: Math.floor((totalSeconds % 86400) / 3600),
+    minutes: Math.floor((totalSeconds % 3600) / 60),
+    seconds: totalSeconds % 60,
+  };
 };
 
 const copy = {
@@ -276,6 +294,7 @@ export default function RedesignedLandingPage() {
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
   const [settings, setSettings] = useState(FALLBACK_SETTINGS);
+  const [settingsLoaded, setSettingsLoaded] = useState(false);
   const [plans, setPlans] = useState([]);
   const [loadingPlans, setLoadingPlans] = useState(true);
   const [approvedReviews, setApprovedReviews] = useState([]);
@@ -316,7 +335,7 @@ export default function RedesignedLandingPage() {
     let active = true;
     Promise.allSettled([
       getLandingPageSettings(),
-      subscriptionPlanService.getAllPlans(),
+      subscriptionPlanService.getAvailablePlans(),
       api.get("/feedbacks"),
     ])
       .then(([settingsResult, plansResult, reviewsResult]) => {
@@ -324,6 +343,7 @@ export default function RedesignedLandingPage() {
         if (settingsResult.status === "fulfilled") {
           const data = unwrap(settingsResult.value);
           if (data && !Array.isArray(data)) setSettings((previous) => ({ ...previous, ...data }));
+          setSettingsLoaded(true);
         }
         if (plansResult.status === "fulfilled") {
           const data = unwrap(plansResult.value);
@@ -342,22 +362,46 @@ export default function RedesignedLandingPage() {
     return () => { active = false; };
   }, []);
 
-  const text = copy[language] || copy.fr;
-  const faqs = language === "fr" ? defaultFaqs : defaultFaqsEn;
-  const displayedPlans = useMemo(() => {
-    const labels = language === "fr"
-      ? ["Plan Gratuit", "Premium", "Premium Pro"]
-      : ["Free Plan", "Premium", "Premium Pro"];
-    const paidDescriptions = language === "fr"
-      ? ["Accès Premium pendant un semestre.", "Accès Premium Pro pendant un semestre."]
-      : ["Premium access for one semester.", "Premium Pro access for one semester."];
+  useEffect(() => {
+    let active = true;
 
-    return plans.slice(0, 3).map((plan, index) => ({
-      ...plan,
-      name: labels[index] || plan.name,
-      description: index === 0 ? plan.description : paidDescriptions[index - 1],
-    }));
-  }, [language, plans]);
+    const refreshSettings = async () => {
+      try {
+        const data = unwrap(await getLandingPageSettings());
+        if (active && data && !Array.isArray(data)) {
+          setSettings((previous) => ({ ...previous, ...data }));
+          setSettingsLoaded(true);
+        }
+      } catch {
+        // Keep the last successfully loaded settings when a background refresh fails.
+      }
+    };
+    const handleStorage = (event) => {
+      if (event.key === LANDING_SETTINGS_SYNC_KEY) refreshSettings();
+    };
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") refreshSettings();
+    };
+
+    window.addEventListener("landing-settings-changed", refreshSettings);
+    window.addEventListener("storage", handleStorage);
+    window.addEventListener("focus", refreshSettings);
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => {
+      active = false;
+      window.removeEventListener("landing-settings-changed", refreshSettings);
+      window.removeEventListener("storage", handleStorage);
+      window.removeEventListener("focus", refreshSettings);
+      document.removeEventListener("visibilitychange", handleVisibility);
+    };
+  }, []);
+
+  const text = copy[language] || copy.fr;
+  const savedFaqs = Array.isArray(settings.faqItems)
+    ? settings.faqItems.filter((item) => item?.question?.trim() && item?.answer?.trim()).map((item) => [item.question, item.answer])
+    : [];
+  const faqs = settingsLoaded ? savedFaqs : language === "fr" ? defaultFaqs : defaultFaqsEn;
+  const displayedPlans = plans;
   const scrollTo = (id) => document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
 
   return (
@@ -371,8 +415,8 @@ export default function RedesignedLandingPage() {
       <header className="sticky top-0 z-50 border-b border-border/70 bg-background/95 shadow-sm backdrop-blur-xl">
         <div className="mx-auto flex h-18 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           <Link to="/" className="imrs-focus-ring flex items-center gap-3 rounded-lg" aria-label="YourQCM">
-            <img src={settings.logoUrl || logo} alt="YourQCM" className="h-10 w-10 rounded-xl object-contain" />
-            <span className="text-lg font-bold tracking-tight text-primary">YourQCM</span>
+            <img src={settings.logoUrl || logo} alt={settings.siteName || "YourQCM"} className="h-10 w-10 rounded-xl object-contain" />
+            <span className="text-lg font-bold tracking-tight text-primary">{settings.siteName || "YourQCM"}</span>
           </Link>
           <nav className="hidden items-center gap-6 lg:flex" aria-label="Navigation principale">
             {[["benefits", text.navigation[0]], ["pricing", text.navigation[1]], ["faq", text.navigation[2]]].map(([id, label]) => (
@@ -421,6 +465,8 @@ export default function RedesignedLandingPage() {
           </div>
         </section>
 
+        <LandingCountdown settings={settings} language={language} />
+
         <section id="benefits" className="scroll-mt-24 bg-muted/55 py-20">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <SectionHeading eyebrow={language === "fr" ? "01 — Avantages" : "01 — Benefits"} title={text.benefits} copy={text.benefitsCopy} />
@@ -446,7 +492,7 @@ export default function RedesignedLandingPage() {
           </div>
         </section>
 
-        <section id="pricing" className="mx-auto max-w-7xl scroll-mt-24 px-4 py-20 sm:px-6 lg:px-8"><SectionHeading eyebrow={`02 — ${text.plans}`} title={settings.pricingTitle || text.plans} copy={settings.pricingSubtitle || text.plans} centered /><div className="mt-12 grid gap-5 lg:grid-cols-3">{loadingPlans ? <PricingSkeleton /> : displayedPlans.length ? displayedPlans.map((plan, index) => <PricingCard key={plan._id || plan.name} plan={plan} popular={plan.isPopular || index === 1} text={text} onChoose={() => navigate(hasActiveLogin ? dashboardPath : "/register")} />) : <DefaultPlans text={text} onChoose={() => navigate(hasActiveLogin ? dashboardPath : "/register")} />}</div></section>
+        <section id="pricing" className="mx-auto max-w-7xl scroll-mt-24 px-4 py-20 sm:px-6 lg:px-8"><SectionHeading eyebrow={`02 — ${text.plans}`} title={settings.pricingTitle || text.plans} copy={settings.pricingSubtitle || text.plans} centered /><div className="mt-12 grid gap-5 lg:grid-cols-3">{loadingPlans ? <PricingSkeleton /> : displayedPlans.length ? displayedPlans.map((plan) => <PricingCard key={plan._id || plan.name} plan={plan} popular={plan.isPopular} text={text} language={language} onChoose={() => navigate(hasActiveLogin ? "/dashboard/subscription" : "/register", hasActiveLogin ? { state: { selectedPlan: plan } } : undefined)} />) : <div className="rounded-2xl border border-dashed border-border bg-muted/30 p-8 text-center text-sm text-muted-foreground lg:col-span-3">{language === "fr" ? "Les offres sont temporairement indisponibles. Veuillez réessayer plus tard." : "Plans are temporarily unavailable. Please try again later."}</div>}</div></section>
 
         <ApprovedReviewsSection reviews={approvedReviews} language={language} />
 
@@ -512,6 +558,44 @@ export default function RedesignedLandingPage() {
 }
 
 function SectionHeading({ eyebrow, title, copy: description, centered = false }) { return <div className={centered ? "mx-auto max-w-2xl text-center" : "max-w-2xl"}><span className="imrs-eyebrow">{eyebrow}</span><h2 className="mt-5 text-3xl font-bold tracking-tight sm:text-4xl">{title}</h2><p className="mt-4 leading-7 text-muted-foreground">{description}</p></div>; }
+function LandingCountdown({ settings, language }) {
+  const [timeLeft, setTimeLeft] = useState(() => calculateLandingCountdown(settings.timerEnabled, settings.timerEndDate));
+
+  useEffect(() => {
+    let interval;
+    const update = () => {
+      const next = calculateLandingCountdown(settings.timerEnabled, settings.timerEndDate);
+      setTimeLeft(next);
+      if (!next && interval) window.clearInterval(interval);
+    };
+    update();
+    interval = window.setInterval(update, 1000);
+    return () => window.clearInterval(interval);
+  }, [settings.timerEnabled, settings.timerEndDate]);
+
+  if (!timeLeft) return null;
+  const labels = language === "fr" ? ["Jours", "Heures", "Minutes", "Secondes"] : ["Days", "Hours", "Minutes", "Seconds"];
+  const values = [timeLeft.days, timeLeft.hours, timeLeft.minutes, timeLeft.seconds];
+
+  return (
+    <section className="border-y border-blue-200/70 bg-gradient-to-r from-blue-700 via-indigo-700 to-violet-700 px-4 py-7 text-white dark:border-blue-900 sm:px-6" aria-labelledby="landing-countdown-title">
+      <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-6 lg:flex-row">
+        <div className="flex items-center gap-3 text-center lg:text-left">
+          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-white/15"><Clock3 className="h-6 w-6" aria-hidden="true" /></span>
+          <h2 id="landing-countdown-title" className="text-lg font-bold sm:text-xl">{settings.timerTitle || (language === "fr" ? "Offre spéciale se termine dans" : "Special offer ends in")}</h2>
+        </div>
+        <div className="grid grid-cols-4 gap-2 sm:gap-3" aria-label={language === "fr" ? "Temps restant" : "Time remaining"}>
+          {values.map((value, index) => (
+            <div key={labels[index]} className="min-w-16 rounded-xl border border-white/20 bg-white/10 px-2 py-2.5 text-center backdrop-blur-sm sm:min-w-20 sm:px-3">
+              <span className="block text-xl font-extrabold tabular-nums sm:text-2xl">{String(value).padStart(2, "0")}</span>
+              <span className="mt-0.5 block text-[9px] font-semibold uppercase tracking-wide text-blue-100 sm:text-[10px]">{labels[index]}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
 function ApprovedReviewsSection({ reviews, language }) {
   if (!reviews.length) return null;
   const apiOrigin = api.defaults.baseURL?.replace(/\/api\/v1\/?$/, "") || "";
@@ -601,11 +685,29 @@ function ReviewInvitation({ language }) {
   };
 
   return (
-    <section className="border-t border-border bg-background px-4 py-10 text-center sm:px-6">
-      <Button size="lg" onClick={() => setOpen(true)} className="h-12 bg-gradient-to-r from-blue-600 to-indigo-600 px-7 text-base text-white hover:from-blue-700 hover:to-indigo-700">
-        <MessageCircle className="mr-2 h-5 w-5" />
-        {isFrench ? "Donner mon avis" : "Leave a review"}
-      </Button>
+    <section className="border-t border-border bg-gradient-to-br from-blue-50 via-indigo-50 to-white px-4 py-16 text-center dark:from-slate-950 dark:via-blue-950/30 dark:to-slate-950 sm:px-6 md:py-20">
+      <div className="mx-auto max-w-4xl">
+        <div className="mx-auto grid h-20 w-20 place-items-center rounded-full bg-gradient-to-br from-blue-600 to-indigo-600 text-white shadow-xl shadow-blue-600/20">
+          <MessageCircle className="h-10 w-10" aria-hidden="true" />
+        </div>
+        <h2 className="mt-7 text-3xl font-bold tracking-tight text-primary sm:text-4xl md:text-5xl">
+          {isFrench ? "On grandit ensemble" : "We grow together"}
+        </h2>
+        <p className="mx-auto mt-4 max-w-3xl text-base leading-7 text-muted-foreground sm:text-lg">
+          {isFrench
+            ? "YourQCM est né récemment. Et on veut le rendre meilleur grâce à VOUS. Vous avez des idées ? Des remarques ? Des souhaits ? Écrivez-nous. Votre voix est essentielle pour améliorer YourQCM."
+            : "YourQCM was born recently, and we want to make it better with YOU. Have ideas, comments, or wishes? Write to us. Your voice is essential to improving YourQCM."}
+        </p>
+        <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
+          <Button size="lg" onClick={() => setOpen(true)} className="h-12 bg-gradient-to-r from-blue-600 to-indigo-600 px-7 text-base text-white hover:from-blue-700 hover:to-indigo-700">
+            <MessageCircle className="mr-2 h-5 w-5" />
+            {isFrench ? "Partager mon avis" : "Share my feedback"}
+          </Button>
+          <Button asChild size="lg" variant="outline" className="h-12 bg-background/80 px-7 text-base">
+            <Link to="/"><Home className="mr-2 h-5 w-5" />{isFrench ? "Retourner à l'accueil" : "Return home"}</Link>
+          </Button>
+        </div>
+      </div>
 
       <Dialog open={open} onOpenChange={changeOpen}>
         <DialogContent className="max-h-[90dvh] max-w-xl overflow-y-auto text-left">
@@ -678,6 +780,12 @@ function LandingFooter({ settings, text }) {
       icon: <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" /></svg>,
     },
   ].filter((item) => item.href && item.href !== "#");
+  const supportLinks = [
+    ["#faq", "FAQ"],
+    settings.contactEmail && [`mailto:${settings.contactEmail}`, settings.contactEmail],
+    settings.contactPhone && [`tel:${settings.contactPhone.replace(/[^+\d]/g, "")}`, settings.contactPhone],
+    settings.whatsappNumber && [`https://wa.me/${settings.whatsappNumber.replace(/\D/g, "")}`, "WhatsApp"],
+  ].filter(Boolean);
 
   return (
     <footer className="bg-slate-900 px-4 py-10 text-white sm:px-6 sm:py-12 md:py-16 lg:px-8" role="contentinfo">
@@ -686,12 +794,12 @@ function LandingFooter({ settings, text }) {
           <div className="xs:col-span-2 md:col-span-1">
             <h2 className="mb-4 flex items-center gap-2 text-xl font-bold">
               <GraduationCap className="h-6 w-6" aria-hidden="true" />
-              YourQCM
+              {settings.siteName || "YourQCM"}
             </h2>
             <p className="text-sm leading-relaxed text-slate-400">{text.footer}</p>
           </div>
           <DarkFooterLinks title={text.product} links={[["#benefits", text.navigation[0]], ["#pricing", text.navigation[1]]]} />
-          <DarkFooterLinks title={text.support} links={[["#faq", "FAQ"]]} />
+          <DarkFooterLinks title={text.support} links={supportLinks} />
           <div>
             <h3 className="mb-4 font-semibold">{text.social}</h3>
             <div className="flex gap-3">
@@ -704,7 +812,7 @@ function LandingFooter({ settings, text }) {
           </div>
         </div>
         <div className="flex flex-col items-center justify-between gap-4 border-t border-slate-800 pt-8 text-sm text-slate-400 sm:flex-row">
-          <p>© {new Date().getFullYear()} YourQCM. Tous droits réservés.</p>
+          <p>© {new Date().getFullYear()} {settings.siteName || "YourQCM"}. Tous droits réservés.</p>
           <div className="flex gap-6">
             <Link className="transition hover:text-white" to="/privacy-policy">{text.privacy}</Link>
             <Link className="transition hover:text-white" to="/terms-of-use">{text.terms}</Link>
@@ -717,13 +825,17 @@ function LandingFooter({ settings, text }) {
 
 function DarkFooterLinks({ title, links }) { return <div><h3 className="mb-4 font-semibold">{title}</h3><ul className="space-y-3 text-sm text-slate-400">{links.map(([href, label]) => <li key={href}><a href={href} className="transition hover:text-white">{label}</a></li>)}</ul></div>; }
 function PricingSkeleton() { return <>{[1, 2, 3].map((item) => <div key={item} className="h-96 animate-pulse rounded-2xl border border-border bg-muted" />)}</>; }
-function PricingCard({ plan, popular, text, onChoose }) {
+function PricingCard({ plan, popular, text, language, onChoose }) {
   const features = (plan.features || plan.featureList || [])
     .map((feature) => ({
       text: typeof feature === "string" ? feature : feature?.text,
       included: typeof feature === "string" || feature?.included !== false,
     }))
     .filter((feature) => feature.text);
+  const periodLabels = language === "fr"
+    ? { Gratuit: "", Semester: "/ semestre", Semestre: "/ semestre", Annee: "/ an", Annuel: "/ an", Monthly: "/ mois", Annual: "/ an" }
+    : { Gratuit: "", Semester: "/ semester", Semestre: "/ semester", Annee: "/ year", Annuel: "/ year", Monthly: "/ month", Annual: "/ year" };
+  const periodLabel = periodLabels[plan.period] || (plan.period ? `/ ${plan.period}` : "");
 
   return (
     <article className={`relative rounded-2xl border bg-card p-6 ${popular ? "border-cyan-400 shadow-xl shadow-cyan-950/10" : "border-border"}`}>
@@ -731,7 +843,8 @@ function PricingCard({ plan, popular, text, onChoose }) {
       <p className="text-sm font-semibold text-cyan-700 dark:text-cyan-300">{plan.name || "YourQCM Premium"}</p>
       <div className="mt-5 flex items-baseline gap-1">
         <span className="text-4xl font-bold">{plan.price ?? plan.monthlyPrice ?? "—"}</span>
-        {Number(plan.price) > 0 && <span className="text-sm text-muted-foreground">MAD {text.perSemester}</span>}
+        {Number(plan.price) > 0 && <span className="text-sm text-muted-foreground">MAD {periodLabel}</span>}
+        {Number(plan.oldPrice) > Number(plan.price) && <span className="ml-2 text-sm text-muted-foreground line-through">{plan.oldPrice} MAD</span>}
       </div>
       <p className="mt-4 min-h-12 text-sm leading-6 text-muted-foreground">{plan.description || text.includes}</p>
       <Button onClick={onChoose} className="mt-6 w-full" variant={popular ? "default" : "outline"}>{text.choose}</Button>
@@ -747,28 +860,4 @@ function PricingCard({ plan, popular, text, onChoose }) {
       </ul>
     </article>
   );
-}
-function DefaultPlans({ text, onChoose }) {
-  const isFrench = text.login === "Se connecter";
-  const plans = isFrench
-    ? [
-        { name: "Plan Gratuit", price: 0, description: "Découvrez la plateforme avec un semestre gratuit au choix." },
-        { name: "Premium", price: 49, description: "Accès Premium pendant un semestre." },
-        { name: "Premium Pro", price: 399, description: "Accès Premium Pro pendant un semestre." },
-      ]
-    : [
-        { name: "Free Plan", price: 0, description: "Explore the platform with one free semester of your choice." },
-        { name: "Premium", price: 49, description: "Premium access for one semester." },
-        { name: "Premium Pro", price: 399, description: "Premium Pro access for one semester." },
-      ];
-
-  return plans.map((plan, index) => (
-    <PricingCard
-      key={plan.name}
-      popular={index === 1}
-      onChoose={onChoose}
-      text={text}
-      plan={{ ...plan, features: ["Accès aux QCM", "Suivi de progression", "Ressources de révision"] }}
-    />
-  ));
 }

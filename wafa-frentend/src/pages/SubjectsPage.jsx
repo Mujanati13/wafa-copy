@@ -26,6 +26,9 @@ const categoryLabelKeys = {
   qcm: "qcmBank",
 };
 
+const categoryButtonClassName =
+  "h-auto min-h-[76px] min-w-[190px] flex-1 justify-start gap-3 rounded-2xl border border-border/80 bg-card px-4 py-3 text-foreground shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/35 hover:bg-card hover:shadow-md focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 sm:min-w-[210px]";
+
 const getSectionTitle = (module, type) => (
   module?.categoryLabels?.[categoryLabelKeys[type]]?.trim() || labels[type].title
 );
@@ -283,19 +286,19 @@ export default function SubjectsPage() {
       className="imrs-module-hero overflow-hidden rounded-3xl px-4 py-4 shadow-lg sm:px-6 sm:py-5"
       style={{ "--module-color": moduleThemeColor }}
     >
-      <div className="flex min-w-0 items-center gap-3">
+      <div className="grid min-w-0 grid-cols-[auto_minmax(0,1fr)] items-start gap-x-5 sm:gap-x-7">
         <Button
           type="button"
           variant="ghost"
           size="icon"
-          className="h-9 w-9 shrink-0 rounded-lg bg-white/95 text-slate-800 shadow-sm hover:bg-white hover:text-slate-950"
+          className="h-10 w-10 shrink-0 rounded-xl bg-white/95 text-slate-800 shadow-sm hover:bg-white hover:text-slate-950"
           onClick={() => navigate("/dashboard/home#modules")}
           aria-label="Retour au tableau de bord"
           title="Tableau de bord"
         >
           <ArrowLeft className="h-5 w-5" aria-hidden="true" />
         </Button>
-        <div className="min-w-0">
+        <div className="min-w-0 pt-0.5">
           {moduleSemesterLabel && (
             <p
               className="mb-0.5 text-[10px] font-bold uppercase tracking-[.16em] text-blue-600/80 sm:text-xs dark:text-white/75"
@@ -305,30 +308,25 @@ export default function SubjectsPage() {
             </p>
           )}
           <h1 className="truncate text-2xl font-bold tracking-tight sm:text-3xl">{module?.name}</h1>
-        </div>
-      </div>
-
-      <p className="mt-2 max-w-3xl text-sm leading-5 text-slate-600 sm:text-base dark:text-white/80">
-        Choisissez un format d’entraînement puis avancez à votre rythme. Chaque réponse est sauvegardée pendant votre session.
-      </p>
-
-      <div className="mt-3 max-w-3xl">
-        <div className="mb-1.5 flex items-center justify-between text-xs text-slate-600 dark:text-white/75">
-          <span>{module?.questionsAnswered || 0} / {module?.questions || 0} questions</span>
-          <span className="font-semibold text-slate-800 dark:text-white">{module?.progress || 0}%</span>
-        </div>
-        <div
-          className="h-2 overflow-hidden rounded-full bg-blue-100 dark:bg-black/20"
-          role="progressbar"
-          aria-label={`Progression du module ${module?.name || ""}`}
-          aria-valuemin={0}
-          aria-valuemax={100}
-          aria-valuenow={module?.progress || 0}
-        >
-          <div
-            className="h-full rounded-full bg-primary transition-[width] duration-500 dark:bg-white/80"
-            style={{ width: `${module?.progress || 0}%` }}
-          />
+          <div className="mt-3 max-w-3xl">
+            <div className="mb-1.5 flex items-center justify-between text-xs text-slate-600 dark:text-white/75">
+              <span>{module?.questionsAnswered || 0} / {module?.questions || 0} questions</span>
+              <span className="font-semibold text-slate-800 dark:text-white">{module?.progress || 0}%</span>
+            </div>
+            <div
+              className="h-2 overflow-hidden rounded-full bg-blue-100 dark:bg-black/20"
+              role="progressbar"
+              aria-label={`Progression du module ${module?.name || ""}`}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={module?.progress || 0}
+            >
+              <div
+                className="h-full rounded-full bg-primary transition-[width] duration-500 dark:bg-white/80"
+                style={{ width: `${module?.progress || 0}%` }}
+              />
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -342,8 +340,8 @@ export default function SubjectsPage() {
             variant="outline"
             style={isActive ? activeThemeStyle : undefined}
             className={cn(
-              "h-auto min-w-48 justify-start gap-3 px-4 py-3",
-              isActive && "shadow-md hover:brightness-90",
+              categoryButtonClassName,
+              isActive && "border-transparent shadow-md hover:border-transparent hover:brightness-95",
             )}
             onClick={() => { setActiveType(type); setCategory("all"); }}
             aria-pressed={isActive}

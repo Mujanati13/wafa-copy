@@ -1,12 +1,22 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
-  BarChart3, BookOpen, ChevronDown, ChevronLeft, CircleHelp, Crown,
-  Home, Library, Loader2, LogOut, Menu, NotebookPen, Trophy, UserRound, X,
+  BarChart3, BookOpen, ChevronDown, ChevronLeft, CircleHelp, CreditCard, Crown,
+  Home, Library, Loader2, LogOut, Menu, NotebookPen, Settings, Trophy, UserRound, X,
 } from "lucide-react";
 import { SemesterProvider } from "@/context/SemesterContext";
 import { useSemester } from "@/context/SemesterContext";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import ThemeToggle from "@/components/ui/ThemeToggle";
 import LanguageSwitcher from "@/components/shared/LanguageSwitcher";
 import NotificationDropdown from "@/components/layout/NotificationDropdown";
@@ -25,7 +35,7 @@ const navGroups = [
 const bottomItems = [
   { to: "/dashboard/home", label: "Accueil", icon: Home },
   { action: "modules", label: "Modules", icon: BookOpen },
-  { to: "/dashboard/progress", label: "Progrès", icon: BarChart3 },
+  { to: "/dashboard/leaderboard", label: "Classement", icon: Trophy },
   { to: "/dashboard/profile", label: "Profil", icon: UserRound },
 ];
 
@@ -60,6 +70,11 @@ export default function LearnerExperienceLayout() {
 
   const firstName = user?.firstName || user?.name?.split(" ")[0] || "Étudiant";
   const initials = useMemo(() => String(user?.name || `${user?.firstName || ""} ${user?.lastName || ""}` || "IM").split(" ").filter(Boolean).slice(0, 2).map((part) => part[0]).join("").toUpperCase(), [user]);
+  const profilePicture = user?.profilePicture?.startsWith("http")
+    ? user.profilePicture
+    : user?.profilePicture
+      ? `${import.meta.env.VITE_API_URL?.replace("/api/v1", "")}${user.profilePicture}`
+      : undefined;
   const isActive = (to) => location.pathname === to || (!to.endsWith("home") && location.pathname.startsWith(`${to}/`));
 
   const logout = async () => {
@@ -80,7 +95,53 @@ export default function LearnerExperienceLayout() {
           <div className="hidden lg:block"><LanguageSwitcher /></div>
           <ThemeToggle />
           <NotificationDropdown />
-          <NavLink to="/dashboard/profile" className="imrs-focus-ring grid h-9 w-9 place-items-center rounded-full bg-primary text-xs font-bold text-primary-foreground" aria-label="Profil">{initials || "AQ"}</NavLink>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="imrs-focus-ring relative h-10 w-10 rounded-full p-0" aria-label="Ouvrir le menu du profil">
+                <Avatar className="h-9 w-9 ring-2 ring-primary/15">
+                  <AvatarImage src={profilePicture} alt={user?.name || "Profil"} />
+                  <AvatarFallback className="bg-gradient-to-br from-blue-500 to-teal-500 text-xs font-bold text-white">
+                    {initials || "AQ"}
+                  </AvatarFallback>
+                </Avatar>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" sideOffset={8} className="w-72 overflow-hidden rounded-2xl border border-border bg-popover p-0 text-popover-foreground shadow-xl">
+              <DropdownMenuLabel className="p-4 font-normal">
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold">{user?.name || "Utilisateur"}</p>
+                  {user?.email && <p className="mt-1 truncate text-xs text-muted-foreground">{user.email}</p>}
+                  <div className="mt-3 flex items-center gap-3 text-xs">
+                    <span className="flex items-center gap-1" title="Reports approuvés"><span className="h-2.5 w-2.5 rounded-full bg-emerald-500" aria-hidden="true" />{user?.greenPoints || 0}</span>
+                    <span className="flex items-center gap-1" title="Explications approuvées"><span className="h-2.5 w-2.5 rounded-full bg-blue-500" aria-hidden="true" />{user?.bluePoints || 0}</span>
+                    <Badge variant="secondary" className="ml-auto shrink-0 bg-blue-100 text-xs text-blue-700 dark:bg-blue-900/40 dark:text-blue-300">{user?.totalPoints || 0} pts</Badge>
+                  </div>
+                  <div className="mt-3 space-y-1.5">
+                    <div className="flex items-center justify-between text-xs"><span className="font-medium">Niveau {Math.floor((user?.totalPoints || 0) / 50)}</span><span className="text-muted-foreground">{(user?.totalPoints || 0) % 50}/50 XP</span></div>
+                    <div className="h-2 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-gradient-to-r from-blue-400 to-blue-500" style={{ width: `${(((user?.totalPoints || 0) % 50) / 50) * 100}%` }} /></div>
+                  </div>
+                </div>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator className="m-0" />
+              <DropdownMenuItem onSelect={() => navigate("/dashboard/profile")} className="cursor-pointer gap-3 rounded-none px-4 py-3">
+                <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-blue-50 text-blue-600 dark:bg-blue-950/50 dark:text-blue-300"><UserRound className="h-4 w-4" aria-hidden="true" /></span>
+                <span>Profil</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => navigate("/dashboard/settings")} className="cursor-pointer gap-3 rounded-none px-4 py-3">
+                <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-violet-50 text-violet-600 dark:bg-violet-950/50 dark:text-violet-300"><Settings className="h-4 w-4" aria-hidden="true" /></span>
+                <span>Paramètres</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => navigate("/dashboard/subscription")} className="cursor-pointer gap-3 rounded-none px-4 py-3">
+                <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-300"><CreditCard className="h-4 w-4" aria-hidden="true" /></span>
+                <span>Abonnement</span>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator className="m-0" />
+              <DropdownMenuItem onSelect={logout} className="cursor-pointer justify-center gap-2 rounded-none px-4 py-3 text-center font-medium text-red-600 focus:bg-red-50 focus:text-red-700 dark:text-red-400 dark:focus:bg-red-950/40 dark:focus:text-red-300">
+                <LogOut className="h-4 w-4" aria-hidden="true" />
+                <span>Se déconnecter</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </header>
 

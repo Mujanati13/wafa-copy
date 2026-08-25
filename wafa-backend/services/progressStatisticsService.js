@@ -1,8 +1,20 @@
 const clampPercentage = (value) => Math.min(100, Math.max(0, Math.round(value || 0)));
 
-const asId = (value) => {
-  if (!value) return "";
-  if (typeof value === "object" && value._id) return asId(value._id);
+const asId = (value, seen = new Set()) => {
+  if (value === null || value === undefined || value === "") return "";
+  if (typeof value !== "object") return String(value);
+
+  // MongoDB ObjectIds expose an `_id` getter that returns the same object.
+  // Convert them directly instead of recursively following that getter.
+  if (typeof value.toHexString === "function") return value.toHexString();
+
+  if (seen.has(value)) return "";
+  seen.add(value);
+
+  if (value._id !== null && value._id !== undefined && value._id !== value) {
+    return asId(value._id, seen);
+  }
+
   return String(value);
 };
 

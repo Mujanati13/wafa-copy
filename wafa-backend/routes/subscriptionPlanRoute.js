@@ -1,6 +1,7 @@
 import express from "express";
 import {
   getAllPlans,
+  getAvailablePlans,
   getPlanById,
   createPlan,
   updatePlan,
@@ -12,6 +13,7 @@ const router = express.Router();
 
 // Public routes
 router.get("/", getAllPlans);
+router.get("/available", getAvailablePlans);
 router.get("/:id", getPlanById);
 
 // Admin routes

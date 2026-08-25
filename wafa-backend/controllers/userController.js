@@ -11,6 +11,7 @@ import {
     getAcademicYearFromSemesters,
     withAcademicYear,
 } from "../utils/academicYear.js";
+import { buildProfileActivityStatistics } from "../services/profileStatisticsService.js";
 
 const getPagination = (query, defaultLimit = 10, maxLimit = 100) => {
     const page = Math.max(Number.parseInt(query.page, 10) || 1, 1);
@@ -985,11 +986,19 @@ export const UserController = {
         }));
 
         const ranking = await getAcademicRanking(req.user, userStats.totalPoints || 0);
+        const activityStats = buildProfileActivityStatistics({
+            answeredQuestions: userStats.answeredQuestions,
+            totalQuestionsAttempted: userStats.totalQuestionsAttempted,
+            totalCorrectAnswers: userStats.totalCorrectAnswers,
+            averageScore: userStats.averageScore,
+            totalExamsCompleted: userStats.totalExamsCompleted,
+            totalExams: userStats.totalExams,
+        });
 
         // Calculate additional stats
         const stats = {
-            examsCompleted: userStats.totalExams || userStats.totalExamsCompleted || 0,
-            averageScore: userStats.averageScore || 0,
+            examsCompleted: activityStats.examsCompleted,
+            averageScore: activityStats.averageScore,
             studyTimeSeconds: userStats.totalTimeSpent || 0,
             studyHours: getStudyHours(userStats.totalTimeSpent),
             rank: ranking.rank,
@@ -998,14 +1007,15 @@ export const UserController = {
             totalPoints: userStats.totalPoints || 0,
             achievements: userStats.achievements || [],
             moduleProgress: consolidatedProgress,
-            questionsAnswered: userStats.questionsAnswered || 0,
-            correctAnswers: userStats.correctAnswers || 0,
-            totalQuestionsAttempted: userStats.totalQuestionsAttempted || 0,
-            totalCorrectAnswers: userStats.totalCorrectAnswers || 0,
-            totalIncorrectAnswers: userStats.totalIncorrectAnswers || 0,
+            questionsAnswered: activityStats.questionsAttempted,
+            correctAnswers: activityStats.correctAnswers,
+            totalQuestionsAttempted: activityStats.questionsAttempted,
+            totalCorrectAnswers: activityStats.correctAnswers,
+            totalIncorrectAnswers: activityStats.incorrectAnswers,
             weeklyActivity: userStats.weeklyActivity || [] // Include weekly activity for charts
         };
 
+        res.set("Cache-Control", "private, no-store");
         res.status(200).json({
             success: true,
             data: { 
@@ -1071,6 +1081,7 @@ export const UserController = {
 
         await userStats.save();
 
+        res.set("Cache-Control", "private, no-store");
         res.status(200).json({
             success: true,
             data: {
