@@ -12,6 +12,7 @@ import {
     withAcademicYear,
 } from "../utils/academicYear.js";
 import { buildProfileActivityStatistics } from "../services/profileStatisticsService.js";
+import { classifyFirebaseAdminError } from "../utils/firebaseError.js";
 
 const getPagination = (query, defaultLimit = 10, maxLimit = 100) => {
     const page = Math.max(Number.parseInt(query.page, 10) || 1, 1);
@@ -189,21 +190,14 @@ export const UserController = {
                     console.log('✅ Firebase user created:', firebaseUid);
                 } else {
                     console.log('⚠️  Firebase not initialized - user will only be created in MongoDB');
-                    firebaseErrorDetail = 'Firebase not initialized';
+                    firebaseErrorDetail = classifyFirebaseAdminError(new Error('Firebase Admin SDK is not initialized'));
                 }
             } catch (firebaseError) {
                 console.error('🔥 Firebase user creation error:');
                 console.error('   Code:', firebaseError.code);
                 console.error('   Message:', firebaseError.message);
                 
-                // Check for JWT signature error (usually means server time is out of sync)
-                if (firebaseError.message && firebaseError.message.includes('Invalid JWT Signature')) {
-                    console.error('⏰ LIKELY CAUSE: Server time is out of sync!');
-                    console.error('   Please verify that the server clock is properly synchronized.');
-                    firebaseErrorDetail = 'Server time synchronization issue with Firebase (Invalid JWT Signature). Please check server time.';
-                } else {
-                    firebaseErrorDetail = firebaseError.message;
-                }
+                firebaseErrorDetail = classifyFirebaseAdminError(firebaseError);
                 
                 // If Firebase user exists, try to get their UID and update password
                 if (firebaseError.code === 'auth/email-already-exists') {
@@ -221,30 +215,26 @@ export const UserController = {
                         console.log('✅ Existing Firebase user updated:', firebaseUid);
                     } catch (e) {
                         console.error('Could not update existing Firebase user:', e.message);
-                        firebaseErrorDetail = e.message;
+                        firebaseErrorDetail = classifyFirebaseAdminError(e);
                     }
                 }
             }
 
             // If Firebase was not created successfully, return error
             if (!firebaseCreated) {
-                let errorMessage = firebaseErrorDetail || 'Unknown error';
-                let suggestion = '';
-                
-                if (errorMessage.includes('Invalid JWT Signature')) {
-                    suggestion = 'SOLUTION: Please sync your server time (use: ntpdate -s time.nist.gov on Linux, or adjust system clock on Windows). If time is correct, regenerate the Firebase service account key from Firebase Console.';
-                } else if (errorMessage.includes('Certificate key file has been revoked')) {
-                    suggestion = 'SOLUTION: Regenerate the Firebase service account key from: https://console.firebase.google.com/project/_/settings/serviceaccounts/adminsdk';
-                } else {
-                    suggestion = 'SOLUTION: Check Firebase service account key and server configuration.';
-                }
-                
-                return res.status(500).json({
+                const firebaseFailure = firebaseErrorDetail || {
+                    type: 'configuration',
+                    detail: 'Firebase Admin authentication is unavailable.',
+                    solution: 'Verify the server-side Firebase Admin configuration.',
+                };
+
+                return res.status(503).json({
                     success: false,
-                    message: `Firebase authentication could not be set up. Error: ${errorMessage}. ${suggestion}`,
+                    message: 'Firebase authentication could not be set up.',
                     firebaseError: true,
-                    detail: errorMessage,
-                    solution: suggestion
+                    firebaseErrorType: firebaseFailure.type,
+                    detail: firebaseFailure.detail,
+                    solution: firebaseFailure.solution
                 });
             }
 

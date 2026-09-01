@@ -9,50 +9,42 @@ const __dirname = path.dirname(__filename);
 // Initialize Firebase Admin SDK
 let firebaseApp = null;
 
+const getEnvironmentServiceAccount = () => {
+  const projectId = process.env.FIREBASE_PROJECT_ID?.trim();
+  const clientEmail = process.env.FIREBASE_CLIENT_EMAIL?.trim();
+  const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n').trim();
+
+  if (!projectId || !clientEmail || !privateKey) return null;
+  return { projectId, clientEmail, privateKey };
+};
+
 try {
   // Check if Firebase is already initialized
   if (!admin.apps.length) {
-    // Try to load service account from file
-    const serviceAccountPath = path.join(__dirname, '..', 'firebase-service-account.json');
-    
-    let serviceAccount;
-    try {
-      const fileContent = readFileSync(serviceAccountPath, 'utf8');
-      serviceAccount = JSON.parse(fileContent);
-      
-      console.log('📝 Firebase service account loaded from file');
-      console.log('📋 Project ID:', serviceAccount.project_id);
-      console.log('📧 Client Email:', serviceAccount.client_email);
-      console.log('🔑 Private Key ID:', serviceAccount.private_key_id);
-      
+    const environmentServiceAccount = getEnvironmentServiceAccount();
+    const serviceAccountPath = process.env.FIREBASE_SERVICE_ACCOUNT_PATH?.trim()
+      || path.join(__dirname, '..', 'firebase-service-account.json');
+    let serviceAccount = environmentServiceAccount;
+    let credentialSource = 'environment variables';
+
+    if (!serviceAccount) {
+      try {
+        serviceAccount = JSON.parse(readFileSync(serviceAccountPath, 'utf8'));
+        credentialSource = 'server-side service-account file';
+      } catch (fileError) {
+        if (fileError.code !== 'ENOENT') {
+          console.error('Firebase service-account file could not be read:', fileError.message);
+        }
+      }
+    }
+
+    if (serviceAccount) {
       firebaseApp = admin.initializeApp({
         credential: admin.credential.cert(serviceAccount),
       });
-      
-      console.log('✅ Firebase Admin SDK initialized successfully');
-    } catch (fileError) {
-      console.error('❌ Error loading Firebase service account file:', fileError.message);
-      // If file doesn't exist, try environment variables
-      if (process.env.FIREBASE_PROJECT_ID && 
-          process.env.FIREBASE_PRIVATE_KEY && 
-          process.env.FIREBASE_CLIENT_EMAIL) {
-        
-        serviceAccount = {
-          projectId: process.env.FIREBASE_PROJECT_ID,
-          privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
-          clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-        };
-        
-        console.log('📝 Firebase service account loaded from environment variables');
-        
-        firebaseApp = admin.initializeApp({
-          credential: admin.credential.cert(serviceAccount),
-        });
-        
-        console.log('✅ Firebase Admin SDK initialized from environment variables');
-      } else {
-        console.log('⚠️  Firebase Admin SDK not configured. Set up service account file or environment variables.');
-      }
+      console.log(`Firebase Admin SDK initialized from ${credentialSource}`);
+    } else {
+      console.warn('Firebase Admin SDK is not configured. Provide server-side Firebase credentials.');
     }
   } else {
     firebaseApp = admin.app();
