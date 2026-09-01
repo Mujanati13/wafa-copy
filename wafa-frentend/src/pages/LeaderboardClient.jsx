@@ -18,7 +18,9 @@ import {
   Target,
   ArrowUpRight,
   ShieldAlert,
-  GraduationCap
+  GraduationCap,
+  MessageSquareWarning,
+  Lightbulb
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -113,6 +115,30 @@ const SORT_OPTIONS = [
   { id: "bluePoints", label: "Points Bleus", icon: Zap },
   { id: "greenPoints", label: "Points Verts", icon: Star },
   { id: "percentage", label: "Taux de Réponse", icon: Target },
+];
+
+const POINT_RULES = [
+  {
+    points: 1,
+    label: "Bonne réponse",
+    description: "Pour chaque question à laquelle vous répondez correctement.",
+    icon: CheckCircle2,
+    iconClass: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+  },
+  {
+    points: 30,
+    label: "Signaler une erreur",
+    description: "Pour le signalement d'un problème ou d'une erreur dans une question.",
+    icon: MessageSquareWarning,
+    iconClass: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
+  },
+  {
+    points: 40,
+    label: "Proposer une explication",
+    description: "Pour l'envoi d'une explication liée à une question.",
+    icon: Lightbulb,
+    iconClass: "bg-violet-500/10 text-violet-600 dark:text-violet-400",
+  },
 ];
 
 const LeaderboardClient = () => {
@@ -561,6 +587,49 @@ const LeaderboardClient = () => {
             </div>
           </>
         )}
+
+        <section
+          aria-labelledby="points-system-title"
+          className="rounded-3xl border border-border bg-card p-5 shadow-sm sm:p-7"
+        >
+          <div className="mb-5 flex items-start gap-3">
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+              <Award className="h-5 w-5" aria-hidden="true" />
+            </span>
+            <div>
+              <h2 id="points-system-title" className="text-lg font-bold text-foreground sm:text-xl">
+                Système de points
+              </h2>
+              <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+                Gagnez des points en participant activement à la communauté YourQCM.
+              </p>
+            </div>
+          </div>
+
+          <div className="grid gap-3 md:grid-cols-3">
+            {POINT_RULES.map((rule) => {
+              const Icon = rule.icon;
+              return (
+                <article
+                  key={rule.points}
+                  className="flex min-w-0 items-start gap-3 rounded-2xl border border-border/80 bg-muted/25 p-4"
+                >
+                  <span className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-xl", rule.iconClass)}>
+                    <Icon className="h-5 w-5" aria-hidden="true" />
+                  </span>
+                  <div className="min-w-0">
+                    <p className="font-bold text-foreground">
+                      <span className="text-primary">+{rule.points} point{rule.points > 1 ? "s" : ""}</span>
+                      <span className="mx-1.5 text-muted-foreground" aria-hidden="true">·</span>
+                      {rule.label}
+                    </p>
+                    <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{rule.description}</p>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        </section>
 
       </div>
     </div>
