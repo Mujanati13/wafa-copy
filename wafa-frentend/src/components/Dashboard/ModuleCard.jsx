@@ -2,7 +2,7 @@ import React from "react";
 import { useState } from "react";
 import { createPortal } from "react-dom";
 import { motion as Motion, AnimatePresence } from "framer-motion";
-import { HelpCircle, X, BookOpen, Info, Image as ImageIcon, FileText, File } from "lucide-react";
+import { HelpCircle, X, BookOpen, Info, Image as ImageIcon, File } from "lucide-react";
 
 import {
   Dialog,
@@ -152,80 +152,31 @@ const ModuleCard = ({ course, handleCourseClick, index }) => {
       <Dialog open={showHelpModal} onOpenChange={setShowHelpModal}>
         <DialogContent className="max-w-lg max-h-[90vh] flex flex-col">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-3">
+            <DialogTitle className="flex items-center gap-3 pr-8">
               <div
-                className="flex h-12 w-12 items-center justify-center rounded-xl text-white"
+                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-white"
                 style={customStyle}
               >
                 <BookOpen className="w-6 h-6" />
               </div>
-              <div className="flex-1">
-                <div className="flex items-center gap-2">
-                  <span className="block text-lg">{course.name}</span>
-                  {course.difficulty && (
-                    <Badge
-                      className={`text-xs px-2 py-0.5 ${course.difficulty === 'easy' ? 'bg-green-100 text-green-700 border-green-200' :
-                        course.difficulty === 'medium' ? 'bg-yellow-100 text-yellow-700 border-yellow-200' :
-                          'bg-red-100 text-red-700 border-red-200'
-                        }`}
-                      variant="outline"
-                    >
-                      {course.difficulty === 'easy' ? 'easy' :
-                        course.difficulty === 'medium' ? 'medium' : 'hard'}
-                    </Badge>
-                  )}
-                </div>
-                <span className="text-sm font-normal text-gray-500">Guide du module</span>
-              </div>
+              <span className="min-w-0 flex-1 truncate text-left text-lg">{course.name}</span>
+              {course.difficulty && (
+                <Badge
+                  className={`ml-auto shrink-0 px-3 py-1 text-sm font-semibold ${course.difficulty === 'easy' ? 'bg-green-100 text-green-700 border-green-200' :
+                    course.difficulty === 'medium' ? 'bg-yellow-100 text-yellow-700 border-yellow-200' :
+                      'bg-red-100 text-red-700 border-red-200'
+                    }`}
+                  variant="outline"
+                >
+                  {course.difficulty === 'easy' ? 'easy' :
+                    course.difficulty === 'medium' ? 'medium' : 'hard'}
+                </Badge>
+              )}
             </DialogTitle>
           </DialogHeader>
 
           {/* Scrollable content area */}
-          <div className="flex-1 overflow-y-auto space-y-4 mt-4 pr-2 max-h-[60vh]">
-            {/* Module Info with toggle buttons */}
-            <div className="flex items-center gap-2 flex-wrap">
-              <Badge variant="outline" className="gap-1">
-                <Info className="w-3 h-3" />
-                {course.semester || "N/A"}
-              </Badge>
-              <Badge
-                className="gap-1 text-white"
-                style={customStyle || undefined}
-              >
-                {progress}% Complété
-              </Badge>
-
-              {/* Help Image badge - opens modal */}
-              {(course.helpImage || course.imageUrl) && (
-                <Badge
-                  className="gap-1 bg-gradient-to-r from-pink-500 to-rose-500 text-white cursor-pointer hover:from-pink-600 hover:to-rose-600 transition-all"
-                  onClick={() => setShowImageModal(true)}
-                >
-                  <ImageIcon className="w-3 h-3" />
-                  Voir Image
-                </Badge>
-              )}
-
-              {/* Help PDF badge - opens modal */}
-              {course.helpPdf && (
-                <Badge
-                  className="gap-1 bg-gradient-to-r from-purple-500 to-violet-500 text-white cursor-pointer hover:from-purple-600 hover:to-violet-600 transition-all"
-                  onClick={() => setShowPdfModal(true)}
-                >
-                  <File className="w-3 h-3" />
-                  Voir PDF
-                </Badge>
-              )}
-
-              {/* Text content badge */}
-              {(course.helpContent || course.infoText || course.textContent) && (
-                <Badge className="gap-1 bg-gradient-to-r from-cyan-500 to-teal-500 text-white">
-                  <FileText className="w-3 h-3" />
-                  Texte disponible
-                </Badge>
-              )}
-            </div>
-
+          <div className="flex-1 overflow-y-auto space-y-4 pr-2 max-h-[60vh]">
             {/* Text Content - Show by default first (priority 1) */}
             {course.textContent && (
               <div className="p-4 bg-indigo-50 border-2 border-indigo-200 rounded-xl">
@@ -281,7 +232,7 @@ const ModuleCard = ({ course, handleCourseClick, index }) => {
                       const imageUrl = course.helpImage || course.imageUrl;
                       return imageUrl.startsWith("http") ? imageUrl : `${API_URL?.replace('/api/v1', '')}${imageUrl}`;
                     })()}
-                    alt="Guide du module"
+                    alt={`${course.name} - image d'aide`}
                     className="max-w-full max-h-48 object-contain hover:scale-105 transition-transform"
                   />
                 </div>
@@ -379,7 +330,7 @@ const ModuleCard = ({ course, handleCourseClick, index }) => {
                       const imageUrl = course.helpImage || course.imageUrl;
                       return imageUrl.startsWith("http") ? imageUrl : `${API_URL?.replace('/api/v1', '')}${imageUrl}`;
                     })()}
-                    alt="Guide du module"
+                    alt={`${course.name} - image d'aide`}
                     className="max-w-full h-auto object-contain rounded-lg shadow-lg"
                   />
                 </div>

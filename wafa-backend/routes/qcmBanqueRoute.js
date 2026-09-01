@@ -4,7 +4,7 @@ import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
 import { qcmBanqueController } from "../controllers/qcmBanqueController.js";
-import { isAuthenticated, isAdmin } from "../middleware/authMiddleware.js";
+import { isAuthenticated, isAdmin, requiresPremiumAccess } from "../middleware/authMiddleware.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -42,13 +42,13 @@ const uploadQCMImage = multer({
 }).single("qcmImage");
 
 // Get all QCM Banques
-router.get("/all", isAuthenticated, qcmBanqueController.getAll);
+router.get("/all", isAuthenticated, requiresPremiumAccess, qcmBanqueController.getAll);
 
 // Get QCM Banques by module
-router.get("/module/:moduleId", isAuthenticated, qcmBanqueController.getByModuleId);
+router.get("/module/:moduleId", isAuthenticated, requiresPremiumAccess, qcmBanqueController.getByModuleId);
 
 // Get single QCM Banque by ID
-router.get("/:id", isAuthenticated, qcmBanqueController.getById);
+router.get("/:id", isAuthenticated, requiresPremiumAccess, qcmBanqueController.getById);
 
 // Create QCM Banque with image upload (admin only)
 router.post("/create-with-image", isAuthenticated, isAdmin, uploadQCMImage, async (req, res) => {

@@ -135,7 +135,7 @@ const ProfilePage = () => {
           email: userData.email || '',
           phone: userData.phone || '',
           birthDate: userData.birthDate || userData.dateOfBirth?.split('T')[0] || '',
-          university: userData.university || 'Université Mohammed V',
+          university: userData.university || '',
           faculty: userData.faculty || 'Médecine',
           year: calculatedYear || userData.currentYear || '',
           specialization: userData.specialization || '',
@@ -604,7 +604,6 @@ const ProfilePage = () => {
                         value={isEditingAcademic ? editData.university : profileData.university}
                         onChange={(e) => setEditData({ ...editData, university: e.target.value })}
                         disabled={!isEditingAcademic}
-                        placeholder="Université Mohammed V"
                       />
                     </div>
 

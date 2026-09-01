@@ -1,11 +1,12 @@
 import { Router } from "express";
 import { noteController } from "../controllers/noteController.js";
-import { isAuthenticated } from "../middleware/authMiddleware.js";
+import { isAuthenticated, requiresPremiumAccess } from "../middleware/authMiddleware.js";
 
 const router = Router();
 
 // All routes require authentication
 router.use(isAuthenticated);
+router.use(requiresPremiumAccess);
 
 router.post("/", noteController.create);
 router.get("/", noteController.getAll);

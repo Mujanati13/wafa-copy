@@ -4,7 +4,7 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
-import { hasExamAccess, isAuthenticated } from "../middleware/authMiddleware.js";
+import { isAuthenticated, requiresPremiumAccess } from "../middleware/authMiddleware.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -83,9 +83,9 @@ router.put("/update-with-image/:id", uploadCourseImage, async (req, res) => {
 router.get("/", examCourseController.getAll);
 
 // Get courses by module - must be before /:id to avoid treating "module" as an ID
-router.get("/module/:moduleId", isAuthenticated, examCourseController.getByModuleId);
+router.get("/module/:moduleId", isAuthenticated, requiresPremiumAccess, examCourseController.getByModuleId);
 
-router.get("/:id", isAuthenticated, hasExamAccess, examCourseController.getById);
+router.get("/:id", isAuthenticated, requiresPremiumAccess, examCourseController.getById);
 router.post("/", examCourseController.create);
 router.put("/:id", examCourseController.update);
 router.delete("/:id", examCourseController.delete);

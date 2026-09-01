@@ -266,11 +266,11 @@ export const userService = {
     },
 
     // Select free semester for new users
-    selectFreeSemester: async (semester, moduleId, examId) => {
+    selectFreeSemester: async (semester, moduleId) => {
         try {
             // Clear profile cache since we're updating the user
             userService.clearProfileCache();
-            const response = await api.post('/users/select-free-semester', { semester, moduleId, examId });
+            const response = await api.post('/users/select-free-semester', { semester, moduleId });
             return response.data;
         } catch (error) {
             console.error('Error selecting free semester:', error);

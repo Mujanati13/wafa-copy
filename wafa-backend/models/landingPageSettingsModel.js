@@ -113,7 +113,7 @@ const landingPageSettingsSchema = new mongoose.Schema(
         },
         instagramUrl: {
             type: String,
-            default: "",
+            default: "https://www.instagram.com/yourqcm.fmpm",
         },
         youtubeUrl: {
             type: String,
@@ -228,6 +228,11 @@ landingPageSettingsSchema.statics.getSettings = async function () {
 
     if (/@(atlas-qcm[.]online|wafa[.]ma)$/i.test(settings.contactEmail || "")) {
         settings.contactEmail = "contact@yourqcm.online";
+        changed = true;
+    }
+
+    if (/instagram[.]com\/(?:wafa[.]medical|imrsqcm[.]rabat|imrs_qcma)(?:[/?#]|$)/i.test(settings.instagramUrl || "")) {
+        settings.instagramUrl = "https://www.instagram.com/yourqcm.fmpm";
         changed = true;
     }
 

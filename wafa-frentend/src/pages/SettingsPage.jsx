@@ -58,7 +58,7 @@ const SettingsPage = () => {
     lastName: '',
     email: '',
     phone: '',
-    university: 'Université Mohammed V',
+    university: '',
     faculty: 'Médecine',
     currentYear: '',
     emailNotifications: true,
@@ -111,7 +111,7 @@ const SettingsPage = () => {
             lastName: userData.lastName || userData.name?.split(' ').slice(1).join(' ') || '',
             email: userData.email || '',
             phone: userData.phone || '',
-            university: userData.university || 'Université Mohammed V',
+            university: userData.university || '',
             faculty: userData.faculty || 'Médecine',
             currentYear: calculatedYear || userData.currentYear || '',
           };
@@ -396,7 +396,6 @@ const SettingsPage = () => {
                     value={settings.university}
                     onChange={(e) => handleChange('university', e.target.value)}
                     disabled={!isEditingAcademic}
-                    placeholder="Université Mohammed V"
                   />
                 </div>
 

@@ -24,6 +24,7 @@ import logo from "@/assets/logo.png";
 import { cn } from "@/lib/utils";
 import { signOut } from "@/services/authService";
 import { moduleService } from "@/services/moduleService";
+import { userService } from "@/services/userService";
 
 const navGroups = [
   { label: "Accueil", items: [{ to: "/dashboard/home", label: "Vue d'ensemble", icon: Home, exact: true }] },
@@ -67,6 +68,44 @@ export default function LearnerExperienceLayout() {
     window.addEventListener("auth-state-changed", sync);
     return () => { window.removeEventListener("storage", sync); window.removeEventListener("auth-state-changed", sync); };
   }, []);
+
+  useEffect(() => {
+    let active = true;
+    const premiumOnlyPaths = [
+      "/dashboard/playlist",
+      "/dashboard/playlists",
+      "/dashboard/note",
+      "/dashboard/notes",
+      "/dashboard/statistics",
+    ];
+
+    const syncAccountAccess = async () => {
+      const latestUser = await userService.getUserProfile(true).catch(() => null);
+      if (!active || !latestUser) return;
+
+      localStorage.setItem("user", JSON.stringify(latestUser));
+      setUser(latestUser);
+
+      const isFree = String(latestUser.plan || "Free").toLowerCase() === "free";
+      if (isFree && premiumOnlyPaths.some((path) => location.pathname.startsWith(path))) {
+        navigate("/dashboard/home", { replace: true });
+      }
+    };
+
+    syncAccountAccess();
+    const handleFocus = () => syncAccountAccess();
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") syncAccountAccess();
+    };
+    window.addEventListener("focus", handleFocus);
+    document.addEventListener("visibilitychange", handleVisibility);
+
+    return () => {
+      active = false;
+      window.removeEventListener("focus", handleFocus);
+      document.removeEventListener("visibilitychange", handleVisibility);
+    };
+  }, [location.pathname, navigate]);
 
   useEffect(() => setDrawerOpen(false), [location.pathname]);
 

@@ -1,7 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { motion } from 'framer-motion';
 import { FaWhatsapp, FaInstagram, FaFacebookF, FaHeadset } from 'react-icons/fa';
+import { INSTAGRAM_URL } from '@/config/socialLinks';
 
 const FloatingSupport = () => {
   const { t } = useTranslation(['dashboard', 'common']);
@@ -18,7 +18,7 @@ const FloatingSupport = () => {
       icon: FaInstagram,
       label: 'Instagram',
       color: 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600',
-      link: 'https://instagram.com/wafa.medical', // Update with actual handle
+      link: INSTAGRAM_URL,
     },
     {
       icon: FaFacebookF,

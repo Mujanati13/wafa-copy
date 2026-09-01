@@ -28,6 +28,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
+import { INSTAGRAM_HANDLE, INSTAGRAM_URL } from '@/config/socialLinks';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -105,10 +106,6 @@ const SupportPage = () => {
         {
           question: 'L\'application ne charge pas correctement',
           answer: 'Essayez de vider le cache de votre navigateur (Ctrl+Shift+Delete) et de rafraîchir la page. Si le problème persiste, essayez un autre navigateur.',
-        },
-        {
-          question: 'Je ne reçois pas les emails de confirmation',
-          answer: 'Vérifiez votre dossier spam/courrier indésirable. Ajoutez contact@yourqcm.online à vos contacts pour éviter ce problème.',
         },
         {
           question: 'Mon score ne s\'affiche pas correctement',
@@ -291,7 +288,7 @@ const SupportPage = () => {
         <Card className="hover:shadow-lg transition-shadow cursor-pointer group">
           <CardContent className="pt-6 text-center">
             <a
-              href="https://www.instagram.com/imrsqcm.rabat?igsh=ZHR3aDU0OHN2OWV4"
+              href={INSTAGRAM_URL}
               target="_blank"
               rel="noopener noreferrer"
               className="block"
@@ -300,7 +297,7 @@ const SupportPage = () => {
                 <ExternalLink className="w-6 h-6 text-pink-600" />
               </div>
               <h3 className="font-semibold mb-1">Instagram</h3>
-              <p className="text-sm text-muted-foreground">@imrsqcm.rabat</p>
+              <p className="text-sm text-muted-foreground">{INSTAGRAM_HANDLE}</p>
             </a>
           </CardContent>
         </Card>

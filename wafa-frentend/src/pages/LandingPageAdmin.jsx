@@ -888,7 +888,7 @@ const LandingPageAdmin = () => {
                     </Label>
                     <Input
                       id="instagramUrl"
-                      placeholder="https://instagram.com/imrs_qcma"
+                      placeholder="https://www.instagram.com/yourqcm.fmpm"
                       value={settings.instagramUrl}
                       onChange={(e) => handleChange("instagramUrl", e.target.value)}
                     />

@@ -13,6 +13,7 @@ import {
 } from "../utils/academicYear.js";
 import { buildProfileActivityStatistics } from "../services/profileStatisticsService.js";
 import { classifyFirebaseAdminError } from "../utils/firebaseError.js";
+import { applyAdminPlanTransition, SUPPORTED_USER_PLANS } from "../utils/planAccess.js";
 
 const getPagination = (query, defaultLimit = 10, maxLimit = 100) => {
     const page = Math.max(Number.parseInt(query.page, 10) || 1, 1);
@@ -516,30 +517,33 @@ export const UserController = {
             const { userId } = req.params;
             const { plan } = req.body;
 
-            if (!plan || !["Free", "Premium", "Enterprise", "Student Discount"].includes(plan)) {
+            if (!plan || !SUPPORTED_USER_PLANS.includes(plan)) {
                 return res.status(400).json({
                     success: false,
                     message: 'Invalid plan type'
                 });
             }
 
-            const user = await User.findByIdAndUpdate(
-                userId,
-                { plan },
-                { new: true, runValidators: true }
-            ).select('-password -resetCode');
-
-            if (!user) {
+            const existingUser = await User.findById(userId).select("plan").lean();
+            if (!existingUser) {
                 return res.status(404).json({
                     success: false,
                     message: 'User not found'
                 });
             }
 
+            const { updates, downgradedToFree } = applyAdminPlanTransition(existingUser.plan, { plan });
+            const user = await User.findByIdAndUpdate(
+                userId,
+                updates,
+                { new: true, runValidators: true }
+            ).select('-password -resetCode');
+
             res.status(200).json({
                 success: true,
                 message: 'User plan updated successfully',
-                data: user
+                data: user,
+                downgradedToFree
             });
         } catch (error) {
             console.error('Error updating user plan:', error);
@@ -610,6 +614,13 @@ export const UserController = {
                 }
             });
 
+            if (updates.plan && !SUPPORTED_USER_PLANS.includes(updates.plan)) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Invalid plan type'
+                });
+            }
+
             if (
                 Object.prototype.hasOwnProperty.call(updates, 'semesters')
                 && !String(updates.currentYear ?? "").trim()
@@ -640,7 +651,16 @@ export const UserController = {
                 }
             }
 
-            const user = await User.findByIdAndUpdate(userId, updates, { new: true, runValidators: true })
+            const existingUser = await User.findById(userId).select("plan").lean();
+            if (!existingUser) {
+                return res.status(404).json({
+                    success: false,
+                    message: 'User not found'
+                });
+            }
+
+            const planTransition = applyAdminPlanTransition(existingUser.plan, updates);
+            const user = await User.findByIdAndUpdate(userId, planTransition.updates, { new: true, runValidators: true })
                 .select('-password -resetCode');
 
             if (!user) {
@@ -653,7 +673,8 @@ export const UserController = {
             res.status(200).json({
                 success: true,
                 message: 'User updated successfully',
-                data: user
+                data: user,
+                downgradedToFree: planTransition.downgradedToFree
             });
         } catch (error) {
             console.error('Error updating user:', error);
@@ -1107,12 +1128,12 @@ export const UserController = {
     // Select the single module/exam included with the free plan (one-time only)
     selectFreeSemester: asyncHandler(async (req, res) => {
         const userId = req.user._id;
-        const { semester, moduleId, examId } = req.body;
+        const { semester, moduleId } = req.body;
 
-        if (!mongoose.isValidObjectId(moduleId) || !mongoose.isValidObjectId(examId)) {
+        if (!mongoose.isValidObjectId(moduleId)) {
             return res.status(400).json({
                 success: false,
-                message: "Please select a valid module and exam."
+                message: "Please select a valid module."
             });
         }
 
@@ -1167,15 +1188,18 @@ export const UserController = {
             });
         }
 
+        // The onboarding flow always grants the first exam in the module. Keep
+        // the ordering deterministic so every client receives the same exam.
         const selectedExam = await mongoose.model("ExamParYear")
-            .findOne({ _id: examId, moduleId: selectedModule._id })
+            .findOne({ moduleId: selectedModule._id })
+            .sort({ year: -1, createdAt: 1, _id: 1 })
             .select("name moduleId")
             .lean();
 
         if (!selectedExam) {
-            return res.status(400).json({
+            return res.status(404).json({
                 success: false,
-                message: "The selected exam does not belong to the selected module."
+                message: "No exam is currently available for the selected module."
             });
         }
 

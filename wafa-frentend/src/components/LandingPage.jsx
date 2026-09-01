@@ -39,6 +39,7 @@ import {
   AlertCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { INSTAGRAM_URL } from "@/config/socialLinks";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -1612,7 +1613,7 @@ const Footer = ({ settings }) => {
   const contactPhone = settings?.contactPhone || t("contact_phone_value");
   const whatsappNumber = settings?.whatsappNumber || "";
   const facebookUrl = settings?.facebookUrl || "#";
-  const instagramUrl = settings?.instagramUrl || "#";
+  const instagramUrl = INSTAGRAM_URL;
   const youtubeUrl = settings?.youtubeUrl || "#";
 
   return (

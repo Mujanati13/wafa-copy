@@ -20,6 +20,7 @@ import LanguageSwitcher from "@/components/shared/LanguageSwitcher";
 import logo from "@/assets/logo.png";
 import { getLandingPageSettings } from "@/services/landingPageService";
 import { subscriptionPlanService } from "@/services/subscriptionPlanService";
+import { INSTAGRAM_URL } from "@/config/socialLinks";
 
 const FALLBACK_SETTINGS = {
   siteName: "YourQCM",
@@ -773,7 +774,7 @@ function ReviewField({ label, error, children }) {
 function LandingFooter({ settings, text }) {
   const socialLinks = [
     { href: settings.facebookUrl, label: "Facebook", icon: <Facebook className="h-5 w-5" /> },
-    { href: settings.instagramUrl, label: "Instagram", icon: <Instagram className="h-5 w-5" /> },
+    { href: INSTAGRAM_URL, label: "Instagram", icon: <Instagram className="h-5 w-5" /> },
     {
       href: settings.youtubeUrl,
       label: "YouTube",

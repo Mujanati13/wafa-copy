@@ -1,11 +1,12 @@
 import { Router } from "express";
 import { playlistController } from "../controllers/playlistController.js";
-import { isAuthenticated } from "../middleware/authMiddleware.js";
+import { isAuthenticated, requiresPremiumAccess } from "../middleware/authMiddleware.js";
 
 const router = Router();
 
 // All routes require authentication
 router.use(isAuthenticated);
+router.use(requiresPremiumAccess);
 
 router.post("/", playlistController.create);
 router.get("/", playlistController.getAll);

@@ -3,6 +3,7 @@
  */
 import jwt from "jsonwebtoken";
 import { refreshSingleSession } from "../services/singleSessionService.js";
+import { userHasPremiumAccess } from "../utils/planAccess.js";
 
 const shouldLogAuthFailures = () => (
   process.env.AUTH_FAILURE_LOGGING === "true" || process.env.NODE_ENV !== "production"
@@ -152,6 +153,21 @@ export const hasExamAccess = (req, res, next) => {
   });
 };
 
+/** Require a currently active paid plan for premium-only resources. */
+export const requiresPremiumAccess = (req, res, next) => {
+  if (!req.user) {
+    return res.status(401).json({ success: false, message: "Authentication required." });
+  }
+
+  if (userHasPremiumAccess(req.user)) return next();
+
+  return res.status(403).json({
+    success: false,
+    code: "PREMIUM_REQUIRED",
+    message: "This feature requires an active premium subscription.",
+  });
+};
+
 /**
  * Optional authentication - doesn't block if not authenticated
  */
@@ -166,5 +182,6 @@ export default {
   isEmailVerified,
   hasActiveSubscription,
   hasExamAccess,
+  requiresPremiumAccess,
   optionalAuth,
 };
