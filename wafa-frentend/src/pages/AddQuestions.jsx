@@ -15,6 +15,7 @@ import { PageHeader } from "@/components/shared";
 import { toast } from "sonner";
 import { api } from "@/lib/utils";
 import { cryptoCompat } from "@/lib/cryptoCompat";
+import { resolveQuestionImageUrl } from "@/lib/mediaUrl";
 
 const AddQuestions = () => {
   const { t } = useTranslation(['admin', 'common']);
@@ -1464,7 +1465,7 @@ const AddQuestions = () => {
                       {viewingQuestion.images.map((img, idx) => (
                         <img 
                           key={idx} 
-                          src={img.startsWith('http') ? img : `${import.meta.env.VITE_API_URL?.replace('/api/v1', '')}${img}`} 
+                          src={resolveQuestionImageUrl(img)}
                           alt={`Question image ${idx + 1}`} 
                           className="w-full h-32 object-cover rounded border" 
                         />
@@ -1551,7 +1552,7 @@ const AddQuestions = () => {
                       {editingQuestion.images.map((img, idx) => (
                         <div key={idx} className="relative group">
                           <img 
-                            src={img.startsWith('http') ? img : `${import.meta.env.VITE_API_URL?.replace('/api/v1', '')}${img}`} 
+                            src={resolveQuestionImageUrl(img)}
                             alt={`Image ${idx + 1}`} 
                             className="w-full h-24 object-cover rounded border"
                           />

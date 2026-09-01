@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { resolveMediaUrl } from "@/lib/mediaUrl";
 
 const API_URL = import.meta.env.VITE_API_URL || "";
 
@@ -27,8 +28,7 @@ const ModuleCard = ({ course, handleCourseClick, index }) => {
   // Construct proper URL for imageUrl
   const getFullImageUrl = (url) => {
     if (!url) return null;
-    if (url.startsWith('http') || url.startsWith('data:')) return url;
-    return `${API_URL?.replace('/api/v1', '')}${url}`;
+    return resolveMediaUrl(url, { folder: "modules" });
   };
 
   const fullImageUrl = getFullImageUrl(course.imageUrl);
@@ -82,17 +82,18 @@ const ModuleCard = ({ course, handleCourseClick, index }) => {
         <div className="flex items-start justify-between gap-4 pt-2">
           {/* Admin-managed module image */}
           <div
-            className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg shadow-sm sm:h-20 sm:w-20"
-            style={customStyle}
+            className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-transparent shadow-none sm:h-20 sm:w-20"
           >
-            <div className="absolute inset-0 flex items-center justify-center">
-              <ImageIcon className="h-8 w-8 text-white/90" aria-hidden="true" />
-            </div>
+            {(!hasValidImageUrl || imageError) && (
+              <div className="absolute inset-0 flex items-center justify-center bg-transparent">
+                <ImageIcon className="h-8 w-8" style={{ color: moduleColor }} aria-hidden="true" />
+              </div>
+            )}
             {hasValidImageUrl && !imageError && (
               <img
                 src={fullImageUrl}
                 alt={course.name}
-                className={`absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-105 ${imageLoaded ? "opacity-100" : "opacity-0"}`}
+                className={`absolute inset-0 h-full w-full bg-transparent object-contain transition-transform duration-300 group-hover:scale-105 ${imageLoaded ? "opacity-100" : "opacity-0"}`}
                 onLoad={() => setImageLoaded(true)}
                 onError={() => setImageError(true)}
               />

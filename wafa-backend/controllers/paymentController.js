@@ -50,27 +50,24 @@ const client = async () => new paypal.core.PayPalHttpClient(await environment())
 
 const VALID_SEMESTERS = ["S1", "S2", "S3", "S4", "S5", "S6", "S7", "S8", "S9", "S10"];
 
-const getBillingConfig = (plan) => {
-  const period = String(plan?.period || "").toLowerCase();
-  const name = String(plan?.name || "").toLowerCase();
-  const yearly = ["annee", "annuel", "annual", "year"].some(value => period.includes(value) || name.includes(value));
+const isSemesterPlan = (plan) => {
+  const period = String(plan?.period || "").trim().toLowerCase();
+  const name = String(plan?.name || "").trim().toLowerCase();
+  const isLegacyAnnualPlan = name.includes("annuel") || name.includes("annual");
+  return !isLegacyAnnualPlan && (period === "semester" || period === "semestre" || name === "premium" || name === "premium semestre");
+};
 
-  return yearly
-    ? { duration: "1year", semesterCount: 2, transactionPlan: "Premium Annuel" }
-    : { duration: "6months", semesterCount: 1, transactionPlan: "Premium" };
+const getBillingConfig = (plan) => {
+  if (!isSemesterPlan(plan)) {
+    throw new Error("Seuls les abonnements par semestre sont disponibles.");
+  }
+  return { duration: "6months", semesterCount: 1, transactionPlan: "Premium" };
 };
 
 const validatePlanSemesters = (semesters, semesterCount) => {
   const selected = [...new Set(Array.isArray(semesters) ? semesters : [])];
   if (selected.length !== semesterCount || selected.some(semester => !VALID_SEMESTERS.includes(semester))) {
     throw new Error(`This plan requires exactly ${semesterCount} valid semester${semesterCount > 1 ? "s" : ""}.`);
-  }
-
-  if (semesterCount === 2) {
-    const years = selected.map(semester => Math.ceil(Number(semester.slice(1)) / 2));
-    if (years[0] !== years[1]) {
-      throw new Error("A yearly plan must cover the two semesters of the same academic year.");
-    }
   }
 
   return selected.sort((a, b) => Number(a.slice(1)) - Number(b.slice(1)));
@@ -121,6 +118,10 @@ const createOrder = asyncHandler(async (req, res) => {
   if (!selectedPlan) {
     res.status(400);
     throw new Error("Invalid or inactive subscription plan.");
+  }
+  if (!isSemesterPlan(selectedPlan)) {
+    res.status(400);
+    throw new Error("Seuls les abonnements par semestre sont disponibles.");
   }
 
   const billing = getBillingConfig(selectedPlan);
@@ -298,7 +299,7 @@ const capturePayment = asyncHandler(async (req, res) => {
           "1month": "1 mois",
           "3months": "3 mois",
           "6months": "6 mois",
-          "1year": "1 an"
+          "1year": "période d'accès"
         }[transaction.duration] || transaction.duration;
 
         await NotificationController.createNotification(
@@ -554,6 +555,10 @@ const createBankTransferRequest = asyncHandler(async (req, res) => {
     res.status(400);
     throw new Error("Invalid or inactive subscription plan.");
   }
+  if (!isSemesterPlan(selectedPlan)) {
+    res.status(400);
+    throw new Error("Seuls les abonnements par semestre sont disponibles.");
+  }
 
   const billing = getBillingConfig(selectedPlan);
   let selectedSemesters;
@@ -644,7 +649,7 @@ const approvePayment = asyncHandler(async (req, res) => {
 
   currentExpiry.setDate(currentExpiry.getDate() + daysToAdd);
 
-  // Set the user's plan to the one from the transaction (e.g., "Premium Pro", "Premium Annuel")
+  // Persist the paid plan stored on the transaction.
   user.plan = transaction.plan;
   user.planExpiry = currentExpiry;
   user.approvalDate = new Date();

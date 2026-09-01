@@ -80,7 +80,7 @@ Toute violation peut entraîner la suspension immédiate de votre compte.`
       content: `Conditions des abonnements premium :
 
 • Les paiements sont traités de manière sécurisée via PayPal
-• Les abonnements sont facturés selon la période choisie (mensuel/annuel)
+• Les abonnements sont facturés par semestre
 • Le renouvellement est automatique sauf annulation préalable
 • Vous pouvez annuler à tout moment depuis votre profil
 • L'accès premium reste actif jusqu'à la fin de la période payée

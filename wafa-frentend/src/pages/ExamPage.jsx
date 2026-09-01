@@ -76,10 +76,10 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 import { api } from "@/lib/utils";
 import { cn } from "@/lib/utils";
+import { resolveQuestionImageUrl } from "@/lib/mediaUrl";
 import ExplicationModel from "@/components/ExamsPage/ExplicationModel";
 import NoteModal from "@/components/ExamsPage/NoteModal";
 import ReportModal from "@/components/ExamsPage/ReportModal";
@@ -184,6 +184,18 @@ const ExamPage = () => {
   const [isSavingBeforeExit, setIsSavingBeforeExit] = useState(false);
   const [showImageZoom, setShowImageZoom] = useState(false);
   const [zoomedImageUrl, setZoomedImageUrl] = useState(null);
+
+  // Keep the page behind image overlays fixed while allowing the overlay's
+  // own native scroll surface to handle mouse wheels and mobile touch panning.
+  useEffect(() => {
+    if (!showImageGallery && !showImageZoom) return undefined;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [showImageGallery, showImageZoom]);
 
   // Save status tracking
   const [isSaved, setIsSaved] = useState(true);
@@ -1492,6 +1504,7 @@ const ExamPage = () => {
           setShowSidebar(false);
           setShowConfirmSubmit(false);
           setShowImageZoom(false);
+          setShowImageGallery(false);
           break;
       }
     };
@@ -2460,7 +2473,7 @@ const ExamPage = () => {
                     {currentQuestionData.images && currentQuestionData.images.length > 0 && (
                       <div className="space-y-2">
                         {currentQuestionData.images.map((imgUrl, imgIdx) => {
-                          const fullImgUrl = imgUrl.startsWith('http') ? imgUrl : `${import.meta.env.VITE_API_URL?.replace('/api/v1', '')}${imgUrl}`;
+                          const fullImgUrl = resolveQuestionImageUrl(imgUrl);
                           return (
                             <button
                               key={imgIdx}
@@ -3650,62 +3663,46 @@ const ExamPage = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-2 sm:p-4"
+            className="fixed inset-0 z-50 flex items-center justify-center overflow-hidden bg-black/60 p-2 backdrop-blur-sm sm:p-4"
             onClick={() => setShowImageGallery(false)}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="image-gallery-title"
           >
             <motion.div
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-card text-card-foreground border border-border rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] sm:max-h-[85vh] flex flex-col"
+              className="flex h-[calc(100dvh-1rem)] max-h-[90dvh] w-full max-w-4xl min-h-0 flex-col overflow-hidden rounded-xl border border-border bg-card text-card-foreground shadow-2xl sm:h-[min(85dvh,760px)]"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Header */}
-              <div className="flex items-center justify-between p-3 sm:p-4 border-b bg-gradient-to-r from-purple-500 to-pink-600 text-white rounded-t-xl">
+              <div className="flex shrink-0 items-center justify-between rounded-t-xl border-b bg-gradient-to-r from-purple-500 to-pink-600 p-3 text-white sm:p-4">
                 <div className="flex items-center gap-2 sm:gap-3">
                   <Image className="h-5 w-5 sm:h-6 sm:w-6" />
-                  <h2 className="text-base sm:text-xl font-bold">
+                  <h2 id="image-gallery-title" className="text-base font-bold sm:text-xl">
                     Toutes les images
                   </h2>
                 </div>
                 <button
                   onClick={() => setShowImageGallery(false)}
                   className="p-1.5 sm:p-2 rounded-full hover:bg-white/20 transition-colors"
+                  aria-label="Fermer la galerie d'images"
                 >
                   <X className="h-4 w-4 sm:h-5 sm:w-5" />
                 </button>
               </div>
 
               {/* Images Grid */}
-              <ScrollArea className="flex-1 p-3 sm:p-4 min-h-0 overflow-y-auto">
+              <div className="min-h-0 flex-1 touch-pan-y overflow-y-auto overscroll-contain p-3 [-webkit-overflow-scrolling:touch] sm:p-4">
                 <div className="pr-3 sm:pr-4 space-y-0">
                   {(() => {
                     // Get all images from all questions in the entire exam
-                    const allImages = questions.reduce((acc, q, idx) => {
+                    const allImages = questions.reduce((acc, q) => {
                       const globalIndex = questions.findIndex(question => question._id === q._id);
                       if (q.images && q.images.length > 0) {
                         q.images.forEach((imgUrl, imgIdx) => {
-                          // Ensure proper URL formatting for images
-                          let imageUrl = imgUrl;
-                          if (!imageUrl.startsWith('http')) {
-                            // Get base URL without /api/v1
-                            const baseUrl = import.meta.env.VITE_BASED_URL?.replace('/api/v1', '') || 'http://localhost:5010';
-                            
-                            // Handle different image path formats
-                            if (imageUrl.startsWith('/uploads/')) {
-                              // Already has /uploads/ prefix
-                              imageUrl = `${baseUrl}${imageUrl}`;
-                            } else if (imageUrl.includes('/uploads/')) {
-                              // Has /uploads/ somewhere in path
-                              imageUrl = `${baseUrl}/${imageUrl}`;
-                            } else {
-                              // Assume it's just filename or relative path
-                              imageUrl = imageUrl.startsWith('/') ? imageUrl : `/${imageUrl}`;
-                              imageUrl = `${baseUrl}/uploads${imageUrl}`;
-                            }
-                          }
-                          
-                          console.log(`Image URL for Q${q.displayNumber}:`, imageUrl); // Debug log
+                          const imageUrl = resolveQuestionImageUrl(imgUrl);
                           
                           acc.push({
                             src: imageUrl,
@@ -3773,10 +3770,10 @@ const ExamPage = () => {
                     );
                   })()}
                 </div>
-              </ScrollArea>
+              </div>
 
               {/* Footer */}
-              <div className="p-3 sm:p-4 border-t border-border bg-card rounded-b-xl">
+              <div className="shrink-0 rounded-b-xl border-t border-border bg-card p-3 sm:p-4">
                 <div className="flex justify-end">
                   <Button
                     variant="outline"
@@ -3798,30 +3795,31 @@ const ExamPage = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[70] flex items-center justify-center bg-black/90 backdrop-blur-sm"
+            className="fixed inset-0 z-[70] touch-pan-y overflow-y-auto overscroll-contain bg-black/90 p-2 backdrop-blur-sm [-webkit-overflow-scrolling:touch] sm:p-4"
             onClick={() => setShowImageZoom(false)}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Agrandissement de l'image"
           >
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="relative max-w-4xl max-h-[90vh] w-full mx-4"
+              className="relative mx-auto flex min-h-full w-full max-w-5xl items-start justify-center py-12"
               onClick={(e) => e.stopPropagation()}
             >
               <img
                 src={zoomedImageUrl}
-                alt="Zoomed image"
-                className="w-full h-full object-contain rounded-lg shadow-2xl"
+                alt="Image agrandie"
+                className="block h-auto max-w-full rounded-lg object-contain shadow-2xl"
               />
               <button
                 onClick={() => setShowImageZoom(false)}
-                className="absolute top-4 right-4 p-2 rounded-full bg-card hover:bg-card/80 text-foreground transition-colors shadow-lg border border-border"
+                className="fixed right-3 top-3 z-10 rounded-full border border-border bg-card p-2 text-foreground shadow-lg transition-colors hover:bg-card/80 sm:right-5 sm:top-5"
+                aria-label="Fermer l'image agrandie"
               >
                 <X className="h-6 w-6" />
               </button>
-              <p className="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-white text-sm">
-                Click or press ESC to close
-              </p>
             </motion.div>
           </motion.div>
         )}

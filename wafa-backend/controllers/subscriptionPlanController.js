@@ -20,6 +20,14 @@ const normalizeFeatures = (features) => {
   }).filter(Boolean);
 };
 
+const isSemesterPlan = (plan) => {
+  const period = String(plan?.period || "").trim().toLowerCase();
+  const name = String(plan?.name || "").trim().toLowerCase();
+  const isFreePlan = Number(plan?.price) === 0 || name === "gratuit" || name === "free";
+  const isLegacyAnnualPlan = name.includes("annuel") || name.includes("annual");
+  return !isLegacyAnnualPlan && (isFreePlan || period === "semester" || period === "semestre");
+};
+
 // Get all subscription plans
 const getAllPlans = asyncHandler(async (req, res) => {
   const plans = await SubscriptionPlan.find()
@@ -29,7 +37,9 @@ const getAllPlans = asyncHandler(async (req, res) => {
   res.set("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
   res.status(200).json({
     success: true,
-    data: plans,
+    // Historical annual entries remain visible to administrators and in records,
+    // but customer-facing pricing is restricted to the semester model.
+    data: plans.filter(isSemesterPlan),
   });
 });
 

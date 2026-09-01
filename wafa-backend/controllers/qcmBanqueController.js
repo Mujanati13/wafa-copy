@@ -1,6 +1,7 @@
 import QCMBanque from "../models/qcmBanqueModel.js";
 import asyncHandler from '../handlers/asyncHandler.js';
 import QuestionModel from "../models/questionModule.js";
+import { getAnsweredCountByExam } from "../utils/answerProgress.js";
 
 export const qcmBanqueController = {
     create: asyncHandler(async (req, res) => {
@@ -134,11 +135,14 @@ export const qcmBanqueController = {
             questionsByQCM[_id.toString()] = count;
         });
 
+        const answeredCountByExam = await getAnsweredCountByExam(req.user?._id);
+
         // Attach question count to each QCM
         const qcmWithCounts = qcmList.map(qcm => ({
             ...qcm,
             moduleName: typeof qcm.moduleId === 'object' && qcm.moduleId !== null ? qcm.moduleId.name : undefined,
-            questionCount: questionsByQCM[qcm._id.toString()] || 0
+            questionCount: questionsByQCM[qcm._id.toString()] || 0,
+            answeredQuestions: answeredCountByExam[qcm._id.toString()] || 0
         }));
 
         res.status(200).json({

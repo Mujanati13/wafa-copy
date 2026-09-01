@@ -13,10 +13,12 @@ import {
   XCircle,
 } from "lucide-react";
 import { api } from "@/lib/utils";
+import { useSemester } from "@/context/SemesterContext";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const EMPTY_SUMMARY = {
   moduleCount: 0,
@@ -240,7 +242,33 @@ function EmptyInline({ message }) {
   return <div className="rounded-xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">{message}</div>;
 }
 
+function SemesterPicker({ semesters, current, onChange, disabled }) {
+  const choices = semesters.length ? semesters : current ? [current] : [];
+
+  return (
+    <label className="relative shrink-0">
+      <span className="sr-only">Choisir le semestre des statistiques</span>
+      <select
+        value={current || ""}
+        disabled={disabled || !choices.length}
+        onChange={(event) => onChange(event.target.value)}
+        className="imrs-focus-ring h-10 min-w-24 appearance-none rounded-xl border border-border bg-card py-0 pl-4 pr-9 text-sm font-semibold text-foreground shadow-sm disabled:cursor-not-allowed disabled:opacity-60"
+      >
+        {!choices.length && <option value="">Semestre</option>}
+        {choices.map((semester) => <option key={semester} value={semester}>{semester}</option>)}
+      </select>
+      <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+    </label>
+  );
+}
+
 export default function StatisticsPage() {
+  const {
+    selectedSemester,
+    setSelectedSemester,
+    userSemesters,
+    loading: semestersLoading,
+  } = useSemester();
   const [data, setData] = useState({ summary: EMPTY_SUMMARY, modules: [] });
   const [expandedModules, setExpandedModules] = useState(() => new Set());
   const [loading, setLoading] = useState(true);
@@ -250,10 +278,19 @@ export default function StatisticsPage() {
   useEffect(() => {
     const controller = new AbortController();
     const loadProgress = async () => {
+      if (!selectedSemester) {
+        setData({ summary: EMPTY_SUMMARY, modules: [] });
+        setExpandedModules(new Set());
+        setError(semestersLoading ? "" : "Sélectionnez un semestre pour afficher vos statistiques.");
+        setLoading(semestersLoading);
+        return;
+      }
+
       setLoading(true);
       setError("");
       try {
         const response = await api.get("/users/progress", {
+          params: { semester: selectedSemester },
           signal: controller.signal,
         });
         setData(response.data?.data || { summary: EMPTY_SUMMARY, modules: [] });
@@ -268,7 +305,7 @@ export default function StatisticsPage() {
     };
     loadProgress();
     return () => controller.abort();
-  }, [reloadKey]);
+  }, [reloadKey, selectedSemester, semestersLoading]);
 
   const toggleModule = (moduleId) => setExpandedModules((current) => {
     const next = new Set(current);
@@ -286,35 +323,51 @@ export default function StatisticsPage() {
         <div>
           <div className="flex items-center gap-2 text-sm font-semibold text-primary"><BarChart3 className="h-5 w-5" />Statistiques personnelles</div>
           <h1 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">Progression par module et cours</h1>
-          <p className="mt-3 max-w-3xl text-muted-foreground">Suivez les questions complétées, vos réponses correctes et les cours à renforcer dans tous les modules.</p>
+          <p className="mt-3 max-w-3xl text-muted-foreground">Suivez les questions complétées, vos réponses correctes et les cours à renforcer pour {selectedSemester || "le semestre sélectionné"}.</p>
         </div>
-        <Button variant="outline" onClick={() => setReloadKey((key) => key + 1)} disabled={loading}><RefreshCw className={`mr-2 h-4 w-4 ${loading ? "animate-spin" : ""}`} />Actualiser</Button>
+        <div className="flex items-center gap-2">
+          <SemesterPicker semesters={userSemesters} current={selectedSemester} onChange={setSelectedSemester} disabled={semestersLoading} />
+          <Button variant="outline" onClick={() => setReloadKey((key) => key + 1)} disabled={loading || !selectedSemester}><RefreshCw className={`mr-2 h-4 w-4 ${loading ? "animate-spin" : ""}`} />Actualiser</Button>
+        </div>
       </header>
 
       {loading ? <LoadingState /> : error ? (
         <Card className="border-red-200"><CardContent className="grid min-h-64 place-items-center p-8 text-center"><div><XCircle className="mx-auto h-10 w-10 text-red-500" /><h2 className="mt-4 text-lg font-semibold">Statistiques indisponibles</h2><p className="mt-2 text-sm text-muted-foreground">{error}</p><Button className="mt-5" onClick={() => setReloadKey((key) => key + 1)}>Réessayer</Button></div></CardContent></Card>
       ) : (
-        <>
-          <section aria-labelledby="summary-heading">
-            <h2 id="summary-heading" className="sr-only">Résumé</h2>
-            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-              <SummaryCard icon={<BookOpen className="h-5 w-5" />} label="Modules et cours" value={summary.moduleCount} detail={`${summary.courseCount} cours`} tone="violet" />
-              <SummaryCard icon={<Target className="h-5 w-5" />} label="Progression globale" value={`${summary.completionPercentage}%`} detail={`${formatNumber(summary.answeredQuestions)}/${formatNumber(summary.totalQuestions)} questions`} tone="blue" />
-              <SummaryCard icon={<CheckCircle2 className="h-5 w-5" />} label="Réponses correctes" value={formatNumber(summary.correctAnswers)} detail={`${summary.successRate}% de réussite`} tone="green" />
-              <SummaryCard icon={<XCircle className="h-5 w-5" />} label="Réponses incorrectes" value={formatNumber(summary.incorrectAnswers)} detail="Questions à revoir" tone="red" />
-            </div>
-          </section>
+        <Tabs defaultValue="overview" className="gap-7">
+          <TabsList className="grid h-auto w-full grid-cols-2 rounded-2xl border border-border bg-muted/70 p-1.5 sm:max-w-xl">
+            <TabsTrigger value="overview" className="min-h-11 rounded-xl px-3 text-xs sm:text-sm">
+              <BarChart3 className="h-4 w-4" aria-hidden="true" />Vue principale
+            </TabsTrigger>
+            <TabsTrigger value="quick-summary" className="min-h-11 rounded-xl px-3 text-xs sm:text-sm">
+              <CircleGauge className="h-4 w-4" aria-hidden="true" />Résumé rapide
+            </TabsTrigger>
+          </TabsList>
 
-          <section aria-labelledby="modules-heading" className="space-y-5">
-            <div><div className="flex items-center gap-2 text-sm font-semibold text-primary"><span className="grid h-7 w-7 place-items-center rounded-full bg-primary text-xs text-primary-foreground">1</span>Vue principale</div><h2 id="modules-heading" className="mt-2 text-2xl font-bold">Progression par module</h2><p className="mt-2 text-sm text-muted-foreground">Ouvrez un module pour afficher les mêmes statistiques pour chacun de ses cours.</p></div>
-            {modules.length ? <div className="grid items-start gap-4 lg:grid-cols-2">{modules.map((module) => <ModuleProgressCard key={module.moduleId} module={module} expanded={expandedModules.has(module.moduleId)} onToggle={() => toggleModule(module.moduleId)} />)}</div> : <EmptyInline message="Aucun module disponible." />}
-          </section>
+          <TabsContent value="overview" className="space-y-8">
+            <section aria-labelledby="summary-heading">
+              <h2 id="summary-heading" className="sr-only">Résumé de {selectedSemester}</h2>
+              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                <SummaryCard icon={<BookOpen className="h-5 w-5" />} label="Modules et cours" value={summary.moduleCount} detail={`${summary.courseCount} cours · ${selectedSemester}`} tone="violet" />
+                <SummaryCard icon={<Target className="h-5 w-5" />} label="Progression globale" value={`${summary.completionPercentage}%`} detail={`${formatNumber(summary.answeredQuestions)}/${formatNumber(summary.totalQuestions)} questions`} tone="blue" />
+                <SummaryCard icon={<CheckCircle2 className="h-5 w-5" />} label="Réponses correctes" value={formatNumber(summary.correctAnswers)} detail={`${summary.successRate}% de réussite`} tone="green" />
+                <SummaryCard icon={<XCircle className="h-5 w-5" />} label="Réponses incorrectes" value={formatNumber(summary.incorrectAnswers)} detail="Questions à revoir" tone="red" />
+              </div>
+            </section>
 
-          <section aria-labelledby="highlights-heading" className="space-y-5 border-t border-border pt-10">
-            <div><div className="flex items-center gap-2 text-sm font-semibold text-primary"><span className="grid h-7 w-7 place-items-center rounded-full bg-primary text-xs text-primary-foreground">2</span>Résumé rapide</div><h2 id="highlights-heading" className="mt-2 text-2xl font-bold">Points forts et cours à renforcer</h2><p className="mt-2 text-sm text-muted-foreground">Le rouge signale le score le plus faible, le vert le meilleur score et le bleu votre activité la plus récente.</p></div>
-            {modules.length ? <div className="grid items-start gap-5 lg:grid-cols-2">{modules.map((module) => <HighlightsCard key={module.moduleId} module={module} />)}</div> : <EmptyInline message="Les points forts apparaîtront dès que des cours seront disponibles." />}
-          </section>
-        </>
+            <section aria-labelledby="modules-heading" className="space-y-5">
+              <div><h2 id="modules-heading" className="text-2xl font-bold">Progression par module</h2><p className="mt-2 text-sm text-muted-foreground">Modules de {selectedSemester}. Ouvrez un module pour afficher les mêmes statistiques pour chacun de ses cours.</p></div>
+              {modules.length ? <div className="grid items-start gap-4 lg:grid-cols-2">{modules.map((module) => <ModuleProgressCard key={module.moduleId} module={module} expanded={expandedModules.has(module.moduleId)} onToggle={() => toggleModule(module.moduleId)} />)}</div> : <EmptyInline message={`Aucun module disponible pour ${selectedSemester}.`} />}
+            </section>
+          </TabsContent>
+
+          <TabsContent value="quick-summary">
+            <section aria-labelledby="highlights-heading" className="space-y-5">
+              <div><h2 id="highlights-heading" className="text-2xl font-bold">Points forts et cours à renforcer</h2><p className="mt-2 text-sm text-muted-foreground">Résumé de {selectedSemester}. Le rouge signale le score le plus faible, le vert le meilleur score et le bleu votre activité la plus récente.</p></div>
+              {modules.length ? <div className="grid items-start gap-5 lg:grid-cols-2">{modules.map((module) => <HighlightsCard key={module.moduleId} module={module} />)}</div> : <EmptyInline message={`Aucun résumé disponible pour ${selectedSemester}.`} />}
+            </section>
+          </TabsContent>
+        </Tabs>
       )}
     </div>
   );

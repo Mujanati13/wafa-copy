@@ -145,6 +145,7 @@ export const UserController = {
                 isPaid = false,
                 sendPasswordEmail = true
             } = req.body;
+            const normalizedPlan = plan === "Premium Annuel" ? "Premium" : plan;
 
             // Validate required fields
             if (!firstName || !lastName || !email || !password) {
@@ -257,7 +258,7 @@ export const UserController = {
                 email,
                 password: hashedPassword,
                 phone: phone || null,
-                plan,
+                plan: normalizedPlan,
                 currentYear: currentYear || getAcademicYearFromSemesters(semesters),
                 semesters: semesters || [],
                 emailVerified: true, // Admin-created users are pre-verified
@@ -266,19 +267,16 @@ export const UserController = {
             };
 
             // Add payment-related fields if user is paid
-            if (isPaid && plan !== "Free") {
+            if (isPaid && normalizedPlan !== "Free") {
                 userData.paymentMode = paymentMode || "Manual";
                 userData.paymentDate = new Date();
                 userData.approvalDate = new Date();
                 
                 // Set plan expiry based on plan type
                 const now = new Date();
-                if (plan === "Premium") {
+                if (normalizedPlan === "Premium") {
                     // 6 months for semester plan
                     userData.planExpiry = new Date(now.setMonth(now.getMonth() + 6));
-                } else if (plan === "Premium Annuel") {
-                    // 12 months for annual plan
-                    userData.planExpiry = new Date(now.setMonth(now.getMonth() + 12));
                 }
             }
 
@@ -1108,7 +1106,8 @@ export const UserController = {
         res.status(200).json({
             success: true,
             data: {
-                plan: user.plan || 'Free',
+                // Keep legacy records readable while exposing the current terminology.
+                plan: user.plan === 'Premium Annuel' ? 'Premium Semestre' : (user.plan || 'Free'),
                 subscription: user.subscription || null,
                 email: user.email
             }

@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect } from "react";
 import { useTranslation } from 'react-i18next';
-import { Calendar, Search, Filter, Plus, Edit, Trash2, Eye, ChevronLeft, ChevronRight, Loader2, X } from "lucide-react";
+import { Calendar, Search, Filter, Plus, Edit, Trash2, Eye, ChevronLeft, ChevronRight, ImageUp, Loader2, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -36,25 +36,95 @@ const ExamParYears = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [selectedItems, setSelectedItems] = useState(new Set());
+  const [globalCoverUrl, setGlobalCoverUrl] = useState("");
+  const [globalCoverFile, setGlobalCoverFile] = useState(null);
+  const [globalCoverPreview, setGlobalCoverPreview] = useState("");
+  const [uploadingGlobalCover, setUploadingGlobalCover] = useState(false);
   const [formData, setFormData] = useState({
     examName: "",
     moduleName: "",
     year: "",
-    imageUrl: DEFAULT_EXAM_IMAGE,
+    imageUrl: "",
     helpText: "",
     courseCategoryId: "",
   });
 
   const placeholderImage = DEFAULT_EXAM_IMAGE;
 
+  useEffect(() => () => {
+    if (globalCoverPreview) URL.revokeObjectURL(globalCoverPreview);
+  }, [globalCoverPreview]);
+
   useEffect(() => {
     fetchExams();
     fetchModules();
     fetchCourseCategories();
+    fetchGlobalCover();
   }, [showCreateForm]);
 
   const [modules, setModules] = useState([]);
   const [courseCategories, setCourseCategories] = useState([]);
+
+  const apiOrigin = (import.meta.env.VITE_API_URL || "").replace(/\/api\/v1\/?$/, "");
+  const getImageSrc = (imageUrl) => {
+    if (!imageUrl) return "";
+    return imageUrl.startsWith("http") || imageUrl.startsWith("data:")
+      ? imageUrl
+      : `${apiOrigin}${imageUrl}`;
+  };
+
+  const fetchGlobalCover = async () => {
+    try {
+      const { data } = await api.get("/exams/global-cover");
+      setGlobalCoverUrl(data?.data?.imageUrl || "");
+    } catch (err) {
+      console.error("Error fetching the global exam cover:", err);
+    }
+  };
+
+  const handleGlobalCoverSelection = (event) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+    const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error("Format non pris en charge. Utilisez JPG, PNG, WebP ou GIF.");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("L’image dépasse la taille maximale de 5 Mo.");
+      return;
+    }
+    if (globalCoverPreview) URL.revokeObjectURL(globalCoverPreview);
+    setGlobalCoverFile(file);
+    setGlobalCoverPreview(URL.createObjectURL(file));
+  };
+
+  const cancelGlobalCoverSelection = () => {
+    if (globalCoverPreview) URL.revokeObjectURL(globalCoverPreview);
+    setGlobalCoverFile(null);
+    setGlobalCoverPreview("");
+  };
+
+  const handleGlobalCoverUpload = async () => {
+    if (!globalCoverFile) return;
+    const submitData = new FormData();
+    submitData.append("examImage", globalCoverFile);
+    try {
+      setUploadingGlobalCover(true);
+      const { data } = await api.put("/exams/global-cover", submitData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      setGlobalCoverUrl(data?.data?.imageUrl || "");
+      cancelGlobalCoverSelection();
+      await fetchExams();
+      toast.success(`Image appliquée à ${data?.data?.matchedCount ?? exams.length} examen(s).`);
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Impossible de mettre à jour l’image globale.");
+    } finally {
+      setUploadingGlobalCover(false);
+    }
+  };
 
   const fetchModules = async () => {
     try {
@@ -92,7 +162,7 @@ const ExamParYears = () => {
         name: formData.examName,
         moduleId: selectedModule._id,
         year: parseInt(formData.year),
-        imageUrl: formData.imageUrl || DEFAULT_EXAM_IMAGE,
+        imageUrl: formData.imageUrl || globalCoverUrl || DEFAULT_EXAM_IMAGE,
         infoText: formData.helpText || "",
         courseCategoryId: formData.courseCategoryId || null,
       });
@@ -103,7 +173,7 @@ const ExamParYears = () => {
         examName: "",
         moduleName: "",
         year: "",
-        imageUrl: DEFAULT_EXAM_IMAGE,
+        imageUrl: "",
         helpText: "",
         courseCategoryId: "",
       });
@@ -211,7 +281,7 @@ const ExamParYears = () => {
         name: formData.examName,
         moduleId: selectedModule._id,
         year: parseInt(formData.year),
-        imageUrl: formData.imageUrl || DEFAULT_EXAM_IMAGE,
+        imageUrl: formData.imageUrl || globalCoverUrl || DEFAULT_EXAM_IMAGE,
         infoText: formData.helpText || "",
         courseCategoryId: formData.courseCategoryId || null,
       });
@@ -224,7 +294,7 @@ const ExamParYears = () => {
           examName: "",
           moduleName: "",
           year: "",
-          imageUrl: DEFAULT_EXAM_IMAGE,
+          imageUrl: "",
           helpText: "",
         });
         toast.success("Examen mis à jour avec succès");
@@ -263,7 +333,7 @@ const ExamParYears = () => {
         moduleName: e?.moduleName || e?.moduleId?.name || "",
         examName: e?.name || "",
         year: String(e?.year ?? ""),
-        imageUrl: e?.imageUrl || placeholderImage,
+        imageUrl: getImageSrc(e?.imageUrl) || placeholderImage,
         totalQuestions: e?.totalQuestions || 0, // Use totalQuestions from backend
         helpText: e?.infoText || "",
         courseCategoryId: e?.courseCategoryId || "",
@@ -418,15 +488,63 @@ const ExamParYears = () => {
             <h2 className="text-2xl font-bold text-black mb-1">Répertoire des Examens</h2>
             <p className="text-muted-foreground">Total: <span className="font-semibold text-black">{filteredExams.length}</span> examens</p>
           </div>
-          <Button
-            size="lg"
-            className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg"
-            onClick={() => setShowAddExamForm(true)}
-          >
-            <Plus className="w-5 h-5 mr-2" />
-            Créer Examen
-          </Button>
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <label className="inline-flex h-11 cursor-pointer items-center justify-center gap-2 rounded-md border border-blue-200 bg-white px-5 font-medium text-blue-700 shadow-sm transition hover:bg-blue-50 focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2">
+              <ImageUp className="h-5 w-5" />
+              Image globale
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/gif"
+                className="sr-only"
+                onChange={handleGlobalCoverSelection}
+                disabled={uploadingGlobalCover}
+              />
+            </label>
+            <Button
+              size="lg"
+              className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg"
+              onClick={() => setShowAddExamForm(true)}
+            >
+              <Plus className="w-5 h-5 mr-2" />
+              Créer Examen
+            </Button>
+          </div>
         </motion.div>
+
+        {(globalCoverPreview || globalCoverUrl) && (
+          <Card className="border-blue-100 bg-blue-50/40">
+            <CardContent className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex min-w-0 items-center gap-4">
+                <img
+                  src={globalCoverPreview || getImageSrc(globalCoverUrl)}
+                  alt="Aperçu de l’image globale des examens"
+                  className="h-20 w-28 shrink-0 rounded-lg border bg-white object-cover"
+                />
+                <div className="min-w-0">
+                  <p className="font-semibold text-slate-900">
+                    {globalCoverPreview ? "Nouvelle image prête à être appliquée" : "Image globale actuelle"}
+                  </p>
+                  <p className="mt-1 text-sm text-slate-600">
+                    {globalCoverPreview
+                      ? `Elle remplacera la couverture des ${exams.length} examens par année.`
+                      : "Cette couverture est utilisée pour tous les examens par année."}
+                  </p>
+                </div>
+              </div>
+              {globalCoverPreview && (
+                <div className="flex shrink-0 gap-2">
+                  <Button variant="outline" onClick={cancelGlobalCoverSelection} disabled={uploadingGlobalCover}>
+                    Annuler
+                  </Button>
+                  <Button onClick={handleGlobalCoverUpload} disabled={uploadingGlobalCover} className="gap-2">
+                    {uploadingGlobalCover && <Loader2 className="h-4 w-4 animate-spin" />}
+                    {uploadingGlobalCover ? "Application..." : "Appliquer à tous"}
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
         <Card>
           <CardHeader>
@@ -773,7 +891,7 @@ const ExamParYears = () => {
                         setShowAddExamForm(false);
                         setEditingExam(null);
                         setFormSemesterFilter("all");
-                        setFormData({ examName: "", moduleName: "", year: "", imageUrl: DEFAULT_EXAM_IMAGE, helpText: "" });
+                        setFormData({ examName: "", moduleName: "", year: "", imageUrl: "", helpText: "" });
                       }}
                     >
                       Annuler

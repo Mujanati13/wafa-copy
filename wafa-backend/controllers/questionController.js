@@ -5,11 +5,19 @@ import QCMBanque from "../models/qcmBanqueModel.js";
 import UserModel from "../models/userModel.js";
 import PointModel from "../models/pointModel.js";
 import xlsx from "xlsx";
+import { normalizeQuestionImages } from "../utils/questionImagePath.js";
 
 export const questionController = {
     create: asyncHandler(async (req, res) => {
         const { examId, text, options, note, images, sessionLabel } = req.body;
-        const newQuestion = await QuestionModel.create({ examId, text, options, note, images, sessionLabel });
+        const newQuestion = await QuestionModel.create({
+            examId,
+            text,
+            options,
+            note,
+            images: normalizeQuestionImages(images),
+            sessionLabel
+        });
         res.status(201).json({ success: true, data: newQuestion });
     }),
 
@@ -17,7 +25,8 @@ export const questionController = {
         const { id } = req.params;
         const { examId, text, options, note, images, sessionLabel, questionNumber } = req.body;
         
-        const updateData = { text, options, note, images };
+        const updateData = { text, options, note };
+        if (images !== undefined) updateData.images = normalizeQuestionImages(images);
         if (examId) updateData.examId = examId;
         if (sessionLabel !== undefined) updateData.sessionLabel = sessionLabel;
         if (questionNumber !== undefined) updateData.questionNumber = questionNumber;
@@ -360,6 +369,13 @@ export const questionController = {
         };
 
         const numbers = parseNumbers(questionNumbers);
+        const normalizedImageUrls = normalizeQuestionImages(imageUrls);
+        if (normalizedImageUrls.length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: "Aucune URL d'image valide fournie"
+            });
+        }
 
         // Get questions for this exam or qcm banque, sorted by questionNumber then createdAt
         const filter = examId ? { examId } : { qcmBanqueId };
@@ -395,7 +411,7 @@ export const questionController = {
             
             if (question) {
                 const currentImages = question.images || [];
-                const newImages = [...currentImages, ...imageUrls];
+                const newImages = normalizeQuestionImages([...currentImages, ...normalizedImageUrls]);
 
                 await QuestionModel.findByIdAndUpdate(question._id, {
                     images: newImages

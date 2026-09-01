@@ -116,10 +116,21 @@ const questionImageStorage = multer.diskStorage({
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    const ext = file.originalname.split('.').pop();
-    cb(null, `question-${uniqueSuffix}.${ext}`);
+    const extensionByMime = {
+      "image/jpeg": ".jpg",
+      "image/png": ".png",
+      "image/webp": ".webp",
+      "image/gif": ".gif",
+    };
+    cb(null, `question-${uniqueSuffix}${extensionByMime[file.mimetype]}`);
   }
 });
+
+const questionImageFilter = (req, file, cb) => {
+  const supportedTypes = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);
+  if (supportedTypes.has(file.mimetype)) return cb(null, true);
+  return cb(new Error("Format non pris en charge. Utilisez JPG, PNG, WebP ou GIF."), false);
+};
 
 // Upload middleware for question images (multiple)
 export const uploadQuestionImages = multer({
@@ -127,7 +138,7 @@ export const uploadQuestionImages = multer({
   limits: {
     fileSize: 5 * 1024 * 1024, // 5MB max per image
   },
-  fileFilter: imageFilter,
+  fileFilter: questionImageFilter,
 }).array("images", 10); // Max 10 images
 
 // Upload middleware for Excel files

@@ -13,6 +13,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
+import { resolveMediaUrl } from "@/lib/mediaUrl";
 
 const labels = {
   year: { title: "Examens par année", description: "Entraînez-vous avec des sessions complètes.", icon: CalendarDays },
@@ -96,11 +97,10 @@ function ExamCard({ exam, type, moduleColor, moduleName, onStart, onHelp }) {
     ? Math.round((answeredQuestions / totalQuestions) * 100)
     : providedProgress;
   const isStarted = progress > 0;
-  const apiOrigin = (import.meta.env.VITE_API_URL || "").replace(/\/api\/v1\/?$/, "");
   const imageUrl = exam.imageUrl
-    ? (exam.imageUrl.startsWith("http") || exam.imageUrl.startsWith("data:")
-      ? exam.imageUrl
-      : `${apiOrigin}${exam.imageUrl}`)
+    ? resolveMediaUrl(exam.imageUrl, {
+      folder: type === "year" ? "exams" : type === "course" ? "courses" : "qcm",
+    })
     : "";
 
   if (type === "year") {
@@ -121,13 +121,13 @@ function ExamCard({ exam, type, moduleColor, moduleName, onStart, onHelp }) {
         <div className="h-1 w-full shrink-0" style={{ backgroundColor: moduleColor }} aria-hidden="true" />
         <CardContent className="flex flex-col px-4 pb-4 pt-3.5 sm:px-5">
           <div className="flex items-start justify-between gap-3">
-            <div className="relative grid h-13 w-13 shrink-0 place-items-center overflow-hidden rounded-xl bg-sky-50 text-blue-700 dark:bg-sky-950/60 dark:text-sky-300">
+            <div className="relative grid h-13 w-13 shrink-0 place-items-center overflow-hidden rounded-xl bg-transparent text-blue-700 dark:text-sky-300">
               <BookOpen className="h-8 w-8" strokeWidth={1.6} aria-hidden="true" />
               {imageUrl && (
                 <img
                   src={imageUrl}
                   alt={displayName}
-                  className="absolute inset-0 h-full w-full object-contain"
+                  className="absolute inset-0 h-full w-full bg-transparent object-contain"
                   onError={(event) => { event.currentTarget.style.display = "none"; }}
                 />
               )}
@@ -166,7 +166,12 @@ function ExamCard({ exam, type, moduleColor, moduleName, onStart, onHelp }) {
                 <span className="grid h-6 w-9 place-items-center rounded-full bg-cyan-50 text-cyan-500 dark:bg-cyan-950/60 dark:text-cyan-300">
                   <FileQuestion className="h-3.5 w-3.5" aria-hidden="true" />
                 </span>
-                {answeredQuestions} / {totalQuestions}
+                <span
+                  aria-label={`${answeredQuestions} questions complétées sur ${totalQuestions}`}
+                  title="Total / complétées"
+                >
+                  {totalQuestions} / {answeredQuestions}
+                </span>
               </span>
               <span className="mr-1 font-semibold text-slate-800 dark:text-slate-100 sm:mr-2">{progress}%</span>
             </div>
@@ -192,7 +197,17 @@ function ExamCard({ exam, type, moduleColor, moduleName, onStart, onHelp }) {
   return <Card className="group overflow-hidden border-border bg-card shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg">
     <CardContent className="p-5">
       <div className="flex items-start justify-between gap-3">
-        <div className="grid h-11 w-11 place-items-center rounded-xl text-white" style={{ backgroundColor: moduleColor }}><Icon className="h-5 w-5" /></div>
+        <div className="relative grid h-11 w-11 place-items-center overflow-hidden rounded-xl bg-transparent" style={{ color: moduleColor }}>
+          <Icon className="h-5 w-5" />
+          {imageUrl && (
+            <img
+              src={imageUrl}
+              alt={exam.name}
+              className="absolute inset-0 h-full w-full bg-transparent object-contain"
+              onError={(event) => { event.currentTarget.style.display = "none"; }}
+            />
+          )}
+        </div>
         <div className="flex items-center gap-1">
           {exam.helpText && <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onHelp(exam)} aria-label={`Informations sur ${exam.name}`}><HelpCircle className="h-4 w-4 text-muted-foreground" /></Button>}
           {exam.year && <Badge variant="outline">{exam.year}</Badge>}

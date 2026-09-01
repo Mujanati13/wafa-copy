@@ -1,18 +1,23 @@
 import examModel from "../models/examParYearModel.js";
+import ExamCoverSettings from "../models/examCoverSettingsModel.js";
 import asyncHandler from '../handlers/asyncHandler.js';
 import QuestionModel from "../models/questionModule.js";
 import { NotificationController } from "./notificationController.js";
+import { getAnsweredCountByExam } from "../utils/answerProgress.js";
 
 export const examController = {
     create: asyncHandler(async (req, res) => {
 
         const { name, moduleId, year, imageUrl, infoText, courseCategoryId } = req.body;
+        const globalCover = imageUrl
+            ? null
+            : await ExamCoverSettings.findOne({ key: "global" }).select("imageUrl").lean();
         
         const newExam = await examModel.create({
             name,
             moduleId,
             year,
-            imageUrl,
+            imageUrl: imageUrl || globalCover?.imageUrl || "",
             infoText,
             courseCategoryId: courseCategoryId || null
         });
@@ -21,6 +26,50 @@ export const examController = {
             data: newExam
         });
 
+    }),
+
+    getGlobalCover: asyncHandler(async (req, res) => {
+        const settings = await ExamCoverSettings.findOne({ key: "global" })
+            .select("imageUrl updatedAt")
+            .lean();
+
+        res.status(200).json({
+            success: true,
+            data: settings || { imageUrl: "", updatedAt: null }
+        });
+    }),
+
+    updateGlobalCover: asyncHandler(async (req, res) => {
+        if (!req.file) {
+            return res.status(400).json({
+                success: false,
+                message: "Veuillez sélectionner une image valide."
+            });
+        }
+
+        const imageUrl = `/uploads/exams/${req.file.filename}`;
+        const updateResult = await examModel.updateMany({}, { $set: { imageUrl } });
+
+        await ExamCoverSettings.findOneAndUpdate(
+            { key: "global" },
+            {
+                $set: {
+                    imageUrl,
+                    updatedBy: req.user?._id || null,
+                }
+            },
+            { new: true, upsert: true, setDefaultsOnInsert: true }
+        );
+
+        res.status(200).json({
+            success: true,
+            message: "L’image globale des examens a été mise à jour.",
+            data: {
+                imageUrl,
+                matchedCount: updateResult.matchedCount,
+                modifiedCount: updateResult.modifiedCount,
+            }
+        });
     }),
 
     update: asyncHandler(async (req, res) => {
@@ -171,11 +220,14 @@ export const examController = {
             questionCountByExam[_id.toString()] = count;
         });
 
+        const answeredCountByExam = await getAnsweredCountByExam(req.user?._id);
+
         const examsWithCounts = exams.map(exam => ({
             ...exam,
             moduleName: typeof exam.moduleId === 'object' && exam.moduleId !== null ? exam.moduleId.name : undefined,
             moduleColor: typeof exam.moduleId === 'object' && exam.moduleId !== null ? exam.moduleId.color : '#6366f1',
-            questionCount: questionCountByExam[exam._id.toString()] || 0
+            questionCount: questionCountByExam[exam._id.toString()] || 0,
+            answeredQuestions: answeredCountByExam[exam._id.toString()] || 0
         }));
 
         res.status(200).json({

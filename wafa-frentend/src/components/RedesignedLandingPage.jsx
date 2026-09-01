@@ -833,8 +833,8 @@ function PricingCard({ plan, popular, text, language, onChoose }) {
     }))
     .filter((feature) => feature.text);
   const periodLabels = language === "fr"
-    ? { Gratuit: "", Semester: "/ semestre", Semestre: "/ semestre", Annee: "/ an", Annuel: "/ an", Monthly: "/ mois", Annual: "/ an" }
-    : { Gratuit: "", Semester: "/ semester", Semestre: "/ semester", Annee: "/ year", Annuel: "/ year", Monthly: "/ month", Annual: "/ year" };
+    ? { Gratuit: "", Semester: "/ semestre", Semestre: "/ semestre" }
+    : { Gratuit: "", Semester: "/ semester", Semestre: "/ semester" };
   const periodLabel = periodLabels[plan.period] || (plan.period ? `/ ${plan.period}` : "");
 
   return (

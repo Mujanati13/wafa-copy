@@ -7,6 +7,7 @@ import {
     findEquivalentModules,
     moduleNamesAreEquivalent,
 } from "../utils/moduleIdentity.js";
+import { getAnsweredCountByExam } from "../utils/answerProgress.js";
 
 export const examCourseController = {
     // Create a new exam course
@@ -184,11 +185,14 @@ export const examCourseController = {
             });
         }
 
-        // Add question count for each course
+        const answeredCountByExam = await getAnsweredCountByExam(req.user?._id);
+
+        // Add total and user-specific completed question counts for each course.
         const coursesWithCount = resolvedCourses.map(course => ({
             ...course,
             moduleId: course.moduleId || { _id: module._id, name: module.name },
             questionCount: course.totalQuestions ?? course.linkedQuestions?.length ?? 0,
+            answeredQuestions: answeredCountByExam[course._id.toString()] || 0,
         }));
 
         res.status(200).json({

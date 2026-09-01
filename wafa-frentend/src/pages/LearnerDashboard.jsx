@@ -12,6 +12,8 @@ const getCachedUser = () => {
   try { return JSON.parse(localStorage.getItem("userProfile") || localStorage.getItem("user") || "{}"); } catch { return {}; }
 };
 
+const displayPlanName = (planName) => planName === "Premium Annuel" ? "Premium Semestre" : (planName || "Gratuit");
+
 export default function LearnerDashboard() {
   const navigate = useNavigate();
   const { selectedSemester, setSelectedSemester, userSemesters, loading: semesterLoading } = useSemester();
@@ -88,7 +90,7 @@ export default function LearnerDashboard() {
   const progress = Math.round(Number(stats?.overallProgress ?? stats?.progress ?? semesterProgress) || 0);
   const completed = Math.max(0, Number(stats?.examsCompleted ?? stats?.totalExamsCompleted) || 0);
   const average = Math.round(Number(stats?.averageScore ?? stats?.average) || 0);
-  const plan = user?.plan || "Gratuit";
+  const plan = displayPlanName(user?.plan);
 
   return <div className="space-y-7">
     <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-sky-100 via-blue-100 to-cyan-100 px-5 py-7 text-slate-900 shadow-xl shadow-blue-200/40 dark:from-[#10265f] dark:via-[#133f80] dark:to-[#12718d] dark:text-white dark:shadow-blue-950/15 lg:hidden">

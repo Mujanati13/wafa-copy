@@ -540,7 +540,7 @@ ${selectedModule.exams?.length ? `\n📋 Examens disponibles:\n${selectedModule.
                       <div className="text-white min-w-0 flex-1">
                         <p className="text-xs sm:text-sm font-medium opacity-90">Mon Abonnement</p>
                         <p className="text-xl sm:text-2xl font-bold mt-1 truncate">
-                          {isFreeUser ? 'Free' : (user?.plan === 'Premium Annuel' ? 'Premium Pro' : (user?.plan || 'Gratuit'))}
+                          {isFreeUser ? 'Free' : (user?.plan === 'Premium Annuel' ? 'Premium Semestre' : (user?.plan || 'Gratuit'))}
                         </p>
                         <p className="text-[10px] xs:text-xs opacity-80 mt-2 group-hover:underline">
                           {isFreeUser ? 'Voir les options de paiement →' : 'Voir les details →'}

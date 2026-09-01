@@ -30,15 +30,12 @@ const ClientSubscriptionPage = () => {
   // WhatsApp contact number
   const WHATSAPP_NUMBER = "0699204386";
 
-  const isYearlyPlan = (plan) => {
-    const value = `${plan?.period || ''} ${plan?.name || ''}`.toLowerCase();
-    return ['annee', 'annuel', 'annual', 'year'].some((label) => value.includes(label));
-  };
-
-  const getMaxSemesters = (plan) => {
-    if (!plan) return 0;
-    if (isYearlyPlan(plan)) return 2;
-    return 1;
+  const getMaxSemesters = (plan) => (plan ? 1 : 0);
+  const displayPlanName = (planName) => planName === 'Premium Annuel' ? 'Premium Semestre' : (planName || 'Plan Gratuit');
+  const isCurrentSubscriptionPlan = (plan) => {
+    const currentPlan = displayPlanName(userSubscription?.plan).toLowerCase();
+    const candidatePlan = displayPlanName(plan?.name).toLowerCase();
+    return currentPlan === candidatePlan || (currentPlan === 'premium semestre' && candidatePlan === 'premium');
   };
 
   useEffect(() => {
@@ -76,7 +73,7 @@ const ClientSubscriptionPage = () => {
   };
 
   const handleSelectPlan = (plan) => {
-    if (userSubscription?.plan === plan.name) {
+    if (isCurrentSubscriptionPlan(plan)) {
       toast.info('Vous avez déjà ce plan');
       return;
     }
@@ -94,18 +91,6 @@ const ClientSubscriptionPage = () => {
 
   const handleSemesterChange = (semester, checked) => {
     const maxSemesters = getMaxSemesters(selectedPlan);
-
-    if (isYearlyPlan(selectedPlan)) {
-      if (!checked) {
-        setSelectedSemesters([]);
-        return;
-      }
-
-      const semesterNumber = Number(semester.slice(1));
-      const firstSemester = semesterNumber % 2 === 0 ? semesterNumber - 1 : semesterNumber;
-      setSelectedSemesters([`S${firstSemester}`, `S${firstSemester + 1}`]);
-      return;
-    }
 
     if (checked) {
       if (selectedSemesters.length < maxSemesters) {
@@ -226,7 +211,7 @@ const ClientSubscriptionPage = () => {
                   <div>
                     <p className="text-xs text-muted-foreground mb-1.5">Plan d'abonnement</p>
                     <Badge className="text-sm sm:text-base px-3.5 py-1.5" variant={userSubscription?.plan === 'Premium' ? 'default' : 'secondary'}>
-                      {userSubscription?.plan === 'Premium Annuel' ? 'Premium Pro' : (userSubscription?.plan || 'Plan Gratuit')}
+                      {displayPlanName(userSubscription?.plan)}
                     </Badge>
                   </div>
                   {userSubscription?.subscription && (
@@ -255,7 +240,7 @@ const ClientSubscriptionPage = () => {
               <h2 className="text-xl sm:text-2xl font-bold mb-6 text-foreground">Plans Disponibles</h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {allPlans.map((plan, index) => {
-                  const isCurrentPlan = userSubscription?.plan === plan.name;
+                  const isCurrentPlan = isCurrentSubscriptionPlan(plan);
                   const isFree = plan.price === 0;
 
                   return (
@@ -299,7 +284,7 @@ const ClientSubscriptionPage = () => {
                             )}
                             {plan.period && !isFree && (
                               <span className="text-xs text-muted-foreground ml-2">
-                                / {isYearlyPlan(plan) ? 'an' : 'semestre'}
+                                / semestre
                               </span>
                             )}
                           </div>
@@ -536,7 +521,7 @@ const ClientSubscriptionPage = () => {
                 </div>
                 {selectedPlan.period && (
                   <p className="text-xs text-muted-foreground">
-                    Durée: {isYearlyPlan(selectedPlan) ? "1 Année" : "1 Semestre"}
+                    Durée: 1 Semestre
                   </p>
                 )}
               </div>
