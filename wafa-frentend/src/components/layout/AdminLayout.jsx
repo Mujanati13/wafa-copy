@@ -3,7 +3,7 @@ import TopBar from "./TopBar";
 import SideBarAdmin from "./SideBarAdmin";
 import { Outlet } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion as Motion, AnimatePresence } from "framer-motion";
 
 const AdminLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -30,6 +30,7 @@ const AdminLayout = () => {
       <TopBar 
         onMenuClick={() => setSidebarOpen(!sidebarOpen)}
         sidebarOpen={sidebarOpen}
+        loginPath="/admin/login"
       />
       
       {/* Main Content Area */}
@@ -49,7 +50,7 @@ const AdminLayout = () => {
         </AnimatePresence>
 
         {/* Sidebar */}
-        <motion.aside
+        <Motion.aside
           initial={false}
           animate={{
             x: isMobile && !sidebarOpen ? -280 : 0,
@@ -70,10 +71,10 @@ const AdminLayout = () => {
             onToggle={() => setSidebarOpen(!sidebarOpen)}
             isMobile={isMobile}
           />
-        </motion.aside>
+        </Motion.aside>
 
         {/* Main Content */}
-        <motion.main
+        <Motion.main
           initial={false}
           animate={{
             marginLeft: isMobile ? 0 : 0,
@@ -86,15 +87,15 @@ const AdminLayout = () => {
           className="flex-1 overflow-y-auto"
         >
           <div className="container mx-auto p-2 sm:p-4 md:p-6 max-w-7xl">
-            <motion.div
+            <Motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3 }}
             >
               <Outlet />
-            </motion.div>
+            </Motion.div>
           </div>
-        </motion.main>
+        </Motion.main>
       </div>
     </div>
   );

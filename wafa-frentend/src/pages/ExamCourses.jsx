@@ -1,7 +1,7 @@
-import { useMemo, useState, useEffect, useRef } from "react";
+import { useMemo, useState, useEffect, useRef, useCallback } from "react";
 import { useTranslation } from 'react-i18next';
-import { GraduationCap, Search, Filter, Plus, Edit, Trash2, Eye, ChevronLeft, ChevronRight, Loader2, Upload, X } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { GraduationCap, Search, Filter, Plus, Edit, Trash2, Eye, ChevronLeft, ChevronRight, Loader2, Upload, X, FileSpreadsheet, Download, CheckCircle2, AlertTriangle } from "lucide-react";
+import { motion as Motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -38,6 +38,11 @@ const ExamCourses = () => {
   const [imageFile, setImageFile] = useState(null); // File upload state
   const [imagePreview, setImagePreview] = useState(""); // Image preview URL
   const fileInputRef = useRef(null);
+  const importInputRef = useRef(null);
+  const [showImportDialog, setShowImportDialog] = useState(false);
+  const [importFile, setImportFile] = useState(null);
+  const [importing, setImporting] = useState(false);
+  const [importResult, setImportResult] = useState(null);
   const [formData, setFormData] = useState({
     courseName: "",
     moduleName: "",
@@ -56,29 +61,23 @@ const ExamCourses = () => {
   const [error, setError] = useState(null);
   const placeholderImage = DEFAULT_COURSE_IMAGE;
 
-  useEffect(() => {
-    fetchCourses();
-    fetchModules();
-    fetchCourseCategories();
-  }, []);
-
-  const fetchModules = async () => {
+  const fetchModules = useCallback(async () => {
     try {
       const { data } = await api.get("/modules");
       setModules(data?.data || []);
     } catch (err) {
       console.error("Error fetching modules:", err);
     }
-  };
+  }, []);
 
-  const fetchCourseCategories = async () => {
+  const fetchCourseCategories = useCallback(async () => {
     try {
       const { data } = await api.get("/course-categories");
       setCourseCategories(data?.data || []);
     } catch (err) {
       console.error("Error fetching course categories:", err);
     }
-  };
+  }, []);
 
   const fetchCategoriesForModule = async (moduleId) => {
     if (!moduleId) {
@@ -100,15 +99,15 @@ const ExamCourses = () => {
     }
   };
 
-  const fetchCourses = async () => {
+  const fetchCourses = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
       const { data } = await api.get("/exam-courses");
       const list = (data?.data || []).map((c) => {
         // Handle image URL - prepend API_URL if it's a relative path
-        let imageUrl = c.imageUrl || placeholderImage;
-        if (imageUrl && !imageUrl.startsWith("http") && imageUrl !== placeholderImage) {
+        let imageUrl = c.imageUrl || DEFAULT_COURSE_IMAGE;
+        if (imageUrl && !imageUrl.startsWith("http") && imageUrl !== DEFAULT_COURSE_IMAGE) {
           imageUrl = `${API_URL?.replace('/api/v1', '')}${imageUrl}`;
         }
         
@@ -117,6 +116,7 @@ const ExamCourses = () => {
           moduleName: c.moduleName || c.moduleId?.name || "",
           moduleId: c.moduleId?._id || c.moduleId || "",
           category: c.category || "",
+          lessonNumber: c.lessonNumber || "",
           courseName: c.name || "",
           imageUrl: imageUrl,
           helpText: c.helpText || c.description || "",
@@ -132,7 +132,13 @@ const ExamCourses = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchCourses();
+    fetchModules();
+    fetchCourseCategories();
+  }, [fetchCourses, fetchModules, fetchCourseCategories]);
 
   const filteredCourses = useMemo(() => {
     const term = searchTerm.toLowerCase();
@@ -202,6 +208,76 @@ const ExamCourses = () => {
   const uniqueCategories = Array.from(new Set(examCourses.map((c) => c.category))).filter(Boolean);
   // Get categories from /course-categories endpoint
   const allCategories = courseCategories.map(cat => cat.name).filter(Boolean);
+
+  const resetImport = () => {
+    setShowImportDialog(false);
+    setImportFile(null);
+    setImportResult(null);
+    if (importInputRef.current) importInputRef.current.value = "";
+  };
+
+  const handleImportFileSelect = (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    const extension = file.name.split(".").pop()?.toLowerCase();
+    if (!["xlsx", "xls", "csv"].includes(extension)) {
+      toast.error("Utilisez un fichier .xlsx, .xls ou .csv");
+      event.target.value = "";
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("Le fichier ne doit pas dépasser 10 Mo");
+      event.target.value = "";
+      return;
+    }
+    setImportFile(file);
+    setImportResult(null);
+  };
+
+  const downloadImportTemplate = async () => {
+    try {
+      const response = await api.get("/exam-courses/import-template", { responseType: "blob" });
+      const url = URL.createObjectURL(response.data);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = "modele-import-cours.xlsx";
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Error downloading course import template:", error);
+      toast.error("Impossible de télécharger le modèle");
+    }
+  };
+
+  const handleCourseImport = async () => {
+    if (!importFile) {
+      toast.error("Sélectionnez un fichier Excel");
+      return;
+    }
+    const formData = new FormData();
+    formData.append("file", importFile);
+    setImporting(true);
+    setImportResult(null);
+    try {
+      const response = await api.post("/exam-courses/import", formData);
+      setImportResult(response.data?.data || null);
+      toast.success(response.data?.message || "Import terminé");
+      await fetchCourses();
+    } catch (error) {
+      console.error("Error importing courses:", error);
+      const payload = error.response?.data;
+      setImportResult({
+        ...(payload?.data || {}),
+        message: payload?.message || "L'import a échoué.",
+        requestFailed: true,
+      });
+      toast.error(payload?.message || "Erreur lors de l'import");
+    } finally {
+      setImporting(false);
+    }
+  };
 
   // Handle file selection
   const handleFileSelect = (e) => {
@@ -444,12 +520,25 @@ const ExamCourses = () => {
     );
   }
 
+  if (error) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-card px-6">
+        <div className="w-full max-w-md rounded-xl border border-red-200 bg-background p-6 text-center shadow-sm">
+          <AlertTriangle className="mx-auto h-10 w-10 text-red-500" />
+          <h2 className="mt-3 text-lg font-semibold">Cours indisponibles</h2>
+          <p className="mt-1 text-sm text-muted-foreground">{error}</p>
+          <Button className="mt-5" onClick={fetchCourses}>Réessayer</Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-card">
       <div className="max-w-7xl mx-auto px-6 py-8 space-y-6">
         {/* Bulk Delete Toolbar */}
         {selectedItems.size > 0 && (
-          <motion.div
+          <Motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             className="bg-purple-600 text-white px-6 py-3 rounded-lg shadow-lg flex items-center justify-between"
@@ -463,11 +552,11 @@ const ExamCourses = () => {
               <Trash2 className="h-4 w-4" />
               Supprimer la sélection
             </Button>
-          </motion.div>
+          </Motion.div>
         )}
 
         {/* Action Bar */}
-        <motion.div
+        <Motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
@@ -477,15 +566,26 @@ const ExamCourses = () => {
             <h2 className="text-2xl font-bold text-black mb-1">{t('admin:course_directory')}</h2>
             <p className="text-muted-foreground">{t('admin:total')}: <span className="font-semibold text-black">{filteredCourses.length}</span> {t('admin:courses')}</p>
           </div>
-          <Button
-            size="lg"
-            className="bg-purple-600 hover:bg-purple-700 text-white shadow-lg"
-            onClick={() => setShowAddCourseForm(true)}
-          >
-            <Plus className="w-5 h-5 mr-2" />
-            {t('admin:create_course')}
-          </Button>
-        </motion.div>
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+            <Button
+              size="lg"
+              variant="outline"
+              className="w-full gap-2 sm:w-auto"
+              onClick={() => setShowImportDialog(true)}
+            >
+              <FileSpreadsheet className="h-5 w-5" />
+              Importer Excel
+            </Button>
+            <Button
+              size="lg"
+              className="w-full bg-purple-600 text-white shadow-lg hover:bg-purple-700 sm:w-auto"
+              onClick={() => setShowAddCourseForm(true)}
+            >
+              <Plus className="w-5 h-5 mr-2" />
+              {t('admin:create_course')}
+            </Button>
+          </div>
+        </Motion.div>
 
         <Card>
           <CardHeader>
@@ -553,6 +653,7 @@ const ExamCourses = () => {
                     </TableHead>                    <TableHead>ID</TableHead>
                     <TableHead>Module</TableHead>
                     <TableHead>Catégorie</TableHead>
+                    <TableHead>Leçon</TableHead>
                     <TableHead>Nom du Cours</TableHead>
                     <TableHead>Image</TableHead>
                     <TableHead>Aide</TableHead>
@@ -563,7 +664,7 @@ const ExamCourses = () => {
                 <TableBody>
                   {currentCourses.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={8} className="text-center py-12 text-muted-foreground">
+                      <TableCell colSpan={10} className="text-center py-12 text-muted-foreground">
                         Aucun cours trouvé
                       </TableCell>
                     </TableRow>
@@ -582,6 +683,7 @@ const ExamCourses = () => {
                         <TableCell>
                           <Badge variant="secondary">{course.category}</Badge>
                         </TableCell>
+                        <TableCell className="font-semibold">{course.lessonNumber || "—"}</TableCell>
                         <TableCell className="font-medium">{course.courseName}</TableCell>
                         <TableCell>
                           <div className="w-16 h-12 rounded-md overflow-hidden bg-muted border">
@@ -641,12 +743,119 @@ const ExamCourses = () => {
 
       {showCreateForm && <NewExamCourseForm setShowNewExamCourseForm={setShowCreateForm} modules={uniqueModules} categories={allCategories} />}
 
+      <Dialog open={showImportDialog} onOpenChange={(open) => { if (!open) resetImport(); }}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FileSpreadsheet className="h-5 w-5 text-emerald-600" />
+              Importer des cours depuis Excel
+            </DialogTitle>
+            <DialogDescription>
+              Importez jusqu'à 2 000 lignes. Les modules doivent déjà exister dans le semestre indiqué.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-5 py-2">
+            <div className="rounded-lg border bg-muted/30 p-4 text-sm">
+              <p className="font-semibold text-foreground">Colonnes attendues</p>
+              <p className="mt-1 text-muted-foreground">
+                Semestre, Module, Catégorie (facultative), Numéro de leçon et Nom de la leçon.
+              </p>
+              <Button type="button" variant="link" className="mt-2 h-auto gap-2 p-0" onClick={downloadImportTemplate}>
+                <Download className="h-4 w-4" />
+                Télécharger le modèle Excel
+              </Button>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="course-excel-import">Fichier Excel</Label>
+              <input
+                ref={importInputRef}
+                id="course-excel-import"
+                type="file"
+                accept=".xlsx,.xls,.csv"
+                onChange={handleImportFileSelect}
+                className="block w-full rounded-md border border-input bg-background px-3 py-2 text-sm file:mr-3 file:rounded-md file:border-0 file:bg-purple-100 file:px-3 file:py-2 file:font-medium file:text-purple-800 hover:file:bg-purple-200"
+              />
+              <p className="text-xs text-muted-foreground">Formats .xlsx, .xls ou .csv — 10 Mo maximum.</p>
+            </div>
+
+            {importResult && (
+              <div className={`rounded-lg border p-4 ${
+                importResult.requestFailed
+                  ? "border-red-200 bg-red-50"
+                  : importResult.failed > 0
+                    ? "border-amber-200 bg-amber-50"
+                    : "border-emerald-200 bg-emerald-50"
+              }`}>
+                <div className="flex items-start gap-3">
+                  {importResult.requestFailed || importResult.failed > 0
+                    ? <AlertTriangle className={`mt-0.5 h-5 w-5 shrink-0 ${importResult.requestFailed ? "text-red-600" : "text-amber-600"}`} />
+                    : <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" />}
+                  <div className="min-w-0 flex-1">
+                    <p className="font-semibold text-foreground">
+                      {importResult.requestFailed
+                        ? importResult.message
+                        : importResult.failed > 0
+                          ? "Import terminé avec des lignes ignorées"
+                          : "Import terminé"}
+                    </p>
+                    {typeof importResult.imported === "number" && (
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        {importResult.imported} importé(s) sur {importResult.total} — {importResult.failed} ignoré(s)
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {importResult.missingHeaders?.length > 0 && (
+                  <p className="mt-3 text-sm text-red-700">
+                    Colonnes manquantes : {importResult.missingHeaders.join(", ")}
+                  </p>
+                )}
+
+                {importResult.errors?.length > 0 && (
+                  <div className="mt-4 max-h-56 overflow-auto rounded-md border bg-background">
+                    <table className="w-full text-left text-sm">
+                      <thead className="sticky top-0 bg-muted">
+                        <tr>
+                          <th className="px-3 py-2">Ligne</th>
+                          <th className="px-3 py-2">Champ</th>
+                          <th className="px-3 py-2">Erreur</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {importResult.errors.map((item, index) => (
+                          <tr key={`${item.row}-${item.field}-${index}`} className="border-t">
+                            <td className="px-3 py-2 font-medium">{item.row}</td>
+                            <td className="px-3 py-2">{item.field}</td>
+                            <td className="px-3 py-2 text-muted-foreground">{item.reason}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button type="button" variant="outline" onClick={resetImport} disabled={importing}>Fermer</Button>
+            <Button type="button" onClick={handleCourseImport} disabled={!importFile || importing} className="gap-2 bg-purple-600 text-white hover:bg-purple-700">
+              {importing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+              {importing ? "Import en cours..." : "Importer les cours"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Add/Edit Course Dialog */}
       <AnimatePresence>
         {showAddCourseForm && (
           <Dialog open={showAddCourseForm} onOpenChange={(open) => { if (!open) resetForm(); }}>
             <DialogContent className="bg-card border-border text-black sm:max-w-lg max-h-[90vh] overflow-y-auto">
-              <motion.div
+              <Motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
@@ -840,7 +1049,7 @@ const ExamCourses = () => {
                     >
                       Annuler
                     </Button>
-                    <motion.div
+                    <Motion.div
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                     >
@@ -850,10 +1059,10 @@ const ExamCourses = () => {
                       >
                         {editingCourse ? "Mettre à jour" : "Créer Cours"}
                       </Button>
-                    </motion.div>
+                    </Motion.div>
                   </DialogFooter>
                 </form>
-              </motion.div>
+              </Motion.div>
             </DialogContent>
           </Dialog>
         )}
@@ -875,6 +1084,12 @@ const ExamCourses = () => {
                   <Label className="text-sm font-semibold text-foreground">Module</Label>
                   <p className="text-foreground bg-background p-2 rounded border">{viewingCourse.moduleName}</p>
                 </div>
+                {viewingCourse.lessonNumber && (
+                  <div className="space-y-2">
+                    <Label className="text-sm font-semibold text-foreground">Numéro de leçon</Label>
+                    <p className="text-foreground bg-background p-2 rounded border">{viewingCourse.lessonNumber}</p>
+                  </div>
+                )}
                 <div className="space-y-2">
                   <Label className="text-sm font-semibold text-foreground">Catégorie</Label>
                   <p className="text-foreground bg-background p-2 rounded border">{viewingCourse.category}</p>

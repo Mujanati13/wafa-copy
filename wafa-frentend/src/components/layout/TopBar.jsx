@@ -45,7 +45,7 @@ const normalizeLandingSettings = (settings) => {
   return { ...currentSettings, siteName };
 };
 
-const TopBar = ({ onMenuClick }) => {
+const TopBar = ({ onMenuClick, loginPath = "/login" }) => {
   const { t } = useTranslation(['dashboard', 'common']);
   const [user, setUser] = useState(() => parseStorageJSON('userProfile', parseStorageJSON('user', null)));
   const [landingSettings, setLandingSettings] = useState(() => normalizeLandingSettings(
@@ -123,7 +123,7 @@ const TopBar = ({ onMenuClick }) => {
     try {
       await signOut();
       userService.clearProfileCache();
-      navigate("/login");
+      navigate(loginPath, { replace: true });
     } catch (error) {
       console.error("Logout error:", error);
       // Force logout even if there's an error
@@ -131,7 +131,7 @@ const TopBar = ({ onMenuClick }) => {
       localStorage.removeItem("user");
       localStorage.removeItem("userProfile");
       userService.clearProfileCache();
-      navigate("/login");
+      navigate(loginPath, { replace: true });
     }
   };
 

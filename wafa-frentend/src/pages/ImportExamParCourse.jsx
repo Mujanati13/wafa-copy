@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion as Motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -29,7 +29,9 @@ import {
   FileText,
   Layers,
   Search,
-  Filter
+  Filter,
+  FileSpreadsheet,
+  Download
 } from "lucide-react";
 import { toast } from "sonner";
 import { cryptoCompat } from "@/lib/cryptoCompat";
@@ -111,6 +113,10 @@ const ImportExamParCourse = () => {
   const [loadingQuestions, setLoadingQuestions] = useState(false);
   const [linking, setLinking] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [bulkImporting, setBulkImporting] = useState(false);
+  const [bulkImportFile, setBulkImportFile] = useState(null);
+  const [bulkImportResult, setBulkImportResult] = useState(null);
+  const bulkImportInputRef = useRef(null);
 
   // Selection state
   const [selectedModule, setSelectedModule] = useState("");
@@ -420,6 +426,81 @@ const ImportExamParCourse = () => {
     m => m.examYearId && m.questionNumbers.trim()
   );
 
+  const clearBulkImport = () => {
+    setBulkImportFile(null);
+    setBulkImportResult(null);
+    if (bulkImportInputRef.current) bulkImportInputRef.current.value = "";
+  };
+
+  const handleBulkImportFile = (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    const extension = file.name.split(".").pop()?.toLowerCase();
+    if (!["xlsx", "xls", "csv"].includes(extension)) {
+      toast.error("Utilisez un fichier .xlsx, .xls ou .csv");
+      event.target.value = "";
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("Le fichier ne doit pas dépasser 10 Mo");
+      event.target.value = "";
+      return;
+    }
+    setBulkImportFile(file);
+    setBulkImportResult(null);
+  };
+
+  const downloadBulkImportTemplate = async () => {
+    try {
+      const response = await api.get("/exam-courses/import-template", { responseType: "blob" });
+      const url = URL.createObjectURL(response.data);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = "modele-exam-par-cours.xlsx";
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Error downloading course template:", error);
+      toast.error("Impossible de télécharger le modèle Excel");
+    }
+  };
+
+  const handleBulkCourseImport = async () => {
+    if (!selectedSemester || !selectedModule || !bulkImportFile) {
+      toast.error("Sélectionnez le semestre, le module et le fichier Excel");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("semester", selectedSemester);
+    formData.append("moduleId", selectedModule);
+    formData.append("file", bulkImportFile);
+
+    setBulkImporting(true);
+    setBulkImportResult(null);
+    try {
+      const response = await api.post("/exam-courses/import", formData);
+      setBulkImportResult(response.data?.data || null);
+      toast.success(response.data?.message || "Import terminé");
+      await fetchCoursesForModule(selectedModule);
+      setBulkImportFile(null);
+      if (bulkImportInputRef.current) bulkImportInputRef.current.value = "";
+    } catch (error) {
+      console.error("Error importing Exam par cours spreadsheet:", error);
+      const payload = error.response?.data;
+      setBulkImportResult({
+        ...(payload?.data || {}),
+        message: payload?.message || "L'import a échoué.",
+        requestFailed: true,
+      });
+      toast.error(payload?.message || "Erreur lors de l'import Excel");
+    } finally {
+      setBulkImporting(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-card">
       <div className="max-w-7xl mx-auto px-6 py-8 space-y-6">
@@ -461,6 +542,7 @@ const ImportExamParCourse = () => {
                       setSelectedSemester(value);
                       setSelectedModule("");
                       setSelectedCourse("");
+                      clearBulkImport();
                     }}
                   >
                     <SelectTrigger className="border-rose-200">
@@ -483,7 +565,11 @@ const ImportExamParCourse = () => {
                   </Label>
                   <Select
                     value={selectedModule}
-                    onValueChange={setSelectedModule}
+                    onValueChange={(value) => {
+                      setSelectedModule(value);
+                      setSelectedCourse("");
+                      clearBulkImport();
+                    }}
                     disabled={!selectedSemester || loadingModules}
                   >
                     <SelectTrigger className="border-rose-200">
@@ -498,6 +584,111 @@ const ImportExamParCourse = () => {
                     </SelectContent>
                   </Select>
                 </div>
+              </div>
+
+              <div className="mt-6 rounded-xl border border-emerald-200 bg-emerald-50/50 p-4 sm:p-5">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div>
+                    <h3 className="flex items-center gap-2 font-semibold text-emerald-950">
+                      <FileSpreadsheet className="h-5 w-5 text-emerald-600" />
+                      Import Excel automatique
+                    </h3>
+                    <p className="mt-1 text-sm text-emerald-900/70">
+                      Le semestre et le module du fichier doivent correspondre aux sélections ci-dessus.
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="gap-2 border-emerald-300 bg-background text-emerald-800 hover:bg-emerald-100"
+                    onClick={downloadBulkImportTemplate}
+                  >
+                    <Download className="h-4 w-4" />
+                    Télécharger le modèle
+                  </Button>
+                </div>
+
+                <div className="mt-4 rounded-lg border bg-background p-3 text-xs text-muted-foreground">
+                  Colonnes exactes : <code>semestre</code>, <code>module</code>, <code>categorie</code>, <code>num_lesson</code>, <code>lesson name</code>
+                </div>
+
+                <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
+                  <div className="space-y-2">
+                    <Label htmlFor="exam-course-excel-file">Fichier Excel</Label>
+                    <input
+                      ref={bulkImportInputRef}
+                      id="exam-course-excel-file"
+                      type="file"
+                      accept=".xlsx,.xls,.csv"
+                      onChange={handleBulkImportFile}
+                      disabled={!selectedSemester || !selectedModule || bulkImporting}
+                      className="block w-full rounded-md border border-input bg-background px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-50 file:mr-3 file:rounded-md file:border-0 file:bg-emerald-100 file:px-3 file:py-2 file:font-medium file:text-emerald-800"
+                    />
+                    <p className="text-xs text-muted-foreground">Formats .xlsx, .xls ou .csv — 10 Mo maximum.</p>
+                  </div>
+                  <Button
+                    type="button"
+                    onClick={handleBulkCourseImport}
+                    disabled={!selectedSemester || !selectedModule || !bulkImportFile || bulkImporting}
+                    className="gap-2 bg-emerald-600 text-white hover:bg-emerald-700"
+                  >
+                    {bulkImporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                    {bulkImporting ? "Import en cours..." : "Importer les cours"}
+                  </Button>
+                </div>
+
+                {bulkImportResult && (
+                  <div className={`mt-4 rounded-lg border p-4 ${
+                    bulkImportResult.requestFailed
+                      ? "border-red-200 bg-red-50"
+                      : bulkImportResult.failed > 0
+                        ? "border-amber-200 bg-amber-50"
+                        : "border-emerald-200 bg-emerald-50"
+                  }`}>
+                    <div className="flex items-start gap-2">
+                      {bulkImportResult.requestFailed || bulkImportResult.failed > 0
+                        ? <AlertCircle className={`mt-0.5 h-5 w-5 shrink-0 ${bulkImportResult.requestFailed ? "text-red-600" : "text-amber-600"}`} />
+                        : <CheckCircle className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" />}
+                      <div>
+                        <p className="font-semibold text-foreground">
+                          {bulkImportResult.requestFailed
+                            ? bulkImportResult.message
+                            : `${bulkImportResult.imported} cours importé(s) sur ${bulkImportResult.total}`}
+                        </p>
+                        {typeof bulkImportResult.failed === "number" && bulkImportResult.failed > 0 && (
+                          <p className="mt-1 text-sm text-muted-foreground">{bulkImportResult.failed} ligne(s) ignorée(s)</p>
+                        )}
+                      </div>
+                    </div>
+
+                    {bulkImportResult.missingHeaders?.length > 0 && (
+                      <p className="mt-3 text-sm text-red-700">Colonnes manquantes : {bulkImportResult.missingHeaders.join(", ")}</p>
+                    )}
+                    {bulkImportResult.errors?.length > 0 && (
+                      <div className="mt-3 max-h-52 overflow-auto rounded-md border bg-background">
+                        <table className="w-full text-left text-xs sm:text-sm">
+                          <thead className="sticky top-0 bg-muted">
+                            <tr>
+                              <th className="px-3 py-2">Ligne</th>
+                              <th className="px-3 py-2">Champ</th>
+                              <th className="px-3 py-2">Erreur</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {bulkImportResult.errors.map((item, index) => (
+                              <tr key={`${item.row}-${item.field}-${index}`} className="border-t">
+                                <td className="px-3 py-2 font-medium">{item.row}</td>
+                                <td className="px-3 py-2">{item.field}</td>
+                                <td className="px-3 py-2 text-muted-foreground">{item.reason}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Enhanced Sous-Modules / Courses Display */}

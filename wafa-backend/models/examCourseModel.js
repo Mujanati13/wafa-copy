@@ -15,6 +15,12 @@ const examCourseSchema = new mongoose.Schema(
             type: String,
             default: "",
         },
+        lessonNumber: {
+            type: String,
+            trim: true,
+            maxlength: 30,
+            default: "",
+        },
         subCategory: {
             type: String,
             default: "",
@@ -78,6 +84,7 @@ examCourseSchema.index({ category: 1 });
 examCourseSchema.index({ status: 1 });
 examCourseSchema.index({ moduleId: 1, status: 1 });
 examCourseSchema.index({ moduleId: 1, category: 1 });
+examCourseSchema.index({ moduleId: 1, lessonNumber: 1 });
 examCourseSchema.index({ moduleId: 1, createdAt: -1 });
 
 // Update totalQuestions when linkedQuestions changes

@@ -1,21 +1,17 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
-import { motion } from 'framer-motion';
+import { motion as Motion } from 'framer-motion';
 import { Eye, EyeOff, Lock, Mail, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import axios from 'axios';
 import logo from '@/assets/logo.png';
 import { userService } from '@/services/userService';
 import { dashboardService } from '@/services/dashboardService';
-
-const API_URL = import.meta.env.VITE_API_URL;
+import { loginWithEmail, signOut } from '@/services/authService';
 
 const AdminLogin = () => {
-  const { t } = useTranslation(['auth', 'common']);
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -36,41 +32,27 @@ const AdminLogin = () => {
     setIsLoading(true);
 
     try {
-      // Use direct MongoDB login (passport local strategy)
-      const response = await axios.post(
-        `${API_URL}/auth/login`,
-        {
-          email: formData.email,
-          password: formData.password,
-        },
-        {
-          withCredentials: true,
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-
-      const user = response.data.user;
+      // Keep admin authentication on the shared session path. It attaches the
+      // stable browser identifier used to recover interrupted logout requests.
+      const result = await loginWithEmail(formData.email, formData.password);
+      const user = result.user;
 
       // Check if user is admin
       if (!user?.isAdmin) {
+        // Login has already claimed a backend session. Release it before
+        // denying admin access so this account is not left falsely active.
+        await signOut();
         toast.error('Accès refusé', {
           description: 'Vous n\'avez pas les permissions administrateur.',
         });
-        setIsLoading(false);
         return;
       }
 
       // Store user data and token
       localStorage.setItem('user', JSON.stringify(user));
       localStorage.setItem('userProfile', JSON.stringify(user));
-      if (response.data.token) {
-        localStorage.setItem('token', response.data.token);
-      }
       dashboardService.clearCache();
       userService.clearProfileCache();
-      localStorage.setItem('userProfile', JSON.stringify(user));
       window.dispatchEvent(new Event('auth-state-changed'));
 
       toast.success('Connexion réussie', {
@@ -94,7 +76,7 @@ const AdminLogin = () => {
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <motion.div
+      <Motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
@@ -203,7 +185,7 @@ const AdminLogin = () => {
         <p className="text-center text-slate-400 text-sm mt-6">
           © 2024 YourQCM. Tous droits réservés.
         </p>
-      </motion.div>
+      </Motion.div>
     </div>
   );
 };

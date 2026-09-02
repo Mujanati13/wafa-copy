@@ -44,7 +44,12 @@ const excelFilter = (req, file, cb) => {
     "application/vnd.ms-excel", // .xls
     "text/csv" // .csv
   ];
-  if (allowedMimes.includes(file.mimetype)) {
+  const allowedExtensions = new Set([".xlsx", ".xls", ".csv"]);
+  const extension = path.extname(file.originalname || "").toLowerCase();
+  const hasAllowedExtension = allowedExtensions.has(extension);
+  const hasAllowedMime = allowedMimes.includes(file.mimetype)
+    || file.mimetype === "application/octet-stream";
+  if (hasAllowedExtension && hasAllowedMime) {
     cb(null, true);
   } else {
     cb(new Error("Veuillez télécharger un fichier Excel valide (.xlsx, .xls, .csv)"), false);

@@ -3,21 +3,43 @@ import ExamCourse from "../models/examCourseModel.js";
 import Question from "../models/questionModule.js";
 import ExamParYear from "../models/examParYearModel.js";
 import Module from "../models/moduleModel.js";
+import xlsx from "xlsx";
+import mongoose from "mongoose";
 import {
     findEquivalentModules,
     moduleNamesAreEquivalent,
+    normalizeModuleIdentity,
 } from "../utils/moduleIdentity.js";
 import { getAnsweredCountByExam } from "../utils/answerProgress.js";
+import {
+    mapCourseImportRows,
+    MAX_COURSE_IMPORT_ROWS,
+    normalizeImportText,
+    normalizeSemester,
+    validateCourseImportRecord,
+} from "../utils/courseImport.js";
+
+const COURSE_IMPORT_HEADER_LABELS = {
+    semester: "Semestre",
+    module: "Module",
+    lessonNumber: "Numéro de leçon",
+    lessonName: "Nom de la leçon",
+};
+
+const addImportError = (errors, row, field, reason) => {
+    if (errors.length < 100) errors.push({ row, field, reason });
+};
 
 export const examCourseController = {
     // Create a new exam course
     create: asyncHandler(async (req, res) => {
-        const { name, moduleId, category, subCategory, description, imageUrl, status } = req.body;
+        const { name, moduleId, category, lessonNumber, subCategory, description, imageUrl, status } = req.body;
 
         const newCourse = await ExamCourse.create({
             name,
             moduleId,
             category,
+            lessonNumber,
             subCategory,
             description,
             imageUrl,
@@ -50,7 +72,7 @@ export const examCourseController = {
         // Use lean() and only select necessary fields for better performance
         const courses = await ExamCourse.find(filter)
             .populate("moduleId", "name semester")
-            .select('name moduleId category subCategory description difficulty color imageUrl status totalQuestions')
+            .select('name moduleId category lessonNumber subCategory description difficulty color imageUrl status totalQuestions')
             .lean()
             .sort({ createdAt: -1 });
 
@@ -158,7 +180,7 @@ export const examCourseController = {
 
         const courses = await ExamCourse.find({ moduleId: { $in: equivalentModuleIds } })
             .populate("moduleId", "name")
-            .select('name moduleId category subCategory description difficulty color imageUrl status totalQuestions helpText')
+            .select('name moduleId category lessonNumber subCategory description difficulty color imageUrl status totalQuestions helpText')
             .lean()
             .sort({ createdAt: -1 });
 
@@ -204,11 +226,11 @@ export const examCourseController = {
     // Update an exam course
     update: asyncHandler(async (req, res) => {
         const { id } = req.params;
-        const { name, moduleId, category, subCategory, description, imageUrl, status, helpText } = req.body;
+        const { name, moduleId, category, lessonNumber, subCategory, description, imageUrl, status, helpText } = req.body;
 
         const updated = await ExamCourse.findByIdAndUpdate(
             id,
-            { name, moduleId, category, subCategory, description, imageUrl, status, helpText },
+            { name, moduleId, category, lessonNumber, subCategory, description, imageUrl, status, helpText },
             { new: true, runValidators: true }
         ).populate("moduleId", "name");
 
@@ -242,6 +264,239 @@ export const examCourseController = {
         res.status(200).json({
             success: true,
             message: "Cours supprimé avec succès",
+        });
+    }),
+
+    downloadImportTemplate: asyncHandler(async (req, res) => {
+        const worksheet = xlsx.utils.json_to_sheet([
+            {
+                semestre: "S3",
+                module: "Sémiologie 1",
+                categorie: "Rhumatologie",
+                num_lesson: "L1",
+                "lesson name": "Introduction et généralités en sémiologie de rhumatologie",
+            },
+        ]);
+        worksheet["!cols"] = [
+            { wch: 12 },
+            { wch: 28 },
+            { wch: 24 },
+            { wch: 20 },
+            { wch: 42 },
+        ];
+        const workbook = xlsx.utils.book_new();
+        xlsx.utils.book_append_sheet(workbook, worksheet, "Cours");
+        const buffer = xlsx.write(workbook, { type: "buffer", bookType: "xlsx" });
+
+        res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        res.setHeader("Content-Disposition", 'attachment; filename="modele-import-cours.xlsx"');
+        return res.status(200).send(buffer);
+    }),
+
+    importFromExcel: asyncHandler(async (req, res) => {
+        if (!req.file) {
+            return res.status(400).json({ success: false, message: "Veuillez fournir un fichier Excel." });
+        }
+
+        let workbook;
+        try {
+            workbook = xlsx.read(req.file.buffer, { type: "buffer", cellDates: false });
+        } catch (error) {
+            return res.status(400).json({
+                success: false,
+                message: `Le fichier Excel est illisible: ${error.message}`,
+            });
+        }
+
+        const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+        if (!worksheet) {
+            return res.status(400).json({ success: false, message: "Le classeur ne contient aucune feuille." });
+        }
+
+        const matrix = xlsx.utils.sheet_to_json(worksheet, { header: 1, defval: "", blankrows: false });
+        const headers = matrix[0] || [];
+        const rows = xlsx.utils.sheet_to_json(worksheet, { defval: "", blankrows: false, raw: false });
+
+        if (rows.length === 0) {
+            return res.status(400).json({ success: false, message: "Le fichier Excel ne contient aucun cours." });
+        }
+        if (rows.length > MAX_COURSE_IMPORT_ROWS) {
+            return res.status(413).json({
+                success: false,
+                message: `Le fichier dépasse la limite de ${MAX_COURSE_IMPORT_ROWS} lignes.`,
+            });
+        }
+
+        const { missingHeaders, records } = mapCourseImportRows(rows, headers);
+        if (missingHeaders.length > 0) {
+            return res.status(422).json({
+                success: false,
+                code: "INVALID_IMPORT_HEADERS",
+                message: `Colonnes obligatoires manquantes: ${missingHeaders.map(field => COURSE_IMPORT_HEADER_LABELS[field]).join(", ")}.`,
+                data: { missingHeaders: missingHeaders.map(field => COURSE_IMPORT_HEADER_LABELS[field]) },
+            });
+        }
+
+        const requestedSemester = String(req.body?.semester || "").trim();
+        const requestedModuleId = String(req.body?.moduleId || "").trim();
+        if (Boolean(requestedSemester) !== Boolean(requestedModuleId)) {
+            return res.status(400).json({
+                success: false,
+                message: "Le semestre et le module doivent être sélectionnés ensemble.",
+            });
+        }
+
+        let scopedSemester = "";
+        let scopedModule = null;
+        if (requestedSemester && requestedModuleId) {
+            scopedSemester = normalizeSemester(requestedSemester);
+            if (!scopedSemester || !mongoose.isValidObjectId(requestedModuleId)) {
+                return res.status(400).json({ success: false, message: "Semestre ou module invalide." });
+            }
+            scopedModule = await Module.findById(requestedModuleId).select("_id name semester").lean();
+            if (!scopedModule) {
+                return res.status(404).json({ success: false, message: "Module sélectionné introuvable." });
+            }
+            if (scopedModule.semester !== scopedSemester) {
+                return res.status(422).json({
+                    success: false,
+                    message: `Le module sélectionné n'appartient pas au semestre ${scopedSemester}.`,
+                });
+            }
+        }
+
+        const modules = scopedModule
+            ? [scopedModule]
+            : await Module.find({}).select("_id name semester").lean();
+        const moduleCandidates = new Map();
+        modules.forEach((module) => {
+            const key = `${module.semester}:${normalizeModuleIdentity(module.name)}`;
+            const candidates = moduleCandidates.get(key) || [];
+            candidates.push(module);
+            moduleCandidates.set(key, candidates);
+        });
+
+        const errors = [];
+        const resolvedRecords = [];
+        records.forEach((record) => {
+            const validationErrors = validateCourseImportRecord(record);
+            validationErrors.forEach(error => addImportError(errors, record.rowNumber, error.field, error.reason));
+            if (validationErrors.length > 0) return;
+
+            if (scopedModule) {
+                if (record.semester !== scopedSemester) {
+                    addImportError(
+                        errors,
+                        record.rowNumber,
+                        "Semestre",
+                        `La ligne indique ${record.semester}, mais ${scopedSemester} est sélectionné.`
+                    );
+                    return;
+                }
+                if (!moduleNamesAreEquivalent(record.moduleName, scopedModule.name)) {
+                    addImportError(
+                        errors,
+                        record.rowNumber,
+                        "Module",
+                        `La ligne indique « ${record.moduleName} », mais « ${scopedModule.name} » est sélectionné.`
+                    );
+                    return;
+                }
+                resolvedRecords.push({ ...record, module: scopedModule });
+                return;
+            }
+
+            const candidates = moduleCandidates.get(
+                `${record.semester}:${normalizeModuleIdentity(record.moduleName)}`
+            ) || [];
+            if (candidates.length === 0) {
+                addImportError(
+                    errors,
+                    record.rowNumber,
+                    "Module",
+                    `Module « ${record.moduleName} » introuvable dans ${record.semester}`
+                );
+                return;
+            }
+            if (candidates.length > 1) {
+                addImportError(errors, record.rowNumber, "Module", "Plusieurs modules correspondent à cette valeur.");
+                return;
+            }
+            resolvedRecords.push({ ...record, module: candidates[0] });
+        });
+
+        const targetModuleIds = [...new Map(
+            resolvedRecords.map(record => [record.module._id.toString(), record.module._id])
+        ).values()];
+        const existingCourses = targetModuleIds.length > 0
+            ? await ExamCourse.find({ moduleId: { $in: targetModuleIds } })
+                .select("moduleId lessonNumber name")
+                .lean()
+            : [];
+        const existingKeys = new Set(existingCourses.flatMap(course => {
+            const moduleId = course.moduleId.toString();
+            const keys = [`${moduleId}:name:${normalizeImportText(course.name)}`];
+            if (course.lessonNumber) {
+                keys.push(`${moduleId}:number:${normalizeImportText(course.lessonNumber)}`);
+            }
+            return keys;
+        }));
+        const pendingKeys = new Set();
+        const documents = [];
+
+        resolvedRecords.forEach((record) => {
+            const moduleId = record.module._id.toString();
+            const numberKey = `${moduleId}:number:${normalizeImportText(record.lessonNumber)}`;
+            const nameKey = `${moduleId}:name:${normalizeImportText(record.lessonName)}`;
+            if (existingKeys.has(numberKey) || existingKeys.has(nameKey)) {
+                addImportError(errors, record.rowNumber, "Cours", "Ce numéro ou ce nom de leçon existe déjà dans ce module.");
+                return;
+            }
+            if (pendingKeys.has(numberKey) || pendingKeys.has(nameKey)) {
+                addImportError(errors, record.rowNumber, "Cours", "Doublon détecté dans le fichier.");
+                return;
+            }
+            pendingKeys.add(numberKey);
+            pendingKeys.add(nameKey);
+            documents.push({
+                name: record.lessonName,
+                moduleId: record.module._id,
+                category: record.category,
+                lessonNumber: record.lessonNumber,
+                status: "draft",
+            });
+        });
+
+        const createdCourses = documents.length > 0 ? await ExamCourse.insertMany(documents) : [];
+        const failed = records.length - createdCourses.length;
+        console.info("Course Excel import completed", {
+            adminId: req.user?._id?.toString(),
+            filename: req.file.originalname,
+            total: records.length,
+            imported: createdCourses.length,
+            failed,
+            semester: scopedSemester || undefined,
+            moduleId: scopedModule?._id?.toString(),
+        });
+
+        const status = createdCourses.length > 0 ? 201 : 422;
+        return res.status(status).json({
+            success: createdCourses.length > 0,
+            message: createdCourses.length > 0
+                ? `${createdCourses.length} cours importé(s), ${failed} ligne(s) ignorée(s).`
+                : "Aucun cours n'a été importé. Corrigez les erreurs indiquées.",
+            data: {
+                total: records.length,
+                imported: createdCourses.length,
+                failed,
+                errors,
+                errorsTruncated: errors.length >= 100 && failed > errors.length,
+                scope: scopedModule ? {
+                    semester: scopedSemester,
+                    moduleId: scopedModule._id,
+                    moduleName: scopedModule.name,
+                } : null,
+            },
         });
     }),
 

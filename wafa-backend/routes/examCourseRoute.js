@@ -4,12 +4,26 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
-import { isAuthenticated, requiresPremiumAccess } from "../middleware/authMiddleware.js";
+import { isAuthenticated, isAdmin, requiresPremiumAccess } from "../middleware/authMiddleware.js";
+import { uploadExcelFile } from "../middleware/uploadMiddleware.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const router = Router();
+
+const handleCourseExcelUpload = (req, res, next) => {
+    uploadExcelFile(req, res, (error) => {
+        if (!error) return next();
+        const status = error.code === "LIMIT_FILE_SIZE" ? 413 : 400;
+        return res.status(status).json({
+            success: false,
+            message: error.code === "LIMIT_FILE_SIZE"
+                ? "Le fichier Excel ne doit pas dépasser 10 Mo."
+                : error.message,
+        });
+    });
+};
 
 // Ensure uploads directory exists
 const uploadsDir = path.join(__dirname, "..", "uploads", "courses");
@@ -81,6 +95,10 @@ router.put("/update-with-image/:id", uploadCourseImage, async (req, res) => {
 
 // CRUD operations
 router.get("/", examCourseController.getAll);
+
+// Bulk Excel import (admin only). Keep static routes before /:id.
+router.get("/import-template", isAuthenticated, isAdmin, examCourseController.downloadImportTemplate);
+router.post("/import", isAuthenticated, isAdmin, handleCourseExcelUpload, examCourseController.importFromExcel);
 
 // Get courses by module - must be before /:id to avoid treating "module" as an ID
 router.get("/module/:moduleId", isAuthenticated, requiresPremiumAccess, examCourseController.getByModuleId);
