@@ -101,6 +101,8 @@ router.get("/import-template", isAuthenticated, isAdmin, examCourseController.do
 router.post("/import", isAuthenticated, isAdmin, handleCourseExcelUpload, examCourseController.importFromExcel);
 router.get("/question-import-template", isAuthenticated, isAdmin, examCourseController.downloadQuestionImportTemplate);
 router.post("/:id/import-questions", isAuthenticated, isAdmin, handleCourseExcelUpload, examCourseController.importQuestionsFromExcel);
+router.get("/question-mapping-template", isAuthenticated, isAdmin, examCourseController.downloadQuestionMappingTemplate);
+router.post("/question-mapping-import", isAuthenticated, isAdmin, handleCourseExcelUpload, examCourseController.importQuestionMappingMatrix);
 
 // Get courses by module - must be before /:id to avoid treating "module" as an ID
 router.get("/module/:moduleId", isAuthenticated, requiresPremiumAccess, examCourseController.getByModuleId);

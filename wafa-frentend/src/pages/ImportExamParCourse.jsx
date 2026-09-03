@@ -451,42 +451,58 @@ const ImportExamParCourse = () => {
   };
 
   const downloadBulkImportTemplate = async () => {
+    if (!selectedModule) {
+      toast.error("Sélectionnez d'abord un semestre et un module");
+      return;
+    }
     try {
-      const response = await api.get("/exam-courses/question-import-template", { responseType: "blob" });
+      const response = await api.get("/exam-courses/question-mapping-template", {
+        params: { moduleId: selectedModule },
+        responseType: "blob",
+      });
       const url = URL.createObjectURL(response.data);
       const anchor = document.createElement("a");
       anchor.href = url;
-      anchor.download = "modele-questions-exam-par-cours.xlsx";
+      anchor.download = "modele-matrice-exam-par-cours.xlsx";
       document.body.appendChild(anchor);
       anchor.click();
       anchor.remove();
       URL.revokeObjectURL(url);
     } catch (error) {
-      console.error("Error downloading course question template:", error);
-      toast.error("Impossible de télécharger le modèle Excel");
+      console.error("Error downloading question mapping template:", error);
+      let message = error.response?.data?.message;
+      if (!message && error.response?.data instanceof Blob) {
+        try {
+          message = JSON.parse(await error.response.data.text())?.message;
+        } catch {
+          // Keep the generic fallback when the server response is not JSON.
+        }
+      }
+      toast.error(message || "Impossible de télécharger le modèle Excel");
     }
   };
 
   const handleBulkCourseImport = async () => {
-    if (!selectedSemester || !selectedModule || !selectedCourse || !bulkImportFile) {
-      toast.error("Sélectionnez le semestre, le module, le cours et le fichier Excel");
+    if (!selectedSemester || !selectedModule || !bulkImportFile) {
+      toast.error("Sélectionnez le semestre, le module et le fichier Excel");
       return;
     }
 
     const formData = new FormData();
     formData.append("file", bulkImportFile);
+    formData.append("moduleId", selectedModule);
 
     setBulkImporting(true);
     setBulkImportResult(null);
     try {
-      const response = await api.post(`/exam-courses/${selectedCourse}/import-questions`, formData);
+      const response = await api.post("/exam-courses/question-mapping-import", formData);
       setBulkImportResult(response.data?.data || null);
       toast.success(response.data?.message || "Import terminé");
       await fetchCoursesForModule(selectedModule);
       setBulkImportFile(null);
       if (bulkImportInputRef.current) bulkImportInputRef.current.value = "";
     } catch (error) {
-      console.error("Error importing Exam par cours questions:", error);
+      console.error("Error importing Exam par cours question matrix:", error);
       const payload = error.response?.data;
       setBulkImportResult({
         ...(payload?.data || {}),
@@ -589,10 +605,10 @@ const ImportExamParCourse = () => {
                   <div>
                     <h3 className="flex items-center gap-2 font-semibold text-emerald-950">
                       <FileSpreadsheet className="h-5 w-5 text-emerald-600" />
-                      Importer les questions QCM du cours
+                      Import matriciel des questions par cours
                     </h3>
                     <p className="mt-1 text-sm text-emerald-900/70">
-                      Sélectionnez le cours cible, puis utilisez le modèle QCM ci-dessous.
+                      Téléchargez le modèle du module, remplissez les intersections examen/leçon, puis importez-le.
                     </p>
                   </div>
                   <Button
@@ -601,6 +617,7 @@ const ImportExamParCourse = () => {
                     size="sm"
                     className="gap-2 border-emerald-300 bg-background text-emerald-800 hover:bg-emerald-100"
                     onClick={downloadBulkImportTemplate}
+                    disabled={!selectedSemester || !selectedModule || bulkImporting}
                   >
                     <Download className="h-4 w-4" />
                     Télécharger le modèle
@@ -608,34 +625,14 @@ const ImportExamParCourse = () => {
                 </div>
 
                 <div className="mt-4 space-y-1 rounded-lg border bg-background p-3 text-xs text-muted-foreground">
-                  <p><strong>Colonnes obligatoires :</strong> <code>qst Num</code>, <code>Question</code>, <code>A</code>, <code>B</code>, <code>C</code>, <code>D</code>, <code>answer</code></p>
-                  <p><strong>Colonnes facultatives :</strong> <code>E</code>, <code>Session</code>, <code>Note</code></p>
-                  <p><strong>answer :</strong> lettre(s) des bonnes réponses, par exemple <code>A</code> ou <code>A,C</code>. Une valeur vide, <code>null</code> ou <code>nulle</code> marque une question annulée.</p>
+                  <p><strong>Ligne 1 :</strong> numéros des leçons (<code>L1</code>, <code>L2</code>...) à partir de la colonne B.</p>
+                  <p><strong>Ligne 2 :</strong> noms des leçons, directement sous leur numéro.</p>
+                  <p><strong>Colonne A :</strong> titres exacts des examens par année déjà enregistrés.</p>
+                  <p><strong>Cellules :</strong> numéros comme <code>42</code>, <code>43, 46</code>, <code>38-40</code> ou <code>5, 7-10, 16</code>.</p>
+                  <p><strong>Important :</strong> n'ajoutez aucune ligne de catégorie. Le modèle est généré sans catégorie.</p>
                 </div>
 
-                <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="exam-course-import-target">Cours cible</Label>
-                    <Select
-                      value={selectedCourse}
-                      onValueChange={(value) => {
-                        setSelectedCourse(value);
-                        clearBulkImport();
-                      }}
-                      disabled={!selectedModule || loadingCourses || bulkImporting}
-                    >
-                      <SelectTrigger id="exam-course-import-target">
-                        <SelectValue placeholder={loadingCourses ? "Chargement..." : "Choisir un cours"} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {filteredCourses.map((course) => (
-                          <SelectItem key={course._id} value={course._id}>
-                            {course.name} — {course.category || "Sans catégorie"}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+                <div className="mt-4 grid grid-cols-1 gap-3">
                   <div className="space-y-2">
                     <Label htmlFor="exam-course-excel-file">Fichier Excel</Label>
                     <input
@@ -644,7 +641,7 @@ const ImportExamParCourse = () => {
                       type="file"
                       accept=".xlsx,.xls,.csv"
                       onChange={handleBulkImportFile}
-                      disabled={!selectedSemester || !selectedModule || !selectedCourse || bulkImporting}
+                      disabled={!selectedSemester || !selectedModule || bulkImporting}
                       className="block w-full rounded-md border border-input bg-background px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-50 file:mr-3 file:rounded-md file:border-0 file:bg-emerald-100 file:px-3 file:py-2 file:font-medium file:text-emerald-800"
                     />
                     <p className="text-xs text-muted-foreground">Formats .xlsx, .xls ou .csv — 10 Mo maximum.</p>
@@ -652,11 +649,11 @@ const ImportExamParCourse = () => {
                   <Button
                     type="button"
                     onClick={handleBulkCourseImport}
-                    disabled={!selectedSemester || !selectedModule || !selectedCourse || !bulkImportFile || bulkImporting}
-                    className="gap-2 bg-emerald-600 text-white hover:bg-emerald-700 sm:col-span-2 sm:justify-self-end"
+                    disabled={!selectedSemester || !selectedModule || !bulkImportFile || bulkImporting}
+                    className="gap-2 bg-emerald-600 text-white hover:bg-emerald-700 sm:justify-self-end"
                   >
                     {bulkImporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-                    {bulkImporting ? "Import en cours..." : "Importer les questions"}
+                    {bulkImporting ? "Import en cours..." : "Importer la matrice"}
                   </Button>
                 </div>
 
@@ -676,10 +673,15 @@ const ImportExamParCourse = () => {
                         <p className="font-semibold text-foreground">
                           {bulkImportResult.requestFailed
                             ? bulkImportResult.message
-                            : `${bulkImportResult.imported} question(s) importée(s) sur ${bulkImportResult.total}`}
+                            : `${bulkImportResult.imported} nouvelle(s) liaison(s) sur ${bulkImportResult.total}`}
                         </p>
                         {typeof bulkImportResult.failed === "number" && bulkImportResult.failed > 0 && (
-                          <p className="mt-1 text-sm text-muted-foreground">{bulkImportResult.failed} ligne(s) ignorée(s)</p>
+                          <p className="mt-1 text-sm text-muted-foreground">{bulkImportResult.failed} erreur(s) détectée(s)</p>
+                        )}
+                        {!bulkImportResult.requestFailed && typeof bulkImportResult.mappingCells === "number" && (
+                          <p className="mt-1 text-sm text-muted-foreground">
+                            {bulkImportResult.mappingCells} cellule(s) traitée(s), {bulkImportResult.alreadyLinked || 0} liaison(s) déjà existante(s), {bulkImportResult.lessonsUpdated || 0} leçon(s) mise(s) à jour.
+                          </p>
                         )}
                       </div>
                     </div>

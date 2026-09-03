@@ -15,6 +15,7 @@ import {
     mapCourseImportRows,
     MAX_COURSE_IMPORT_ROWS,
     normalizeImportText,
+    normalizeLessonNumber,
     normalizeSemester,
     validateCourseImportCellTypes,
     validateCourseImportRecord,
@@ -28,6 +29,12 @@ import {
     MAX_COURSE_QUESTION_IMPORT_ROWS,
     parseCourseQuestionImportRows,
 } from "../utils/courseQuestionImport.js";
+import {
+    buildQuestionMappingTemplateMatrix,
+    MAX_MATRIX_EXAMS,
+    MAX_MATRIX_LESSONS,
+    parseQuestionMappingMatrix,
+} from "../utils/questionMappingMatrix.js";
 
 const COURSE_IMPORT_HEADER_LABELS = {
     semester: "Semestre",
@@ -439,6 +446,407 @@ export const examCourseController = {
                 errors,
                 errorsTruncated: parsed.errors.length > 100,
                 course: { id: course._id, name: course.name },
+            },
+        });
+    }),
+
+    downloadQuestionMappingTemplate: asyncHandler(async (req, res) => {
+        const moduleId = String(req.query?.moduleId || "").trim();
+        if (!mongoose.isValidObjectId(moduleId)) {
+            return res.status(400).json({ success: false, message: "Sélectionnez un module valide." });
+        }
+        const scopedModule = await Module.findById(moduleId).select("_id name semester").lean();
+        if (!scopedModule) {
+            return res.status(404).json({ success: false, message: "Module sélectionné introuvable." });
+        }
+
+        const [courses, exams] = await Promise.all([
+            ExamCourse.find({ moduleId: scopedModule._id })
+                .select("_id name lessonNumber")
+                .lean(),
+            ExamParYear.find({ moduleId: scopedModule._id })
+                .select("_id name year")
+                .sort({ year: -1, name: 1 })
+                .lean(),
+        ]);
+        const invalidCourses = courses.filter(course => !String(course.lessonNumber || "").trim());
+        if (invalidCourses.length > 0) {
+            return res.status(422).json({
+                success: false,
+                message: `Ajoutez un numéro de leçon aux cours suivants avant de générer le modèle: ${invalidCourses.slice(0, 10).map(course => course.name).join(", ")}.`,
+            });
+        }
+        if (courses.length === 0) {
+            return res.status(422).json({ success: false, message: "Ce module ne contient aucun cours à mapper." });
+        }
+        if (courses.length > MAX_MATRIX_LESSONS) {
+            return res.status(422).json({
+                success: false,
+                message: `Ce module dépasse la limite de ${MAX_MATRIX_LESSONS} leçons par matrice.`,
+            });
+        }
+        if (exams.length === 0) {
+            return res.status(422).json({ success: false, message: "Ce module ne contient aucun examen par année." });
+        }
+        if (exams.length > MAX_MATRIX_EXAMS) {
+            return res.status(422).json({
+                success: false,
+                message: `Ce module dépasse la limite de ${MAX_MATRIX_EXAMS} examens par matrice.`,
+            });
+        }
+
+        const duplicateExamNames = exams.reduce((counts, exam) => {
+            const name = String(exam.name || "").trim();
+            counts.set(name, (counts.get(name) || 0) + 1);
+            return counts;
+        }, new Map());
+        const ambiguousExamNames = [...duplicateExamNames.entries()]
+            .filter(([, count]) => count > 1)
+            .map(([name]) => name);
+        if (ambiguousExamNames.length > 0) {
+            return res.status(409).json({
+                success: false,
+                message: `Les titres d'examens doivent être uniques dans ce module: ${ambiguousExamNames.slice(0, 10).join(", ")}.`,
+            });
+        }
+
+        courses.sort((left, right) => (
+            String(left.lessonNumber).localeCompare(String(right.lessonNumber), "fr", { numeric: true })
+            || String(left.name).localeCompare(String(right.name), "fr")
+        ));
+        const matrix = buildQuestionMappingTemplateMatrix(courses, exams);
+        const worksheet = xlsx.utils.aoa_to_sheet(matrix);
+        worksheet["!merges"] = [{ s: { r: 0, c: 0 }, e: { r: 1, c: 0 } }];
+        worksheet["!cols"] = [
+            { wch: 28 },
+            ...courses.map(course => ({
+                wch: Math.min(42, Math.max(16, String(course.name).length + 2)),
+            })),
+        ];
+        worksheet["!rows"] = [{ hpt: 24 }, { hpt: 36 }];
+        const workbook = xlsx.utils.book_new();
+        xlsx.utils.book_append_sheet(workbook, worksheet, "Matrice");
+        const buffer = xlsx.write(workbook, { type: "buffer", bookType: "xlsx" });
+
+        res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        res.setHeader("Content-Disposition", 'attachment; filename="modele-matrice-exam-par-cours.xlsx"');
+        return res.status(200).send(buffer);
+    }),
+
+    importQuestionMappingMatrix: asyncHandler(async (req, res) => {
+        if (!req.file) {
+            return res.status(400).json({ success: false, message: "Veuillez fournir un fichier Excel." });
+        }
+        const moduleId = String(req.body?.moduleId || "").trim();
+        if (!mongoose.isValidObjectId(moduleId)) {
+            return res.status(400).json({ success: false, message: "Sélectionnez un module valide." });
+        }
+        const scopedModule = await Module.findById(moduleId).select("_id name semester").lean();
+        if (!scopedModule) {
+            return res.status(404).json({ success: false, message: "Module sélectionné introuvable." });
+        }
+
+        let matrix;
+        try {
+            const workbook = xlsx.read(req.file.buffer, { type: "buffer", cellDates: false });
+            const worksheet = workbook.Sheets[workbook.SheetNames?.[0]];
+            if (!worksheet) throw new Error("Le classeur ne contient aucune feuille.");
+            matrix = xlsx.utils.sheet_to_json(worksheet, {
+                header: 1,
+                defval: "",
+                blankrows: false,
+                raw: false,
+            });
+        } catch (error) {
+            return res.status(400).json({
+                success: false,
+                code: "INVALID_MAPPING_WORKBOOK",
+                message: `Le fichier Excel est illisible: ${error.message}`,
+            });
+        }
+
+        const parsed = parseQuestionMappingMatrix(matrix);
+        if (parsed.errors.length > 0) {
+            return res.status(422).json({
+                success: false,
+                code: "INVALID_MAPPING_MATRIX",
+                message: "La matrice contient des erreurs. Aucun lien n'a été modifié.",
+                data: {
+                    total: parsed.mappings.length,
+                    imported: 0,
+                    failed: parsed.errors.length,
+                    errors: parsed.errors.slice(0, 100),
+                    errorsTruncated: parsed.errors.length > 100,
+                },
+            });
+        }
+
+        const [courses, exams] = await Promise.all([
+            ExamCourse.find({ moduleId: scopedModule._id })
+                .select("_id name lessonNumber linkedQuestions questionSources")
+                .lean(),
+            ExamParYear.find({ moduleId: scopedModule._id })
+                .select("_id name year")
+                .lean(),
+        ]);
+        const validationErrors = [];
+        const addValidationError = (row, field, reason) => {
+            if (validationErrors.length < 100) validationErrors.push({ row, field, reason });
+        };
+
+        const coursesByLessonNumber = courses.reduce((result, course) => {
+            const key = normalizeImportText(normalizeLessonNumber(course.lessonNumber));
+            if (!result.has(key)) result.set(key, []);
+            result.get(key).push(course);
+            return result;
+        }, new Map());
+        const courseByLessonNumber = new Map();
+        parsed.lessons.forEach((lesson) => {
+            const key = normalizeImportText(lesson.lessonNumber);
+            const candidates = coursesByLessonNumber.get(key) || [];
+            const exactCandidates = candidates.filter(course => (
+                normalizeImportText(course.name) === normalizeImportText(lesson.lessonName)
+            ));
+            if (exactCandidates.length !== 1) {
+                const reason = candidates.length === 0
+                    ? `La leçon ${lesson.lessonNumber} n'existe pas dans le module sélectionné`
+                    : exactCandidates.length === 0
+                        ? `Le nom « ${lesson.lessonName} » ne correspond pas à la leçon ${lesson.lessonNumber}`
+                        : `La leçon ${lesson.lessonNumber} est ambiguë dans la base de données`;
+                addValidationError(1, `${xlsx.utils.encode_col(lesson.columnIndex)}1`, reason);
+                return;
+            }
+            courseByLessonNumber.set(key, exactCandidates[0]);
+        });
+
+        const examsByName = exams.reduce((result, exam) => {
+            const name = String(exam.name || "").trim();
+            if (!result.has(name)) result.set(name, []);
+            result.get(name).push(exam);
+            return result;
+        }, new Map());
+        const examByName = new Map();
+        parsed.examRows.forEach((examRow) => {
+            const candidates = examsByName.get(examRow.examName) || [];
+            if (candidates.length !== 1) {
+                addValidationError(
+                    examRow.rowNumber,
+                    `A${examRow.rowNumber}`,
+                    candidates.length === 0
+                        ? `L'examen « ${examRow.examName} » n'existe pas exactement dans le module sélectionné`
+                        : `Plusieurs examens portent le titre exact « ${examRow.examName} »`
+                );
+                return;
+            }
+            examByName.set(examRow.examName, candidates[0]);
+        });
+
+        if (validationErrors.length > 0) {
+            return res.status(422).json({
+                success: false,
+                code: "MAPPING_TARGETS_NOT_FOUND",
+                message: "Certaines leçons ou certains examens ne correspondent pas à la base de données. Aucun lien n'a été modifié.",
+                data: {
+                    total: parsed.mappings.length,
+                    imported: 0,
+                    failed: validationErrors.length,
+                    errors: validationErrors,
+                },
+            });
+        }
+
+        const examIds = [...new Set([...examByName.values()].map(exam => exam._id.toString()))];
+        const questions = await Question.find({ examId: { $in: examIds } })
+            .select("_id examId questionNumber createdAt")
+            .sort({ examId: 1, questionNumber: 1, createdAt: 1 })
+            .lean();
+        const questionsByExam = questions.reduce((result, question) => {
+            const key = question.examId.toString();
+            if (!result.has(key)) result.set(key, []);
+            result.get(key).push(question);
+            return result;
+        }, new Map());
+        const questionMapsByExam = new Map();
+        questionsByExam.forEach((examQuestions, examId) => {
+            const questionMap = new Map();
+            examQuestions.forEach((question, index) => {
+                const number = question.questionNumber || index + 1;
+                if (!questionMap.has(number)) questionMap.set(number, []);
+                questionMap.get(number).push(question);
+            });
+            questionMapsByExam.set(examId, questionMap);
+        });
+
+        const existingCourseIdsByQuestion = courses.reduce((result, course) => {
+            (course.linkedQuestions || []).forEach((questionId) => {
+                const key = questionId.toString();
+                if (!result.has(key)) result.set(key, new Set());
+                result.get(key).add(course._id.toString());
+            });
+            return result;
+        }, new Map());
+
+        const assignments = [];
+        const assignedCourseByQuestion = new Map();
+        parsed.mappings.forEach((mapping) => {
+            const course = courseByLessonNumber.get(normalizeImportText(mapping.lessonNumber));
+            const exam = examByName.get(mapping.examName);
+            const questionMap = questionMapsByExam.get(exam._id.toString()) || new Map();
+            mapping.questionNumbers.forEach((questionNumber) => {
+                const questionCandidates = questionMap.get(questionNumber) || [];
+                if (questionCandidates.length === 0) {
+                    addValidationError(
+                        mapping.rowNumber,
+                        mapping.cell,
+                        `La question ${questionNumber} n'existe pas dans l'examen « ${mapping.examName} »`
+                    );
+                    return;
+                }
+                if (questionCandidates.length > 1) {
+                    addValidationError(
+                        mapping.rowNumber,
+                        mapping.cell,
+                        `Plusieurs questions portent le numéro ${questionNumber} dans l'examen « ${mapping.examName} »`
+                    );
+                    return;
+                }
+                const question = questionCandidates[0];
+                const existingCourseIds = existingCourseIdsByQuestion.get(question._id.toString()) || new Set();
+                if ([...existingCourseIds].some(courseId => courseId !== course._id.toString())) {
+                    addValidationError(
+                        mapping.rowNumber,
+                        mapping.cell,
+                        `La question ${questionNumber} est déjà liée à une autre leçon dans la base de données`
+                    );
+                    return;
+                }
+                const assignmentKey = `${exam._id}:${question._id}`;
+                const previousCourseId = assignedCourseByQuestion.get(assignmentKey);
+                if (previousCourseId && previousCourseId !== course._id.toString()) {
+                    addValidationError(
+                        mapping.rowNumber,
+                        mapping.cell,
+                        `La question ${questionNumber} est déjà affectée à une autre leçon dans cette matrice`
+                    );
+                    return;
+                }
+                assignedCourseByQuestion.set(assignmentKey, course._id.toString());
+                assignments.push({ course, exam, question, questionNumber });
+            });
+        });
+
+        if (validationErrors.length > 0) {
+            return res.status(422).json({
+                success: false,
+                code: "MAPPING_QUESTIONS_NOT_FOUND",
+                message: "Certaines questions sont introuvables ou affectées plusieurs fois. Aucun lien n'a été modifié.",
+                data: {
+                    total: assignments.length,
+                    imported: 0,
+                    failed: validationErrors.length,
+                    errors: validationErrors,
+                    errorsTruncated: validationErrors.length >= 100,
+                },
+            });
+        }
+
+        const plansByCourse = new Map();
+        let alreadyLinked = 0;
+        assignments.forEach(({ course, exam, question, questionNumber }) => {
+            const courseId = course._id.toString();
+            if (!plansByCourse.has(courseId)) {
+                plansByCourse.set(courseId, {
+                    course,
+                    newQuestionIds: new Map(),
+                    newSources: new Map(),
+                    existingQuestionIds: new Set((course.linkedQuestions || []).map(id => id.toString())),
+                    existingSourceIds: new Set((course.questionSources || []).map(source => source.questionId?.toString()).filter(Boolean)),
+                });
+            }
+            const plan = plansByCourse.get(courseId);
+            const questionId = question._id.toString();
+            if (plan.existingQuestionIds.has(questionId) || plan.newQuestionIds.has(questionId)) {
+                alreadyLinked += 1;
+            } else {
+                plan.newQuestionIds.set(questionId, question._id);
+            }
+            if (!plan.existingSourceIds.has(questionId) && !plan.newSources.has(questionId)) {
+                plan.newSources.set(questionId, {
+                    questionId: question._id,
+                    examParYearId: exam._id,
+                    yearName: exam.name,
+                    questionNumber,
+                });
+            }
+        });
+
+        const changedPlans = [...plansByCourse.values()].filter(plan => (
+            plan.newQuestionIds.size > 0 || plan.newSources.size > 0
+        ));
+        const operations = changedPlans.map(plan => ({
+            updateOne: {
+                filter: { _id: plan.course._id },
+                update: [
+                    {
+                        $set: {
+                            linkedQuestions: {
+                                $setUnion: [
+                                    { $ifNull: ["$linkedQuestions", []] },
+                                    [...plan.newQuestionIds.values()],
+                                ],
+                            },
+                            questionSources: {
+                                $setUnion: [
+                                    { $ifNull: ["$questionSources", []] },
+                                    [...plan.newSources.values()],
+                                ],
+                            },
+                        },
+                    },
+                    { $set: { totalQuestions: { $size: "$linkedQuestions" } } },
+                ],
+            },
+        }));
+
+        try {
+            if (operations.length > 0) await ExamCourse.bulkWrite(operations, { ordered: true });
+        } catch (error) {
+            console.error("Question mapping matrix import failed", {
+                adminId: req.user?._id?.toString(),
+                moduleId,
+                filename: req.file.originalname,
+                message: error.message,
+            });
+            return res.status(500).json({
+                success: false,
+                code: "MAPPING_DATABASE_FAILED",
+                message: "La matrice est valide, mais les liens n'ont pas pu être enregistrés.",
+            });
+        }
+
+        const questionsLinked = [...plansByCourse.values()]
+            .reduce((sum, plan) => sum + plan.newQuestionIds.size, 0);
+        console.info("Question mapping matrix imported", {
+            adminId: req.user?._id?.toString(),
+            moduleId,
+            filename: req.file.originalname,
+            mappingCells: parsed.mappings.length,
+            requestedQuestions: assignments.length,
+            questionsLinked,
+            alreadyLinked,
+            lessonsUpdated: operations.length,
+        });
+        return res.status(200).json({
+            success: true,
+            message: `${questionsLinked} nouvelle(s) liaison(s) créée(s), ${alreadyLinked} déjà existante(s).`,
+            data: {
+                total: assignments.length,
+                imported: questionsLinked,
+                failed: 0,
+                mappingCells: parsed.mappings.length,
+                alreadyLinked,
+                lessonsUpdated: operations.length,
+                errors: [],
             },
         });
     }),
