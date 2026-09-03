@@ -27,6 +27,8 @@ export const parseQuestionNumberExpression = (value) => {
     if (!source) return { numbers: [], error: null };
 
     const normalized = source.replace(/[\u2010-\u2015\u2212]/g, "-");
+    if (normalized === "-") return { numbers: [], error: null };
+
     const numbers = [];
     const seen = new Set();
 
@@ -127,7 +129,10 @@ export const parseQuestionMappingMatrix = (matrix = []) => {
     for (let rowIndex = 2; rowIndex < matrix.length; rowIndex += 1) {
         const row = matrix[rowIndex] || [];
         const examName = String(row[0] ?? "").trim();
-        const hasMapping = row.slice(1).some(value => String(value ?? "").trim());
+        const hasMapping = row.slice(1).some((value) => {
+            const parsed = parseQuestionNumberExpression(value);
+            return Boolean(parsed.error) || parsed.numbers.length > 0;
+        });
         if (!examName && !hasMapping) continue;
         if (!examName) {
             errors.push({
@@ -157,6 +162,8 @@ export const parseQuestionMappingMatrix = (matrix = []) => {
                 errors.push({ row: rowIndex + 1, field: cell, reason: parsed.error });
                 return;
             }
+            if (parsed.numbers.length === 0) return;
+
             if ((assignmentCount + parsed.numbers.length) > MAX_MATRIX_QUESTION_ASSIGNMENTS) {
                 errors.push({
                     row: rowIndex + 1,
@@ -188,9 +195,5 @@ export const parseQuestionMappingMatrix = (matrix = []) => {
     if (examRows.length === 0) {
         errors.push({ row: 3, field: "Examens", reason: "Aucun examen par année n'est défini" });
     }
-    if (mappings.length === 0 && errors.length === 0) {
-        errors.push({ row: 3, field: "Matrice", reason: "Aucun numéro de question n'est renseigné" });
-    }
-
     return { lessons, examRows, mappings, errors };
 };

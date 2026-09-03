@@ -581,11 +581,15 @@ export const examCourseController = {
             });
         }
 
+        const submittedExamNames = parsed.examRows.map(examRow => examRow.examName);
         const [courses, exams] = await Promise.all([
             ExamCourse.find({ moduleId: scopedModule._id })
                 .select("_id name lessonNumber linkedQuestions questionSources")
                 .lean(),
-            ExamParYear.find({ moduleId: scopedModule._id })
+            ExamParYear.find({
+                moduleId: scopedModule._id,
+                name: { $in: submittedExamNames },
+            })
                 .select("_id name year")
                 .lean(),
         ]);
