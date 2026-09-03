@@ -107,8 +107,8 @@ test("category list replaces N+1 counts with one aggregate", { concurrency: fals
     ExamCourse.aggregate = async () => {
       aggregateCalls += 1;
       return [
-        { _id: { moduleId, category: "A" }, count: 3 },
-        { _id: { moduleId, category: "B" }, count: 5 },
+        { _id: `legacy:${moduleId}:A`, count: 3 },
+        { _id: `legacy:${moduleId}:B`, count: 5 },
       ];
     };
     ExamCourse.countDocuments = async () => {

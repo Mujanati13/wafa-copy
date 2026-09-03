@@ -1,6 +1,11 @@
 import asyncHandler from "../handlers/asyncHandler.js";
 import CourseCategory from "../models/courseCategoryModel.js";
 import ExamCourse from "../models/examCourseModel.js";
+import Module from "../models/moduleModel.js";
+import {
+    getCourseCategoryRelationKey,
+    getCourseCategoryUsageFilter,
+} from "../utils/courseCategoryRelations.js";
 
 export const courseCategoryController = {
     // Create a new category (without creating exam courses)
@@ -56,7 +61,10 @@ export const courseCategoryController = {
             .sort({ createdAt: -1 })
             .lean();
 
-        // Count all categories in one grouped query instead of one query per row.
+        // Count explicit category IDs and legacy name/module relationships in one
+        // query. Categories whose module was deleted are intentionally considered
+        // orphaned and show zero usable courses.
+        const categoryIds = categories.map(category => category._id);
         const moduleIds = [...new Map(
             categories
                 .map(category => category.moduleId?._id)
@@ -64,17 +72,41 @@ export const courseCategoryController = {
                 .map(id => [id.toString(), id])
         ).values()];
         const categoryNames = [...new Set(categories.map(category => category.name))];
-        const groupedCounts = moduleIds.length > 0 && categoryNames.length > 0
+        const groupedCounts = categoryIds.length > 0
             ? await ExamCourse.aggregate([
                 {
                     $match: {
-                        moduleId: { $in: moduleIds },
-                        category: { $in: categoryNames }
+                        $or: [
+                            { courseCategoryId: { $in: categoryIds } },
+                            {
+                                courseCategoryId: null,
+                                moduleId: { $in: moduleIds },
+                                category: { $in: categoryNames },
+                            },
+                        ],
                     }
                 },
                 {
+                    $project: {
+                        relationKey: {
+                            $cond: [
+                                { $ne: [{ $ifNull: ["$courseCategoryId", null] }, null] },
+                                { $concat: ["id:", { $toString: "$courseCategoryId" }] },
+                                {
+                                    $concat: [
+                                        "legacy:",
+                                        { $toString: "$moduleId" },
+                                        ":",
+                                        "$category",
+                                    ],
+                                },
+                            ],
+                        },
+                    },
+                },
+                {
                     $group: {
-                        _id: { moduleId: "$moduleId", category: "$category" },
+                        _id: "$relationKey",
                         count: { $sum: 1 }
                     }
                 }
@@ -82,17 +114,22 @@ export const courseCategoryController = {
             : [];
         const countByCategory = new Map(
             groupedCounts.map(item => [
-                `${item._id.moduleId.toString()}:${item._id.category}`,
+                item._id,
                 item.count
             ])
         );
 
-        const categoriesWithCounts = categories.map(category => ({
-            ...category,
-            examCourseCount: countByCategory.get(
-                `${category.moduleId?._id?.toString()}:${category.name}`
-            ) || 0
-        }));
+        const categoriesWithCounts = categories.map((category) => {
+            const moduleExists = Boolean(category.moduleId?._id);
+            const keys = getCourseCategoryRelationKey(category);
+            return {
+                ...category,
+                isOrphaned: !moduleExists,
+                examCourseCount: moduleExists
+                    ? (countByCategory.get(keys.explicit) || 0) + (countByCategory.get(keys.legacy) || 0)
+                    : 0,
+            };
+        });
 
         res.status(200).json({
             success: true,
@@ -204,11 +241,12 @@ export const courseCategoryController = {
             });
         }
 
-        // Check if there are exam courses using this category
-        const courseCount = await ExamCourse.countDocuments({
-            category: category.name,
-            moduleId: category.moduleId
-        });
+        const moduleExists = category.moduleId
+            ? Boolean(await Module.exists({ _id: category.moduleId }))
+            : false;
+        const courseCount = moduleExists
+            ? await ExamCourse.countDocuments(getCourseCategoryUsageFilter(category))
+            : 0;
 
         if (courseCount > 0) {
             return res.status(400).json({
@@ -217,11 +255,19 @@ export const courseCategoryController = {
             });
         }
 
+        if (!moduleExists) {
+            await ExamCourse.updateMany(
+                { courseCategoryId: category._id },
+                { $unset: { courseCategoryId: 1 } }
+            );
+        }
         await CourseCategory.findByIdAndDelete(id);
 
         res.status(200).json({
             success: true,
-            message: "Catégorie supprimée avec succès"
+            message: moduleExists
+                ? "Catégorie supprimée avec succès"
+                : "Catégorie orpheline supprimée avec succès"
         });
     }),
 
