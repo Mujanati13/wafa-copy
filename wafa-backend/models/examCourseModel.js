@@ -15,6 +15,11 @@ const examCourseSchema = new mongoose.Schema(
             type: String,
             default: "",
         },
+        courseCategoryId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "CourseCategory",
+            default: null,
+        },
         lessonNumber: {
             type: String,
             trim: true,
@@ -84,6 +89,7 @@ examCourseSchema.index({ category: 1 });
 examCourseSchema.index({ status: 1 });
 examCourseSchema.index({ moduleId: 1, status: 1 });
 examCourseSchema.index({ moduleId: 1, category: 1 });
+examCourseSchema.index({ courseCategoryId: 1 });
 examCourseSchema.index({ moduleId: 1, lessonNumber: 1 });
 examCourseSchema.index({ moduleId: 1, createdAt: -1 });
 

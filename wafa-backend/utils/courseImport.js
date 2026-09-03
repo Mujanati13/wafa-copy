@@ -96,6 +96,33 @@ export const mapCourseImportRows = (rows = [], headers = []) => {
     return { headerMap, missingHeaders, records };
 };
 
+export const validateCourseImportCellTypes = (row, headerMap) => {
+    const errors = [];
+    const textFields = [
+        ["module", "Module"],
+        ["category", "Catégorie"],
+        ["lessonName", "Nom de la leçon"],
+    ];
+    textFields.forEach(([field, label]) => {
+        const value = getCell(row, headerMap[field]);
+        if (value !== "" && value != null && typeof value !== "string") {
+            errors.push({ field: label, reason: "Une valeur texte est attendue" });
+        }
+    });
+
+    const semesterValue = getCell(row, headerMap.semester);
+    if (semesterValue !== "" && semesterValue != null
+        && typeof semesterValue !== "string" && typeof semesterValue !== "number") {
+        errors.push({ field: "Semestre", reason: "Utilisez une valeur comme S3 ou 3" });
+    }
+    const lessonNumberValue = getCell(row, headerMap.lessonNumber);
+    if (lessonNumberValue !== "" && lessonNumberValue != null
+        && typeof lessonNumberValue !== "string" && typeof lessonNumberValue !== "number") {
+        errors.push({ field: "Numéro de leçon", reason: "Utilisez une valeur comme L1 ou 1" });
+    }
+    return errors;
+};
+
 export const validateCourseImportRecord = (record) => {
     const errors = [];
     if (!record.semester) {

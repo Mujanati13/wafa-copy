@@ -5,6 +5,8 @@ import {
     mapCourseImportRows,
     normalizeLessonNumber,
     normalizeSemester,
+    resolveCourseImportHeaders,
+    validateCourseImportCellTypes,
     validateCourseImportRecord,
 } from "../utils/courseImport.js";
 
@@ -118,4 +120,23 @@ test("detects a repeated lesson inside the same module category", () => {
     });
 
     assert.deepEqual(firstKeys, repeatedKeys);
+});
+
+test("reports invalid Excel cell types with their field names", () => {
+    const row = {
+        semestre: true,
+        module: 123,
+        categorie: false,
+        num_lesson: { value: "L1" },
+        "lesson name": 456,
+    };
+    const headerMap = resolveCourseImportHeaders(Object.keys(row));
+
+    assert.deepEqual(validateCourseImportCellTypes(row, headerMap), [
+        { field: "Module", reason: "Une valeur texte est attendue" },
+        { field: "Catégorie", reason: "Une valeur texte est attendue" },
+        { field: "Nom de la leçon", reason: "Une valeur texte est attendue" },
+        { field: "Semestre", reason: "Utilisez une valeur comme S3 ou 3" },
+        { field: "Numéro de leçon", reason: "Utilisez une valeur comme L1 ou 1" },
+    ]);
 });

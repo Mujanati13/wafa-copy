@@ -4,7 +4,6 @@ const courseCategorySchema = new mongoose.Schema({
     name: {
         type: String,
         required: true,
-        unique: true,
         trim: true
     },
     moduleId: {
@@ -34,7 +33,7 @@ const courseCategorySchema = new mongoose.Schema({
 });
 
 // Index for faster queries
-courseCategorySchema.index({ moduleId: 1, name: 1 });
+courseCategorySchema.index({ moduleId: 1, name: 1 }, { unique: true });
 courseCategorySchema.index({ moduleId: 1, status: 1, createdAt: -1 });
 
 const CourseCategory = mongoose.model("CourseCategory", courseCategorySchema);

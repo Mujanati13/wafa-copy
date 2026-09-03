@@ -16,6 +16,7 @@
     "test:progress": "node --test tests/progress-statistics.test.js",
     "test:profile-stats": "node --test tests/profile-statistics.test.js",
     "db:indexes": "node scripts/sync-performance-indexes.js",
+    "db:migrate-course-category-index": "node scripts/migrate-course-category-index.js",
     "session:clear": "node scripts/clear-user-session.js"
   },
   "author": "",

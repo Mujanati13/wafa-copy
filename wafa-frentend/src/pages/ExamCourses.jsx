@@ -274,7 +274,9 @@ const ExamCourses = () => {
       const response = await api.post("/exam-courses/import", formData);
       setImportResult(response.data?.data || null);
       toast.success(response.data?.message || "Import terminé");
-      await fetchCourses();
+      setImportFile(null);
+      if (importInputRef.current) importInputRef.current.value = "";
+      await Promise.all([fetchCourses(), fetchCourseCategories()]);
     } catch (error) {
       console.error("Error importing courses:", error);
       const payload = error.response?.data;
@@ -863,6 +865,11 @@ const ExamCourses = () => {
                     {typeof importResult.imported === "number" && (
                       <p className="mt-1 text-sm text-muted-foreground">
                         {importResult.imported} importé(s) sur {importResult.total} — {importResult.failed} ignoré(s)
+                      </p>
+                    )}
+                    {importResult.categoriesCreated > 0 && (
+                      <p className="mt-1 text-sm text-emerald-700">
+                        {importResult.categoriesCreated} nouvelle(s) catégorie(s) créée(s) : {importResult.createdCategoryNames.join(", ")}
                       </p>
                     )}
                   </div>

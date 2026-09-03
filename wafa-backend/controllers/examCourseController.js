@@ -14,9 +14,15 @@ import {
     getCourseImportDuplicateKeys,
     mapCourseImportRows,
     MAX_COURSE_IMPORT_ROWS,
+    normalizeImportText,
     normalizeSemester,
+    validateCourseImportCellTypes,
     validateCourseImportRecord,
 } from "../utils/courseImport.js";
+import {
+    CourseCategoryImportError,
+    findOrCreateCourseImportCategories,
+} from "../services/courseCategoryImportService.js";
 
 const COURSE_IMPORT_HEADER_LABELS = {
     semester: "Semestre",
@@ -308,14 +314,28 @@ export const examCourseController = {
             });
         }
 
+        if (!Array.isArray(workbook.SheetNames) || workbook.SheetNames.length === 0) {
+            return res.status(400).json({ success: false, message: "Le classeur ne contient aucune feuille." });
+        }
+
         const worksheet = workbook.Sheets[workbook.SheetNames[0]];
         if (!worksheet) {
             return res.status(400).json({ success: false, message: "Le classeur ne contient aucune feuille." });
         }
 
-        const matrix = xlsx.utils.sheet_to_json(worksheet, { header: 1, defval: "", blankrows: false });
-        const headers = matrix[0] || [];
-        const rows = xlsx.utils.sheet_to_json(worksheet, { defval: "", blankrows: false, raw: false });
+        let headers;
+        let rows;
+        try {
+            const matrix = xlsx.utils.sheet_to_json(worksheet, { header: 1, defval: "", blankrows: false });
+            headers = matrix[0] || [];
+            rows = xlsx.utils.sheet_to_json(worksheet, { defval: "", blankrows: false, raw: true });
+        } catch (error) {
+            return res.status(400).json({
+                success: false,
+                code: "INVALID_IMPORT_CONTENT",
+                message: `Impossible de lire les lignes du fichier Excel: ${error.message}`,
+            });
+        }
 
         if (rows.length === 0) {
             return res.status(400).json({ success: false, message: "Le fichier Excel ne contient aucun cours." });
@@ -327,7 +347,7 @@ export const examCourseController = {
             });
         }
 
-        const { missingHeaders, records } = mapCourseImportRows(rows, headers);
+        const { headerMap, missingHeaders, records } = mapCourseImportRows(rows, headers);
         if (missingHeaders.length > 0) {
             return res.status(422).json({
                 success: false,
@@ -363,8 +383,11 @@ export const examCourseController = {
 
         const errors = [];
         const resolvedRecords = [];
-        records.forEach((record) => {
-            const validationErrors = validateCourseImportRecord(record);
+        records.forEach((record, index) => {
+            const validationErrors = [
+                ...validateCourseImportCellTypes(rows[index], headerMap),
+                ...validateCourseImportRecord(record),
+            ];
             validationErrors.forEach(error => addImportError(errors, record.rowNumber, error.field, error.reason));
             if (validationErrors.length > 0) return;
 
@@ -426,7 +449,50 @@ export const examCourseController = {
             });
         });
 
-        const createdCourses = documents.length > 0 ? await ExamCourse.insertMany(documents) : [];
+        let createdCourses = [];
+        let createdCategoryNames = [];
+        if (documents.length > 0) {
+            try {
+                const categoryResult = await findOrCreateCourseImportCategories({
+                    moduleId: scopedModule._id,
+                    categoryNames: documents.map(document => document.category),
+                });
+                createdCategoryNames = categoryResult.createdNames;
+                documents.forEach((document) => {
+                    const category = categoryResult.categoriesByKey.get(normalizeImportText(document.category));
+                    document.category = category.name;
+                    document.courseCategoryId = category._id;
+                });
+                createdCourses = await ExamCourse.insertMany(documents);
+            } catch (error) {
+                const isCategoryError = error instanceof CourseCategoryImportError;
+                const field = isCategoryError ? "Catégorie" : "Base de données";
+                const reason = isCategoryError
+                    ? `${error.message} (${error.categoryName})`
+                    : error?.name === "ValidationError"
+                        ? `Données refusées: ${error.message}`
+                        : "L'enregistrement des cours a échoué. Réessayez; si le problème persiste, contactez l'administrateur technique.";
+                console.error("Course Excel import database failure", {
+                    adminId: req.user?._id?.toString(),
+                    filename: req.file.originalname,
+                    moduleId: scopedModule._id.toString(),
+                    errorName: error?.name,
+                    errorCode: error?.code,
+                    message: error?.message,
+                });
+                return res.status(isCategoryError && error?.cause?.code === 11000 ? 409 : 500).json({
+                    success: false,
+                    code: isCategoryError ? "CATEGORY_CREATION_FAILED" : "COURSE_IMPORT_DATABASE_FAILED",
+                    message: "L'import a été interrompu avant la création des cours.",
+                    data: {
+                        total: records.length,
+                        imported: 0,
+                        failed: records.length,
+                        errors: [{ row: null, field, reason }],
+                    },
+                });
+            }
+        }
         const failed = records.length - createdCourses.length;
         console.info("Course Excel import completed", {
             adminId: req.user?._id?.toString(),
@@ -434,6 +500,7 @@ export const examCourseController = {
             total: records.length,
             imported: createdCourses.length,
             failed,
+            categoriesCreated: createdCategoryNames.length,
             semester: scopedSemester,
             moduleId: scopedModule?._id?.toString(),
         });
@@ -448,6 +515,8 @@ export const examCourseController = {
                 total: records.length,
                 imported: createdCourses.length,
                 failed,
+                categoriesCreated: createdCategoryNames.length,
+                createdCategoryNames,
                 errors,
                 errorsTruncated: errors.length >= 100 && failed > errors.length,
                 scope: {
