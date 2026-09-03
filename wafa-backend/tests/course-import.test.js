@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
+    getCourseImportDuplicateKeys,
     mapCourseImportRows,
     normalizeLessonNumber,
     normalizeSemester,
@@ -56,7 +57,7 @@ test("normalizes semester and lesson number variants", () => {
 
 test("reports missing headers and invalid required values", () => {
     const missing = mapCourseImportRows([], ["Semestre", "Module"]);
-    assert.deepEqual(missing.missingHeaders, ["lessonNumber", "lessonName"]);
+    assert.deepEqual(missing.missingHeaders, ["category", "lessonNumber", "lessonName"]);
 
     const errors = validateCourseImportRecord({
         semester: "",
@@ -66,5 +67,55 @@ test("reports missing headers and invalid required values", () => {
         lessonNumber: "",
         lessonName: "",
     });
-    assert.equal(errors.length, 4);
+    assert.equal(errors.length, 5);
+});
+
+test("requires a category value for every imported course", () => {
+    const rows = [{
+        semestre: "S3",
+        module: "Sémiologie 1",
+        categorie: "",
+        num_lesson: "L1",
+        "lesson name": "Introduction",
+    }];
+    const { records } = mapCourseImportRows(rows, Object.keys(rows[0]));
+
+    assert.deepEqual(validateCourseImportRecord(records[0]), [{
+        field: "Catégorie",
+        reason: "La catégorie est requise",
+    }]);
+});
+
+test("allows the same lesson number in different categories", () => {
+    const rheumatologyKeys = getCourseImportDuplicateKeys({
+        moduleId: "module-1",
+        category: "Rhumatologie",
+        lessonNumber: "L1",
+        lessonName: "Introduction rhumatologie",
+    });
+    const cardiologyKeys = getCourseImportDuplicateKeys({
+        moduleId: "module-1",
+        category: "Cardiologie",
+        lessonNumber: "L1",
+        lessonName: "Introduction cardiologie",
+    });
+
+    assert.equal(rheumatologyKeys.some(key => cardiologyKeys.includes(key)), false);
+});
+
+test("detects a repeated lesson inside the same module category", () => {
+    const firstKeys = getCourseImportDuplicateKeys({
+        moduleId: "module-1",
+        category: "Rhumatologie",
+        lessonNumber: "L01",
+        lessonName: "Introduction",
+    });
+    const repeatedKeys = getCourseImportDuplicateKeys({
+        moduleId: "module-1",
+        category: "rhumatologie",
+        lessonNumber: "L1",
+        lessonName: "Introduction",
+    });
+
+    assert.deepEqual(firstKeys, repeatedKeys);
 });

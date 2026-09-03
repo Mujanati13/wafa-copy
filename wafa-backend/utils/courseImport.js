@@ -53,11 +53,30 @@ export const normalizeLessonNumber = (value = "") => {
     return normalized;
 };
 
+export const getCourseImportDuplicateKeys = ({
+    moduleId,
+    category = "",
+    lessonNumber = "",
+    lessonName = "",
+    name = "",
+}) => {
+    const categoryScope = `${String(moduleId)}:category:${normalizeImportText(category)}`;
+    const resolvedName = lessonName || name;
+    const keys = [];
+    if (lessonNumber) {
+        keys.push(`${categoryScope}:number:${normalizeImportText(normalizeLessonNumber(lessonNumber))}`);
+    }
+    if (resolvedName) {
+        keys.push(`${categoryScope}:name:${normalizeImportText(resolvedName)}`);
+    }
+    return keys;
+};
+
 const getCell = (row, sourceHeader) => sourceHeader ? row[sourceHeader] : "";
 
 export const mapCourseImportRows = (rows = [], headers = []) => {
     const headerMap = resolveCourseImportHeaders(headers);
-    const requiredFields = ["semester", "module", "lessonNumber", "lessonName"];
+    const requiredFields = ["semester", "module", "category", "lessonNumber", "lessonName"];
     const missingHeaders = requiredFields.filter(field => !headerMap[field]);
 
     if (missingHeaders.length > 0) {
@@ -83,6 +102,7 @@ export const validateCourseImportRecord = (record) => {
         errors.push({ field: "Semestre", reason: `Semestre invalide: ${record.semesterSource || "vide"}` });
     }
     if (!record.moduleName) errors.push({ field: "Module", reason: "Le module est requis" });
+    if (!record.category) errors.push({ field: "Catégorie", reason: "La catégorie est requise" });
     if (!record.lessonNumber) errors.push({ field: "Numéro de leçon", reason: "Le numéro de leçon est requis" });
     if (record.lessonNumber.length > 30) errors.push({ field: "Numéro de leçon", reason: "30 caractères maximum" });
     if (!record.lessonName) errors.push({ field: "Nom de la leçon", reason: "Le nom de la leçon est requis" });

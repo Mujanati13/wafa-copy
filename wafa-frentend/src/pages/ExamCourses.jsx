@@ -40,6 +40,8 @@ const ExamCourses = () => {
   const fileInputRef = useRef(null);
   const importInputRef = useRef(null);
   const [showImportDialog, setShowImportDialog] = useState(false);
+  const [importSemester, setImportSemester] = useState("");
+  const [importModuleId, setImportModuleId] = useState("");
   const [importFile, setImportFile] = useState(null);
   const [importing, setImporting] = useState(false);
   const [importResult, setImportResult] = useState(null);
@@ -208,9 +210,15 @@ const ExamCourses = () => {
   const uniqueCategories = Array.from(new Set(examCourses.map((c) => c.category))).filter(Boolean);
   // Get categories from /course-categories endpoint
   const allCategories = courseCategories.map(cat => cat.name).filter(Boolean);
+  const importModules = useMemo(
+    () => modules.filter((module) => module.semester === importSemester),
+    [modules, importSemester]
+  );
 
   const resetImport = () => {
     setShowImportDialog(false);
+    setImportSemester("");
+    setImportModuleId("");
     setImportFile(null);
     setImportResult(null);
     if (importInputRef.current) importInputRef.current.value = "";
@@ -252,11 +260,13 @@ const ExamCourses = () => {
   };
 
   const handleCourseImport = async () => {
-    if (!importFile) {
-      toast.error("Sélectionnez un fichier Excel");
+    if (!importSemester || !importModuleId || !importFile) {
+      toast.error("Sélectionnez le semestre, le module et le fichier Excel");
       return;
     }
     const formData = new FormData();
+    formData.append("semester", importSemester);
+    formData.append("moduleId", importModuleId);
     formData.append("file", importFile);
     setImporting(true);
     setImportResult(null);
@@ -751,7 +761,7 @@ const ExamCourses = () => {
               Importer des cours depuis Excel
             </DialogTitle>
             <DialogDescription>
-              Importez jusqu'à 2 000 lignes. Les modules doivent déjà exister dans le semestre indiqué.
+              Sélectionnez le semestre et le module, puis importez jusqu'à 2 000 lignes.
             </DialogDescription>
           </DialogHeader>
 
@@ -759,12 +769,61 @@ const ExamCourses = () => {
             <div className="rounded-lg border bg-muted/30 p-4 text-sm">
               <p className="font-semibold text-foreground">Colonnes attendues</p>
               <p className="mt-1 text-muted-foreground">
-                Semestre, Module, Catégorie (facultative), Numéro de leçon et Nom de la leçon.
+                <code>semestre</code>, <code>module</code>, <code>categorie</code>, <code>num_lesson</code> et <code>lesson name</code>.
               </p>
               <Button type="button" variant="link" className="mt-2 h-auto gap-2 p-0" onClick={downloadImportTemplate}>
                 <Download className="h-4 w-4" />
                 Télécharger le modèle Excel
               </Button>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="course-import-semester">Semestre</Label>
+                <Select
+                  value={importSemester}
+                  onValueChange={(value) => {
+                    setImportSemester(value);
+                    setImportModuleId("");
+                    setImportFile(null);
+                    setImportResult(null);
+                    if (importInputRef.current) importInputRef.current.value = "";
+                  }}
+                  disabled={importing}
+                >
+                  <SelectTrigger id="course-import-semester">
+                    <SelectValue placeholder="Choisir un semestre" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {["S1", "S2", "S3", "S4", "S5", "S6", "S7", "S8", "S9", "S10"].map((semester) => (
+                      <SelectItem key={semester} value={semester}>{semester}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="course-import-module">Module</Label>
+                <Select
+                  value={importModuleId}
+                  onValueChange={(value) => {
+                    setImportModuleId(value);
+                    setImportFile(null);
+                    setImportResult(null);
+                    if (importInputRef.current) importInputRef.current.value = "";
+                  }}
+                  disabled={!importSemester || importing}
+                >
+                  <SelectTrigger id="course-import-module">
+                    <SelectValue placeholder="Choisir un module" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {importModules.map((module) => (
+                      <SelectItem key={module._id} value={module._id}>{module.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             <div className="space-y-2">
@@ -775,6 +834,7 @@ const ExamCourses = () => {
                 type="file"
                 accept=".xlsx,.xls,.csv"
                 onChange={handleImportFileSelect}
+                disabled={!importSemester || !importModuleId || importing}
                 className="block w-full rounded-md border border-input bg-background px-3 py-2 text-sm file:mr-3 file:rounded-md file:border-0 file:bg-purple-100 file:px-3 file:py-2 file:font-medium file:text-purple-800 hover:file:bg-purple-200"
               />
               <p className="text-xs text-muted-foreground">Formats .xlsx, .xls ou .csv — 10 Mo maximum.</p>
@@ -842,7 +902,7 @@ const ExamCourses = () => {
 
           <DialogFooter className="gap-2 sm:gap-0">
             <Button type="button" variant="outline" onClick={resetImport} disabled={importing}>Fermer</Button>
-            <Button type="button" onClick={handleCourseImport} disabled={!importFile || importing} className="gap-2 bg-purple-600 text-white hover:bg-purple-700">
+            <Button type="button" onClick={handleCourseImport} disabled={!importSemester || !importModuleId || !importFile || importing} className="gap-2 bg-purple-600 text-white hover:bg-purple-700">
               {importing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
               {importing ? "Import en cours..." : "Importer les cours"}
             </Button>

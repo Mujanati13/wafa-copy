@@ -8,13 +8,12 @@ import mongoose from "mongoose";
 import {
     findEquivalentModules,
     moduleNamesAreEquivalent,
-    normalizeModuleIdentity,
 } from "../utils/moduleIdentity.js";
 import { getAnsweredCountByExam } from "../utils/answerProgress.js";
 import {
+    getCourseImportDuplicateKeys,
     mapCourseImportRows,
     MAX_COURSE_IMPORT_ROWS,
-    normalizeImportText,
     normalizeSemester,
     validateCourseImportRecord,
 } from "../utils/courseImport.js";
@@ -22,6 +21,7 @@ import {
 const COURSE_IMPORT_HEADER_LABELS = {
     semester: "Semestre",
     module: "Module",
+    category: "Catégorie",
     lessonNumber: "Numéro de leçon",
     lessonName: "Nom de la leçon",
 };
@@ -339,42 +339,27 @@ export const examCourseController = {
 
         const requestedSemester = String(req.body?.semester || "").trim();
         const requestedModuleId = String(req.body?.moduleId || "").trim();
-        if (Boolean(requestedSemester) !== Boolean(requestedModuleId)) {
+        if (!requestedSemester || !requestedModuleId) {
             return res.status(400).json({
                 success: false,
-                message: "Le semestre et le module doivent être sélectionnés ensemble.",
+                message: "Sélectionnez le semestre et le module avant d'importer le fichier.",
             });
         }
 
-        let scopedSemester = "";
-        let scopedModule = null;
-        if (requestedSemester && requestedModuleId) {
-            scopedSemester = normalizeSemester(requestedSemester);
-            if (!scopedSemester || !mongoose.isValidObjectId(requestedModuleId)) {
-                return res.status(400).json({ success: false, message: "Semestre ou module invalide." });
-            }
-            scopedModule = await Module.findById(requestedModuleId).select("_id name semester").lean();
-            if (!scopedModule) {
-                return res.status(404).json({ success: false, message: "Module sélectionné introuvable." });
-            }
-            if (scopedModule.semester !== scopedSemester) {
-                return res.status(422).json({
-                    success: false,
-                    message: `Le module sélectionné n'appartient pas au semestre ${scopedSemester}.`,
-                });
-            }
+        const scopedSemester = normalizeSemester(requestedSemester);
+        if (!scopedSemester || !mongoose.isValidObjectId(requestedModuleId)) {
+            return res.status(400).json({ success: false, message: "Semestre ou module invalide." });
         }
-
-        const modules = scopedModule
-            ? [scopedModule]
-            : await Module.find({}).select("_id name semester").lean();
-        const moduleCandidates = new Map();
-        modules.forEach((module) => {
-            const key = `${module.semester}:${normalizeModuleIdentity(module.name)}`;
-            const candidates = moduleCandidates.get(key) || [];
-            candidates.push(module);
-            moduleCandidates.set(key, candidates);
-        });
+        const scopedModule = await Module.findById(requestedModuleId).select("_id name semester").lean();
+        if (!scopedModule) {
+            return res.status(404).json({ success: false, message: "Module sélectionné introuvable." });
+        }
+        if (scopedModule.semester !== scopedSemester) {
+            return res.status(422).json({
+                success: false,
+                message: `Le module sélectionné n'appartient pas au semestre ${scopedSemester}.`,
+            });
+        }
 
         const errors = [];
         const resolvedRecords = [];
@@ -383,46 +368,25 @@ export const examCourseController = {
             validationErrors.forEach(error => addImportError(errors, record.rowNumber, error.field, error.reason));
             if (validationErrors.length > 0) return;
 
-            if (scopedModule) {
-                if (record.semester !== scopedSemester) {
-                    addImportError(
-                        errors,
-                        record.rowNumber,
-                        "Semestre",
-                        `La ligne indique ${record.semester}, mais ${scopedSemester} est sélectionné.`
-                    );
-                    return;
-                }
-                if (!moduleNamesAreEquivalent(record.moduleName, scopedModule.name)) {
-                    addImportError(
-                        errors,
-                        record.rowNumber,
-                        "Module",
-                        `La ligne indique « ${record.moduleName} », mais « ${scopedModule.name} » est sélectionné.`
-                    );
-                    return;
-                }
-                resolvedRecords.push({ ...record, module: scopedModule });
+            if (record.semester !== scopedSemester) {
+                addImportError(
+                    errors,
+                    record.rowNumber,
+                    "Semestre",
+                    `La ligne indique ${record.semester}, mais ${scopedSemester} est sélectionné.`
+                );
                 return;
             }
-
-            const candidates = moduleCandidates.get(
-                `${record.semester}:${normalizeModuleIdentity(record.moduleName)}`
-            ) || [];
-            if (candidates.length === 0) {
+            if (!moduleNamesAreEquivalent(record.moduleName, scopedModule.name)) {
                 addImportError(
                     errors,
                     record.rowNumber,
                     "Module",
-                    `Module « ${record.moduleName} » introuvable dans ${record.semester}`
+                    `La ligne indique « ${record.moduleName} », mais « ${scopedModule.name} » est sélectionné.`
                 );
                 return;
             }
-            if (candidates.length > 1) {
-                addImportError(errors, record.rowNumber, "Module", "Plusieurs modules correspondent à cette valeur.");
-                return;
-            }
-            resolvedRecords.push({ ...record, module: candidates[0] });
+            resolvedRecords.push({ ...record, module: scopedModule });
         });
 
         const targetModuleIds = [...new Map(
@@ -430,34 +394,29 @@ export const examCourseController = {
         ).values()];
         const existingCourses = targetModuleIds.length > 0
             ? await ExamCourse.find({ moduleId: { $in: targetModuleIds } })
-                .select("moduleId lessonNumber name")
+                .select("moduleId category lessonNumber name")
                 .lean()
             : [];
-        const existingKeys = new Set(existingCourses.flatMap(course => {
-            const moduleId = course.moduleId.toString();
-            const keys = [`${moduleId}:name:${normalizeImportText(course.name)}`];
-            if (course.lessonNumber) {
-                keys.push(`${moduleId}:number:${normalizeImportText(course.lessonNumber)}`);
-            }
-            return keys;
-        }));
+        const existingKeys = new Set(existingCourses.flatMap(course => (
+            getCourseImportDuplicateKeys(course)
+        )));
         const pendingKeys = new Set();
         const documents = [];
 
         resolvedRecords.forEach((record) => {
-            const moduleId = record.module._id.toString();
-            const numberKey = `${moduleId}:number:${normalizeImportText(record.lessonNumber)}`;
-            const nameKey = `${moduleId}:name:${normalizeImportText(record.lessonName)}`;
-            if (existingKeys.has(numberKey) || existingKeys.has(nameKey)) {
-                addImportError(errors, record.rowNumber, "Cours", "Ce numéro ou ce nom de leçon existe déjà dans ce module.");
+            const duplicateKeys = getCourseImportDuplicateKeys({
+                ...record,
+                moduleId: record.module._id,
+            });
+            if (duplicateKeys.some(key => existingKeys.has(key))) {
+                addImportError(errors, record.rowNumber, "Cours", "Ce numéro ou ce nom de leçon existe déjà dans cette catégorie du module.");
                 return;
             }
-            if (pendingKeys.has(numberKey) || pendingKeys.has(nameKey)) {
+            if (duplicateKeys.some(key => pendingKeys.has(key))) {
                 addImportError(errors, record.rowNumber, "Cours", "Doublon détecté dans le fichier.");
                 return;
             }
-            pendingKeys.add(numberKey);
-            pendingKeys.add(nameKey);
+            duplicateKeys.forEach(key => pendingKeys.add(key));
             documents.push({
                 name: record.lessonName,
                 moduleId: record.module._id,
@@ -475,7 +434,7 @@ export const examCourseController = {
             total: records.length,
             imported: createdCourses.length,
             failed,
-            semester: scopedSemester || undefined,
+            semester: scopedSemester,
             moduleId: scopedModule?._id?.toString(),
         });
 
@@ -491,11 +450,11 @@ export const examCourseController = {
                 failed,
                 errors,
                 errorsTruncated: errors.length >= 100 && failed > errors.length,
-                scope: scopedModule ? {
+                scope: {
                     semester: scopedSemester,
                     moduleId: scopedModule._id,
                     moduleName: scopedModule.name,
-                } : null,
+                },
             },
         });
     }),
