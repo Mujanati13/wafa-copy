@@ -23,6 +23,11 @@ import {
     CourseCategoryImportError,
     findOrCreateCourseImportCategories,
 } from "../services/courseCategoryImportService.js";
+import {
+    COURSE_QUESTION_IMPORT_HEADER_LABELS,
+    MAX_COURSE_QUESTION_IMPORT_ROWS,
+    parseCourseQuestionImportRows,
+} from "../utils/courseQuestionImport.js";
 
 const COURSE_IMPORT_HEADER_LABELS = {
     semester: "Semestre",
@@ -297,6 +302,145 @@ export const examCourseController = {
         res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
         res.setHeader("Content-Disposition", 'attachment; filename="modele-import-cours.xlsx"');
         return res.status(200).send(buffer);
+    }),
+
+    downloadQuestionImportTemplate: asyncHandler(async (req, res) => {
+        const worksheet = xlsx.utils.json_to_sheet([{
+            "qst Num": 1,
+            Question: "Quelle est la bonne réponse ?",
+            A: "Première proposition",
+            B: "Deuxième proposition",
+            C: "Troisième proposition",
+            D: "Quatrième proposition",
+            E: "",
+            answer: "A",
+            Session: "Session principale",
+            Note: "",
+        }]);
+        worksheet["!cols"] = [
+            { wch: 12 }, { wch: 45 }, { wch: 28 }, { wch: 28 }, { wch: 28 },
+            { wch: 28 }, { wch: 28 }, { wch: 16 }, { wch: 24 }, { wch: 32 },
+        ];
+        const workbook = xlsx.utils.book_new();
+        xlsx.utils.book_append_sheet(workbook, worksheet, "Questions");
+        const buffer = xlsx.write(workbook, { type: "buffer", bookType: "xlsx" });
+        res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        res.setHeader("Content-Disposition", 'attachment; filename="modele-questions-exam-par-cours.xlsx"');
+        return res.status(200).send(buffer);
+    }),
+
+    importQuestionsFromExcel: asyncHandler(async (req, res) => {
+        if (!req.file) {
+            return res.status(400).json({ success: false, message: "Veuillez fournir un fichier Excel." });
+        }
+        const { id } = req.params;
+        if (!mongoose.isValidObjectId(id)) {
+            return res.status(400).json({ success: false, message: "Cours sélectionné invalide." });
+        }
+        const course = await ExamCourse.findById(id);
+        if (!course) {
+            return res.status(404).json({ success: false, message: "Cours sélectionné introuvable." });
+        }
+
+        let workbook;
+        let rows;
+        let headers;
+        try {
+            workbook = xlsx.read(req.file.buffer, { type: "buffer", cellDates: false });
+            const worksheet = workbook.Sheets[workbook.SheetNames?.[0]];
+            if (!worksheet) throw new Error("Le classeur ne contient aucune feuille.");
+            const matrix = xlsx.utils.sheet_to_json(worksheet, { header: 1, defval: "", blankrows: false });
+            headers = matrix[0] || [];
+            rows = xlsx.utils.sheet_to_json(worksheet, { defval: "", blankrows: false, raw: false });
+        } catch (error) {
+            return res.status(400).json({
+                success: false,
+                message: `Le fichier Excel est illisible: ${error.message}`,
+            });
+        }
+
+        if (rows.length === 0) {
+            return res.status(400).json({ success: false, message: "Le fichier Excel ne contient aucune question." });
+        }
+        if (rows.length > MAX_COURSE_QUESTION_IMPORT_ROWS) {
+            return res.status(413).json({
+                success: false,
+                message: `Le fichier dépasse la limite de ${MAX_COURSE_QUESTION_IMPORT_ROWS} lignes.`,
+            });
+        }
+
+        const parsed = parseCourseQuestionImportRows(rows, headers);
+        if (parsed.missingHeaders.length > 0) {
+            const missingHeaders = parsed.missingHeaders.map(field => COURSE_QUESTION_IMPORT_HEADER_LABELS[field]);
+            return res.status(422).json({
+                success: false,
+                code: "INVALID_QUESTION_IMPORT_HEADERS",
+                message: `Colonnes obligatoires manquantes: ${missingHeaders.join(", ")}.`,
+                data: { missingHeaders },
+            });
+        }
+
+        const existingNumbers = new Set(
+            (await Question.find({ _id: { $in: course.linkedQuestions || [] } })
+                .select("questionNumber")
+                .lean())
+                .map(question => question.questionNumber)
+                .filter(Boolean)
+        );
+        const errors = parsed.errors.slice(0, 100);
+        const documents = parsed.records.filter((record) => {
+            if (!existingNumbers.has(record.questionNumber)) return true;
+            if (errors.length < 100) {
+                errors.push({
+                    row: record.rowNumber,
+                    field: "qst Num",
+                    reason: "Ce numéro existe déjà dans le cours sélectionné",
+                });
+            }
+            return false;
+        }).map(({ rowNumber, ...record }) => ({
+            ...record,
+            examCourseId: course._id,
+        }));
+
+        let createdQuestions = [];
+        try {
+            if (documents.length > 0) {
+                createdQuestions = await Question.insertMany(documents);
+                course.linkedQuestions.push(...createdQuestions.map(question => question._id));
+                await course.save();
+            }
+        } catch (error) {
+            if (createdQuestions.length > 0) {
+                await Question.deleteMany({ _id: { $in: createdQuestions.map(question => question._id) } });
+            }
+            console.error("Course question Excel import failed", {
+                adminId: req.user?._id?.toString(),
+                courseId: id,
+                filename: req.file.originalname,
+                message: error.message,
+            });
+            return res.status(500).json({
+                success: false,
+                message: "Les questions n'ont pas pu être enregistrées. Aucune question n'a été ajoutée au cours.",
+            });
+        }
+
+        const failed = rows.length - createdQuestions.length;
+        return res.status(createdQuestions.length > 0 ? 201 : 422).json({
+            success: createdQuestions.length > 0,
+            message: createdQuestions.length > 0
+                ? `${createdQuestions.length} question(s) importée(s), ${failed} ligne(s) ignorée(s).`
+                : "Aucune question n'a été importée. Corrigez les erreurs indiquées.",
+            data: {
+                total: rows.length,
+                imported: createdQuestions.length,
+                failed,
+                errors,
+                errorsTruncated: parsed.errors.length > 100,
+                course: { id: course._id, name: course.name },
+            },
+        });
     }),
 
     importFromExcel: asyncHandler(async (req, res) => {

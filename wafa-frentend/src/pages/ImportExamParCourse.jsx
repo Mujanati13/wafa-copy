@@ -452,43 +452,41 @@ const ImportExamParCourse = () => {
 
   const downloadBulkImportTemplate = async () => {
     try {
-      const response = await api.get("/exam-courses/import-template", { responseType: "blob" });
+      const response = await api.get("/exam-courses/question-import-template", { responseType: "blob" });
       const url = URL.createObjectURL(response.data);
       const anchor = document.createElement("a");
       anchor.href = url;
-      anchor.download = "modele-exam-par-cours.xlsx";
+      anchor.download = "modele-questions-exam-par-cours.xlsx";
       document.body.appendChild(anchor);
       anchor.click();
       anchor.remove();
       URL.revokeObjectURL(url);
     } catch (error) {
-      console.error("Error downloading course template:", error);
+      console.error("Error downloading course question template:", error);
       toast.error("Impossible de télécharger le modèle Excel");
     }
   };
 
   const handleBulkCourseImport = async () => {
-    if (!selectedSemester || !selectedModule || !bulkImportFile) {
-      toast.error("Sélectionnez le semestre, le module et le fichier Excel");
+    if (!selectedSemester || !selectedModule || !selectedCourse || !bulkImportFile) {
+      toast.error("Sélectionnez le semestre, le module, le cours et le fichier Excel");
       return;
     }
 
     const formData = new FormData();
-    formData.append("semester", selectedSemester);
-    formData.append("moduleId", selectedModule);
     formData.append("file", bulkImportFile);
 
     setBulkImporting(true);
     setBulkImportResult(null);
     try {
-      const response = await api.post("/exam-courses/import", formData);
+      const response = await api.post(`/exam-courses/${selectedCourse}/import-questions`, formData);
       setBulkImportResult(response.data?.data || null);
       toast.success(response.data?.message || "Import terminé");
       await fetchCoursesForModule(selectedModule);
       setBulkImportFile(null);
       if (bulkImportInputRef.current) bulkImportInputRef.current.value = "";
     } catch (error) {
-      console.error("Error importing Exam par cours spreadsheet:", error);
+      console.error("Error importing Exam par cours questions:", error);
       const payload = error.response?.data;
       setBulkImportResult({
         ...(payload?.data || {}),
@@ -591,10 +589,10 @@ const ImportExamParCourse = () => {
                   <div>
                     <h3 className="flex items-center gap-2 font-semibold text-emerald-950">
                       <FileSpreadsheet className="h-5 w-5 text-emerald-600" />
-                      Import Excel automatique
+                      Importer les questions QCM du cours
                     </h3>
                     <p className="mt-1 text-sm text-emerald-900/70">
-                      Le semestre et le module du fichier doivent correspondre aux sélections ci-dessus.
+                      Sélectionnez le cours cible, puis utilisez le modèle QCM ci-dessous.
                     </p>
                   </div>
                   <Button
@@ -609,11 +607,35 @@ const ImportExamParCourse = () => {
                   </Button>
                 </div>
 
-                <div className="mt-4 rounded-lg border bg-background p-3 text-xs text-muted-foreground">
-                  Colonnes exactes : <code>semestre</code>, <code>module</code>, <code>categorie</code>, <code>num_lesson</code>, <code>lesson name</code>
+                <div className="mt-4 space-y-1 rounded-lg border bg-background p-3 text-xs text-muted-foreground">
+                  <p><strong>Colonnes obligatoires :</strong> <code>qst Num</code>, <code>Question</code>, <code>A</code>, <code>B</code>, <code>C</code>, <code>D</code>, <code>answer</code></p>
+                  <p><strong>Colonnes facultatives :</strong> <code>E</code>, <code>Session</code>, <code>Note</code></p>
+                  <p><strong>answer :</strong> lettre(s) des bonnes réponses, par exemple <code>A</code> ou <code>A,C</code>. Une valeur vide, <code>null</code> ou <code>nulle</code> marque une question annulée.</p>
                 </div>
 
-                <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
+                <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="exam-course-import-target">Cours cible</Label>
+                    <Select
+                      value={selectedCourse}
+                      onValueChange={(value) => {
+                        setSelectedCourse(value);
+                        clearBulkImport();
+                      }}
+                      disabled={!selectedModule || loadingCourses || bulkImporting}
+                    >
+                      <SelectTrigger id="exam-course-import-target">
+                        <SelectValue placeholder={loadingCourses ? "Chargement..." : "Choisir un cours"} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {filteredCourses.map((course) => (
+                          <SelectItem key={course._id} value={course._id}>
+                            {course.name} — {course.category || "Sans catégorie"}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                   <div className="space-y-2">
                     <Label htmlFor="exam-course-excel-file">Fichier Excel</Label>
                     <input
@@ -622,7 +644,7 @@ const ImportExamParCourse = () => {
                       type="file"
                       accept=".xlsx,.xls,.csv"
                       onChange={handleBulkImportFile}
-                      disabled={!selectedSemester || !selectedModule || bulkImporting}
+                      disabled={!selectedSemester || !selectedModule || !selectedCourse || bulkImporting}
                       className="block w-full rounded-md border border-input bg-background px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-50 file:mr-3 file:rounded-md file:border-0 file:bg-emerald-100 file:px-3 file:py-2 file:font-medium file:text-emerald-800"
                     />
                     <p className="text-xs text-muted-foreground">Formats .xlsx, .xls ou .csv — 10 Mo maximum.</p>
@@ -630,11 +652,11 @@ const ImportExamParCourse = () => {
                   <Button
                     type="button"
                     onClick={handleBulkCourseImport}
-                    disabled={!selectedSemester || !selectedModule || !bulkImportFile || bulkImporting}
-                    className="gap-2 bg-emerald-600 text-white hover:bg-emerald-700"
+                    disabled={!selectedSemester || !selectedModule || !selectedCourse || !bulkImportFile || bulkImporting}
+                    className="gap-2 bg-emerald-600 text-white hover:bg-emerald-700 sm:col-span-2 sm:justify-self-end"
                   >
                     {bulkImporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-                    {bulkImporting ? "Import en cours..." : "Importer les cours"}
+                    {bulkImporting ? "Import en cours..." : "Importer les questions"}
                   </Button>
                 </div>
 
@@ -654,7 +676,7 @@ const ImportExamParCourse = () => {
                         <p className="font-semibold text-foreground">
                           {bulkImportResult.requestFailed
                             ? bulkImportResult.message
-                            : `${bulkImportResult.imported} cours importé(s) sur ${bulkImportResult.total}`}
+                            : `${bulkImportResult.imported} question(s) importée(s) sur ${bulkImportResult.total}`}
                         </p>
                         {typeof bulkImportResult.failed === "number" && bulkImportResult.failed > 0 && (
                           <p className="mt-1 text-sm text-muted-foreground">{bulkImportResult.failed} ligne(s) ignorée(s)</p>

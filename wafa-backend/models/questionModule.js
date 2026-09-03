@@ -12,6 +12,11 @@ const questionSchema = new mongoose.Schema(
             ref: "QCMBanque",
             required: false
         },
+        examCourseId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "ExamCourse",
+            required: false,
+        },
         text: {
             type: String,
             required: true
@@ -99,6 +104,7 @@ questionSchema.index({ examId: 1 });
 questionSchema.index({ qcmBanqueId: 1 });
 questionSchema.index({ examId: 1, questionNumber: 1 });
 questionSchema.index({ qcmBanqueId: 1, questionNumber: 1 });
+questionSchema.index({ examCourseId: 1, questionNumber: 1 });
 
 export default mongoose.model("Question", questionSchema);
 

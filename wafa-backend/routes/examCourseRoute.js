@@ -99,6 +99,8 @@ router.get("/", examCourseController.getAll);
 // Bulk Excel import (admin only). Keep static routes before /:id.
 router.get("/import-template", isAuthenticated, isAdmin, examCourseController.downloadImportTemplate);
 router.post("/import", isAuthenticated, isAdmin, handleCourseExcelUpload, examCourseController.importFromExcel);
+router.get("/question-import-template", isAuthenticated, isAdmin, examCourseController.downloadQuestionImportTemplate);
+router.post("/:id/import-questions", isAuthenticated, isAdmin, handleCourseExcelUpload, examCourseController.importQuestionsFromExcel);
 
 // Get courses by module - must be before /:id to avoid treating "module" as an ID
 router.get("/module/:moduleId", isAuthenticated, requiresPremiumAccess, examCourseController.getByModuleId);
