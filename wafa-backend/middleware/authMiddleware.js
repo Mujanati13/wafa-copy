@@ -135,8 +135,16 @@ export const hasExamAccess = (req, res, next) => {
     return res.status(401).json({ success: false, message: "Authentication required." });
   }
 
-  if (user.isAdmin || user.plan !== "Free") {
+  if (user.isAdmin || userHasPremiumAccess(user)) {
     return next();
+  }
+
+  if (normalizeUserPlan(user.plan) !== "Free") {
+    return res.status(403).json({
+      success: false,
+      code: "SUBSCRIPTION_EXPIRED",
+      message: "Your premium subscription has expired. Please renew to continue.",
+    });
   }
 
   const requestedExamId = req.params.examId || req.params.id || req.body?.examId || req.body?.qcmBanqueId;

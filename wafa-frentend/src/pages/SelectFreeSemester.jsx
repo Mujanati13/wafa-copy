@@ -133,7 +133,7 @@ const SelectFreeSemester = () => {
 
       if (response.success) {
         toast.success('Examen gratuit activé !', {
-          description: 'Le premier examen disponible de ce module va s’ouvrir.',
+          description: 'L’examen le plus récent de ce module va s’ouvrir.',
           duration: 3000,
         });
 
@@ -202,7 +202,7 @@ const SelectFreeSemester = () => {
             Choisissez votre module gratuit
           </h1>
           <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-            Le plan gratuit donne accès à <span className="font-semibold text-primary">un examen dans un seul module</span>. Choisissez votre semestre et votre module : le premier examen disponible s’ouvrira automatiquement.
+            Le plan gratuit donne accès à <span className="font-semibold text-primary">un examen dans un seul module</span>. Choisissez votre semestre et votre module : l’examen le plus récent s’ouvrira automatiquement.
           </p>
         </Motion.div>
 
@@ -286,7 +286,7 @@ const SelectFreeSemester = () => {
           </Motion.div>
         )}
 
-        {/* Module selection automatically activates and opens its first exam. */}
+        {/* Module selection automatically activates and opens its newest exam. */}
         {selectedSemester && (
           <Motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
             <div>
@@ -342,7 +342,7 @@ const SelectFreeSemester = () => {
                   <div className="w-5 h-5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
                     <Check className="h-3.5 w-3.5" />
                   </div>
-                  <span>Accès complet au premier examen disponible du module choisi</span>
+                  <span>Accès complet à l’examen le plus récent du module choisi</span>
                 </li>
                 <li className="flex items-center gap-2.5">
                   <div className="w-5 h-5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">

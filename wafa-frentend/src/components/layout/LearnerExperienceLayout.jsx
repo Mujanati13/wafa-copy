@@ -25,7 +25,7 @@ import { cn } from "@/lib/utils";
 import { signOut } from "@/services/authService";
 import { moduleService } from "@/services/moduleService";
 import { userService } from "@/services/userService";
-import { displaySubscriptionPlanName, isPremiumPlan, isPremiumProPlan } from "@/utils/subscriptionDisplay";
+import { displaySubscriptionPlanName, editableUserPlan, isPremiumPlan, isPremiumProPlan } from "@/utils/subscriptionDisplay";
 
 const navGroups = [
   { label: "Accueil", items: [{ to: "/dashboard/home", label: "Vue d'ensemble", icon: Home, exact: true }] },
@@ -81,16 +81,36 @@ export default function LearnerExperienceLayout() {
       const latestUser = await userService.getUserProfile(true).catch(() => null);
       if (!active || !latestUser) return;
 
+      const previousUser = parseUser();
+      const previousAccess = JSON.stringify({
+        plan: editableUserPlan(previousUser.plan),
+        semesters: previousUser.semesters || [],
+        freeModule: previousUser.freeModule || null,
+        freeExam: previousUser.freeExam || null,
+      });
+      const latestAccess = JSON.stringify({
+        plan: editableUserPlan(latestUser.plan),
+        semesters: latestUser.semesters || [],
+        freeModule: latestUser.freeModule || null,
+        freeExam: latestUser.freeExam || null,
+      });
+
       localStorage.setItem("user", JSON.stringify(latestUser));
+      localStorage.setItem("userProfile", JSON.stringify(latestUser));
       setUser(latestUser);
 
-      const isFree = String(latestUser.plan || "Free").toLowerCase() === "free";
+      if (previousAccess !== latestAccess) {
+        window.dispatchEvent(new Event("auth-state-changed"));
+      }
+
+      const isFree = editableUserPlan(latestUser.plan) === "Free";
       if (isFree && premiumOnlyPaths.some((path) => location.pathname.startsWith(path))) {
         navigate("/dashboard/home", { replace: true });
       }
     };
 
     syncAccountAccess();
+    const accessSyncInterval = window.setInterval(syncAccountAccess, 15000);
     const handleFocus = () => syncAccountAccess();
     const handleVisibility = () => {
       if (document.visibilityState === "visible") syncAccountAccess();
@@ -100,6 +120,7 @@ export default function LearnerExperienceLayout() {
 
     return () => {
       active = false;
+      window.clearInterval(accessSyncInterval);
       window.removeEventListener("focus", handleFocus);
       document.removeEventListener("visibilitychange", handleVisibility);
     };

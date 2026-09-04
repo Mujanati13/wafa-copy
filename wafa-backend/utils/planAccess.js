@@ -10,11 +10,19 @@ export const normalizeUserPlan = (plan) => {
 
 export const applyAdminPlanTransition = (currentPlan, requestedUpdates = {}) => {
     const updates = { ...requestedUpdates };
-    const downgradedToFree = currentPlan !== "Free" && updates.plan === "Free";
+    const normalizedCurrentPlan = normalizeUserPlan(currentPlan);
+    const normalizedRequestedPlan = Object.prototype.hasOwnProperty.call(updates, "plan")
+        ? normalizeUserPlan(updates.plan)
+        : normalizedCurrentPlan;
+    const downgradedToFree = normalizedCurrentPlan !== "Free"
+        && normalizedRequestedPlan === "Free";
 
     if (downgradedToFree) {
         Object.assign(updates, {
             planExpiry: null,
+            paymentDate: null,
+            approvalDate: null,
+            paymentMode: null,
             semesters: [],
             currentYear: "",
             freeModules: [],

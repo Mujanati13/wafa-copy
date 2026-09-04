@@ -153,6 +153,7 @@ const userSchema = new mongoose.Schema(
     university: {
       type: String,
       trim: true,
+      default: "",
     },
     faculty: {
       type: String,

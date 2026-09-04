@@ -7,6 +7,7 @@ import PointModel from "../models/pointModel.js";
 import xlsx from "xlsx";
 import { normalizeQuestionImages } from "../utils/questionImagePath.js";
 import { buildAnsweredCountByExam } from "../utils/answerProgress.js";
+import { normalizeUserPlan } from "../utils/planAccess.js";
 
 export const questionController = {
     create: asyncHandler(async (req, res) => {
@@ -95,7 +96,7 @@ export const questionController = {
         if (!question) {
             return res.status(404).json({ success: false, message: "Question not found" });
         }
-        if (req.user?.plan === "Free" && !req.user?.isAdmin && question.examId?.toString() !== req.user.freeExam?.toString()) {
+        if (normalizeUserPlan(req.user?.plan) === "Free" && !req.user?.isAdmin && question.examId?.toString() !== req.user.freeExam?.toString()) {
             return res.status(403).json({
                 success: false,
                 code: "FREE_PLAN_EXAM_LIMIT",
@@ -127,7 +128,7 @@ export const questionController = {
     getByModuleId: asyncHandler(async (req, res) => {
         const { moduleId } = req.params;
 
-        if (req.user?.plan === "Free" && !req.user?.isAdmin && req.user.freeModule?.toString() !== moduleId) {
+        if (normalizeUserPlan(req.user?.plan) === "Free" && !req.user?.isAdmin && req.user.freeModule?.toString() !== moduleId) {
             return res.status(200).json({ success: true, data: [] });
         }
 
@@ -160,7 +161,7 @@ export const questionController = {
             ]
         };
 
-        if (req.user?.plan === "Free" && !req.user?.isAdmin) {
+        if (normalizeUserPlan(req.user?.plan) === "Free" && !req.user?.isAdmin) {
             questionFilter.$or = req.user.freeExam ? [{ examId: req.user.freeExam }] : [];
         }
 

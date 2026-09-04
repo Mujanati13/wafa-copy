@@ -22,6 +22,7 @@ const ModuleCard = ({ course, handleCourseClick, index }) => {
   const [showPdfModal, setShowPdfModal] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
+  const [helpImageError, setHelpImageError] = useState(false);
 
   const progress = Math.min(100, Math.max(0, Number(course.progress) || 0));
 
@@ -32,6 +33,7 @@ const ModuleCard = ({ course, handleCourseClick, index }) => {
   };
 
   const fullImageUrl = getFullImageUrl(course.imageUrl);
+  const fullHelpImageUrl = getFullImageUrl(course.helpImage);
 
   // Check if imageUrl is valid (not empty, not "null", not "undefined", starts with http or /)
   const hasValidImageUrl = fullImageUrl &&
@@ -40,6 +42,13 @@ const ModuleCard = ({ course, handleCourseClick, index }) => {
     fullImageUrl !== 'null' &&
     fullImageUrl !== 'undefined' &&
     (fullImageUrl.startsWith('http') || fullImageUrl.startsWith('/') || fullImageUrl.startsWith('data:'));
+
+  const hasValidHelpImageUrl = fullHelpImageUrl &&
+    typeof fullHelpImageUrl === 'string' &&
+    fullHelpImageUrl.trim() !== '' &&
+    fullHelpImageUrl !== 'null' &&
+    fullHelpImageUrl !== 'undefined' &&
+    (fullHelpImageUrl.startsWith('http') || fullHelpImageUrl.startsWith('/') || fullHelpImageUrl.startsWith('data:'));
 
   // Keep every visual progress cue aligned with the admin-managed module theme.
   const moduleColor = course.color || "#0891b2";
@@ -162,7 +171,7 @@ const ModuleCard = ({ course, handleCourseClick, index }) => {
               <span className="min-w-0 flex-1 truncate text-left text-lg">{course.name}</span>
               {course.difficulty && (
                 <Badge
-                  className={`ml-auto shrink-0 px-3 py-1 text-sm font-semibold ${course.difficulty === 'easy' ? 'bg-green-100 text-green-700 border-green-200' :
+                  className={`ml-auto shrink-0 rounded-full px-4 py-2 text-base font-bold leading-none shadow-sm ${course.difficulty === 'easy' ? 'bg-green-100 text-green-700 border-green-200' :
                     course.difficulty === 'medium' ? 'bg-yellow-100 text-yellow-700 border-yellow-200' :
                       'bg-red-100 text-red-700 border-red-200'
                     }`}
@@ -177,20 +186,7 @@ const ModuleCard = ({ course, handleCourseClick, index }) => {
 
           {/* Scrollable content area */}
           <div className="flex-1 overflow-y-auto space-y-4 pr-2 max-h-[60vh]">
-            {/* Text Content - Show by default first (priority 1) */}
-            {course.textContent && (
-              <div className="p-4 bg-indigo-50 border-2 border-indigo-200 rounded-xl">
-                <h4 className="font-semibold text-indigo-900 mb-3 flex items-center gap-2">
-                  <BookOpen className="w-5 h-5" />
-                  Contenu du module
-                </h4>
-                <div className="text-sm text-indigo-800 leading-relaxed whitespace-pre-wrap overflow-y-auto" style={{ maxHeight: '300px' }}>
-                  {course.textContent}
-                </div>
-              </div>
-            )}
-
-            {/* Detailed Help Content (priority 2) */}
+            {/* The detailed guide is the primary modal content. */}
             {course.helpContent && (
               <div className="p-4 bg-blue-50 border-2 border-blue-200 rounded-xl">
                 <h4 className="font-semibold text-blue-900 mb-3 flex items-center gap-2">
@@ -203,21 +199,8 @@ const ModuleCard = ({ course, handleCourseClick, index }) => {
               </div>
             )}
 
-            {/* Short Description (priority 3) */}
-            {course.infoText && (
-              <div className="p-4 bg-card border-2 border-border rounded-xl">
-                <h4 className="font-semibold text-foreground mb-3 flex items-center gap-2">
-                  <Info className="w-5 h-5" />
-                  En bref
-                </h4>
-                <p className="text-sm text-muted-foreground leading-relaxed overflow-y-auto" style={{ maxHeight: '200px' }}>
-                  {course.infoText}
-                </p>
-              </div>
-            )}
-
-            {/* Help Image Preview - click opens modal */}
-            {(course.helpImage || course.imageUrl) && (
+            {/* A supplementary image appears directly after the guide, when provided. */}
+            {hasValidHelpImageUrl && !helpImageError && (
               <div className="space-y-2">
                 <h4 className="font-semibold text-pink-900 flex items-center gap-2">
                   <ImageIcon className="w-5 h-5 text-pink-600" />
@@ -228,15 +211,38 @@ const ModuleCard = ({ course, handleCourseClick, index }) => {
                   onClick={() => setShowImageModal(true)}
                 >
                   <img
-                    src={(() => {
-                      const imageUrl = course.helpImage || course.imageUrl;
-                      return imageUrl.startsWith("http") ? imageUrl : `${API_URL?.replace('/api/v1', '')}${imageUrl}`;
-                    })()}
+                    src={fullHelpImageUrl}
                     alt={`${course.name} - image d'aide`}
                     className="max-w-full max-h-48 object-contain hover:scale-105 transition-transform"
+                    onError={() => setHelpImageError(true)}
                   />
                 </div>
                 <p className="text-xs text-pink-700 text-center">Cliquez pour agrandir l'image</p>
+              </div>
+            )}
+
+            {/* Additional module text follows the guide and its optional image. */}
+            {course.textContent && (
+              <div className="p-4 bg-indigo-50 border-2 border-indigo-200 rounded-xl">
+                <h4 className="font-semibold text-indigo-900 mb-3 flex items-center gap-2">
+                  <BookOpen className="w-5 h-5" />
+                  Contenu du module
+                </h4>
+                <div className="text-sm text-indigo-800 leading-relaxed whitespace-pre-wrap overflow-y-auto" style={{ maxHeight: '300px' }}>
+                  {course.textContent}
+                </div>
+              </div>
+            )}
+
+            {course.infoText && (
+              <div className="p-4 bg-card border-2 border-border rounded-xl">
+                <h4 className="font-semibold text-foreground mb-3 flex items-center gap-2">
+                  <Info className="w-5 h-5" />
+                  En bref
+                </h4>
+                <p className="text-sm text-muted-foreground leading-relaxed overflow-y-auto" style={{ maxHeight: '200px' }}>
+                  {course.infoText}
+                </p>
               </div>
             )}
 
@@ -295,7 +301,7 @@ const ModuleCard = ({ course, handleCourseClick, index }) => {
       {/* Image Modal - Full screen with scroll */}
       {createPortal(
         <AnimatePresence>
-          {showImageModal && (course.helpImage || course.imageUrl) && (
+          {showImageModal && hasValidHelpImageUrl && !helpImageError && (
             <Motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -326,12 +332,13 @@ const ModuleCard = ({ course, handleCourseClick, index }) => {
                 {/* Scrollable Image Container */}
                 <div className="overflow-auto p-6 flex items-center justify-center bg-card" style={{ maxHeight: 'calc(95vh - 80px)' }}>
                   <img
-                    src={(() => {
-                      const imageUrl = course.helpImage || course.imageUrl;
-                      return imageUrl.startsWith("http") ? imageUrl : `${API_URL?.replace('/api/v1', '')}${imageUrl}`;
-                    })()}
+                    src={fullHelpImageUrl}
                     alt={`${course.name} - image d'aide`}
                     className="max-w-full h-auto object-contain rounded-lg shadow-lg"
+                    onError={() => {
+                      setHelpImageError(true);
+                      setShowImageModal(false);
+                    }}
                   />
                 </div>
               </Motion.div>

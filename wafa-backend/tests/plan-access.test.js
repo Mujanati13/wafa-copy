@@ -14,6 +14,30 @@ test("downgrading a premium user clears every content entitlement", () => {
     assert.equal(updates.freeModule, null);
     assert.equal(updates.hasUsedFreeSemester, false);
     assert.equal(updates.planExpiry, null);
+    assert.equal(updates.paymentDate, null);
+    assert.equal(updates.approvalDate, null);
+    assert.equal(updates.paymentMode, null);
+});
+
+test("legacy paid plan names are also fully revoked when downgraded", () => {
+    const { updates, downgradedToFree } = applyAdminPlanTransition("Premium Pro Annuel", {
+        plan: "Free",
+    });
+
+    assert.equal(downgradedToFree, true);
+    assert.deepEqual(updates.semesters, []);
+    assert.equal(updates.freeExam, null);
+    assert.equal(updates.planExpiry, null);
+});
+
+test("editing a paid user without changing their plan does not downgrade them", () => {
+    const { updates, downgradedToFree } = applyAdminPlanTransition("Premium", {
+        name: "Updated Student",
+    });
+
+    assert.equal(downgradedToFree, false);
+    assert.equal(updates.name, "Updated Student");
+    assert.equal(Object.hasOwn(updates, "semesters"), false);
 });
 
 test("saving an existing free user does not erase their free entitlement", () => {

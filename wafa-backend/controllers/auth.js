@@ -106,6 +106,7 @@ export const AuthController = {
         name: username, // Set name to username if not provided
         email,
         password: hashPassword,
+        university: "",
         emailVerified: true, // Auto-verified - no email verification required
       });
 
@@ -678,6 +679,7 @@ export const AuthController = {
         email,
         username,
         name: fullName,
+        university: "",
         emailVerified: email_verified || false,
         profilePicture: picture || null,
         lastLogin: new Date(),

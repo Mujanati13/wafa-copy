@@ -62,6 +62,6 @@ router.get("/all/:id", isAuthenticated, hasExamAccess, examController.getById);
 router.get("/module/:moduleId", isAuthenticated, examController.getByModuleId);
 
 // Route to record exam completion and send notification
-router.post("/complete", isAuthenticated, examController.completeExam);
+router.post("/complete", isAuthenticated, hasExamAccess, examController.completeExam);
 
 export default router;

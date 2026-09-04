@@ -32,7 +32,7 @@ const seedData = async () => {
                 username: 'seeduser',
                 email: 'seeduser@wafa.ma',
                 password: hashedPassword,
-                university: 'Université Mohamed V',
+                university: '',
                 faculty: 'Faculté de Médecine',
                 currentYear: 'S3',
                 role: 'student',

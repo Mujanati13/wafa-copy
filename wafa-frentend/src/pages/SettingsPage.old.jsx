@@ -25,7 +25,7 @@ const SettingsPage = () => {
     profilePicture: null,
 
     // Academic Information
-    university: "Université Hassan II",
+    university: "",
     faculty: "Faculté de Médecine",
     currentYear: "6ème année",
     studentId: "MED2024001",

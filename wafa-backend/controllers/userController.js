@@ -1206,12 +1206,12 @@ export const UserController = {
             });
         }
 
-        // The onboarding flow always grants the first exam in the module. Keep
-        // the ordering deterministic so every client receives the same exam.
+        // The onboarding flow grants the newest exam in the selected module.
+        // Sort by year first, then by creation time for deterministic same-year ties.
         const selectedExam = await mongoose.model("ExamParYear")
             .findOne({ moduleId: selectedModule._id })
-            .sort({ year: -1, createdAt: 1, _id: 1 })
-            .select("name moduleId")
+            .sort({ year: -1, createdAt: -1, _id: -1 })
+            .select("name moduleId year")
             .lean();
 
         if (!selectedExam) {

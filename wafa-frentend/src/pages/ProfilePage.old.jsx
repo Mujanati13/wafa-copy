@@ -27,7 +27,7 @@ const ProfilePage = () => {
     email: 'ahmed.benali@example.com',
     phone: '+213 555 123 456',
     birthDate: '1998-03-15',
-    university: 'Université d\'Alger',
+    university: '',
     faculty: 'Faculté de Médecine',
     year: '3ème Année',
     specialization: 'Médecine Générale',
@@ -244,4 +244,4 @@ const ProfilePage = () => {
   );
 };
 
-export default ProfilePage; 
+export default ProfilePage;

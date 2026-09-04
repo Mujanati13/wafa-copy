@@ -353,24 +353,11 @@ const Dashboard = () => {
       );
       
       // Free users: Show only 1 module total (not per semester)
-      const userPlan = user?.plan || 'Free';
-      if (userPlan === 'Free') {
-        // Get all modules across all subscribed semesters
-        const allSubscribedModules = coursesData.filter(course =>
-          userSemesters.includes(course.semester)
-        );
-        
-        // If we already have 1 or more modules in any semester, limit to first one overall
-        if (allSubscribedModules.length > 0) {
-          // Check if current filtered semester contains the first module
-          const firstModule = allSubscribedModules[0];
-          if (firstModule.semester === semester) {
-            filtered = [firstModule];
-          } else {
-            // Current semester doesn't have the free module
-            filtered = [];
-          }
-        }
+      if (isFreeUser) {
+        const freeModuleId = String(user?.freeModule?._id || user?.freeModule || '');
+        filtered = freeModuleId
+          ? filtered.filter((course) => String(course._id) === freeModuleId)
+          : [];
       }
       
       setFilteredCourses(filtered);

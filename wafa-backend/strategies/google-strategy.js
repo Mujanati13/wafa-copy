@@ -40,6 +40,7 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
           email: profile.emails[0].value,
           username: profile.displayName || profile.emails[0].value.split('@')[0],
           name: profile.displayName,
+          university: "",
           emailVerified: true,
           profilePicture: profile.photos[0]?.value,
           // No password for OAuth users
