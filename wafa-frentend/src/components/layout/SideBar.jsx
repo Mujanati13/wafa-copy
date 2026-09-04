@@ -32,6 +32,7 @@ import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
+import { isPremiumProPlan } from "@/utils/subscriptionDisplay";
 import {
   Collapsible,
   CollapsibleContent,
@@ -267,14 +268,14 @@ const SideBar = ({ sidebarOpen, setSidebarOpen, isMobile }) => {
       label: t('dashboard:my_playlists'),
       icon: SquareLibrary,
       path: "/dashboard/playlist",
-      requiresPremiumPro: true, // Only available for PREMIUM PRO or Premium Annuel
+      requiresPremiumPro: true,
     },
     {
       id: "note",
       label: t('dashboard:my_notes'),
       icon: NotebookPen,
       path: "/dashboard/note",
-      requiresPremiumPro: true, // Only available for PREMIUM PRO or Premium Annuel
+      requiresPremiumPro: true,
     },
     {
       id: "subscription",
@@ -289,8 +290,8 @@ const SideBar = ({ sidebarOpen, setSidebarOpen, isMobile }) => {
       path: "/dashboard/support",
     },
   ].filter(item => {
-    // Filter out PREMIUM PRO features for users without PREMIUM PRO or Premium Annuel
-    if (item.requiresPremiumPro && userPlan !== "PREMIUM PRO" && userPlan !== "Premium Annuel") {
+    // Filter out Premium Pro features for other subscription tiers.
+    if (item.requiresPremiumPro && !isPremiumProPlan(userPlan)) {
       return false;
     }
     return true;

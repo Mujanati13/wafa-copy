@@ -11,6 +11,7 @@ import { dashboardService } from "@/services/dashboardService";
 import { subscriptionPlanService } from "@/services/subscriptionPlanService";
 import { toast } from "sonner";
 import { api, cn } from "@/lib/utils";
+import { displaySubscriptionCopy, displaySubscriptionPlanName, editableUserPlan } from "@/utils/subscriptionDisplay";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -31,11 +32,8 @@ const ClientSubscriptionPage = () => {
   const WHATSAPP_NUMBER = "0699204386";
 
   const getMaxSemesters = (plan) => (plan ? 1 : 0);
-  const displayPlanName = (planName) => planName === 'Premium Annuel' ? 'Premium Semestre' : (planName || 'Plan Gratuit');
   const isCurrentSubscriptionPlan = (plan) => {
-    const currentPlan = displayPlanName(userSubscription?.plan).toLowerCase();
-    const candidatePlan = displayPlanName(plan?.name).toLowerCase();
-    return currentPlan === candidatePlan || (currentPlan === 'premium semestre' && candidatePlan === 'premium');
+    return editableUserPlan(userSubscription?.plan) === editableUserPlan(plan?.name);
   };
 
   useEffect(() => {
@@ -124,7 +122,7 @@ const ClientSubscriptionPage = () => {
 
       const requestData = {
         planId: selectedPlan._id,
-        planName: selectedPlan.name,
+        planName: displaySubscriptionPlanName(selectedPlan.name),
         amount: selectedPlan.price,
         semesters: selectedSemesters,
         paymentMode: "Bank Transfer"
@@ -141,7 +139,7 @@ const ClientSubscriptionPage = () => {
         });
 
         const message = encodeURIComponent(
-          `Bonjour ! Je souhaite souscrire au plan ${selectedPlan.name} (${selectedPlan.price} MAD).\n\nSemestres choisis : ${semestersList}\n\nJ'ai créé une demande de paiement (#${response.data.requestId || 'N/A'}).\n\nMerci de me contacter pour finaliser mon abonnement.`
+          `Bonjour ! Je souhaite souscrire au plan ${displaySubscriptionPlanName(selectedPlan.name)} (${selectedPlan.price} MAD).\n\nSemestres choisis : ${semestersList}\n\nJ'ai créé une demande de paiement (#${response.data.requestId || 'N/A'}).\n\nMerci de me contacter pour finaliser mon abonnement.`
         );
 
         const whatsappUrl = `https://wa.me/212${WHATSAPP_NUMBER.replace(/^0/, '')}?text=${message}`;
@@ -211,7 +209,7 @@ const ClientSubscriptionPage = () => {
                   <div>
                     <p className="text-xs text-muted-foreground mb-1.5">Plan d'abonnement</p>
                     <Badge className="text-sm sm:text-base px-3.5 py-1.5" variant={userSubscription?.plan === 'Premium' ? 'default' : 'secondary'}>
-                      {displayPlanName(userSubscription?.plan)}
+                      {displaySubscriptionPlanName(userSubscription?.plan, 'Plan Gratuit')}
                     </Badge>
                   </div>
                   {userSubscription?.subscription && (
@@ -269,9 +267,9 @@ const ClientSubscriptionPage = () => {
                         )}
 
                         <CardHeader className={isCurrentPlan ? 'pt-8' : ''}>
-                          <CardTitle className="text-2xl font-bold text-foreground">{plan.name}</CardTitle>
+                          <CardTitle className="text-2xl font-bold text-foreground">{displaySubscriptionPlanName(plan.name)}</CardTitle>
                           <CardDescription className="text-muted-foreground text-xs leading-relaxed min-h-[32px]">
-                            {plan.description}
+                            {displaySubscriptionCopy(plan.description)}
                           </CardDescription>
                           <div className="mt-4">
                             <span className="text-3xl font-extrabold text-foreground">
@@ -452,7 +450,7 @@ const ClientSubscriptionPage = () => {
                                   {isIncluded
                                     ? <Check className="w-4 h-4 shrink-0 mt-0.5 text-emerald-500" />
                                     : <X className="w-4 h-4 shrink-0 mt-0.5 text-red-500" />}
-                                  <span className={cn("text-xs", isIncluded ? "text-foreground" : "text-muted-foreground line-through")}>{featureText}</span>
+                                  <span className={cn("text-xs", isIncluded ? "text-foreground" : "text-muted-foreground line-through")}>{displaySubscriptionCopy(featureText)}</span>
                                 </div>
                               );
                             })}
@@ -516,7 +514,7 @@ const ClientSubscriptionPage = () => {
               {/* Plan Summary */}
               <div className="p-4 bg-muted/40 rounded-2xl border border-border">
                 <div className="flex justify-between items-center mb-1">
-                  <span className="font-bold text-foreground">{selectedPlan.name}</span>
+                  <span className="font-bold text-foreground">{displaySubscriptionPlanName(selectedPlan.name)}</span>
                   <span className="font-extrabold text-lg text-primary">{selectedPlan.price} MAD</span>
                 </div>
                 {selectedPlan.period && (

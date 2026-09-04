@@ -120,24 +120,24 @@ const SORT_OPTIONS = [
 const POINT_RULES = [
   {
     points: 1,
-    label: "Bonne réponse",
+    label: "Répondre correctement",
     description: "Pour chaque question à laquelle vous répondez correctement.",
     icon: CheckCircle2,
     iconClass: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
   },
   {
-    points: 30,
-    label: "Signaler une erreur",
-    description: "Pour le signalement d'un problème ou d'une erreur dans une question.",
-    icon: MessageSquareWarning,
-    iconClass: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
-  },
-  {
     points: 40,
-    label: "Proposer une explication",
-    description: "Pour l'envoi d'une explication liée à une question.",
+    label: "Soumettre une explication",
+    description: "Pour une explication de question approuvée.",
     icon: Lightbulb,
     iconClass: "bg-violet-500/10 text-violet-600 dark:text-violet-400",
+  },
+  {
+    points: 30,
+    label: "Signaler un problème",
+    description: "Pour un problème ou une erreur signalé et approuvé.",
+    icon: MessageSquareWarning,
+    iconClass: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
   },
 ];
 

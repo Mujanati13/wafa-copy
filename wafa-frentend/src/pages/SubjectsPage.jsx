@@ -14,6 +14,10 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { resolveMediaUrl } from "@/lib/mediaUrl";
+import {
+  EXAM_PROGRESS_UPDATED_EVENT,
+  getSessionExamCompletedCount,
+} from "@/utils/examProgress";
 
 const labels = {
   year: { title: "Examens par année", description: "Entraînez-vous avec des sessions complètes.", icon: CalendarDays },
@@ -122,7 +126,7 @@ function ExamCard({ exam, type, moduleColor, moduleName, onStart, onHelp }) {
         <CardContent className="flex flex-col px-4 pb-4 pt-3.5 sm:px-5">
           <div className="flex items-start justify-between gap-3">
             <div className="relative grid h-13 w-13 shrink-0 place-items-center overflow-hidden rounded-xl bg-transparent text-blue-700 dark:text-sky-300">
-              <BookOpen className="h-8 w-8" strokeWidth={1.6} aria-hidden="true" />
+              {!imageUrl && <BookOpen className="h-8 w-8" strokeWidth={1.6} aria-hidden="true" />}
               {imageUrl && (
                 <img
                   src={imageUrl}
@@ -168,9 +172,9 @@ function ExamCard({ exam, type, moduleColor, moduleName, onStart, onHelp }) {
                 </span>
                 <span
                   aria-label={`${answeredQuestions} questions complétées sur ${totalQuestions}`}
-                  title="Total / complétées"
+                  title="Questions terminées / total des questions"
                 >
-                  {totalQuestions} / {answeredQuestions}
+                  {answeredQuestions} / {totalQuestions} terminées
                 </span>
               </span>
               <span className="mr-1 font-semibold text-slate-800 dark:text-slate-100 sm:mr-2">{progress}%</span>
@@ -198,7 +202,7 @@ function ExamCard({ exam, type, moduleColor, moduleName, onStart, onHelp }) {
     <CardContent className="p-5">
       <div className="flex items-start justify-between gap-3">
         <div className="relative grid h-11 w-11 place-items-center overflow-hidden rounded-xl bg-transparent" style={{ color: moduleColor }}>
-          <Icon className="h-5 w-5" />
+          {!imageUrl && <Icon className="h-5 w-5" />}
           {imageUrl && (
             <img
               src={imageUrl}
@@ -236,6 +240,29 @@ export default function SubjectsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [helpExam, setHelpExam] = useState(null);
+
+  useEffect(() => {
+    const syncCompletedCount = (event) => {
+      const examId = event.detail?.examId;
+      const completedQuestions = Math.max(0, Number(event.detail?.completedQuestions) || 0);
+      if (!examId) return;
+
+      setExamsByType((current) => Object.fromEntries(
+        Object.entries(current).map(([type, exams]) => [
+          type,
+          exams.map((exam) => (
+            String(exam.id) === String(examId)
+              ? { ...exam, answeredQuestions: Math.min(Number(exam.questions) || 0, completedQuestions) }
+              : exam
+          )),
+        ]),
+      ));
+    };
+
+    window.addEventListener(EXAM_PROGRESS_UPDATED_EVENT, syncCompletedCount);
+    return () => window.removeEventListener(EXAM_PROGRESS_UPDATED_EVENT, syncCompletedCount);
+  }, []);
+
   useEffect(() => {
     let cancelled = false;
     const loadModule = async () => {
@@ -261,7 +288,10 @@ export default function SubjectsPage() {
         const maps = (items, type) => items.map((item) => ({
           id: item._id || item.id, name: item.name || item.title || "Examen sans titre", questions: item.totalQuestions || item.questionCount || 0,
           progress: item.progress || item.completionRate || 0,
-          answeredQuestions: item.answeredQuestions ?? item.questionsAttempted ?? 0,
+          answeredQuestions: Math.max(
+            Number(item.answeredQuestions ?? item.questionsAttempted) || 0,
+            getSessionExamCompletedCount(item._id || item.id),
+          ),
           year: item.year, category: item.category || "Général", imageUrl: item.imageUrl,
           helpText: item.infoText || item.helpText || item.description || "",
           type,

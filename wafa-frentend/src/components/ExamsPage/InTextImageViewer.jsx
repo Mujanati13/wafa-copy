@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { resolveQuestionImageUrl } from '@/lib/mediaUrl';
 
 /**
  * InTextImageViewer - Button and modal to display images related to a question
@@ -176,7 +177,7 @@ const InTextImageViewer = ({
           {/* Image */}
           <div className="w-full h-full flex items-center justify-center p-4 overflow-auto">
             <img
-              src={images[currentIndex]}
+              src={resolveQuestionImageUrl(images[currentIndex])}
               alt={`Question image ${currentIndex + 1}`}
               className="max-w-full max-h-[60vh] object-contain transition-transform duration-200"
               style={{
@@ -207,7 +208,7 @@ const InTextImageViewer = ({
                 )}
               >
                 <img
-                  src={img}
+                  src={resolveQuestionImageUrl(img)}
                   alt={`Thumbnail ${idx + 1}`}
                   className="w-full h-full object-cover"
                 />

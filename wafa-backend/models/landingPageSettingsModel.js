@@ -73,7 +73,7 @@ const landingPageSettingsSchema = new mongoose.Schema(
         },
         premiumAnnualFeatures: {
             type: [String],
-            default: ["Tout Premium mensuel", "2 mois gratuits", "Contenu exclusif", "Accès anticipé aux nouveautés"],
+            default: ["Tous les avantages Premium", "Accès pour un semestre", "Contenu exclusif", "Accès anticipé aux nouveautés"],
         },
 
         // FAQ Section
@@ -113,7 +113,7 @@ const landingPageSettingsSchema = new mongoose.Schema(
         },
         instagramUrl: {
             type: String,
-            default: "https://www.instagram.com/yourqcm.fmpm",
+            default: "https://www.instagram.com/yourqcm.fmpm?igsi=MXc1bWMzdWt5cjhoaA==",
         },
         youtubeUrl: {
             type: String,
@@ -231,8 +231,12 @@ landingPageSettingsSchema.statics.getSettings = async function () {
         changed = true;
     }
 
-    if (/instagram[.]com\/(?:wafa[.]medical|imrsqcm[.]rabat|imrs_qcma)(?:[/?#]|$)/i.test(settings.instagramUrl || "")) {
-        settings.instagramUrl = "https://www.instagram.com/yourqcm.fmpm";
+    const officialInstagramUrl = "https://www.instagram.com/yourqcm.fmpm?igsi=MXc1bWMzdWt5cjhoaA==";
+    if (
+        settings.instagramUrl !== officialInstagramUrl
+        && /instagram[.]com\/(?:wafa[.]medical|imrsqcm[.]rabat|imrs_qcma|yourqcm[.]fmpm)(?:[/?#]|$)/i.test(settings.instagramUrl || "")
+    ) {
+        settings.instagramUrl = officialInstagramUrl;
         changed = true;
     }
 

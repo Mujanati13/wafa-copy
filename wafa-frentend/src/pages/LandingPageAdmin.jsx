@@ -650,10 +650,10 @@ const LandingPageAdmin = () => {
               </CardContent>
             </Card>
 
-            {/* Premium Monthly */}
+            {/* Premium */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Premium Mensuel</CardTitle>
+                <CardTitle className="text-lg">Premium</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="space-y-2">
@@ -888,7 +888,7 @@ const LandingPageAdmin = () => {
                     </Label>
                     <Input
                       id="instagramUrl"
-                      placeholder="https://www.instagram.com/yourqcm.fmpm"
+                      placeholder="https://www.instagram.com/yourqcm.fmpm?igsi=MXc1bWMzdWt5cjhoaA=="
                       value={settings.instagramUrl}
                       onChange={(e) => handleChange("instagramUrl", e.target.value)}
                     />

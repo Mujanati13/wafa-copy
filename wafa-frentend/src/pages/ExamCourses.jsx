@@ -698,7 +698,7 @@ const ExamCourses = () => {
                         <TableCell className="font-semibold">{course.lessonNumber || "—"}</TableCell>
                         <TableCell className="font-medium">{course.courseName}</TableCell>
                         <TableCell>
-                          <div className="w-16 h-12 rounded-md overflow-hidden bg-muted border">
+                          <div className="w-16 h-12 rounded-md overflow-hidden bg-transparent border">
                             <img src={course.imageUrl} alt={course.courseName} className="w-full h-full object-cover" />
                           </div>
                         </TableCell>

@@ -25,6 +25,7 @@ import { cn } from "@/lib/utils";
 import { signOut } from "@/services/authService";
 import { moduleService } from "@/services/moduleService";
 import { userService } from "@/services/userService";
+import { displaySubscriptionPlanName, isPremiumPlan, isPremiumProPlan } from "@/utils/subscriptionDisplay";
 
 const navGroups = [
   { label: "Accueil", items: [{ to: "/dashboard/home", label: "Vue d'ensemble", icon: Home, exact: true }] },
@@ -44,12 +45,9 @@ const parseUser = () => {
   try { return JSON.parse(localStorage.getItem("userProfile") || localStorage.getItem("user") || "{}"); } catch { return {}; }
 };
 
-const displayPlanName = (planName) => planName === "Premium Annuel" ? "Premium Semestre" : (planName || "Plan gratuit");
-
 const planAllows = (user, item) => {
-  const plan = String(user?.plan || "Free").toLowerCase();
-  const premium = plan.includes("premium");
-  const premiumPro = plan.includes("premium pro") || plan.includes("annuel");
+  const premium = isPremiumPlan(user?.plan);
+  const premiumPro = isPremiumProPlan(user?.plan);
   if (item.premiumPro) return premiumPro;
   if (item.premium) return premium;
   return true;
@@ -205,7 +203,7 @@ export default function LearnerExperienceLayout() {
             ))}
           </nav>
           <div className="border-t border-sidebar-border p-3">
-            <NavLink to="/dashboard/subscription" className={cn("mb-2 flex items-center gap-3 rounded-xl border border-indigo-200/80 bg-indigo-50/80 p-3 text-sm text-indigo-950 transition hover:bg-indigo-100 dark:border-indigo-400/15 dark:bg-indigo-400/10 dark:text-indigo-100 dark:hover:bg-indigo-400/15", collapsed && "lg:justify-center lg:px-2")}><Crown className="h-5 w-5 shrink-0 text-amber-500 dark:text-amber-300" /><span className={cn("min-w-0", collapsed && "lg:hidden")}><span className="block font-semibold">{displayPlanName(user?.plan)}</span><span className="block text-xs text-indigo-700/75 dark:text-indigo-200/70">Voir mon abonnement</span></span></NavLink>
+            <NavLink to="/dashboard/subscription" className={cn("mb-2 flex items-center gap-3 rounded-xl border border-indigo-200/80 bg-indigo-50/80 p-3 text-sm text-indigo-950 transition hover:bg-indigo-100 dark:border-indigo-400/15 dark:bg-indigo-400/10 dark:text-indigo-100 dark:hover:bg-indigo-400/15", collapsed && "lg:justify-center lg:px-2")}><Crown className="h-5 w-5 shrink-0 text-amber-500 dark:text-amber-300" /><span className={cn("min-w-0", collapsed && "lg:hidden")}><span className="block font-semibold">{displaySubscriptionPlanName(user?.plan)}</span><span className="block text-xs text-indigo-700/75 dark:text-indigo-200/70">Voir mon abonnement</span></span></NavLink>
             <NavLink to="/dashboard/support" className={cn("flex items-center gap-3 rounded-xl px-3 py-2 text-sm text-sidebar-foreground/85 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground", collapsed && "lg:justify-center lg:px-2")}><CircleHelp className="h-5 w-5 shrink-0" /><span className={collapsed ? "lg:hidden" : ""}>Support</span></NavLink>
             <button onClick={logout} className={cn("mt-1 flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-sm text-sidebar-foreground/85 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground", collapsed && "lg:justify-center lg:px-2")}><LogOut className="h-5 w-5 shrink-0" /><span className={collapsed ? "lg:hidden" : ""}>Déconnexion</span></button>
           </div>

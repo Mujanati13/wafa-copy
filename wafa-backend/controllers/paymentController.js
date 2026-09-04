@@ -6,6 +6,12 @@ import { NotificationController } from "./notificationController.js";
 import PaypalSettings from "../models/paypalSettingsModel.js";
 import SubscriptionPlan from "../models/subscriptionPlanModel.js";
 import mongoose from "mongoose";
+import {
+  getBillingConfig,
+  isPaidSemesterPlan,
+  VALID_SUBSCRIPTION_SEMESTERS,
+  validatePlanSemesters,
+} from "../utils/subscriptionBilling.js";
 
 // Cache PayPal settings
 let cachedPaypalSettings = null;
@@ -47,31 +53,6 @@ const environment = async () => {
 };
 
 const client = async () => new paypal.core.PayPalHttpClient(await environment());
-
-const VALID_SEMESTERS = ["S1", "S2", "S3", "S4", "S5", "S6", "S7", "S8", "S9", "S10"];
-
-const isSemesterPlan = (plan) => {
-  const period = String(plan?.period || "").trim().toLowerCase();
-  const name = String(plan?.name || "").trim().toLowerCase();
-  const isLegacyAnnualPlan = name.includes("annuel") || name.includes("annual");
-  return !isLegacyAnnualPlan && (period === "semester" || period === "semestre" || name === "premium" || name === "premium semestre");
-};
-
-const getBillingConfig = (plan) => {
-  if (!isSemesterPlan(plan)) {
-    throw new Error("Seuls les abonnements par semestre sont disponibles.");
-  }
-  return { duration: "6months", semesterCount: 1, transactionPlan: "Premium" };
-};
-
-const validatePlanSemesters = (semesters, semesterCount) => {
-  const selected = [...new Set(Array.isArray(semesters) ? semesters : [])];
-  if (selected.length !== semesterCount || selected.some(semester => !VALID_SEMESTERS.includes(semester))) {
-    throw new Error(`This plan requires exactly ${semesterCount} valid semester${semesterCount > 1 ? "s" : ""}.`);
-  }
-
-  return selected.sort((a, b) => Number(a.slice(1)) - Number(b.slice(1)));
-};
 
 // Create PayPal order
 const createOrder = asyncHandler(async (req, res) => {
@@ -119,7 +100,7 @@ const createOrder = asyncHandler(async (req, res) => {
     res.status(400);
     throw new Error("Invalid or inactive subscription plan.");
   }
-  if (!isSemesterPlan(selectedPlan)) {
+  if (!isPaidSemesterPlan(selectedPlan)) {
     res.status(400);
     throw new Error("Seuls les abonnements par semestre sont disponibles.");
   }
@@ -128,7 +109,7 @@ const createOrder = asyncHandler(async (req, res) => {
   const duration = billing.duration;
 
   // Validate semesters
-  const validSemesters = ["S1", "S2", "S3", "S4", "S5", "S6", "S7", "S8", "S9", "S10"];
+  const validSemesters = VALID_SUBSCRIPTION_SEMESTERS;
   let selectedSemesters;
   try {
     selectedSemesters = validatePlanSemesters(semesters, billing.semesterCount);
@@ -176,7 +157,7 @@ const createOrder = asyncHandler(async (req, res) => {
           currency_code: "USD",
           value: amount.toFixed(2),
         },
-        description: `YourQCM ${selectedPlan.name} - ${duration}`,
+        description: `YourQCM ${billing.transactionPlan} - 1 semestre`,
       },
     ],
     application_context: {
@@ -532,7 +513,7 @@ const createBankTransferRequest = asyncHandler(async (req, res) => {
   }
 
   // Validate semesters
-  const validSemesters = VALID_SEMESTERS;
+  const validSemesters = VALID_SUBSCRIPTION_SEMESTERS;
   if (!Array.isArray(semesters) || semesters.length === 0) {
     res.status(400);
     throw new Error("Veuillez sélectionner au moins un semestre");
@@ -555,7 +536,7 @@ const createBankTransferRequest = asyncHandler(async (req, res) => {
     res.status(400);
     throw new Error("Invalid or inactive subscription plan.");
   }
-  if (!isSemesterPlan(selectedPlan)) {
+  if (!isPaidSemesterPlan(selectedPlan)) {
     res.status(400);
     throw new Error("Seuls les abonnements par semestre sont disponibles.");
   }
@@ -586,7 +567,7 @@ const createBankTransferRequest = asyncHandler(async (req, res) => {
     req.user._id,
     "subscription",
     "Demande de paiement créée",
-    `Votre demande de paiement pour le plan ${selectedPlan.name} a été enregistrée. Contactez-nous sur WhatsApp pour finaliser.`,
+    `Votre demande de paiement pour le plan ${billing.transactionPlan} (1 semestre) a été enregistrée. Contactez-nous sur WhatsApp pour finaliser.`,
     "/dashboard/subscription"
   );
 

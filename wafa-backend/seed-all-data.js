@@ -131,9 +131,9 @@ const runSeeder = async () => {
       isVerified: true,
       emailVerified: true,
       isAactive: true,
-      plan: 'Premium Pro Annuel',
+      plan: 'Premium Pro',
       currentYear: '3ème année',
-      semesters: ['S5', 'S6'],
+      semesters: ['S5'],
       university: 'FMP Rabat',
       faculty: 'Médecine Générale'
     },
@@ -146,9 +146,9 @@ const runSeeder = async () => {
       isVerified: true,
       emailVerified: true,
       isAactive: true,
-      plan: 'Premium Semestre',
+      plan: 'Premium',
       currentYear: '2ème année',
-      semesters: ['S3', 'S4'],
+      semesters: ['S3'],
       university: 'FMP Casablanca',
       faculty: 'Médecine Générale'
     },
@@ -161,9 +161,9 @@ const runSeeder = async () => {
       isVerified: true,
       emailVerified: true,
       isAactive: true,
-      plan: 'Premium Pro Annuel',
+      plan: 'Premium Pro',
       currentYear: '4ème année',
-      semesters: ['S7', 'S8'],
+      semesters: ['S7'],
       university: 'FMP Fès',
       faculty: 'Médecine Générale'
     },
@@ -176,9 +176,9 @@ const runSeeder = async () => {
       isVerified: true,
       emailVerified: true,
       isAactive: true,
-      plan: 'Premium Pro Annuel',
+      plan: 'Premium Pro',
       currentYear: '5ème année',
-      semesters: ['S9', 'S10'],
+      semesters: ['S9'],
       university: 'FMP Marrakech',
       faculty: 'Médecine Générale'
     },
@@ -719,7 +719,7 @@ const runSeeder = async () => {
       ]
     },
     {
-      name: 'Premium Semestre',
+      name: 'Premium',
       description: 'Accès illimité à tous les modules d\'un semestre complet',
       price: 199,
       oldPrice: 299,
@@ -736,16 +736,16 @@ const runSeeder = async () => {
       ]
     },
     {
-      name: 'Premium Pro Annuel',
-      description: 'L\'expérience intégrale pour toute votre année universitaire',
+      name: 'Premium Pro',
+      description: 'L\'expérience intégrale pour un semestre complet',
       price: 399,
       oldPrice: 599,
-      period: 'Annuel',
+      period: 'Semestre',
       order: 3,
       isPopular: false,
       status: 'Active',
       features: [
-        { text: 'Accès intégral à TOUS les semestres (S1 à S10)', included: true },
+        { text: 'Accès intégral à tous les modules du semestre choisi', included: true },
         { text: 'Banque QCM complète & annales illimitées', included: true },
         { text: 'Génération d\'explications par IA illimitée', included: true },
         { text: 'Fiches de révision téléchargeables en PDF', included: true },
@@ -765,10 +765,10 @@ const runSeeder = async () => {
     currency: 'MAD',
     status: 'completed',
     paypalOrderId: 'TX_DEMO_2026_001',
-    plan: 'Premium Pro Annuel',
-    duration: '1year',
+    plan: 'Premium Pro',
+    duration: '6months',
     paymentMethod: 'PayPal',
-    semesters: ['S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8', 'S9', 'S10'],
+    semesters: ['S5'],
     metadata: { seed: true }
   });
 
@@ -778,10 +778,10 @@ const runSeeder = async () => {
     currency: 'MAD',
     status: 'completed',
     paypalOrderId: 'TX_DEMO_2026_002',
-    plan: 'Premium Semestre',
+    plan: 'Premium',
     duration: '6months',
     paymentMethod: 'Virement',
-    semesters: ['S3', 'S4'],
+    semesters: ['S3'],
     metadata: { seed: true }
   });
   console.log('✓ Seeded subscription plans and transaction records');
@@ -801,10 +801,10 @@ const runSeeder = async () => {
     status: 'pending'
   });
 
-  await upsertDoc(Contact, { email: yassine.email, subject: 'Question sur le renouvellement annuel' }, {
+  await upsertDoc(Contact, { email: yassine.email, subject: 'Question sur le renouvellement semestriel' }, {
     name: yassine.name,
     email: yassine.email,
-    subject: 'Question sur le renouvellement annuel',
+    subject: 'Question sur le renouvellement semestriel',
     message: 'Bonjour, je souhaite savoir si le passage en 4ème année conserve l\'historique des statistiques et mes playlists.',
     status: 'pending',
     priority: 'medium',

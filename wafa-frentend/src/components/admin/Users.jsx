@@ -15,6 +15,7 @@ import {
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
 import { cn } from "../../lib/utils";
+import { displaySubscriptionPlanName } from "@/utils/subscriptionDisplay";
 import {
   Download,
   UserPlus,
@@ -527,7 +528,7 @@ const UsersComponent = () => {
                             getPlanBadgeColor(user.plan)
                           )}
                         >
-                          {user.plan}
+                          {displaySubscriptionPlanName(user.plan, "Free")}
                         </span>
                       </td>
                       <td className="py-4 px-4">

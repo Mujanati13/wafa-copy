@@ -3,7 +3,7 @@
  */
 import jwt from "jsonwebtoken";
 import { refreshSingleSession } from "../services/singleSessionService.js";
-import { userHasPremiumAccess } from "../utils/planAccess.js";
+import { normalizeUserPlan, userHasPremiumAccess } from "../utils/planAccess.js";
 
 const shouldLogAuthFailures = () => (
   process.env.AUTH_FAILURE_LOGGING === "true" || process.env.NODE_ENV !== "production"
@@ -103,9 +103,9 @@ export const hasActiveSubscription = (req, res, next) => {
       return next();
     }
     
-    // Premium users need to have valid expiry
-    if (user.plan === "Premium") {
-      if (!user.planExpiry || new Date(user.planExpiry) > new Date()) {
+    // Both paid semester tiers need to have a valid expiry.
+    if (normalizeUserPlan(user.plan) !== "Free") {
+      if (userHasPremiumAccess(user)) {
         return next();
       }
       return res.status(403).json({

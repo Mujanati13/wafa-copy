@@ -235,7 +235,7 @@ Tout le contenu présent sur YourQCM (questions, explications, résumés, graphi
 
 ### Modalités de Paiement
 - Les paiements sont traités de manière sécurisée via PayPal
-- Les abonnements sont facturés selon la période choisie (mensuel/annuel)
+- Les abonnements sont facturés par semestre
 - Le renouvellement est automatique sauf annulation préalable
 - Les prix peuvent être modifiés avec un préavis de 30 jours
 

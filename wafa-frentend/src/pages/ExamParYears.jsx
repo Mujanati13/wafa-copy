@@ -651,7 +651,7 @@ const ExamParYears = () => {
                           <Badge variant="secondary">{exam.year}</Badge>
                         </TableCell>
                         <TableCell>
-                          <div className="w-16 h-12 rounded-md overflow-hidden bg-muted border">
+                          <div className="w-16 h-12 rounded-md overflow-hidden bg-transparent border">
                             <img src={exam.imageUrl} alt={exam.examName} className="w-full h-full object-cover" />
                           </div>
                         </TableCell>

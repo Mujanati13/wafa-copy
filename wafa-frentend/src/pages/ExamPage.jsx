@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useTranslation } from 'react-i18next';
 import { useParams, useNavigate, useSearchParams, useLocation } from "react-router-dom";
+import { publishExamCompletedCount } from "@/utils/examProgress";
+import { dashboardService } from "@/services/dashboardService";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft,
@@ -81,6 +83,7 @@ import { toast } from "sonner";
 import { api } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import { resolveQuestionImageUrl } from "@/lib/mediaUrl";
+import { isPremiumPlan, isPremiumProPlan } from "@/utils/subscriptionDisplay";
 import ExplicationModel from "@/components/ExamsPage/ExplicationModel";
 import NoteModal from "@/components/ExamsPage/NoteModal";
 import ReportModal from "@/components/ExamsPage/ReportModal";
@@ -320,8 +323,8 @@ const ExamPage = () => {
   const userLevelInfo = userProfile ? calculateLevel(userProfile.totalPoints || 0) : null;
 
   // Check access levels for different features
-  const hasPremiumAccess = userPlan === "PREMIUM" || userPlan === "PREMIUM PRO" || userPlan === "Premium" || userPlan === "Premium Annuel";
-  const hasPremiumProAccess = userPlan === "PREMIUM PRO" || userPlan === "Premium Annuel";
+  const hasPremiumAccess = isPremiumPlan(userPlan);
+  const hasPremiumProAccess = isPremiumProPlan(userPlan);
 
   // Helper to handle feature access with upgrade prompt for PREMIUM PRO features
   const handlePremiumProFeature = (featureName, action) => {
@@ -520,8 +523,14 @@ const ExamPage = () => {
         }
       };
     }
-    // Default exam-years format - already in correct format
-    return data;
+    // Annual exams populate moduleId with module details. Normalize it before
+    // answer verification/persistence, whose API contract requires the ID.
+    return {
+      ...data,
+      moduleId: data.moduleId?._id || data.moduleId,
+      moduleName: data.moduleName || data.moduleId?.name,
+      moduleColor: data.moduleColor || data.moduleId?.color || '#6366f1',
+    };
   }, []);
 
   // Track if we've already fetched exam data to prevent refetching
@@ -1183,7 +1192,7 @@ const ExamPage = () => {
       }
 
       // Save answer for persistence
-      await api.post('/questions/save-answer', {
+      const saveResponse = await api.post('/questions/save-answer', {
         questionId: questionData._id,
         selectedAnswers: userAnswers,
         isVerified: true,
@@ -1191,6 +1200,12 @@ const ExamPage = () => {
         examId: examId,
         moduleId: examData?.moduleId
       });
+
+      publishExamCompletedCount(
+        examId,
+        saveResponse.data?.data?.completedQuestions,
+      );
+      dashboardService.clearCache();
 
       console.log('=== VERIFICATION COMPLETE ===');
 
@@ -3674,7 +3689,7 @@ const ExamPage = () => {
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="flex h-[calc(100dvh-1rem)] max-h-[90dvh] w-full max-w-4xl min-h-0 flex-col overflow-hidden rounded-xl border border-border bg-card text-card-foreground shadow-2xl sm:h-[min(85dvh,760px)]"
+              className="grid h-[calc(100dvh-1rem)] w-full max-w-4xl min-h-0 grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden rounded-xl border border-border bg-card text-card-foreground shadow-2xl sm:h-[min(85dvh,760px)]"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Header */}
@@ -3695,7 +3710,14 @@ const ExamPage = () => {
               </div>
 
               {/* Images Grid */}
-              <div className="min-h-0 flex-1 touch-pan-y overflow-y-auto overscroll-contain p-3 [-webkit-overflow-scrolling:touch] sm:p-4">
+              <div
+                className="h-full min-h-0 touch-pan-y overflow-x-hidden overflow-y-scroll overscroll-y-contain p-3 sm:p-4"
+                style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' }}
+                onWheel={(e) => e.stopPropagation()}
+                onTouchMove={(e) => e.stopPropagation()}
+                tabIndex={0}
+                aria-label="Liste défilante des images de l'examen"
+              >
                 <div className="pr-3 sm:pr-4 space-y-0">
                   {(() => {
                     // Get all images from all questions in the entire exam

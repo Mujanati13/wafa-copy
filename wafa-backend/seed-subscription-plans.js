@@ -59,7 +59,7 @@ const seedSubscriptionPlans = async () => {
                 isPopular: true
             },
             {
-                name: 'Premium Pro Semestre',
+                name: 'Premium Pro',
                 description: 'Accès complet par semestre - Meilleure valeur',
                 price: 120,
                 oldPrice: 200,

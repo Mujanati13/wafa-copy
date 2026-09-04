@@ -26,6 +26,7 @@ import {
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { cn } from "../../lib/utils";
+import { displaySubscriptionPlanName, editableUserPlan } from "@/utils/subscriptionDisplay";
 import {
   Download,
   UserPlus,
@@ -183,7 +184,7 @@ const UsersWithTabs = () => {
           [
             `"${user.name || user.username || ""}"`,
             `"${user.email}"`,
-            `"${user.plan || "Free"}"`,
+            `"${displaySubscriptionPlanName(user.plan, "Free")}"`,
             `"${user.isAactive ? "Actif" : "Inactif"}"`,
             `"${new Date(user.createdAt).toLocaleDateString("fr-FR")}"`,
           ].join(",")
@@ -244,7 +245,7 @@ const UsersWithTabs = () => {
         body: allUsers.map((user) => [
           user.name || user.username || "-",
           user.email,
-          user.plan || "Free",
+          displaySubscriptionPlanName(user.plan, "Free"),
           user.isAactive ? "Actif" : "Inactif",
           new Date(user.createdAt).toLocaleDateString("fr-FR"),
         ]),
@@ -411,7 +412,7 @@ const UsersWithTabs = () => {
       username: user.username || "",
       currentYear: user.currentYear || "",
       semesters: Array.isArray(user.semesters) ? user.semesters : [],
-      plan: user.plan || "Free",
+      plan: editableUserPlan(user.plan),
       isAactive: user.isAactive ?? true,
       paymentMode: user.paymentMode || "",
       paymentDate: formatDateSafe(user.paymentDate),
@@ -425,6 +426,10 @@ const UsersWithTabs = () => {
   // Update user
   const handleUpdateUser = async () => {
     if (!selectedUser) return;
+    if (editFormData.plan !== "Free" && (editFormData.semesters || []).length !== 1) {
+      toast.error("Sélectionnez exactement un semestre pour cet abonnement");
+      return;
+    }
     setActionLoading(true);
     try {
       // Clean up data before sending - convert empty strings to null for enum fields
@@ -1147,7 +1152,7 @@ const UsersWithTabs = () => {
                 <div>
                   <Label className="text-muted-foreground">Plan</Label>
                   <Badge className={getPlanBadgeColor(selectedUser.plan)}>
-                    {selectedUser.plan || "Free"}
+                    {displaySubscriptionPlanName(selectedUser.plan, "Free")}
                   </Badge>
                 </div>
                 <div>
@@ -1297,11 +1302,17 @@ const UsersWithTabs = () => {
                   id="edit-plan"
                   className="w-full p-2 border rounded-md bg-card"
                   value={editFormData.plan || "Free"}
-                  onChange={(e) => setEditFormData({ ...editFormData, plan: e.target.value })}
+                  onChange={(e) => setEditFormData({
+                    ...editFormData,
+                    plan: e.target.value,
+                    semesters: e.target.value === "Free"
+                      ? editFormData.semesters
+                      : (editFormData.semesters || []).slice(0, 1),
+                  })}
                 >
                   <option value="Free">Gratuit</option>
                   <option value="Premium">Premium (Semestre)</option>
-                  <option value="Premium Annuel">Premium Annuel</option>
+                  <option value="Premium Pro">Premium Pro (Semestre)</option>
                 </select>
               </div>
             </div>
@@ -1317,8 +1328,13 @@ const UsersWithTabs = () => {
                       checked={editFormData.semesters?.includes(sem.value) || false}
                       onChange={(e) => {
                         const currentSemesters = editFormData.semesters || [];
-                        if (e.target.checked) {
-                          setEditFormData({ 
+                        if (e.target.checked && editFormData.plan !== "Free") {
+                          setEditFormData({
+                            ...editFormData,
+                            semesters: [sem.value],
+                          });
+                        } else if (e.target.checked) {
+                          setEditFormData({
                             ...editFormData, 
                             semesters: [...currentSemesters, sem.value].sort() 
                           });

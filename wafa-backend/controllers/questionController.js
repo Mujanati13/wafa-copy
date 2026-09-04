@@ -6,6 +6,7 @@ import UserModel from "../models/userModel.js";
 import PointModel from "../models/pointModel.js";
 import xlsx from "xlsx";
 import { normalizeQuestionImages } from "../utils/questionImagePath.js";
+import { buildAnsweredCountByExam } from "../utils/answerProgress.js";
 
 export const questionController = {
     create: asyncHandler(async (req, res) => {
@@ -1126,6 +1127,11 @@ export const questionController = {
         await userStats.save();
         console.log('✓ User stats saved successfully');
 
+        const answeredCountByExam = buildAnsweredCountByExam(userStats.answeredQuestions);
+        const completedQuestions = examId
+            ? answeredCountByExam[examId.toString()] || 0
+            : 0;
+
         res.status(200).json({
             success: true,
             message: "Réponse sauvegardée",
@@ -1133,7 +1139,8 @@ export const questionController = {
                 questionId,
                 selectedAnswers,
                 isVerified,
-                isCorrect
+                isCorrect,
+                completedQuestions
             }
         });
     }),

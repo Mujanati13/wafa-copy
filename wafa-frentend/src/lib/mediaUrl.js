@@ -39,7 +39,9 @@ export const resolveMediaUrl = (value, {
     try {
       const absoluteUrl = new URL(normalized);
       const uploadIndex = absoluteUrl.pathname.toLowerCase().indexOf("/uploads/");
-      if (uploadIndex >= 0 && LOOPBACK_HOSTS.has(absoluteUrl.hostname.toLowerCase())) {
+      // /uploads is application-owned local storage. Always use the current
+      // API/public origin so URLs saved under an old domain keep working.
+      if (uploadIndex >= 0) {
         return `${origin}${absoluteUrl.pathname.slice(uploadIndex)}${absoluteUrl.search}${absoluteUrl.hash}`;
       }
     } catch {

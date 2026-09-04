@@ -5,6 +5,7 @@ import { X, DollarSign, Package, Check } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { displaySubscriptionCopy, displaySubscriptionPlanName, editableSubscriptionPeriod } from "@/utils/subscriptionDisplay";
 
 const PlanModal = ({
   open,
@@ -32,7 +33,7 @@ const PlanModal = ({
           const text = typeof feature === "object" ? feature?.text : feature;
           if (!String(text || "").trim()) return null;
           return {
-            text: String(text).trim(),
+            text: displaySubscriptionCopy(String(text).trim()),
             included: typeof feature === "object" ? feature.included !== false : true,
           };
         })
@@ -41,10 +42,10 @@ const PlanModal = ({
         .split(",")
         .map((text) => text.trim())
         .filter(Boolean)
-        .map((text) => ({ text, included: true }));
+        .map((text) => ({ text: displaySubscriptionCopy(text), included: true }));
     setForm({
-      name: initialPlan?.name ?? "",
-      description: initialPlan?.description ?? "",
+      name: displaySubscriptionPlanName(initialPlan?.name, ""),
+      description: displaySubscriptionCopy(initialPlan?.description),
       price:
         initialPlan?.price === 0 || initialPlan?.price
           ? String(initialPlan.price)
@@ -53,7 +54,7 @@ const PlanModal = ({
         initialPlan?.oldPrice === 0 || initialPlan?.oldPrice
           ? String(initialPlan.oldPrice)
           : "",
-      period: initialPlan?.period ?? "Semester",
+      period: editableSubscriptionPeriod(initialPlan?.period),
       features: featuresArray,
       featuresInput: "",
     });
@@ -148,12 +149,7 @@ const PlanModal = ({
                   className="h-11 w-full rounded-lg border border-border focus:border-purple-500 focus:ring-purple-500 transition-all px-3 bg-background text-foreground"
                 >
                   <option value="Gratuit">Gratuit</option>
-                  <option value="Semester">Semester</option>
                   <option value="Semestre">Semestre</option>
-                  <option value="Annee">Annee</option>
-                  <option value="Annuel">Annuel</option>
-                  <option value="Monthly">Monthly</option>
-                  <option value="Annual">Annual</option>
                 </select>
               </div>
             </div>

@@ -47,6 +47,24 @@ app.use('/uploads', express.static(uploadsDir, {
   immutable: isProduction
 }));
 
+// Older question uploads were written below process.cwd(). When the server was
+// launched from the repository root, those files landed outside __dirname and
+// were therefore registered in MongoDB but unreachable over HTTP. Keep a
+// read-only fallback for those files while all new uploads use uploadsDir.
+const legacyQuestionUploadsDir = path.resolve(process.cwd(), 'uploads', 'questions');
+const questionUploadsDir = path.join(uploadsDir, 'questions');
+if (
+  legacyQuestionUploadsDir !== questionUploadsDir &&
+  fs.existsSync(legacyQuestionUploadsDir)
+) {
+  app.use('/uploads/questions', express.static(legacyQuestionUploadsDir, {
+    dotfiles: 'deny',
+    index: false,
+    maxAge: isProduction ? '7d' : 0,
+    immutable: isProduction
+  }));
+}
+
 // CORS middleware
 const allowedOrigins = (process.env.CORS_ORIGIN || '')
   .split(',')

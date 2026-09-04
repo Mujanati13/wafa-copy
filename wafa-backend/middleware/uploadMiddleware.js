@@ -6,6 +6,7 @@ import {
   MAX_RESUME_FILE_SIZE,
   sanitizeResumeFilename,
 } from "../utils/resumeUpload.js";
+import { QUESTION_IMAGES_DIRECTORY } from "../utils/questionImagePath.js";
 
 // Configure Multer to use memory storage
 const storage = multer.memoryStorage();
@@ -113,11 +114,10 @@ export const saveProfilePictureLocally = async (buffer, userId) => {
 // Configure disk storage for question images
 const questionImageStorage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const uploadDir = path.join(process.cwd(), 'uploads', 'questions');
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
+    if (!fs.existsSync(QUESTION_IMAGES_DIRECTORY)) {
+      fs.mkdirSync(QUESTION_IMAGES_DIRECTORY, { recursive: true });
     }
-    cb(null, uploadDir);
+    cb(null, QUESTION_IMAGES_DIRECTORY);
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);

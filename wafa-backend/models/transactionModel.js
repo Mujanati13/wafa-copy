@@ -34,7 +34,7 @@ const transactionSchema = new mongoose.Schema(
     },
     plan: {
       type: String,
-      enum: ["Premium", "Premium Annuel", "Gratuit"],
+      enum: ["Premium", "Premium Pro", "Premium Annuel", "Premium Pro Annuel", "Premium Semestre", "Gratuit"],
       required: true,
     },
     duration: {

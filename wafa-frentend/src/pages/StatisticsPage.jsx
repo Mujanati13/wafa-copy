@@ -19,6 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { EXAM_PROGRESS_UPDATED_EVENT } from "@/utils/examProgress";
 
 const EMPTY_SUMMARY = {
   moduleCount: 0,
@@ -274,6 +275,13 @@ export default function StatisticsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [reloadKey, setReloadKey] = useState(0);
+  const [activeView, setActiveView] = useState("overview");
+
+  useEffect(() => {
+    const refreshProgress = () => setReloadKey((key) => key + 1);
+    window.addEventListener(EXAM_PROGRESS_UPDATED_EVENT, refreshProgress);
+    return () => window.removeEventListener(EXAM_PROGRESS_UPDATED_EVENT, refreshProgress);
+  }, []);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -293,7 +301,13 @@ export default function StatisticsPage() {
           params: { semester: selectedSemester },
           signal: controller.signal,
         });
-        setData(response.data?.data || { summary: EMPTY_SUMMARY, modules: [] });
+        const responseData = response.data?.data || { summary: EMPTY_SUMMARY, modules: [] };
+        setData({
+          ...responseData,
+          modules: (responseData.modules || []).filter(
+            (module) => String(module.semester || "").toUpperCase() === selectedSemester,
+          ),
+        });
         setExpandedModules(new Set());
       } catch (requestError) {
         if (requestError.code !== "ERR_CANCELED") {
@@ -334,7 +348,7 @@ export default function StatisticsPage() {
       {loading ? <LoadingState /> : error ? (
         <Card className="border-red-200"><CardContent className="grid min-h-64 place-items-center p-8 text-center"><div><XCircle className="mx-auto h-10 w-10 text-red-500" /><h2 className="mt-4 text-lg font-semibold">Statistiques indisponibles</h2><p className="mt-2 text-sm text-muted-foreground">{error}</p><Button className="mt-5" onClick={() => setReloadKey((key) => key + 1)}>Réessayer</Button></div></CardContent></Card>
       ) : (
-        <Tabs defaultValue="overview" className="gap-7">
+        <Tabs value={activeView} onValueChange={setActiveView} className="gap-7">
           <TabsList className="grid h-auto w-full grid-cols-2 rounded-2xl border border-border bg-muted/70 p-1.5 sm:max-w-xl">
             <TabsTrigger value="overview" className="min-h-11 rounded-xl px-3 text-xs sm:text-sm">
               <BarChart3 className="h-4 w-4" aria-hidden="true" />Vue principale

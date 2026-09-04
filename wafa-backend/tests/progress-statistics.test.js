@@ -1,7 +1,21 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import mongoose from "mongoose";
-import { buildProgressStatistics } from "../services/progressStatisticsService.js";
+import {
+  buildCompleteActivitySources,
+  buildProgressStatistics,
+  filterModulesBySemester,
+} from "../services/progressStatisticsService.js";
+
+test("strictly keeps only modules from the selected semester", () => {
+  const modules = filterModulesBySemester([
+    { _id: "m1", semester: "S1" },
+    { _id: "m3", semester: "S3" },
+    { _id: "global", semester: "", availableInAllSemesters: true },
+  ], "s1");
+
+  assert.deepEqual(modules.map((module) => module._id), ["m1"]);
+});
 
 test("calculates module/course progress and deterministic highlights", () => {
   const result = buildProgressStatistics({
@@ -70,4 +84,40 @@ test("handles MongoDB ObjectIds without recursive stack overflow", () => {
   assert.equal(result.modules[0].courses[0].courseId, courseId.toHexString());
   assert.equal(result.modules[0].answeredQuestions, 1);
   assert.equal(result.summary.successRate, 100);
+});
+
+test("includes unmapped annual-exam and QCM-bank activity without double counting course questions", () => {
+  const sources = buildCompleteActivitySources({
+    courses: [{
+      _id: "course-1",
+      name: "Cours thématique",
+      moduleId: "module-1",
+      linkedQuestions: ["q1"],
+    }],
+    annualExams: [{ _id: "exam-1", name: "2026 normal", moduleId: "module-1" }],
+    qcmBanks: [{ _id: "bank-1", name: "Entraînement", moduleId: "module-1" }],
+    questions: [
+      { _id: "q1", examId: "exam-1" },
+      { _id: "q2", examId: "exam-1" },
+      { _id: "q3", qcmBanqueId: "bank-1" },
+    ],
+  });
+
+  const result = buildProgressStatistics({
+    modules: [{ _id: "module-1", name: "Anatomie I", semester: "S1" }],
+    courses: sources,
+    answeredQuestions: {
+      q1: { isVerified: true, isCorrect: true, answeredAt: "2026-09-01T10:00:00.000Z" },
+      q2: { isVerified: true, isCorrect: false, answeredAt: "2026-09-02T10:00:00.000Z" },
+      q3: { isVerified: true, isCorrect: true, answeredAt: "2026-09-03T10:00:00.000Z" },
+    },
+  });
+
+  assert.equal(result.summary.courseCount, 3);
+  assert.equal(result.summary.totalQuestions, 3);
+  assert.equal(result.summary.answeredQuestions, 3);
+  assert.equal(result.summary.correctAnswers, 2);
+  assert.equal(result.summary.incorrectAnswers, 1);
+  assert.equal(result.summary.completionPercentage, 100);
+  assert.equal(result.modules[0].highlights.recent.courseName, "Entraînement");
 });

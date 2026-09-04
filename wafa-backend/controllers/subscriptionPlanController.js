@@ -20,12 +20,38 @@ const normalizeFeatures = (features) => {
   }).filter(Boolean);
 };
 
-const isSemesterPlan = (plan) => {
-  const period = String(plan?.period || "").trim().toLowerCase();
-  const name = String(plan?.name || "").trim().toLowerCase();
-  const isFreePlan = Number(plan?.price) === 0 || name === "gratuit" || name === "free";
-  const isLegacyAnnualPlan = name.includes("annuel") || name.includes("annual");
-  return !isLegacyAnnualPlan && (isFreePlan || period === "semester" || period === "semestre");
+const semesterCopy = (value = "") => String(value)
+  .replace(/\b12\s+months?\b/gi, "6 months")
+  .replace(/\b12\s+mois\b/gi, "6 mois")
+  .replace(/\b(?:the\s+)?(?:whole\s+)?academic year\b/gi, "one semester")
+  .replace(/\b(?:toute\s+votre\s+)?ann[ée]e universitaire\b/gi, "un semestre complet")
+  .replace(/\ball semesters(?:\s*\([^)]*\))?/gi, "all modules in the selected semester")
+  .replace(/\btous les semestres(?:\s*\([^)]*\))?/gi, "tous les modules du semestre choisi")
+  .replace(/\bannual(?:ly)?\b/gi, "per semester")
+  .replace(/\bannuel(?:le)?ment\b/gi, "par semestre")
+  .replace(/\bannuel(?:le)?\b/gi, "Semestre");
+
+const normalizePlanName = (name = "") => {
+  const value = String(name).trim();
+  const lowerName = value.toLowerCase();
+  if (lowerName.includes("premium pro")) return "Premium Pro";
+  if (lowerName.includes("premium")) return "Premium";
+  return semesterCopy(value).trim();
+};
+
+const normalizePlan = (plan) => {
+  const value = typeof plan?.toObject === "function" ? plan.toObject() : { ...plan };
+  const isFreePlan = Number(value.price) === 0;
+  return {
+    ...value,
+    name: normalizePlanName(value.name),
+    description: semesterCopy(value.description),
+    period: isFreePlan ? "Gratuit" : "Semestre",
+    features: normalizeFeatures(value.features).map((feature) => ({
+      ...feature,
+      text: semesterCopy(feature.text),
+    })),
+  };
 };
 
 // Get all subscription plans
@@ -37,9 +63,7 @@ const getAllPlans = asyncHandler(async (req, res) => {
   res.set("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
   res.status(200).json({
     success: true,
-    // Historical annual entries remain visible to administrators and in records,
-    // but customer-facing pricing is restricted to the semester model.
-    data: plans.filter(isSemesterPlan),
+    data: plans.map(normalizePlan),
   });
 });
 
@@ -52,7 +76,7 @@ const getAvailablePlans = asyncHandler(async (req, res) => {
   res.set("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
   res.status(200).json({
     success: true,
-    data: plans,
+    data: plans.map(normalizePlan),
   });
 });
 
@@ -70,7 +94,7 @@ const getPlanById = asyncHandler(async (req, res) => {
 
   res.status(200).json({
     success: true,
-    data: plan,
+    data: normalizePlan(plan),
   });
 });
 
@@ -86,7 +110,8 @@ const createPlan = asyncHandler(async (req, res) => {
     });
   }
 
-  const existingPlan = await SubscriptionPlan.findOne({ name });
+  const normalizedName = normalizePlanName(name);
+  const existingPlan = await SubscriptionPlan.findOne({ name: normalizedName });
   if (existingPlan) {
     return res.status(409).json({
       success: false,
@@ -94,13 +119,14 @@ const createPlan = asyncHandler(async (req, res) => {
     });
   }
 
+  const isFreePlan = Number(price) === 0;
   const plan = new SubscriptionPlan({
-    name,
-    description: description || "",
+    name: normalizedName,
+    description: semesterCopy(description || ""),
     price,
     oldPrice: oldPrice || null,
-    period: period || "Semester",
-    features: normalizeFeatures(features),
+    period: isFreePlan ? "Gratuit" : "Semester",
+    features: normalizeFeatures(features).map((feature) => ({ ...feature, text: semesterCopy(feature.text) })),
     status: status || "Active",
     order: order !== undefined ? order : 0,
   });
@@ -109,7 +135,7 @@ const createPlan = asyncHandler(async (req, res) => {
 
   res.status(201).json({
     success: true,
-    data: plan,
+    data: normalizePlan(plan),
     message: "Plan created successfully",
   });
 });
@@ -139,12 +165,16 @@ const updatePlan = asyncHandler(async (req, res) => {
     }
   }
 
-  if (name) plan.name = name;
-  if (description !== undefined) plan.description = description;
+  if (name) plan.name = normalizePlanName(name);
+  if (description !== undefined) plan.description = semesterCopy(description);
   if (price !== undefined) plan.price = price;
   if (oldPrice !== undefined) plan.oldPrice = oldPrice;
-  if (period !== undefined) plan.period = period;
-  if (features !== undefined) plan.features = normalizeFeatures(features);
+  if (period !== undefined || price !== undefined) {
+    plan.period = Number(price ?? plan.price) === 0 ? "Gratuit" : "Semester";
+  }
+  if (features !== undefined) {
+    plan.features = normalizeFeatures(features).map((feature) => ({ ...feature, text: semesterCopy(feature.text) }));
+  }
   if (status) plan.status = status;
   if (order !== undefined) plan.order = order;
 
@@ -152,7 +182,7 @@ const updatePlan = asyncHandler(async (req, res) => {
 
   res.status(200).json({
     success: true,
-    data: plan,
+    data: normalizePlan(plan),
     message: "Plan updated successfully",
   });
 });

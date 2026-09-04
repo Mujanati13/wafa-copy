@@ -52,7 +52,7 @@ const paymentModeOptions = [
 const planOptions = [
   { value: "Free", label: "Gratuit", description: "Accès limité" },
   { value: "Premium", label: "Premium (Semestre)", description: "6 mois d'accès" },
-  { value: "Premium Annuel", label: "Premium Annuel", description: "12 mois d'accès" },
+  { value: "Premium Pro", label: "Premium Pro (Semestre)", description: "6 mois d'accès" },
 ];
 
 const NewUserForm = ({ setShowNewUserForm, onUserCreated }) => {
@@ -110,6 +110,10 @@ const NewUserForm = ({ setShowNewUserForm, onUserCreated }) => {
   const watchPlan = form.watch("plan");
 
   const onSubmit = async (data) => {
+    if (data.plan !== "Free" && selectedSemesters.length !== 1) {
+      toast.error("Sélectionnez exactement un semestre pour cet abonnement");
+      return;
+    }
     setIsSubmitting(true);
     try {
       // Call the new admin create user endpoint
@@ -173,11 +177,10 @@ const NewUserForm = ({ setShowNewUserForm, onUserCreated }) => {
   };
 
   const toggleSemester = (semValue) => {
-    setSelectedSemesters(prev => 
-      prev.includes(semValue) 
-        ? prev.filter(s => s !== semValue)
-        : [...prev, semValue].sort()
-    );
+    setSelectedSemesters((previous) => {
+      if (previous.includes(semValue)) return previous.filter((semester) => semester !== semValue);
+      return watchPlan === "Free" ? [...previous, semValue].sort() : [semValue];
+    });
   };
 
   const selectAllSemesters = () => {
@@ -467,6 +470,12 @@ const NewUserForm = ({ setShowNewUserForm, onUserCreated }) => {
                                   {...field}
                                   value={plan.value}
                                   checked={field.value === plan.value}
+                                  onChange={(event) => {
+                                    field.onChange(event);
+                                    if (event.target.value !== "Free") {
+                                      setSelectedSemesters((semesters) => semesters.slice(0, 1));
+                                    }
+                                  }}
                                   className="sr-only"
                                 />
                                 <span className="font-medium text-sm text-foreground">{plan.label}</span>

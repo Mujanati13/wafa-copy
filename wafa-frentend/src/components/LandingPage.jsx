@@ -55,6 +55,7 @@ import { toast } from "sonner";
 import Header from "./landingPage/Header";
 import ThemeToggle from "@/components/ui/ThemeToggle";
 import { subscriptionPlanService } from "@/services/subscriptionPlanService";
+import { displaySubscriptionCopy, displaySubscriptionPeriod, displaySubscriptionPlanName } from "@/utils/subscriptionDisplay";
 import axios from "axios";
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -764,7 +765,7 @@ const PricingSection = ({ settings }) => {
                             )}
                           </div>
                         </div>
-                        <CardTitle className="text-xl md:text-2xl font-bold">{plan.name}</CardTitle>
+                        <CardTitle className="text-xl md:text-2xl font-bold">{displaySubscriptionPlanName(plan.name)}</CardTitle>
                         <div className="pt-3 sm:pt-4">
                           <div className="flex items-baseline justify-center gap-1 flex-wrap">
                             <span className="text-3xl xs:text-4xl sm:text-5xl md:text-6xl font-bold text-blue-600 dark:text-blue-400">{plan.price} dh</span>
@@ -772,7 +773,11 @@ const PricingSection = ({ settings }) => {
                               <span className="text-base sm:text-lg md:text-xl text-muted-foreground line-through ml-1 sm:ml-2">{plan.oldPrice} dh</span>
                             )}
                           </div>
-                          <p className="text-muted-foreground text-sm sm:text-base mt-1 sm:mt-2 font-medium">par {plan.period === 'Annee' ? 'Semester' : plan.period}</p>
+                          {displaySubscriptionPeriod(plan.period) && (
+                            <p className="text-muted-foreground text-sm sm:text-base mt-1 sm:mt-2 font-medium">
+                              par {displaySubscriptionPeriod(plan.period)}
+                            </p>
+                          )}
                         </div>
                       </CardHeader>
                       <CardContent className="flex-grow pt-4">
@@ -935,7 +940,7 @@ const PricingSection = ({ settings }) => {
                                 <span className={`flex-shrink-0 mt-0.5 ${isIncluded ? 'text-green-500' : 'text-red-500'}`}>
                                   {isIncluded ? '✔️' : '❌'}
                                 </span>
-                                <span className={`text-sm ${isIncluded ? 'text-foreground' : 'text-muted-foreground line-through'}`}>{featureText}</span>
+                                <span className={`text-sm ${isIncluded ? 'text-foreground' : 'text-muted-foreground line-through'}`}>{displaySubscriptionCopy(featureText)}</span>
                               </div>
                             );
                           })}

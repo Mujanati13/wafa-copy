@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { api } from "@/lib/utils";
+import { isPremiumPlan, isPremiumProPlan } from "@/utils/subscriptionDisplay";
 
 const MAX_EXPLANATIONS = 3;
 const MAX_IMAGES = 5;
@@ -59,8 +60,8 @@ const ExplicationModel = ({ question, setShowExplanation, userPlan = "Free" }) =
   };
 
   // Check access levels - AI explanations only for PREMIUM PRO
-  const hasPremiumAccess = userPlan === "PREMIUM" || userPlan === "PREMIUM PRO" || userPlan === "Premium" || userPlan === "Premium Annuel";
-  const hasPremiumProAccess = userPlan === "PREMIUM PRO" || userPlan === "Premium Annuel";
+  const hasPremiumAccess = isPremiumPlan(userPlan);
+  const hasPremiumProAccess = isPremiumProPlan(userPlan);
 
   // If user doesn't have premium access, default to user tab
   useEffect(() => {

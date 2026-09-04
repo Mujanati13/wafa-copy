@@ -1,5 +1,14 @@
 const clampPercentage = (value) => Math.min(100, Math.max(0, Math.round(value || 0)));
 
+export const filterModulesBySemester = (modules = [], semester = "") => {
+  const normalizedSemester = String(semester || "").trim().toUpperCase();
+  if (!normalizedSemester) return modules;
+
+  return modules.filter(
+    (module) => String(module?.semester || "").trim().toUpperCase() === normalizedSemester,
+  );
+};
+
 const asId = (value, seen = new Set()) => {
   if (value === null || value === undefined || value === "") return "";
   if (typeof value !== "object") return String(value);
@@ -116,6 +125,56 @@ const getCourseModuleId = (course, moduleNameToId, moduleIds) => {
   if (moduleIds.has(directId)) return directId;
   if (moduleNameToId.has(directId)) return moduleNameToId.get(directId);
   return moduleNameToId.get(course.moduleName || course.module || "") || "";
+};
+
+export const buildCompleteActivitySources = ({
+  courses = [],
+  annualExams = [],
+  qcmBanks = [],
+  questions = [],
+}) => {
+  const linkedQuestionIds = new Set(
+    courses.flatMap((course) => course.linkedQuestions || []).map(asId).filter(Boolean),
+  );
+  const questionsByAnnualExam = new Map();
+  const questionsByQcmBank = new Map();
+
+  questions.forEach((question) => {
+    const questionId = asId(question._id);
+    if (!questionId || linkedQuestionIds.has(questionId)) return;
+
+    const annualExamId = asId(question.examId);
+    const qcmBankId = asId(question.qcmBanqueId);
+    if (annualExamId) {
+      if (!questionsByAnnualExam.has(annualExamId)) questionsByAnnualExam.set(annualExamId, []);
+      questionsByAnnualExam.get(annualExamId).push(questionId);
+    }
+    if (qcmBankId) {
+      if (!questionsByQcmBank.has(qcmBankId)) questionsByQcmBank.set(qcmBankId, []);
+      questionsByQcmBank.get(qcmBankId).push(questionId);
+    }
+  });
+
+  const supplementalSources = [
+    ...annualExams.map((exam) => ({
+      _id: `exam-year-${asId(exam._id)}`,
+      name: exam.name || "Examen par année",
+      moduleId: exam.moduleId,
+      category: "Exam par année",
+      status: "active",
+      linkedQuestions: questionsByAnnualExam.get(asId(exam._id)) || [],
+    })),
+    ...qcmBanks.map((qcm) => ({
+      _id: `qcm-bank-${asId(qcm._id)}`,
+      name: qcm.name || "Banque de QCM",
+      moduleId: qcm.moduleId,
+      category: "Banque de QCM",
+      status: "active",
+      linkedQuestions: questionsByQcmBank.get(asId(qcm._id)) || [],
+    })),
+  ].filter((source) => source.linkedQuestions.length > 0);
+
+  return [...courses, ...supplementalSources];
 };
 
 export const buildProgressStatistics = ({ modules = [], courses = [], answeredQuestions = {} }) => {

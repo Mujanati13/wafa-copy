@@ -96,7 +96,7 @@ const userSchema = new mongoose.Schema(
     plan: {
       type: String,
       default: "Free",
-      enum: ["Free", "Premium", "Premium Annuel"],
+      enum: ["Free", "Premium", "Premium Pro", "Premium Annuel", "Premium Pro Annuel", "Premium Semestre"],
     },
     planExpiry: {
       type: Date,

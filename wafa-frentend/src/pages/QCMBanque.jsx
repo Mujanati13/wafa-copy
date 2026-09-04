@@ -486,7 +486,7 @@ const QCMBanque = () => {
                                                 <TableCell className="font-medium">{qcm.moduleName}</TableCell>
                                                 <TableCell className="font-medium">{qcm.name}</TableCell>
                                                 <TableCell>
-                                                    <div className="w-16 h-12 rounded-md overflow-hidden bg-muted border">
+                                                    <div className="w-16 h-12 rounded-md overflow-hidden bg-transparent border">
                                                         <img src={qcm.imageUrl} alt={qcm.name} className="w-full h-full object-cover" />
                                                     </div>
                                                 </TableCell>

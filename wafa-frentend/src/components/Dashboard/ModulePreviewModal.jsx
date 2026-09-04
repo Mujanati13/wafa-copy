@@ -126,7 +126,7 @@ const ModulePreviewModal = ({ isOpen, onClose, module }) => {
 
                   <TabsContent value="image" className="mt-4">
                     {module.imageUrl || module.pdfUrl ? (
-                      <div className="relative aspect-video bg-gradient-to-br from-slate-100 to-slate-50 rounded-lg overflow-hidden border border-border">
+                      <div className="relative aspect-video bg-transparent rounded-lg overflow-hidden border border-border">
                         {module.imageUrl && (
                           <img 
                             src={module.imageUrl} 

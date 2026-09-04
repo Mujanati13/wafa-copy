@@ -13,7 +13,7 @@ import {
 } from "../utils/academicYear.js";
 import { buildProfileActivityStatistics } from "../services/profileStatisticsService.js";
 import { classifyFirebaseAdminError } from "../utils/firebaseError.js";
-import { applyAdminPlanTransition, SUPPORTED_USER_PLANS } from "../utils/planAccess.js";
+import { applyAdminPlanTransition, normalizeUserPlan, SUPPORTED_USER_PLANS } from "../utils/planAccess.js";
 
 const getPagination = (query, defaultLimit = 10, maxLimit = 100) => {
     const page = Math.max(Number.parseInt(query.page, 10) || 1, 1);
@@ -147,7 +147,14 @@ export const UserController = {
                 isPaid = false,
                 sendPasswordEmail = true
             } = req.body;
-            const normalizedPlan = plan === "Premium Annuel" ? "Premium" : plan;
+            const normalizedPlan = normalizeUserPlan(plan);
+
+            if (normalizedPlan !== "Free" && [...new Set(semesters)].length !== 1) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'A paid subscription requires exactly one semester'
+                });
+            }
 
             // Validate required fields
             if (!firstName || !lastName || !email || !password) {
@@ -265,7 +272,7 @@ export const UserController = {
                 
                 // Set plan expiry based on plan type
                 const now = new Date();
-                if (normalizedPlan === "Premium") {
+                if (normalizedPlan === "Premium" || normalizedPlan === "Premium Pro") {
                     // 6 months for semester plan
                     userData.planExpiry = new Date(now.setMonth(now.getMonth() + 6));
                 }
@@ -618,6 +625,17 @@ export const UserController = {
                 return res.status(400).json({
                     success: false,
                     message: 'Invalid plan type'
+                });
+            }
+
+            if (
+                updates.plan && updates.plan !== "Free" &&
+                Object.prototype.hasOwnProperty.call(updates, 'semesters') &&
+                [...new Set(updates.semesters || [])].length !== 1
+            ) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'A paid subscription requires exactly one semester'
                 });
             }
 
@@ -1118,7 +1136,7 @@ export const UserController = {
             success: true,
             data: {
                 // Keep legacy records readable while exposing the current terminology.
-                plan: user.plan === 'Premium Annuel' ? 'Premium Semestre' : (user.plan || 'Free'),
+                plan: normalizeUserPlan(user.plan),
                 subscription: user.subscription || null,
                 email: user.email
             }

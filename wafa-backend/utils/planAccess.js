@@ -1,4 +1,12 @@
-export const SUPPORTED_USER_PLANS = ["Free", "Premium", "Premium Annuel"];
+export const SUPPORTED_USER_PLANS = ["Free", "Premium", "Premium Pro"];
+
+export const normalizeUserPlan = (plan) => {
+    const value = String(plan || "Free").trim();
+    const normalized = value.toLowerCase();
+    if (normalized.includes("premium pro")) return "Premium Pro";
+    if (normalized.includes("premium")) return "Premium";
+    return "Free";
+};
 
 export const applyAdminPlanTransition = (currentPlan, requestedUpdates = {}) => {
     const updates = { ...requestedUpdates };
@@ -22,6 +30,6 @@ export const applyAdminPlanTransition = (currentPlan, requestedUpdates = {}) => 
 
 export const userHasPremiumAccess = (user, now = new Date()) => {
     if (user?.isAdmin) return true;
-    if (!user || !["Premium", "Premium Annuel"].includes(user.plan)) return false;
+    if (!user || !["Premium", "Premium Pro"].includes(normalizeUserPlan(user.plan))) return false;
     return !user.planExpiry || new Date(user.planExpiry) > now;
 };

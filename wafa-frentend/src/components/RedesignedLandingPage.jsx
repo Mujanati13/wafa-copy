@@ -21,6 +21,7 @@ import logo from "@/assets/logo.png";
 import { getLandingPageSettings } from "@/services/landingPageService";
 import { subscriptionPlanService } from "@/services/subscriptionPlanService";
 import { INSTAGRAM_URL } from "@/config/socialLinks";
+import { displaySubscriptionCopy, displaySubscriptionPeriod, displaySubscriptionPlanName } from "@/utils/subscriptionDisplay";
 
 const FALLBACK_SETTINGS = {
   siteName: "YourQCM",
@@ -833,21 +834,19 @@ function PricingCard({ plan, popular, text, language, onChoose }) {
       included: typeof feature === "string" || feature?.included !== false,
     }))
     .filter((feature) => feature.text);
-  const periodLabels = language === "fr"
-    ? { Gratuit: "", Semester: "/ semestre", Semestre: "/ semestre" }
-    : { Gratuit: "", Semester: "/ semester", Semestre: "/ semester" };
-  const periodLabel = periodLabels[plan.period] || (plan.period ? `/ ${plan.period}` : "");
+  const normalizedPeriod = displaySubscriptionPeriod(plan.period, language);
+  const periodLabel = normalizedPeriod ? `/ ${normalizedPeriod}` : "";
 
   return (
     <article className={`relative rounded-2xl border bg-card p-6 ${popular ? "border-cyan-400 shadow-xl shadow-cyan-950/10" : "border-border"}`}>
       {popular && <span className="absolute -top-3 left-6 rounded-full bg-cyan-500 px-3 py-1 text-xs font-bold text-white">{text.popular}</span>}
-      <p className="text-sm font-semibold text-cyan-700 dark:text-cyan-300">{plan.name || "YourQCM Premium"}</p>
+      <p className="text-sm font-semibold text-cyan-700 dark:text-cyan-300">{displaySubscriptionPlanName(plan.name, "YourQCM Premium")}</p>
       <div className="mt-5 flex items-baseline gap-1">
         <span className="text-4xl font-bold">{plan.price ?? plan.monthlyPrice ?? "—"}</span>
         {Number(plan.price) > 0 && <span className="text-sm text-muted-foreground">MAD {periodLabel}</span>}
         {Number(plan.oldPrice) > Number(plan.price) && <span className="ml-2 text-sm text-muted-foreground line-through">{plan.oldPrice} MAD</span>}
       </div>
-      <p className="mt-4 min-h-12 text-sm leading-6 text-muted-foreground">{plan.description || text.includes}</p>
+      <p className="mt-4 min-h-12 text-sm leading-6 text-muted-foreground">{displaySubscriptionCopy(plan.description || text.includes, language)}</p>
       <Button onClick={onChoose} className="mt-6 w-full" variant={popular ? "default" : "outline"}>{text.choose}</Button>
       <ul className="mt-6 space-y-3 border-t border-border pt-5 text-sm">
         {features.map((feature, index) => (
@@ -855,7 +854,7 @@ function PricingCard({ plan, popular, text, language, onChoose }) {
             {feature.included
               ? <Check className="mt-0.5 h-4 w-4 shrink-0 text-cyan-600" />
               : <X className="mt-0.5 h-4 w-4 shrink-0 text-red-500" />}
-            <span className={feature.included ? "" : "text-muted-foreground line-through"}>{feature.text}</span>
+            <span className={feature.included ? "" : "text-muted-foreground line-through"}>{displaySubscriptionCopy(feature.text, language)}</span>
           </li>
         ))}
       </ul>
