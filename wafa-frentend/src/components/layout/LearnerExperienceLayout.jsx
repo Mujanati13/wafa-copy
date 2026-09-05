@@ -20,7 +20,7 @@ import {
 import ThemeToggle from "@/components/ui/ThemeToggle";
 import LanguageSwitcher from "@/components/shared/LanguageSwitcher";
 import NotificationDropdown from "@/components/layout/NotificationDropdown";
-import logo from "@/assets/logo.png";
+import logo from "@/assets/yourqcm-logo.jpeg";
 import { cn } from "@/lib/utils";
 import { signOut } from "@/services/authService";
 import { moduleService } from "@/services/moduleService";
@@ -147,7 +147,7 @@ export default function LearnerExperienceLayout() {
       <header className="sticky top-0 z-40 flex h-16 items-center justify-between border-b border-border bg-background/90 px-3 backdrop-blur-xl sm:px-5">
         <div className="flex min-w-0 items-center gap-2 sm:gap-3">
           <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setDrawerOpen(true)} aria-label="Ouvrir la navigation"><Menu className="h-5 w-5" /></Button>
-          <Link to="/dashboard/home" className="imrs-focus-ring flex min-w-0 items-center gap-2 rounded-lg"><img src={logo} alt="YourQcm" className="h-9 w-9 rounded-lg object-contain" /><span className="hidden text-base font-bold xs:inline"><span className="text-[#1a237e] dark:text-blue-300">Your</span><span className="text-[#00b0d4]">Qcm</span></span></Link>
+          <Link to="/dashboard/home" className="imrs-focus-ring flex min-w-0 items-center gap-2 rounded-lg"><img src={logo} alt="YourQcm" className="h-10 w-10 shrink-0 rounded-full object-contain" /><span className="hidden text-base font-bold xs:inline"><span className="text-[#1a237e] dark:text-blue-300">Your</span><span className="text-[#00b0d4]">Qcm</span></span></Link>
           <div className="hidden h-6 w-px bg-border sm:block" />
           <p className="hidden truncate text-sm text-muted-foreground sm:block">Bienvenue, <span className="font-semibold text-foreground">{firstName}</span></p>
         </div>

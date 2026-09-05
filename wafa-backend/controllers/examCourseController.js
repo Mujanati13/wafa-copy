@@ -34,6 +34,7 @@ import {
     MAX_MATRIX_EXAMS,
     MAX_MATRIX_LESSONS,
     parseQuestionMappingMatrix,
+    readQuestionMappingWorkbook,
 } from "../utils/questionMappingMatrix.js";
 
 const COURSE_IMPORT_HEADER_LABELS = {
@@ -548,15 +549,7 @@ export const examCourseController = {
 
         let matrix;
         try {
-            const workbook = xlsx.read(req.file.buffer, { type: "buffer", cellDates: false });
-            const worksheet = workbook.Sheets[workbook.SheetNames?.[0]];
-            if (!worksheet) throw new Error("Le classeur ne contient aucune feuille.");
-            matrix = xlsx.utils.sheet_to_json(worksheet, {
-                header: 1,
-                defval: "",
-                blankrows: false,
-                raw: false,
-            });
+            matrix = readQuestionMappingWorkbook(req.file.buffer);
         } catch (error) {
             return res.status(400).json({
                 success: false,
@@ -570,7 +563,7 @@ export const examCourseController = {
             return res.status(422).json({
                 success: false,
                 code: "INVALID_MAPPING_MATRIX",
-                message: "La matrice contient des erreurs. Aucun lien n'a été modifié.",
+                message: `${parsed.errors[0].field} : ${parsed.errors[0].reason}. Aucun lien n'a été modifié.`,
                 data: {
                     total: parsed.mappings.length,
                     imported: 0,

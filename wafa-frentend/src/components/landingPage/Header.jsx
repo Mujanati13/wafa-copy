@@ -1,7 +1,8 @@
+import logo from "@/assets/yourqcm-logo.jpeg";
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Menu, X, LogIn, UserPlus, LayoutDashboard, User, GraduationCap } from 'lucide-react';
+import { Menu, X, LogIn, UserPlus, LayoutDashboard, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ThemeToggle from '@/components/ui/ThemeToggle';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -111,17 +112,7 @@ const Header = ({ settings }) => {
             to="/"
             className="flex items-center gap-2 group cursor-pointer transform transition-all duration-300 hover:scale-105"
           >
-            {settings?.logoUrl ? (
-              <img
-                src={settings.logoUrl}
-                alt={settings?.siteName || "YourQcm"}
-                className="h-10 w-10 object-contain rounded-lg shadow-lg"
-              />
-            ) : (
-              <div className="h-10 w-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center shadow-lg">
-                <GraduationCap className="h-6 w-6 text-white" />
-              </div>
-            )}
+            <img src={logo} alt="YourQcm" className="h-10 w-10 shrink-0 rounded-full object-contain" />
             <div className="hidden sm:flex flex-col">
               <span className="text-lg font-bold leading-none">{settings?.siteName ? settings.siteName : <><span className="text-[#1a237e]">Your</span><span className="text-[#00b0d4]">Qcm</span></>}</span>
               <span className="text-xs text-gray-500">{settings?.siteVersion || "v1.1"}</span>
@@ -188,17 +179,7 @@ const Header = ({ settings }) => {
             <SheetContent side="right" className="w-[320px] sm:w-[380px] flex flex-col p-0">
               <div className="flex items-center justify-between p-6 pb-4">
                 <div className="flex items-center gap-2">
-                  {settings?.logoUrl ? (
-                    <img
-                      src={settings.logoUrl}
-                      alt={settings?.siteName || "YourQcm"}
-                      className="h-10 w-10 object-contain rounded-lg shadow-lg"
-                    />
-                  ) : (
-                    <div className="h-10 w-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center shadow-lg">
-                      <GraduationCap className="h-6 w-6 text-white" />
-                    </div>
-                  )}
+                  <img src={logo} alt="YourQcm" className="h-10 w-10 shrink-0 rounded-full object-contain" />
                   <div className="flex flex-col">
                     <span className="text-lg font-bold leading-none">{settings?.siteName ? settings.siteName : <><span className="text-[#1a237e] dark:text-blue-300">Your</span><span className="text-[#00b0d4]">Qcm</span></>}</span>
                     <span className="text-xs text-muted-foreground">{settings?.siteVersion || "v1.1"}</span>

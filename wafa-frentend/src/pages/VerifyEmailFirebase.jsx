@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { toast } from 'sonner';
-import logo from '@/assets/logo.png';
+import logo from '@/assets/yourqcm-logo.jpeg';
 import { auth } from '@/config/firebase';
 import { sendEmailVerification, applyActionCode } from 'firebase/auth';
 import LanguageSwitcher from '@/components/shared/LanguageSwitcher';

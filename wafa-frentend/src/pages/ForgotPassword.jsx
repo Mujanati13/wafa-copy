@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { sendPasswordResetEmail } from '@/services/authService';
 import { toast } from 'sonner';
-import logo from '@/assets/logo.png';
+import logo from '@/assets/yourqcm-logo.jpeg';
 import LanguageSwitcher from '@/components/shared/LanguageSwitcher';
 
 const ForgotPassword = () => {

@@ -6,7 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { userService } from '@/services/userService';
 import { moduleService } from '@/services/moduleService';
-import logo from '@/assets/logo.png';
+import logo from '@/assets/yourqcm-logo.jpeg';
 import { cn } from '@/lib/utils';
 
 const getYearText = (semesterId) => {

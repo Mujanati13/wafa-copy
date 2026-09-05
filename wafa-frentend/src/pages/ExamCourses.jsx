@@ -599,6 +599,13 @@ const ExamCourses = () => {
           </div>
         </Motion.div>
 
+        <section aria-labelledby="course-structure-title" className="rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-950/30">
+          <h2 id="course-structure-title" className="font-semibold text-foreground">Structure</h2>
+          <p className="mt-2 text-sm text-foreground">
+            <strong>Important :</strong> n'ajoutez aucune ligne de catégorie. Le modèle est généré sans catégorie.
+          </p>
+        </section>
+
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">

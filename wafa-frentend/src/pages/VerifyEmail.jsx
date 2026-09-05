@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { toast } from 'sonner';
 import axios from 'axios';
-import logo from '@/assets/logo.png';
+import logo from '@/assets/yourqcm-logo.jpeg';
 import { resendVerificationEmail, getCurrentUser } from '@/services/authService';
 import LanguageSwitcher from '@/components/shared/LanguageSwitcher';
 

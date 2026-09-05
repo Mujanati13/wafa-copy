@@ -6,7 +6,7 @@ import { Eye, EyeOff, Lock, Mail, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import logo from '@/assets/logo.png';
+import logo from '@/assets/yourqcm-logo.jpeg';
 import { userService } from '@/services/userService';
 import { dashboardService } from '@/services/dashboardService';
 import { loginWithEmail, signOut } from '@/services/authService';

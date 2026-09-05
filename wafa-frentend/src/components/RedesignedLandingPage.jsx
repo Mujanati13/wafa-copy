@@ -17,7 +17,7 @@ import { api } from "@/lib/utils";
 import { toast } from "sonner";
 import ThemeToggle from "@/components/ui/ThemeToggle";
 import LanguageSwitcher from "@/components/shared/LanguageSwitcher";
-import logo from "@/assets/logo.png";
+import logo from "@/assets/yourqcm-logo.jpeg";
 import { getLandingPageSettings } from "@/services/landingPageService";
 import { subscriptionPlanService } from "@/services/subscriptionPlanService";
 import FloatingSupport from "@/components/FloatingSupport";
@@ -418,7 +418,7 @@ export default function RedesignedLandingPage() {
       <header className="sticky top-0 z-50 border-b border-border/70 bg-background/95 shadow-sm backdrop-blur-xl">
         <div className="mx-auto flex h-18 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           <Link to="/" className="imrs-focus-ring flex items-center gap-3 rounded-lg" aria-label="YourQcm">
-            <img src={settings.logoUrl || logo} alt={settings.siteName || "YourQcm"} className="h-10 w-10 rounded-xl object-contain" />
+            <img src={logo} alt={settings.siteName || "YourQcm"} className="h-12 w-12 shrink-0 rounded-full object-contain" />
             <span className="text-lg font-bold tracking-tight">{settings.siteName ? settings.siteName : <><span className="text-[#1a237e] dark:text-blue-300">Your</span><span className="text-[#00b0d4]">Qcm</span></>}</span>
           </Link>
           <nav className="hidden items-center gap-6 lg:flex" aria-label="Navigation principale">

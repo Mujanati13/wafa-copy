@@ -1,4 +1,33 @@
 import { normalizeImportText, normalizeLessonNumber } from "./courseImport.js";
+import xlsx from "xlsx";
+
+export const readQuestionMappingWorkbook = (buffer) => {
+    const workbook = xlsx.read(buffer, { type: "buffer", cellDates: false, cellNF: true });
+    const sheetName = workbook.SheetNames.find(name => name.trim().toLowerCase() === "matrice")
+        || workbook.SheetNames[0];
+    const worksheet = workbook.Sheets[sheetName];
+    if (!worksheet) throw new Error("Le classeur ne contient aucune feuille.");
+    // Keep physical row numbers and displayed exam titles, but read question
+    // numbers independently of Excel number formatting (e.g. 1,000 or 42.00).
+    const matrix = xlsx.utils.sheet_to_json(worksheet, {
+        header: 1, defval: "", blankrows: true, raw: false, range: 0,
+    });
+    matrix.forEach((row, rowIndex) => {
+        if (rowIndex < 2) return;
+        row.forEach((value, columnIndex) => {
+            if (columnIndex === 0) return;
+            const cell = worksheet[xlsx.utils.encode_cell({ r: rowIndex, c: columnIndex })];
+            if (cell?.t === "n") {
+                // Excel may turn a range like 7-10 into a date. Do not import
+                // its serial number as a question number.
+                row[columnIndex] = xlsx.SSF.is_date(cell.z || "")
+                    ? `Date Excel « ${value} » : utilisez le format Texte puis ressaisissez la plage`
+                    : cell.v;
+            }
+        });
+    });
+    return matrix;
+};
 
 export const MAX_MATRIX_EXAMS = 500;
 export const MAX_MATRIX_LESSONS = 250;
@@ -32,7 +61,7 @@ export const parseQuestionNumberExpression = (value) => {
     const numbers = [];
     const seen = new Set();
 
-    for (const rawPart of normalized.split(",")) {
+    for (const rawPart of normalized.split(/[,;]|\r?\n|\r/)) {
         const part = rawPart.trim();
         if (!part) {
             return { numbers: [], error: `Format invalide « ${source} »` };
@@ -152,6 +181,18 @@ export const parseQuestionMappingMatrix = (matrix = []) => {
         }
         seenExamNames.add(examName);
         examRows.push({ rowIndex, rowNumber: rowIndex + 1, examName });
+
+        row.forEach((value, columnIndex) => {
+            if (columnIndex === 0 || lessons.some(lesson => lesson.columnIndex === columnIndex)) return;
+            const parsed = parseQuestionNumberExpression(value);
+            if (parsed.error || parsed.numbers.length > 0) {
+                errors.push({
+                    row: rowIndex + 1,
+                    field: `${getExcelColumnName(columnIndex)}${rowIndex + 1}`,
+                    reason: "Cette cellule contient des questions sans en-tête de leçon valide. Renseignez le numéro en ligne 1 et le nom en ligne 2.",
+                });
+            }
+        });
 
         lessons.forEach((lesson) => {
             const expression = String(row[lesson.columnIndex] ?? "").trim();

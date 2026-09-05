@@ -117,6 +117,14 @@ const ImportExamParCourse = () => {
   const [bulkImportFile, setBulkImportFile] = useState(null);
   const [bulkImportResult, setBulkImportResult] = useState(null);
   const bulkImportInputRef = useRef(null);
+  const bulkImportResultRef = useRef(null);
+
+  useEffect(() => {
+    if (bulkImportResult?.requestFailed) {
+      bulkImportResultRef.current?.focus({ preventScroll: true });
+      bulkImportResultRef.current?.scrollIntoView({ behavior: "auto", block: "center" });
+    }
+  }, [bulkImportResult]);
 
   // Selection state
   const [selectedModule, setSelectedModule] = useState("");
@@ -509,7 +517,13 @@ const ImportExamParCourse = () => {
         message: payload?.message || "L'import a échoué.",
         requestFailed: true,
       });
-      toast.error(payload?.message || "Erreur lors de l'import Excel");
+      const firstError = payload?.data?.errors?.[0];
+      toast.error(firstError
+        ? `${firstError.field || `Ligne ${firstError.row}`} : ${firstError.reason}`
+        : payload?.message || "Erreur lors de l'import Excel", {
+        description: firstError ? "Consultez le rapport ci-dessous, corrigez le fichier puis réessayez." : undefined,
+        duration: 8000,
+      });
     } finally {
       setBulkImporting(false);
     }
@@ -630,7 +644,6 @@ const ImportExamParCourse = () => {
                   <p><strong>Colonne A :</strong> titres exacts des examens par année déjà enregistrés.</p>
                   <p><strong>Cellules :</strong> numéros comme <code>42</code>, <code>43, 46</code>, <code>38-40</code> ou <code>5, 7-10, 16</code>. Une cellule vide ou <code>-</code> signifie qu'aucune question n'est liée.</p>
                   <p><strong>Import partiel :</strong> vous pouvez conserver seulement 1, 3 ou 4 lignes d'examens. Seules les lignes présentes seront traitées.</p>
-                  <p><strong>Important :</strong> n'ajoutez aucune ligne de catégorie. Le modèle est généré sans catégorie.</p>
                 </div>
 
                 <div className="mt-4 grid grid-cols-1 gap-3">
@@ -659,7 +672,7 @@ const ImportExamParCourse = () => {
                 </div>
 
                 {bulkImportResult && (
-                  <div className={`mt-4 rounded-lg border p-4 ${
+                  <div ref={bulkImportResultRef} tabIndex={-1} role={bulkImportResult.requestFailed ? "alert" : "status"} className={`mt-4 rounded-lg border p-4 ${
                     bulkImportResult.requestFailed
                       ? "border-red-200 bg-red-50"
                       : bulkImportResult.failed > 0
@@ -687,6 +700,12 @@ const ImportExamParCourse = () => {
                       </div>
                     </div>
 
+                    {bulkImportResult.requestFailed && bulkImportResult.errors?.length > 0 && (
+                      <p className="mt-3 text-sm text-foreground">Corrigez les cellules indiquées dans le fichier Excel, sélectionnez le fichier corrigé puis relancez l'import.</p>
+                    )}
+                    {bulkImportResult.errorsTruncated && (
+                      <p className="mt-2 text-sm text-foreground">Les {bulkImportResult.errors?.length || 0} premières erreurs sont affichées. D'autres erreurs restent à corriger.</p>
+                    )}
                     {bulkImportResult.missingHeaders?.length > 0 && (
                       <p className="mt-3 text-sm text-red-700">Colonnes manquantes : {bulkImportResult.missingHeaders.join(", ")}</p>
                     )}
@@ -696,7 +715,7 @@ const ImportExamParCourse = () => {
                           <thead className="sticky top-0 bg-muted">
                             <tr>
                               <th className="px-3 py-2">Ligne</th>
-                              <th className="px-3 py-2">Champ</th>
+                              <th className="px-3 py-2">Cellule Excel</th>
                               <th className="px-3 py-2">Erreur</th>
                             </tr>
                           </thead>

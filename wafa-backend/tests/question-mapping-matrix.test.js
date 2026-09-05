@@ -11,6 +11,7 @@ import {
     buildQuestionMappingTemplateMatrix,
     parseQuestionMappingMatrix,
     parseQuestionNumberExpression,
+    readQuestionMappingWorkbook,
 } from "../utils/questionMappingMatrix.js";
 
 const createResponse = () => ({
@@ -92,6 +93,79 @@ test("rejects malformed and descending question expressions", () => {
     assert.match(parseQuestionNumberExpression("7-").error, /Format invalide/);
     assert.match(parseQuestionNumberExpression("10-7").error, /Plage invalide/);
     assert.match(parseQuestionNumberExpression("5,,7").error, /Format invalide/);
+});
+
+test("accepts semicolon and multiline lists without accepting missing numbers", () => {
+    assert.deepEqual(parseQuestionNumberExpression("5; 7-9\n16").numbers, [5, 7, 8, 9, 16]);
+    assert.ok(parseQuestionNumberExpression("5;;7").error);
+});
+
+test("reads the Matrice sheet and retains physical rows and raw numeric mappings", () => {
+    const worksheet = xlsx.utils.aoa_to_sheet([
+        ["EXAMEN", "L1"], ["", "Generalites"], [],
+        ["2020 normal", 1000], ["2021 normal", 42],
+    ]);
+    worksheet.B4.z = "#,##0";
+    worksheet.B5.z = "0.00";
+    const workbook = xlsx.utils.book_new();
+    xlsx.utils.book_append_sheet(workbook, xlsx.utils.aoa_to_sheet([["Instructions"]]), "Instructions");
+    xlsx.utils.book_append_sheet(workbook, worksheet, "Matrice");
+    const parsed = parseQuestionMappingMatrix(readQuestionMappingWorkbook(
+        xlsx.write(workbook, { type: "buffer", bookType: "xlsx" })
+    ));
+    assert.deepEqual(parsed.errors, []);
+    assert.deepEqual(parsed.mappings.map(item => [item.cell, item.questionNumbers]), [
+        ["B4", [1000]], ["B5", [42]],
+    ]);
+});
+
+test("reports Excel-converted dates at the original cell instead of importing serial numbers", () => {
+    const worksheet = xlsx.utils.aoa_to_sheet([
+        ["EXAMEN", "L1"], ["", "Generalites"], [], ["2020 normal", 45000],
+    ]);
+    worksheet.B4.z = "dd/mm/yyyy";
+    const workbook = xlsx.utils.book_new();
+    xlsx.utils.book_append_sheet(workbook, worksheet, "Matrice");
+    const parsed = parseQuestionMappingMatrix(readQuestionMappingWorkbook(
+        xlsx.write(workbook, { type: "buffer", bookType: "xlsx" })
+    ));
+    assert.equal(parsed.errors[0].field, "B4");
+    assert.match(parsed.errors[0].reason, /format Texte/);
+    assert.deepEqual(parsed.mappings, []);
+});
+
+test("rejects mapping data outside the lesson headers instead of silently skipping it", () => {
+    const parsed = parseQuestionMappingMatrix([
+        ["EXAMEN", "L1"], ["", "Generalites"], ["2020 normal", "42", "43"],
+    ]);
+    assert.equal(parsed.errors[0].field, "C3");
+    assert.match(parsed.errors[0].reason, /sans en-tête/);
+});
+
+test("validation failure returns cell details without writing any links", { concurrency: false }, async () => {
+    const originalFind = Module.findById;
+    const originalWrite = ExamCourse.bulkWrite;
+    let writes = 0;
+    const moduleId = new mongoose.Types.ObjectId();
+    try {
+        Module.findById = () => ({ select: () => ({ lean: async () => ({ _id: moduleId }) }) });
+        ExamCourse.bulkWrite = async () => { writes += 1; };
+        const res = createResponse();
+        await examCourseController.importQuestionMappingMatrix({
+            body: { moduleId: moduleId.toString() },
+            file: { buffer: createMatrixBuffer([
+                ["EXAMEN", "L1"], ["", "Generalites"], [], ["2020 normal", "10-7"],
+            ]) },
+        }, res);
+        assert.equal(res.statusCode, 422);
+        assert.equal(res.payload.code, "INVALID_MAPPING_MATRIX");
+        assert.equal(res.payload.data.errors[0].field, "B4");
+        assert.equal(res.payload.data.imported, 0);
+        assert.equal(writes, 0);
+    } finally {
+        Module.findById = originalFind;
+        ExamCourse.bulkWrite = originalWrite;
+    }
 });
 
 test("parses a matrix with lesson numbers directly above lesson names", () => {

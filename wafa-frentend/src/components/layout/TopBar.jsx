@@ -1,8 +1,8 @@
+import logo from "@/assets/yourqcm-logo.jpeg";
 import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Menu,
-  GraduationCap,
   UserRound,
   Settings,
   CreditCard,
@@ -151,17 +151,7 @@ const TopBar = ({ onMenuClick, loginPath = "/login" }) => {
 
           {/* Logo - Hidden on mobile, visible on sm and up */}
           <div className="hidden sm:flex items-center gap-2 flex-shrink-0">
-            {landingSettings.logoUrl ? (
-              <img 
-                src={landingSettings.logoUrl} 
-                alt={landingSettings.siteName || 'YourQcm'}
-                className="h-8 w-8 rounded-lg object-cover"
-              />
-            ) : (
-              <div className="h-8 w-8 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center">
-                <GraduationCap className="h-5 w-5 text-white" />
-              </div>
-            )}
+            <img src={logo} alt="YourQcm" className="h-10 w-10 shrink-0 rounded-full object-contain" />
             <div className="hidden sm:flex flex-col">
               <span className="text-sm font-bold leading-none">{landingSettings.siteName ? landingSettings.siteName : <><span className="text-[#1a237e] dark:text-blue-300">Your</span><span className="text-[#00b0d4]">Qcm</span></>}</span>
               <span className="text-xs text-muted-foreground">{landingSettings.siteVersion || 'v1.1'}</span>
