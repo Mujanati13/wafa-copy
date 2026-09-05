@@ -116,6 +116,7 @@ const ImportExamParCourse = () => {
   const [bulkImporting, setBulkImporting] = useState(false);
   const [bulkImportFile, setBulkImportFile] = useState(null);
   const [bulkImportResult, setBulkImportResult] = useState(null);
+  const [matrixCorrections, setMatrixCorrections] = useState({});
   const bulkImportInputRef = useRef(null);
   const bulkImportResultRef = useRef(null);
 
@@ -436,6 +437,7 @@ const ImportExamParCourse = () => {
 
   const clearBulkImport = () => {
     setBulkImportFile(null);
+    setMatrixCorrections({});
     setBulkImportResult(null);
     if (bulkImportInputRef.current) bulkImportInputRef.current.value = "";
   };
@@ -454,6 +456,7 @@ const ImportExamParCourse = () => {
       event.target.value = "";
       return;
     }
+    setMatrixCorrections({});
     setBulkImportFile(file);
     setBulkImportResult(null);
   };
@@ -499,6 +502,7 @@ const ImportExamParCourse = () => {
     const formData = new FormData();
     formData.append("file", bulkImportFile);
     formData.append("moduleId", selectedModule);
+    formData.append("corrections", JSON.stringify(matrixCorrections));
 
     setBulkImporting(true);
     setBulkImportResult(null);
@@ -701,8 +705,11 @@ const ImportExamParCourse = () => {
                     </div>
 
                     {bulkImportResult.requestFailed && bulkImportResult.errors?.length > 0 && (
-                      <p className="mt-3 text-sm text-foreground">Corrigez les cellules indiquées dans le fichier Excel, sélectionnez le fichier corrigé puis relancez l'import.</p>
+                      <p className="mt-3 text-sm text-foreground">Saisissez les numéros voulus dans les champs de correction ci-dessous, puis réessayez. Vous pouvez aussi sélectionner un fichier Excel corrigé. Utilisez « - » pour ne lier aucune question.</p>
                     )}
+                    {bulkImportResult.warnings?.map((warning, index) => (
+                      <p key={index} className="mt-2 text-sm text-foreground">{warning}</p>
+                    ))}
                     {bulkImportResult.errorsTruncated && (
                       <p className="mt-2 text-sm text-foreground">Les {bulkImportResult.errors?.length || 0} premières erreurs sont affichées. D'autres erreurs restent à corriger.</p>
                     )}
@@ -724,12 +731,36 @@ const ImportExamParCourse = () => {
                               <tr key={`${item.row}-${item.field}-${index}`} className="border-t">
                                 <td className="px-3 py-2 font-medium">{item.row}</td>
                                 <td className="px-3 py-2">{item.field}</td>
-                                <td className="px-3 py-2 text-muted-foreground">{item.reason}</td>
+                                <td className="px-3 py-2 text-muted-foreground">
+                                  <p>{item.reason}</p>
+                                  {item.correctable && (
+                                    <div className="mt-2 min-w-48 space-y-1">
+                                      <Label htmlFor={`matrix-correction-${item.field}`}>Correction de {item.field} (valeur : {item.value})</Label>
+                                      <Input
+                                        id={`matrix-correction-${item.field}`}
+                                        value={matrixCorrections[item.field] ?? ""}
+                                        placeholder="Ex. : 29,30 ou 29-30"
+                                        disabled={bulkImporting}
+                                        onChange={(event) => setMatrixCorrections(previous => {
+                                          const next = { ...previous };
+                                          if (event.target.value.trim()) next[item.field] = event.target.value;
+                                          else delete next[item.field];
+                                          return next;
+                                        })}
+                                      />
+                                    </div>
+                                  )}
+                                </td>
                               </tr>
                             ))}
                           </tbody>
                         </table>
                       </div>
+                    )}
+                    {bulkImportResult.requestFailed && Object.keys(matrixCorrections).length > 0 && (
+                      <Button type="button" className="mt-3" onClick={handleBulkCourseImport} disabled={bulkImporting || !bulkImportFile}>
+                        {bulkImporting ? "Vérification en cours..." : "Réessayer avec les corrections"}
+                      </Button>
                     )}
                   </div>
                 )}

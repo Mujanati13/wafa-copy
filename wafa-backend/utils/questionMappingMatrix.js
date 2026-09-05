@@ -34,6 +34,25 @@ export const MAX_MATRIX_LESSONS = 250;
 export const MAX_QUESTIONS_PER_MATRIX_CELL = 2000;
 export const MAX_MATRIX_QUESTION_ASSIGNMENTS = 100000;
 
+export const applyQuestionMappingCorrections = (matrix, corrections = {}) => {
+    if (!corrections || typeof corrections !== "object" || Array.isArray(corrections)
+        || Object.keys(corrections).length > 1000) {
+        throw new Error("Les corrections doivent être une liste de cellules (1 000 maximum).");
+    }
+    const corrected = matrix.map(row => [...row]);
+    for (const [cell, expression] of Object.entries(corrections)) {
+        if (!/^[A-Z]{1,3}[1-9]\d*$/.test(cell) || typeof expression !== "string" || expression.length > 10000) {
+            throw new Error(`Correction invalide pour la cellule ${cell}.`);
+        }
+        const { r, c } = xlsx.utils.decode_cell(cell);
+        if (r < 2 || r >= matrix.length || c < 1 || c >= (matrix[0]?.length || 0)) {
+            throw new Error(`La correction ${cell} doit viser une cellule de questions existante.`);
+        }
+        corrected[r][c] = expression;
+    }
+    return corrected;
+};
+
 export const getExcelColumnName = (index) => {
     let value = index + 1;
     let result = "";
@@ -57,6 +76,9 @@ export const parseQuestionNumberExpression = (value) => {
 
     const normalized = source.replace(/[\u2010-\u2015\u2212]/g, "-");
     if (normalized === "-") return { numbers: [], error: null };
+    if (/\d\s*\.\s*\d/.test(normalized)) {
+        return { numbers: [], error: `Valeur ambiguë « ${source} ». Séparez les questions par une virgule (ex. 29,30) ou indiquez une plage (29-30). Excel peut supprimer un zéro final : vérifiez les numéros avant de corriger.` };
+    }
 
     const numbers = [];
     const seen = new Set();
@@ -113,7 +135,22 @@ export const parseQuestionMappingMatrix = (matrix = []) => {
         });
     }
 
-    const width = Math.max(matrix[0]?.length || 0, matrix[1]?.length || 0);
+    // Some copied tables place the first lesson name in A2 and leave the
+    // final lesson name empty. Shift names only when the entire pattern fits;
+    // the controller still verifies every number/name pair against the module.
+    const lessonCount = (matrix[0]?.length || 0) - 1;
+    const names = matrix[1] || [];
+    const shiftedNames = lessonCount > 0
+        && Array.from({ length: lessonCount }, (_, index) => (
+            normalizeLessonNumber(matrix[0][index + 1]) === `L${index + 1}`
+            && String(names[index] ?? "").trim() !== ""
+        )).every(Boolean)
+        && names.slice(lessonCount).every(value => !String(value ?? "").trim());
+    const lessonNames = shiftedNames ? ["", ...names.slice(0, lessonCount)] : names;
+    const warnings = shiftedNames
+        ? ["La ligne des noms de leçons a été réalignée de A2 vers B2. Les numéros de questions restent dans leurs colonnes d'origine."]
+        : [];
+    const width = Math.max(matrix[0]?.length || 0, lessonNames.length);
     if (width - 1 > MAX_MATRIX_LESSONS) {
         errors.push({
             row: 1,
@@ -126,7 +163,7 @@ export const parseQuestionMappingMatrix = (matrix = []) => {
     const lessonNumberKeys = new Set();
     for (let columnIndex = 1; columnIndex < width; columnIndex += 1) {
         const rawLessonNumber = String(matrix[0]?.[columnIndex] ?? "").trim();
-        const lessonName = String(matrix[1]?.[columnIndex] ?? "").trim();
+        const lessonName = String(lessonNames[columnIndex] ?? "").trim();
         if (!rawLessonNumber && !lessonName) continue;
 
         const cell = `${getExcelColumnName(columnIndex)}1`;
@@ -200,7 +237,7 @@ export const parseQuestionMappingMatrix = (matrix = []) => {
             const parsed = parseQuestionNumberExpression(expression);
             const cell = `${getExcelColumnName(lesson.columnIndex)}${rowIndex + 1}`;
             if (parsed.error) {
-                errors.push({ row: rowIndex + 1, field: cell, reason: parsed.error });
+                errors.push({ row: rowIndex + 1, field: cell, reason: parsed.error, value: expression, correctable: true });
                 return;
             }
             if (parsed.numbers.length === 0) return;
@@ -236,5 +273,5 @@ export const parseQuestionMappingMatrix = (matrix = []) => {
     if (examRows.length === 0) {
         errors.push({ row: 3, field: "Examens", reason: "Aucun examen par année n'est défini" });
     }
-    return { lessons, examRows, mappings, errors };
+    return { lessons, examRows, mappings, errors, warnings };
 };

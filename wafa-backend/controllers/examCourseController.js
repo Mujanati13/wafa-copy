@@ -35,6 +35,7 @@ import {
     MAX_MATRIX_LESSONS,
     parseQuestionMappingMatrix,
     readQuestionMappingWorkbook,
+    applyQuestionMappingCorrections,
 } from "../utils/questionMappingMatrix.js";
 
 const COURSE_IMPORT_HEADER_LABELS = {
@@ -558,6 +559,11 @@ export const examCourseController = {
             });
         }
 
+        try {
+            matrix = applyQuestionMappingCorrections(matrix, req.body?.corrections ? JSON.parse(req.body.corrections) : {});
+        } catch (error) {
+            return res.status(400).json({ success: false, code: "INVALID_MAPPING_CORRECTIONS", message: error.message });
+        }
         const parsed = parseQuestionMappingMatrix(matrix);
         if (parsed.errors.length > 0) {
             return res.status(422).json({
@@ -570,6 +576,7 @@ export const examCourseController = {
                     failed: parsed.errors.length,
                     errors: parsed.errors.slice(0, 100),
                     errorsTruncated: parsed.errors.length > 100,
+                    warnings: parsed.warnings || [],
                 },
             });
         }
@@ -843,6 +850,7 @@ export const examCourseController = {
                 mappingCells: parsed.mappings.length,
                 alreadyLinked,
                 lessonsUpdated: operations.length,
+                warnings: parsed.warnings || [],
                 errors: [],
             },
         });

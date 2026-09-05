@@ -12,6 +12,7 @@ import {
     parseQuestionMappingMatrix,
     parseQuestionNumberExpression,
     readQuestionMappingWorkbook,
+    applyQuestionMappingCorrections,
 } from "../utils/questionMappingMatrix.js";
 
 const createResponse = () => ({
@@ -33,6 +34,53 @@ const createMatrixBuffer = (matrix) => {
     xlsx.utils.book_append_sheet(workbook, worksheet, "Matrice");
     return xlsx.write(workbook, { type: "buffer", bookType: "xlsx" });
 };
+
+test("realigns the supplied anatomy header and allows explicit corrections at AA4, AA8 and AA11", () => {
+    const names = ["Généralités en anatomie", "clavicule", "scapula", "humérus", "Radius", "ulna",
+        "Ostéologie de la main", "articulation de l'épaule", "articulation de coude", "articulation de poignet",
+        "Os coxal", "fémur", "Tibia", "patella", "fibula", "Ostéologie de pied", "articulation de hanche",
+        "articulation de jambes", "articulation de cheville", "Myologie de l'épaule et bras",
+        "Myologie de l'avant bras et la main", "Myologie de bassin et cuisse", "Myologie de jambes et pied",
+        "Vascularisation et innervation de membre supérieurs", "Anatomie topographique de membre supérieur",
+        "Vascularisation et innervation de membre inférieur", "Anatomie topographique de membre inférieur",
+        "Anatomie du Coeur", "Le péricarde", "Les gros vaisseaux du médiastin", "La paroi thoracique",
+        "Poumon et Plèvre", "Le médiastin"];
+    const matrix = [["EXAMEN", ...names.map((_, index) => `L${index + 1}`)], [...names, ""]];
+    for (let row = 3; row <= 11; row += 1) matrix.push([`Exam ${row}`, ...names.map(() => "—")]);
+    matrix[3][26] = 29.3;
+    matrix[7][26] = 33.34;
+    matrix[10][26] = 30.31;
+    const original = structuredClone(matrix);
+    const parsed = parseQuestionMappingMatrix(matrix);
+    assert.deepEqual(parsed.errors.map(error => error.field), ["AA4", "AA8", "AA11"]);
+    assert.ok(parsed.errors.every(error => error.correctable && error.reason.includes("ambiguë")));
+    assert.equal(parsed.lessons[0].lessonName, names[0]);
+    assert.equal(parsed.lessons[32].lessonName, "Le médiastin");
+    assert.equal(parsed.warnings.length, 1);
+    const corrected = parseQuestionMappingMatrix(applyQuestionMappingCorrections(matrix, {
+        AA4: "29,30", AA8: "33,34", AA11: "30,31",
+    }));
+    assert.deepEqual(corrected.errors, []);
+    assert.deepEqual(corrected.mappings.map(mapping => mapping.questionNumbers), [[29, 30], [33, 34], [30, 31]]);
+    assert.ok(corrected.mappings.every(mapping => mapping.lessonNumber === "L26"));
+    assert.deepEqual(matrix, original);
+});
+
+test("does not shift a correct or incomplete lesson-name row", () => {
+    for (const names of [["", "Generalites", "Clavicule"], ["Generalites", "", ""]]) {
+        const parsed = parseQuestionMappingMatrix([["EXAMEN", "L1", "L2"], names, ["2025 ratt", "1", "2"]]);
+        assert.deepEqual(parsed.warnings, []);
+    }
+});
+
+test("validates correction coordinates and revalidates corrected expressions", () => {
+    const matrix = [["EXAMEN", "L1"], ["", "Generalites"], ["2025 ratt", "29.3"]];
+    for (const corrections of [[], null, { A3: "x" }, { B1: "x" }, { B4: "1" }, { C3: "1" }, { B3: 29.3 }]) {
+        assert.throws(() => applyQuestionMappingCorrections(matrix, corrections));
+    }
+    assert.ok(parseQuestionMappingMatrix(applyQuestionMappingCorrections(matrix, { B3: "30-29" })).errors.length);
+    assert.deepEqual(parseQuestionMappingMatrix(applyQuestionMappingCorrections(matrix, { B3: "-" })).errors, []);
+});
 
 test("builds the template without a category row", () => {
     const matrix = buildQuestionMappingTemplateMatrix(
@@ -301,6 +349,24 @@ test("controller imports only submitted exam rows and ignores dash cells", { con
         assert.equal(res.payload.data.total, 1);
         assert.equal(res.payload.data.imported, 1);
         assert.equal(res.payload.data.mappingCells, 1);
+
+        const correctedResponse = createResponse();
+        await examCourseController.importQuestionMappingMatrix({
+            body: { moduleId: moduleId.toString(), corrections: JSON.stringify({ B3: "42" }) },
+            file: {
+                originalname: "corrected-matrix.xlsx",
+                buffer: createMatrixBuffer([
+                    ["EXAMEN", "L1", "L2"],
+                    ["Generalites", "Genou", ""],
+                    ["2020 normal", 42.3, "-"],
+                ]),
+            },
+            user: { _id: new mongoose.Types.ObjectId() },
+        }, correctedResponse);
+        assert.equal(correctedResponse.statusCode, 200);
+        assert.equal(correctedResponse.payload.data.imported, 1);
+        assert.equal(correctedResponse.payload.data.warnings.length, 1);
+        assert.equal(bulkOperations.length, 1);
     } finally {
         Module.findById = originals.moduleFindById;
         ExamCourse.find = originals.courseFind;
