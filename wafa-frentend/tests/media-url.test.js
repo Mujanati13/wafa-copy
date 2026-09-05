@@ -4,7 +4,7 @@ import { resolveQuestionImageUrl } from "../src/lib/mediaUrl.js";
 
 const publicOptions = {
   apiUrl: "/api/v1",
-  browserOrigin: "https://yourqcm.online",
+  browserOrigin: "https://YourQcm.online",
 };
 
 test("keeps canonical question upload paths on the public origin", () => {

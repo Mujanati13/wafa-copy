@@ -10,7 +10,7 @@ if [ ! -f ".env" ]; then
     echo "Creating .env file..."
     cat > .env << 'EOF'
 # CORS Configuration - Add all domains that should access your API
-CORS_ORIGIN=https://yourqcm.online
+CORS_ORIGIN=https://YourQcm.online
 
 # Session and JWT secrets (CHANGE THESE!)
 SESSION_SECRET=change_this_session_secret_in_production
@@ -25,7 +25,7 @@ else
         echo "Adding CORS_ORIGIN to .env..."
         echo "" >> .env
         echo "# CORS Configuration" >> .env
-        echo "CORS_ORIGIN=https://yourqcm.online" >> .env
+        echo "CORS_ORIGIN=https://YourQcm.online" >> .env
         echo "✅ CORS_ORIGIN added"
     else
         echo "✅ CORS_ORIGIN already exists in .env"

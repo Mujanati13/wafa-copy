@@ -157,11 +157,11 @@ const createOrder = asyncHandler(async (req, res) => {
           currency_code: "USD",
           value: amount.toFixed(2),
         },
-        description: `YourQCM ${billing.transactionPlan} - 1 semestre`,
+        description: `YourQcm ${billing.transactionPlan} - 1 semestre`,
       },
     ],
     application_context: {
-      brand_name: "YourQCM Medical Education",
+      brand_name: "YourQcm Medical Education",
       landing_page: "NO_PREFERENCE",
       user_action: "PAY_NOW",
       return_url: `${process.env.FRONTEND_URL}/payment/success`,

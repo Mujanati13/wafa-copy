@@ -36,6 +36,31 @@ export const displaySubscriptionCopy = (copy, language = "fr") => {
     .replace(/\bannuel(?:le)?\b/gi, "par semestre");
 };
 
+// Correct legacy plan features at display time, including saved API content.
+export const displaySubscriptionFeature = (feature, language = "fr") => {
+  const value = displaySubscriptionCopy(feature, language).trim();
+  if (!value || language === "en") return value;
+
+  const key = value.normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .toLocaleLowerCase("fr").replace(/\s+/g, " ");
+
+  if (/^acces a tou[st] les modules$/.test(key)) {
+    return "Accès à tous les modules";
+  }
+  if (/^questions trie(?:e?s)? par categories?\s*\(sous[ -]modules\),?\s*par lecons$/.test(key)) {
+    return "Questions triées par catégories (sous-modules), par leçons";
+  }
+  if (/^statistiques de chaque module et lecon$/.test(key)) {
+    return "Statistiques de chaque module et leçon";
+  }
+  if (/^explications? des etudiants$/.test(key)) {
+    return "Explications des étudiants";
+  }
+  if (/^tp\s*\/\s*td$/.test(key)) return "TP/TD";
+
+  return value.charAt(0).toLocaleUpperCase("fr") + value.slice(1);
+};
+
 export const editableSubscriptionPeriod = (period) => (
   String(period || "").trim().toLocaleLowerCase() === "gratuit"
     ? "Gratuit"

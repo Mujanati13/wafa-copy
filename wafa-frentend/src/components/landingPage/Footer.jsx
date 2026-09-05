@@ -47,7 +47,7 @@ const Footer = () => {
        </div>
        
        <div className="border-t border-border pt-8 text-center text-muted-foreground">
-         <p>&copy; {new Date().getFullYear()} YourQCM. Tous droits réservés.</p>
+         <p>&copy; {new Date().getFullYear()} <span className="text-[#1a237e] dark:text-blue-300 font-semibold">Your</span><span className="text-[#00b0d4] font-semibold">Qcm</span>. Tous droits réservés.</p>
        </div>
      </div>
    </footer>

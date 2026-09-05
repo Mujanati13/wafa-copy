@@ -5,7 +5,7 @@ const landingPageSettingsSchema = new mongoose.Schema(
         // Branding
         siteName: {
             type: String,
-            default: "YourQCM",
+            default: "YourQcm",
         },
         siteVersion: {
             type: String,
@@ -19,7 +19,7 @@ const landingPageSettingsSchema = new mongoose.Schema(
         // Hero Section
         heroTitle: {
             type: String,
-            default: "Faciliter votre préparation avec YourQCM",
+            default: "Faciliter votre préparation avec YourQcm",
         },
         heroSubtitle: {
             type: String,
@@ -87,7 +87,7 @@ const landingPageSettingsSchema = new mongoose.Schema(
                 answer: String,
             }],
             default: [
-                { question: "Comment fonctionne YourQCM?", answer: "YourQCM est une plateforme d'apprentissage..." },
+                { question: "Comment fonctionne YourQcm?", answer: "YourQcm est une plateforme d'apprentissage..." },
                 { question: "Puis-je annuler mon abonnement?", answer: "Oui, vous pouvez annuler à tout moment..." },
             ],
         },
@@ -95,7 +95,7 @@ const landingPageSettingsSchema = new mongoose.Schema(
         // Contact Section
         contactEmail: {
             type: String,
-            default: "contact@yourqcm.online",
+            default: "contact@YourQcm.online",
         },
         contactPhone: {
             type: String,
@@ -113,7 +113,7 @@ const landingPageSettingsSchema = new mongoose.Schema(
         },
         instagramUrl: {
             type: String,
-            default: "https://www.instagram.com/yourqcm.fmpm?igsi=MXc1bWMzdWt5cjhoaA==",
+            default: "https://www.instagram.com/YourQcm.fmpm?igsi=MXc1bWMzdWt5cjhoaA==",
         },
         youtubeUrl: {
             type: String,
@@ -141,8 +141,8 @@ const migrateLegacyBrandText = (value) => {
     if (typeof value !== "string") return value;
 
     return value
-        .replace(/atlas\s*qcm/gi, "YourQCM")
-        .replace(/\bwafa\b/gi, "YourQCM");
+        .replace(/atlas\s*qcm/gi, "YourQcm")
+        .replace(/\bwafa\b/gi, "YourQcm");
 };
 
 // Ensure only one settings document exists
@@ -175,7 +175,7 @@ landingPageSettingsSchema.statics.getSettings = async function () {
     });
 
     const legacyHeroTitles = new Set([
-        "Préparez vos examens avec YourQCM",
+        "Préparez vos examens avec YourQcm",
         "Révisez avec méthode. Réussissez avec confiance.",
     ]);
     const legacyHeroSubtitles = new Set([
@@ -189,7 +189,7 @@ landingPageSettingsSchema.statics.getSettings = async function () {
     ]);
 
     if (legacyHeroTitles.has(settings.heroTitle)) {
-        settings.heroTitle = "Faciliter votre préparation avec YourQCM";
+        settings.heroTitle = "Faciliter votre préparation avec YourQcm";
         changed = true;
     }
     if (legacyHeroSubtitles.has(settings.heroSubtitle)) {
@@ -227,14 +227,14 @@ landingPageSettingsSchema.statics.getSettings = async function () {
     });
 
     if (/@(atlas-qcm[.]online|wafa[.]ma)$/i.test(settings.contactEmail || "")) {
-        settings.contactEmail = "contact@yourqcm.online";
+        settings.contactEmail = "contact@YourQcm.online";
         changed = true;
     }
 
-    const officialInstagramUrl = "https://www.instagram.com/yourqcm.fmpm?igsi=MXc1bWMzdWt5cjhoaA==";
+    const officialInstagramUrl = "https://www.instagram.com/YourQcm.fmpm?igsi=MXc1bWMzdWt5cjhoaA==";
     if (
         settings.instagramUrl !== officialInstagramUrl
-        && /instagram[.]com\/(?:wafa[.]medical|imrsqcm[.]rabat|imrs_qcma|yourqcm[.]fmpm)(?:[/?#]|$)/i.test(settings.instagramUrl || "")
+        && /instagram[.]com\/(?:wafa[.]medical|imrsqcm[.]rabat|imrs_qcma|YourQcm[.]fmpm)(?:[/?#]|$)/i.test(settings.instagramUrl || "")
     ) {
         settings.instagramUrl = officialInstagramUrl;
         changed = true;

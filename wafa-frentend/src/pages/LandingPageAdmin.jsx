@@ -396,7 +396,7 @@ const LandingPageAdmin = () => {
                   <Label htmlFor="siteName">Nom du Site</Label>
                   <Input
                     id="siteName"
-                    placeholder="YourQCM"
+                    placeholder="YourQcm"
                     value={settings.siteName}
                     onChange={(e) => handleChange("siteName", e.target.value)}
                   />
@@ -435,7 +435,7 @@ const LandingPageAdmin = () => {
                       className="h-12 w-12 object-contain rounded-lg"
                       onError={(e) => { e.target.style.display = 'none'; }}
                     />
-                    <span className="text-lg font-bold">{settings.siteName || "YourQCM"}</span>
+                    <span className="text-lg font-bold">{settings.siteName || "YourQcm"}</span>
                     <span className="text-sm text-muted-foreground">{settings.siteVersion || "v1.1"}</span>
                   </div>
                 </div>
@@ -467,7 +467,7 @@ const LandingPageAdmin = () => {
                 <Label htmlFor="heroTitle">Titre Principal</Label>
                 <Input
                   id="heroTitle"
-                  placeholder="Faciliter votre préparation avec YourQCM"
+                  placeholder="Faciliter votre préparation avec YourQcm"
                   value={settings.heroTitle}
                   onChange={(e) => handleChange("heroTitle", e.target.value)}
                 />
@@ -834,7 +834,7 @@ const LandingPageAdmin = () => {
                   <Input
                     id="contactEmail"
                     type="email"
-                    placeholder="contact@yourqcm.online"
+                    placeholder="contact@YourQcm.online"
                     value={settings.contactEmail}
                     onChange={(e) => handleChange("contactEmail", e.target.value)}
                   />
@@ -888,7 +888,7 @@ const LandingPageAdmin = () => {
                     </Label>
                     <Input
                       id="instagramUrl"
-                      placeholder="https://www.instagram.com/yourqcm.fmpm?igsi=MXc1bWMzdWt5cjhoaA=="
+                      placeholder="https://www.instagram.com/YourQcm.fmpm?igsi=MXc1bWMzdWt5cjhoaA=="
                       value={settings.instagramUrl}
                       onChange={(e) => handleChange("instagramUrl", e.target.value)}
                     />

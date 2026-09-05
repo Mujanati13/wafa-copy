@@ -43,27 +43,27 @@ export const sendVerificationEmail = async (email, username, token) => {
   const verificationUrl = `${process.env.FRONTEND_URL}/verify-email?token=${token}`;
   
   const mailOptions = {
-    from: `"YourQCM - Ne pas répondre" <${process.env.EMAIL_USER}>`,
-    replyTo: 'noreply@yourqcm.online',
+    from: `"YourQcm - Ne pas répondre" <${process.env.EMAIL_USER}>`,
+    replyTo: 'noreply@YourQcm.online',
     to: email,
-    subject: 'Vérifiez votre adresse email - YourQCM',
+    subject: 'Vérifiez votre adresse email - YourQcm',
     headers: {
       'X-Priority': '3',
-      'X-Mailer': 'YourQCM Medical Platform',
-      'List-Unsubscribe': `<mailto:unsubscribe@yourqcm.online?subject=unsubscribe>`,
+      'X-Mailer': 'YourQcm Medical Platform',
+      'List-Unsubscribe': `<mailto:unsubscribe@YourQcm.online?subject=unsubscribe>`,
     },
-    text: `Bonjour ${username},\n\nMerci de vous être inscrit sur YourQCM ! Pour activer votre compte, veuillez vérifier votre adresse email en cliquant sur ce lien :\n\n${verificationUrl}\n\nCe lien expirera dans 24 heures. Si vous n'avez pas créé de compte, ignorez cet email.\n\n© ${new Date().getFullYear()} YourQCM. Tous droits réservés.`,
+    text: `Bonjour ${username},\n\nMerci de vous être inscrit sur YourQcm ! Pour activer votre compte, veuillez vérifier votre adresse email en cliquant sur ce lien :\n\n${verificationUrl}\n\nCe lien expirera dans 24 heures. Si vous n'avez pas créé de compte, ignorez cet email.\n\n© ${new Date().getFullYear()} YourQcm. Tous droits réservés.`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center;">
-          <h1 style="color: white; margin: 0;">YourQCM</h1>
+          <h1 style="color: white; margin: 0;">YourQcm</h1>
           <p style="color: white; margin: 10px 0 0 0;">Plateforme d'apprentissage médical</p>
         </div>
         
         <div style="padding: 30px; background-color: #f9fafb;">
           <h2 style="color: #333;">Bonjour ${username},</h2>
           <p style="color: #555; line-height: 1.6;">
-            Merci de vous être inscrit sur YourQCM ! Pour activer votre compte,
+            Merci de vous être inscrit sur YourQcm ! Pour activer votre compte,
             veuillez vérifier votre adresse email en cliquant sur le bouton ci-dessous :
           </p>
           
@@ -95,7 +95,7 @@ export const sendVerificationEmail = async (email, username, token) => {
         
         <div style="background-color: #333; padding: 20px; text-align: center;">
           <p style="color: #999; margin: 0; font-size: 12px;">
-            © ${new Date().getFullYear()} YourQCM. Tous droits réservés.
+            © ${new Date().getFullYear()} YourQcm. Tous droits réservés.
           </p>
         </div>
       </div>
@@ -126,20 +126,20 @@ export const sendPasswordResetEmail = async (email, username, token, firebaseRes
   const isFirebaseReset = !!firebaseResetLink;
   
   const mailOptions = {
-    from: `"YourQCM - Ne pas répondre" <${process.env.EMAIL_USER}>`,
-    replyTo: 'noreply@yourqcm.online',
+    from: `"YourQcm - Ne pas répondre" <${process.env.EMAIL_USER}>`,
+    replyTo: 'noreply@YourQcm.online',
     to: email,
-    subject: 'Réinitialisation de votre mot de passe - YourQCM',
+    subject: 'Réinitialisation de votre mot de passe - YourQcm',
     headers: {
       'X-Priority': '1',
-      'X-Mailer': 'YourQCM Medical Platform',
-      'List-Unsubscribe': `<mailto:unsubscribe@yourqcm.online?subject=unsubscribe>`,
+      'X-Mailer': 'YourQcm Medical Platform',
+      'List-Unsubscribe': `<mailto:unsubscribe@YourQcm.online?subject=unsubscribe>`,
     },
-    text: `Bonjour ${username},\n\nVous avez demandé à réinitialiser votre mot de passe. Cliquez sur ce lien pour créer un nouveau mot de passe :\n\n${resetUrl}\n\n⚠️ Si vous n'avez pas demandé cette réinitialisation, ignorez cet email. Votre mot de passe restera inchangé.\n\nCe lien expirera dans ${isFirebaseReset ? '1 heure' : '1 heure'}.\n\n© ${new Date().getFullYear()} YourQCM. Tous droits réservés.`,
+    text: `Bonjour ${username},\n\nVous avez demandé à réinitialiser votre mot de passe. Cliquez sur ce lien pour créer un nouveau mot de passe :\n\n${resetUrl}\n\n⚠️ Si vous n'avez pas demandé cette réinitialisation, ignorez cet email. Votre mot de passe restera inchangé.\n\nCe lien expirera dans ${isFirebaseReset ? '1 heure' : '1 heure'}.\n\n© ${new Date().getFullYear()} YourQcm. Tous droits réservés.`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center;">
-          <h1 style="color: white; margin: 0;">YourQCM</h1>
+          <h1 style="color: white; margin: 0;">YourQcm</h1>
           <p style="color: white; margin: 10px 0 0 0;">Réinitialisation du mot de passe</p>
         </div>
         
@@ -182,7 +182,7 @@ export const sendPasswordResetEmail = async (email, username, token, firebaseRes
         
         <div style="background-color: #333; padding: 20px; text-align: center;">
           <p style="color: #999; margin: 0; font-size: 12px;">
-            © ${new Date().getFullYear()} YourQCM. Tous droits réservés.
+            © ${new Date().getFullYear()} YourQcm. Tous droits réservés.
           </p>
         </div>
       </div>
@@ -209,15 +209,15 @@ export const sendContactNotification = async (contactData) => {
   }
 
   const mailOptions = {
-    from: `"YourQCM Contact Form" <${process.env.EMAIL_USER}>`,
+    from: `"YourQcm Contact Form" <${process.env.EMAIL_USER}>`,
     replyTo: contactData.email,
     to: process.env.ADMIN_EMAIL || process.env.EMAIL_USER,
     subject: `Nouveau message de contact: ${contactData.subject}`,
     headers: {
       'X-Priority': '1',
-      'X-Mailer': 'YourQCM Medical Platform',
+      'X-Mailer': 'YourQcm Medical Platform',
     },
-    text: `Nouveau message de contact\n\nNom: ${contactData.name}\nEmail: ${contactData.email}\nSujet: ${contactData.subject}\n\nMessage:\n${contactData.message}\n\n© ${new Date().getFullYear()} YourQCM Admin Panel`,
+    text: `Nouveau message de contact\n\nNom: ${contactData.name}\nEmail: ${contactData.email}\nSujet: ${contactData.subject}\n\nMessage:\n${contactData.message}\n\n© ${new Date().getFullYear()} YourQcm Admin Panel`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px;">
@@ -250,7 +250,7 @@ export const sendContactNotification = async (contactData) => {
         
         <div style="background-color: #333; padding: 20px; text-align: center;">
           <p style="color: #999; margin: 0; font-size: 12px;">
-            © ${new Date().getFullYear()} YourQCM Admin Panel
+            © ${new Date().getFullYear()} YourQcm Admin Panel
           </p>
         </div>
       </div>
@@ -277,20 +277,20 @@ export const sendWelcomeEmail = async (email, username) => {
   }
 
   const mailOptions = {
-    from: `"YourQCM - Ne pas répondre" <${process.env.EMAIL_USER}>`,
-    replyTo: 'noreply@yourqcm.online',
+    from: `"YourQcm - Ne pas répondre" <${process.env.EMAIL_USER}>`,
+    replyTo: 'noreply@YourQcm.online',
     to: email,
-    subject: 'Bienvenue sur YourQCM ! 🎉',
+    subject: 'Bienvenue sur YourQcm ! 🎉',
     headers: {
       'X-Priority': '3',
-      'X-Mailer': 'YourQCM Medical Platform',
-      'List-Unsubscribe': `<mailto:unsubscribe@yourqcm.online?subject=unsubscribe>`,
+      'X-Mailer': 'YourQcm Medical Platform',
+      'List-Unsubscribe': `<mailto:unsubscribe@YourQcm.online?subject=unsubscribe>`,
     },
-    text: `Félicitations ${username} !\n\nVotre compte a été vérifié avec succès. Vous pouvez maintenant profiter de toutes les fonctionnalités de notre plateforme d'apprentissage médical.\n\nCe que vous pouvez faire :\n✅ Accéder à des milliers de QCM médicaux\n📚 Consulter des résumés de cours\n📊 Suivre vos progrès en temps réel\n🏆 Participer au classement des meilleurs étudiants\n📝 Créer vos playlists et notes personnalisées\n\nCommencez maintenant: ${process.env.FRONTEND_URL}/dashboard\n\nBesoin d'aide ? N'hésitez pas à nous contacter !\n\n© ${new Date().getFullYear()} YourQCM. Tous droits réservés.`,
+    text: `Félicitations ${username} !\n\nVotre compte a été vérifié avec succès. Vous pouvez maintenant profiter de toutes les fonctionnalités de notre plateforme d'apprentissage médical.\n\nCe que vous pouvez faire :\n✅ Accéder à des milliers de QCM médicaux\n📚 Consulter des résumés de cours\n📊 Suivre vos progrès en temps réel\n🏆 Participer au classement des meilleurs étudiants\n📝 Créer vos playlists et notes personnalisées\n\nCommencez maintenant: ${process.env.FRONTEND_URL}/dashboard\n\nBesoin d'aide ? N'hésitez pas à nous contacter !\n\n© ${new Date().getFullYear()} YourQcm. Tous droits réservés.`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center;">
-          <h1 style="color: white; margin: 0;">🎉 Bienvenue sur YourQCM !</h1>
+          <h1 style="color: white; margin: 0;">🎉 Bienvenue sur YourQcm !</h1>
         </div>
         
         <div style="padding: 30px; background-color: #f9fafb;">
@@ -329,7 +329,7 @@ export const sendWelcomeEmail = async (email, username) => {
         
         <div style="background-color: #333; padding: 20px; text-align: center;">
           <p style="color: #999; margin: 0; font-size: 12px;">
-            © ${new Date().getFullYear()} YourQCM. Tous droits réservés.
+            © ${new Date().getFullYear()} YourQcm. Tous droits réservés.
           </p>
         </div>
       </div>
@@ -356,26 +356,26 @@ export const sendProfileVerificationEmail = async (email, name, code) => {
   }
 
   const mailOptions = {
-    from: `"YourQCM - Ne pas répondre" <${process.env.EMAIL_USER}>`,
-    replyTo: 'noreply@yourqcm.online',
+    from: `"YourQcm - Ne pas répondre" <${process.env.EMAIL_USER}>`,
+    replyTo: 'noreply@YourQcm.online',
     to: email,
-    subject: 'Code de vérification de profil - YourQCM',
+    subject: 'Code de vérification de profil - YourQcm',
     headers: {
       'X-Priority': '1',
-      'X-Mailer': 'YourQCM Medical Platform',
+      'X-Mailer': 'YourQcm Medical Platform',
     },
-    text: `Bonjour ${name || 'Utilisateur'},\n\nVous avez demandé à modifier vos informations personnelles sur YourQCM. Voici votre code de vérification :\n\n${code}\n\nCe code expire dans 15 minutes.\n\nSi vous n'avez pas demandé cette modification, vous pouvez ignorer cet email.\n\n© ${new Date().getFullYear()} YourQCM. Tous droits réservés.`,
+    text: `Bonjour ${name || 'Utilisateur'},\n\nVous avez demandé à modifier vos informations personnelles sur YourQcm. Voici votre code de vérification :\n\n${code}\n\nCe code expire dans 15 minutes.\n\nSi vous n'avez pas demandé cette modification, vous pouvez ignorer cet email.\n\n© ${new Date().getFullYear()} YourQcm. Tous droits réservés.`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center;">
-          <h1 style="color: white; margin: 0;">YourQCM</h1>
+          <h1 style="color: white; margin: 0;">YourQcm</h1>
           <p style="color: white; margin: 10px 0 0 0;">Plateforme d'apprentissage médical</p>
         </div>
         
         <div style="padding: 30px; background-color: #f9fafb;">
           <h2 style="color: #333;">Bonjour ${name || 'Utilisateur'},</h2>
           <p style="color: #555; line-height: 1.6;">
-            Vous avez demandé à modifier vos informations personnelles sur YourQCM.
+            Vous avez demandé à modifier vos informations personnelles sur YourQcm.
             Voici votre code de vérification :
           </p>
           
@@ -403,7 +403,7 @@ export const sendProfileVerificationEmail = async (email, name, code) => {
         
         <div style="background-color: #333; padding: 20px; text-align: center;">
           <p style="color: #999; margin: 0; font-size: 12px;">
-            © ${new Date().getFullYear()} YourQCM. Tous droits réservés.
+            © ${new Date().getFullYear()} YourQcm. Tous droits réservés.
           </p>
         </div>
       </div>

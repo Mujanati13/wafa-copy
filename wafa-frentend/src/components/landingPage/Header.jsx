@@ -114,7 +114,7 @@ const Header = ({ settings }) => {
             {settings?.logoUrl ? (
               <img
                 src={settings.logoUrl}
-                alt={settings?.siteName || "YourQCM"}
+                alt={settings?.siteName || "YourQcm"}
                 className="h-10 w-10 object-contain rounded-lg shadow-lg"
               />
             ) : (
@@ -123,7 +123,7 @@ const Header = ({ settings }) => {
               </div>
             )}
             <div className="hidden sm:flex flex-col">
-              <span className="text-lg font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent leading-none">{settings?.siteName || "YourQCM"}</span>
+              <span className="text-lg font-bold leading-none">{settings?.siteName ? settings.siteName : <><span className="text-[#1a237e]">Your</span><span className="text-[#00b0d4]">Qcm</span></>}</span>
               <span className="text-xs text-gray-500">{settings?.siteVersion || "v1.1"}</span>
             </div>
           </Link>
@@ -191,7 +191,7 @@ const Header = ({ settings }) => {
                   {settings?.logoUrl ? (
                     <img
                       src={settings.logoUrl}
-                      alt={settings?.siteName || "YourQCM"}
+                      alt={settings?.siteName || "YourQcm"}
                       className="h-10 w-10 object-contain rounded-lg shadow-lg"
                     />
                   ) : (
@@ -200,7 +200,7 @@ const Header = ({ settings }) => {
                     </div>
                   )}
                   <div className="flex flex-col">
-                    <span className="text-lg font-bold text-foreground leading-none">{settings?.siteName || "YourQCM"}</span>
+                    <span className="text-lg font-bold leading-none">{settings?.siteName ? settings.siteName : <><span className="text-[#1a237e] dark:text-blue-300">Your</span><span className="text-[#00b0d4]">Qcm</span></>}</span>
                     <span className="text-xs text-muted-foreground">{settings?.siteVersion || "v1.1"}</span>
                   </div>
                 </div>

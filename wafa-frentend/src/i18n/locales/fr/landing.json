@@ -2,7 +2,7 @@
   "hero_badge": "Plateforme #1 pour étudiants en médecine",
   "hero_title_part1": "Exceller dans vos",
   "hero_title_highlight": "examens",
-  "hero_title_part2": "avec YourQCM",
+  "hero_title_part2": "avec YourQcm",
   "hero_description": "Préparez-vous efficacement pour les examens sans stress avec notre plateforme d'examens par années et par cours, conçue pour les étudiants en médecine.",
   "hero_benefit_1": "Sans engagement",
   "hero_benefit_2": "Essai gratuit",
@@ -78,7 +78,7 @@
   
   "testimonial_1_author": "Ahmed Hassan",
   "testimonial_1_role": "Étudiant en médecine",
-  "testimonial_1_content": "YourQCM m'a aidé à obtenir 95% à mes examens finaux. Les explications sont incroyablement détaillées!",
+  "testimonial_1_content": "YourQcm m'a aidé à obtenir 95% à mes examens finaux. Les explications sont incroyablement détaillées!",
   
   "testimonial_2_author": "Fatima Mohamed",
   "testimonial_2_role": "Étudiante en médecine",
@@ -91,8 +91,8 @@
   "faq_badge": "FAQ",
   "faq_title": "Questions Fréquemment Posées",
   
-  "faq_1_question": "Qu'est-ce que YourQCM ?",
-  "faq_1_answer": "YourQCM est une plateforme de préparation aux examens en ligne conçue spécifiquement pour les étudiants en médecine. Elle offre des milliers de questions pratiques, des explications détaillées et une analyse des performances.",
+  "faq_1_question": "Qu'est-ce que YourQcm ?",
+  "faq_1_answer": "YourQcm est une plateforme de préparation aux examens en ligne conçue spécifiquement pour les étudiants en médecine. Elle offre des milliers de questions pratiques, des explications détaillées et une analyse des performances.",
   
   "faq_2_question": "Proposez-vous un essai gratuit?",
   "faq_2_answer": "Oui! Nous proposons un essai gratuit de 7 jours avec accès à toutes les fonctionnalités Pro. Aucune carte de crédit requise.",
@@ -108,7 +108,7 @@
   "contact_subtitle": "Vous avez des questions? Nous serions ravis de vous entendre. Envoyez-nous un message et nous vous répondrons dans les meilleurs délais.",
   
   "contact_email_label": "E-mail",
-  "contact_email_value": "support@yourqcm.online",
+  "contact_email_value": "support@YourQcm.online",
   
   "contact_phone_label": "Téléphone",
   "contact_phone_value": "+212 6 00 00 00 00",
@@ -134,7 +134,7 @@
   "contact_form_submit": "Envoyer le Message",
   "contact_success_message": "Message envoyé avec succès! Nous vous répondrons bientôt.",
   
-  "footer_brand": "YourQCM",
+  "footer_brand": "YourQcm",
   "footer_brand_description": "Votre plateforme ultime de préparation aux examens et de réussite.",
   
   "footer_product_title": "Produit",
@@ -149,7 +149,7 @@
   
   "footer_social_title": "Suivez-nous",
   
-  "footer_copyright": "© 2024 YourQCM. Tous les droits réservés.",
+  "footer_copyright": "© 2024 YourQcm. Tous les droits réservés.",
   "footer_terms": "Conditions de Service",
   "footer_privacy": "Politique de Confidentialité",
   "message_sent_success": "Message envoyé avec succès!",

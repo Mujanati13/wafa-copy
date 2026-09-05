@@ -42,7 +42,7 @@ const runSeeder = async () => {
   const isFresh = process.argv.includes('--fresh') || process.argv.includes('--clear');
 
   console.log('====================================================');
-  console.log('🚀 YourQCM Full Database Seeder');
+  console.log('🚀 YourQcm Full Database Seeder');
   console.log(`📌 Mode: ${isFresh ? 'Fresh (Wipe & Seed)' : 'Upsert / Populate'}`);
   console.log('====================================================');
 
@@ -814,7 +814,7 @@ const runSeeder = async () => {
   await upsertDoc(Feedback, { name: 'Dr. Yassine E.', role: 'Interne en Médecine' }, {
     name: 'Dr. Yassine E.',
     role: 'Interne en Médecine',
-    message: 'YourQCM m\'a permis de réviser toutes les annales méthodiquement et de réussir mes examens de semestre avec mention.',
+    message: 'YourQcm m\'a permis de réviser toutes les annales méthodiquement et de réussir mes examens de semestre avec mention.',
     rating: 5,
     isApproved: true,
     isFeatured: true,
@@ -838,7 +838,7 @@ const runSeeder = async () => {
   const existingSettings = await LandingPageSettings.findOne();
   if (!existingSettings) {
     await LandingPageSettings.create({
-      siteName: 'YourQCM Medical Learning',
+      siteName: 'YourQcm Medical Learning',
       promotionEnabled: true,
       promotionText: 'Offre Rentrée 2026 : -30% sur tous les abonnements Premium !',
       promotionLink: '/dashboard/subscription'
@@ -848,8 +848,8 @@ const runSeeder = async () => {
   const existingPolicy = await PrivacyPolicy.findOne();
   if (!existingPolicy) {
     await PrivacyPolicy.create({
-      content: 'Politique de confidentialité et protection des données personnelles de la plateforme YourQCM.',
-      termsOfUse: 'Conditions générales d\'utilisation et d\'accès aux services pédagogiques YourQCM.',
+      content: 'Politique de confidentialité et protection des données personnelles de la plateforme YourQcm.',
+      termsOfUse: 'Conditions générales d\'utilisation et d\'accès aux services pédagogiques YourQcm.',
       lastUpdatedBy: createdUsers['admin']._id,
       termsLastUpdatedBy: createdUsers['admin']._id,
       termsLastUpdatedAt: new Date()

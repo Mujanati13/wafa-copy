@@ -39,8 +39,8 @@ const parseStorageJSON = (key, fallback = null) => {
 const normalizeLandingSettings = (settings) => {
   const currentSettings = settings || {};
   const siteName = /^(atlas\s*qcm|wafa)$/i.test(currentSettings.siteName?.trim() || '')
-    ? 'YourQCM'
-    : currentSettings.siteName || 'YourQCM';
+    ? 'YourQcm'
+    : currentSettings.siteName || 'YourQcm';
 
   return { ...currentSettings, siteName };
 };
@@ -49,7 +49,7 @@ const TopBar = ({ onMenuClick, loginPath = "/login" }) => {
   const { t } = useTranslation(['dashboard', 'common']);
   const [user, setUser] = useState(() => parseStorageJSON('userProfile', parseStorageJSON('user', null)));
   const [landingSettings, setLandingSettings] = useState(() => normalizeLandingSettings(
-    parseStorageJSON('landingSettings', { siteName: 'YourQCM', siteVersion: 'v1.1', logoUrl: '' })
+    parseStorageJSON('landingSettings', { siteName: 'YourQcm', siteVersion: 'v1.1', logoUrl: '' })
   ));
   const navigate = useNavigate();
 
@@ -154,7 +154,7 @@ const TopBar = ({ onMenuClick, loginPath = "/login" }) => {
             {landingSettings.logoUrl ? (
               <img 
                 src={landingSettings.logoUrl} 
-                alt={landingSettings.siteName || 'YourQCM'}
+                alt={landingSettings.siteName || 'YourQcm'}
                 className="h-8 w-8 rounded-lg object-cover"
               />
             ) : (
@@ -163,7 +163,7 @@ const TopBar = ({ onMenuClick, loginPath = "/login" }) => {
               </div>
             )}
             <div className="hidden sm:flex flex-col">
-              <span className="text-sm font-bold text-foreground leading-none">{landingSettings.siteName || 'YourQCM'}</span>
+              <span className="text-sm font-bold leading-none">{landingSettings.siteName ? landingSettings.siteName : <><span className="text-[#1a237e] dark:text-blue-300">Your</span><span className="text-[#00b0d4]">Qcm</span></>}</span>
               <span className="text-xs text-muted-foreground">{landingSettings.siteVersion || 'v1.1'}</span>
             </div>
           </div>

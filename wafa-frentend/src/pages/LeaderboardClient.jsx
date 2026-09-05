@@ -601,7 +601,7 @@ const LeaderboardClient = () => {
                 Système de points
               </h2>
               <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
-                Gagnez des points en participant activement à la communauté YourQCM.
+                Gagnez des points en participant activement à la communauté YourQcm.
               </p>
             </div>
           </div>

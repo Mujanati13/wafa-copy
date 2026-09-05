@@ -382,7 +382,7 @@ const ExamPage = () => {
               </span>
             </button>
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 via-teal-500 to-blue-600 text-lg md:text-2xl font-bold tracking-wide drop-shadow-sm select-none">
-              YourQCM
+              YourQcm
             </span>
           </div>
 

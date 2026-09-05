@@ -14,7 +14,7 @@ import {
 import { adminAnalyticsService } from "@/services/adminAnalyticsService";
 import { subscriptionPlanService } from "@/services/subscriptionPlanService";
 import { toast } from "sonner";
-import { displaySubscriptionCopy, displaySubscriptionPlanName } from "@/utils/subscriptionDisplay";
+import { displaySubscriptionCopy, displaySubscriptionFeature, displaySubscriptionPlanName } from "@/utils/subscriptionDisplay";
 
 const SubscriptionPage = () => {
   // Real subscription statistics
@@ -470,7 +470,7 @@ const SubscriptionPage = () => {
                             </div>
                             <div className="flex items-start gap-2">
                               <span className="text-xs">❌</span>
-                              <span className="text-xs text-gray-400">Explication des étudiants</span>
+                              <span className="text-xs text-gray-400">Explications des étudiants</span>
                             </div>
                             <div className="flex items-start gap-2">
                               <span className="text-xs">❌</span>
@@ -523,7 +523,7 @@ const SubscriptionPage = () => {
                             </div>
                             <div className="flex items-start gap-2">
                               <span className="text-xs">✔️</span>
-                              <span className="text-xs text-foreground">Explication des étudiants</span>
+                              <span className="text-xs text-foreground">Explications des étudiants</span>
                             </div>
                             <div className="flex items-start gap-2">
                               <span className="text-xs">❌</span>
@@ -576,7 +576,7 @@ const SubscriptionPage = () => {
                             </div>
                             <div className="flex items-start gap-2">
                               <span className="text-xs">✔️</span>
-                              <span className="text-xs text-foreground">Explication des étudiants</span>
+                              <span className="text-xs text-foreground">Explications des étudiants</span>
                             </div>
                             <div className="flex items-start gap-2">
                               <span className="text-xs">✔️</span>
@@ -610,7 +610,7 @@ const SubscriptionPage = () => {
                               {isIncluded
                                 ? <Check className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-green-600" />
                                 : <X className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-red-600" />}
-                              <span className={`text-xs ${isIncluded ? "text-foreground" : "text-muted-foreground line-through"}`}>{displaySubscriptionCopy(featureText)}</span>
+                              <span className={`text-xs ${isIncluded ? "text-foreground" : "text-muted-foreground line-through"}`}>{displaySubscriptionFeature(featureText)}</span>
                             </div>
                           );
                         })}

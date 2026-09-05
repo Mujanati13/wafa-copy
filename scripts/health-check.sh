@@ -40,15 +40,15 @@ echo ""
 echo -e "${YELLOW}Endpoint Health:${NC}"
 
 # Backend API
-if curl -s -f --max-time 5 https://backend.yourqcm.online/api/v1/test > /dev/null 2>&1; then
-    echo -e "  ${GREEN}✓ Backend API (https://backend.yourqcm.online)${NC}"
+if curl -s -f --max-time 5 https://backend.YourQcm.online/api/v1/test > /dev/null 2>&1; then
+    echo -e "  ${GREEN}✓ Backend API (https://backend.YourQcm.online)${NC}"
 else
     echo -e "  ${RED}✗ Backend API is not responding${NC}"
 fi
 
 # Frontend
-if curl -s -f --max-time 5 https://yourqcm.online > /dev/null 2>&1; then
-    echo -e "  ${GREEN}✓ Frontend (https://yourqcm.online)${NC}"
+if curl -s -f --max-time 5 https://YourQcm.online > /dev/null 2>&1; then
+    echo -e "  ${GREEN}✓ Frontend (https://YourQcm.online)${NC}"
 else
     echo -e "  ${RED}✗ Frontend is not responding${NC}"
 fi
@@ -58,24 +58,24 @@ echo ""
 # Check SSL certificates
 echo -e "${YELLOW}SSL Certificates:${NC}"
 
-if [ -d "certbot/conf/live/yourqcm.online" ]; then
-    EXPIRY=$(docker-compose run --rm certbot certificates 2>/dev/null | grep "yourqcm.online" -A 5 | grep "Expiry Date" | head -1)
+if [ -d "certbot/conf/live/YourQcm.online" ]; then
+    EXPIRY=$(docker-compose run --rm certbot certificates 2>/dev/null | grep "YourQcm.online" -A 5 | grep "Expiry Date" | head -1)
     if [ -n "$EXPIRY" ]; then
-        echo -e "  ${GREEN}✓ yourqcm.online${NC}"
+        echo -e "  ${GREEN}✓ YourQcm.online${NC}"
         echo -e "    $EXPIRY"
     fi
 else
-    echo -e "  ${RED}✗ yourqcm.online certificate not found${NC}"
+    echo -e "  ${RED}✗ YourQcm.online certificate not found${NC}"
 fi
 
-if [ -d "certbot/conf/live/yourqcm.online" ]; then
-    EXPIRY=$(docker-compose run --rm certbot certificates 2>/dev/null | grep "backend.yourqcm.online" -A 5 | grep "Expiry Date" | head -1)
+if [ -d "certbot/conf/live/YourQcm.online" ]; then
+    EXPIRY=$(docker-compose run --rm certbot certificates 2>/dev/null | grep "backend.YourQcm.online" -A 5 | grep "Expiry Date" | head -1)
     if [ -n "$EXPIRY" ]; then
-        echo -e "  ${GREEN}✓ backend.yourqcm.online${NC}"
+        echo -e "  ${GREEN}✓ backend.YourQcm.online${NC}"
         echo -e "    $EXPIRY"
     fi
 else
-    echo -e "  ${RED}✗ backend.yourqcm.online certificate not found${NC}"
+    echo -e "  ${RED}✗ backend.YourQcm.online certificate not found${NC}"
 fi
 
 echo ""

@@ -32,9 +32,9 @@ const migrateLegacyBrandText = (value) => {
   if (typeof value !== 'string') return value;
 
   return value
-    .replace(/@(wafa[.](ma|com)|atlas-qcm[.]online)/gi, '@yourqcm.online')
-    .replace(/atlas\s*qcm/gi, 'YourQCM')
-    .replace(/\bwafa\b/gi, 'YourQCM');
+    .replace(/@(wafa[.](ma|com)|atlas-qcm[.]online)/gi, '@YourQcm.online')
+    .replace(/atlas\s*qcm/gi, 'YourQcm')
+    .replace(/\bwafa\b/gi, 'YourQcm');
 };
 
 // Ensure only one document exists

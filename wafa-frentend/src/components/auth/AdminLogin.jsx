@@ -88,7 +88,7 @@ const AdminLogin = () => {
               <div className="relative">
                 <img 
                   src={logo} 
-                  alt="YourQCM Logo"
+                  alt="YourQcm Logo"
                   className="h-20 w-auto object-contain"
                 />
                 <div className="absolute -bottom-2 -right-2 bg-blue-600 rounded-full p-2">
@@ -183,7 +183,7 @@ const AdminLogin = () => {
         </Card>
 
         <p className="text-center text-slate-400 text-sm mt-6">
-          © 2024 YourQCM. Tous droits réservés.
+          © 2024 <span className="text-[#1a237e] font-semibold">Your</span><span className="text-[#00b0d4] font-semibold">Qcm</span>. Tous droits réservés.
         </p>
       </Motion.div>
     </div>

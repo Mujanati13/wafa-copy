@@ -372,7 +372,7 @@ const seedDemoData = async () => {
   const landingSettings = await LandingPageSettings.findOne();
   if (!landingSettings) {
     await LandingPageSettings.create({
-      siteName: "YourQCM Demo",
+      siteName: "YourQcm Demo",
       promotionEnabled: true,
       promotionText: "Données de démonstration chargées",
       promotionLink: "/register",

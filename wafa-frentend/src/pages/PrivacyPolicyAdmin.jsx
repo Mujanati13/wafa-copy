@@ -92,13 +92,13 @@ const PrivacyPolicyAdmin = () => {
   };
 
   const getDefaultContent = () => {
-    return `# Politique de Confidentialité - YourQCM
+    return `# Politique de Confidentialité - YourQcm
 
 Dernière mise à jour : ${new Date().toLocaleDateString('fr-FR')}
 
 ## 1. Introduction
 
-Bienvenue sur YourQCM. Nous nous engageons à protéger votre vie privée et vos données personnelles.
+Bienvenue sur YourQcm. Nous nous engageons à protéger votre vie privée et vos données personnelles.
 
 ## 2. Collecte de Données
 
@@ -118,7 +118,7 @@ Vos données sont utilisées pour :
 
 ## 4. Conditions de l'Utilisation
 
-En utilisant la plateforme YourQCM, vous acceptez les conditions suivantes :
+En utilisant la plateforme YourQcm, vous acceptez les conditions suivantes :
 
 ### Utilisation Acceptable
 - Utiliser la plateforme uniquement à des fins éducatives personnelles
@@ -165,25 +165,25 @@ Nous utilisons des cookies pour améliorer votre expérience.
 
 ## 9. Contact
 
-Pour toute question concernant cette politique, contactez-nous à : contact@yourqcm.online
+Pour toute question concernant cette politique, contactez-nous à : contact@YourQcm.online
 `;
   };
 
   const getDefaultTermsContent = () => {
-    return `# Conditions d'Utilisation - YourQCM
+    return `# Conditions d'Utilisation - YourQcm
 
 Dernière mise à jour : ${new Date().toLocaleDateString('fr-FR')}
 
 ## 1. Acceptation des Conditions
 
-En utilisant la plateforme YourQCM, vous acceptez les présentes conditions d'utilisation dans leur intégralité.
+En utilisant la plateforme YourQcm, vous acceptez les présentes conditions d'utilisation dans leur intégralité.
 
 ## 2. Utilisation Acceptable
 
 ### Droits d'Utilisation
 - Utiliser la plateforme uniquement à des fins éducatives personnelles
 - Accéder au contenu dans le cadre de votre abonnement actif
-- Respecter les droits de propriété intellectuelle de YourQCM
+- Respecter les droits de propriété intellectuelle de YourQcm
 
 ### Comportement sur la Plateforme
 - Maintenir un comportement respectueux envers les autres utilisateurs
@@ -229,7 +229,7 @@ Toute violation des présentes conditions peut entraîner :
 
 ## 5. Propriété Intellectuelle
 
-Tout le contenu présent sur YourQCM (questions, explications, résumés, graphiques, etc.) est protégé par le droit d'auteur et appartient à YourQCM ou à ses partenaires.
+Tout le contenu présent sur YourQcm (questions, explications, résumés, graphiques, etc.) est protégé par le droit d'auteur et appartient à YourQcm ou à ses partenaires.
 
 ## 6. Abonnements et Paiements
 
@@ -251,7 +251,7 @@ Tout le contenu présent sur YourQCM (questions, explications, résumés, graphi
 
 ## 7. Limitation de Responsabilité
 
-YourQCM ne peut être tenue responsable de :
+YourQcm ne peut être tenue responsable de :
 - L'exactitude ou l'exhaustivité du contenu éducatif
 - Toute perte ou dommage résultant de l'utilisation de la plateforme
 - Les interruptions de service ou problèmes techniques
@@ -262,7 +262,7 @@ Nous nous réservons le droit de modifier ces conditions à tout moment. Les mod
 
 ## 9. Contact
 
-Pour toute question concernant ces conditions, contactez-nous à : contact@yourqcm.online
+Pour toute question concernant ces conditions, contactez-nous à : contact@YourQcm.online
 `;
   };
 

@@ -11,7 +11,7 @@ import { dashboardService } from "@/services/dashboardService";
 import { subscriptionPlanService } from "@/services/subscriptionPlanService";
 import { toast } from "sonner";
 import { api, cn } from "@/lib/utils";
-import { displaySubscriptionCopy, displaySubscriptionPlanName, editableUserPlan } from "@/utils/subscriptionDisplay";
+import { displaySubscriptionCopy, displaySubscriptionFeature, displaySubscriptionPlanName, editableUserPlan } from "@/utils/subscriptionDisplay";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -314,7 +314,7 @@ const ClientSubscriptionPage = () => {
                                 </div>
                                 <div className="flex items-start gap-2.5 opacity-40">
                                   <span className="text-rose-500 font-bold text-xs shrink-0 mt-0.5">❌</span>
-                                  <span className="text-xs text-muted-foreground line-through">Explication des étudiants</span>
+                                  <span className="text-xs text-muted-foreground line-through">Explications des étudiants</span>
                                 </div>
                                 <div className="flex items-start gap-2.5 opacity-40">
                                   <span className="text-rose-500 font-bold text-xs shrink-0 mt-0.5">❌</span>
@@ -363,7 +363,7 @@ const ClientSubscriptionPage = () => {
                                 </div>
                                 <div className="flex items-start gap-2.5">
                                   <span className="text-emerald-500 font-bold text-xs shrink-0 mt-0.5">✔️</span>
-                                  <span className="text-xs text-foreground">Explication des étudiants</span>
+                                  <span className="text-xs text-foreground">Explications des étudiants</span>
                                 </div>
                                 <div className="flex items-start gap-2.5 opacity-40">
                                   <span className="text-rose-500 font-bold text-xs shrink-0 mt-0.5">❌</span>
@@ -416,7 +416,7 @@ const ClientSubscriptionPage = () => {
                                 </div>
                                 <div className="flex items-start gap-2.5">
                                   <span className="text-emerald-500 font-bold text-xs shrink-0 mt-0.5">✔️</span>
-                                  <span className="text-xs text-foreground">Explication des étudiants</span>
+                                  <span className="text-xs text-foreground">Explications des étudiants</span>
                                 </div>
                                 <div className="flex items-start gap-2.5">
                                   <span className="text-emerald-500 font-bold text-xs shrink-0 mt-0.5">✔️</span>
@@ -450,7 +450,7 @@ const ClientSubscriptionPage = () => {
                                   {isIncluded
                                     ? <Check className="w-4 h-4 shrink-0 mt-0.5 text-emerald-500" />
                                     : <X className="w-4 h-4 shrink-0 mt-0.5 text-red-500" />}
-                                  <span className={cn("text-xs", isIncluded ? "text-foreground" : "text-muted-foreground line-through")}>{displaySubscriptionCopy(featureText)}</span>
+                                  <span className={cn("text-xs", isIncluded ? "text-foreground" : "text-muted-foreground line-through")}>{displaySubscriptionFeature(featureText)}</span>
                                 </div>
                               );
                             })}

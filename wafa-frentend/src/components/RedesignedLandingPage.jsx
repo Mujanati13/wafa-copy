@@ -21,11 +21,11 @@ import logo from "@/assets/logo.png";
 import { getLandingPageSettings } from "@/services/landingPageService";
 import { subscriptionPlanService } from "@/services/subscriptionPlanService";
 import { INSTAGRAM_URL } from "@/config/socialLinks";
-import { displaySubscriptionCopy, displaySubscriptionPeriod, displaySubscriptionPlanName } from "@/utils/subscriptionDisplay";
+import { displaySubscriptionCopy, displaySubscriptionFeature, displaySubscriptionPeriod, displaySubscriptionPlanName } from "@/utils/subscriptionDisplay";
 
 const FALLBACK_SETTINGS = {
-  siteName: "YourQCM",
-  heroTitle: "Faciliter votre préparation avec YourQCM",
+  siteName: "YourQcm",
+  heroTitle: "Faciliter votre préparation avec YourQcm",
   heroSubtitle: "Révisez mieux. En moins de temps.",
   heroDescription: "Préparez-vous efficacement pour les examens avec notre plateforme d'exam, conçue pour les étudiants en médecine de FMPM.",
   pricingTitle: "Choisissez votre rythme de révision",
@@ -64,7 +64,7 @@ const copy = {
     previewQuestion: "Quel signe clinique oriente vers une insuffisance cardiaque gauche ?",
     previewAnswers: ["Œdèmes des membres inférieurs", "Dyspnée d'effort", "Douleur abdominale"],
     previewCorrect: "Bonne réponse", previewProgress: "Progression du module", previewWeek: "+18% cette semaine", previewLive: "Session active",
-    benefits: "Comment YourQCM vous aide à valider", benefitsCopy: "Des outils puissants pour optimiser votre apprentissage",
+    benefits: "Comment YourQcm vous aide à valider", benefitsCopy: "Des outils puissants pour optimiser votre apprentissage",
     features: [
       ["QCM et examens", "Entraînez-vous sur les thèmes importants."],
       ["Explications utiles", "Comprenez chaque réponse, pas seulement votre score."],
@@ -76,7 +76,7 @@ const copy = {
       ["Surligneur", "Mettez en évidence ce qui est important dans vos révisions."],
     ],
     plans: "Abonnements", popular: "Le plus choisi", perSemester: "/ semestre", choose: "Choisir ce plan", includes: "Ce qui est inclus", faq: "Réponses claires avant de commencer",
-    footer: "Révisez avec intention. Progressez avec YourQCM.", product: "Produit", support: "Support", social: "Suivez-nous", privacy: "Confidentialité", terms: "Conditions",
+    footer: "Révisez avec intention. Progressez avec YourQcm.", product: "Produit", support: "Support", social: "Suivez-nous", privacy: "Confidentialité", terms: "Conditions",
     menu: "Ouvrir le menu",
   },
   en: {
@@ -90,7 +90,7 @@ const copy = {
     previewQuestion: "Which clinical sign suggests left-sided heart failure?",
     previewAnswers: ["Lower limb oedema", "Exertional dyspnoea", "Abdominal pain"],
     previewCorrect: "Correct answer", previewProgress: "Module progress", previewWeek: "+18% this week", previewLive: "Live session",
-    benefits: "How YourQCM helps you succeed", benefitsCopy: "Powerful tools to optimise your learning",
+    benefits: "How YourQcm helps you succeed", benefitsCopy: "Powerful tools to optimise your learning",
     features: [
       ["QCMs and exams", "Practise the topics that matter."],
       ["Useful explanations", "Understand every answer, not only your score."],
@@ -102,7 +102,7 @@ const copy = {
       ["Highlighter", "Highlight what matters most in your revision."],
     ],
     plans: "Plans", popular: "Most popular", perSemester: "/ semester", choose: "Choose this plan", includes: "What's included", faq: "Clear answers before you begin",
-    footer: "Study with intention. Progress with YourQCM.", product: "Product", support: "Support", social: "Follow us", privacy: "Privacy", terms: "Terms",
+    footer: "Study with intention. Progress with YourQcm.", product: "Product", support: "Support", social: "Follow us", privacy: "Privacy", terms: "Terms",
     menu: "Open menu",
   },
 };
@@ -201,7 +201,7 @@ function HeroStudyPreview({ text, language }) {
     <div
       className="relative mx-auto w-full max-w-xl pb-7 pt-3 sm:px-3"
       role="img"
-      aria-label={language === "fr" ? "Aperçu animé d'une session de révision YourQCM" : "Animated preview of a YourQCM study session"}
+      aria-label={language === "fr" ? "Aperçu animé d'une session de révision YourQcm" : "Animated preview of a YourQcm study session"}
     >
       <div className="absolute -inset-7 -z-10 rounded-[3rem] bg-gradient-to-br from-cyan-300/35 via-blue-400/15 to-amber-200/20 blur-3xl" />
 
@@ -216,7 +216,7 @@ function HeroStudyPreview({ text, language }) {
               <GraduationCap className="h-5 w-5" aria-hidden="true" />
             </div>
             <div>
-              <p className="text-sm font-bold text-slate-900 dark:text-white">YourQCM</p>
+              <p className="text-sm font-bold text-slate-900 dark:text-white"><span className="text-[#1a237e] dark:text-blue-300">Your</span><span className="text-[#00b0d4]">Qcm</span></p>
               <p className="text-[11px] text-slate-500 dark:text-slate-400">{text.previewTitle}</p>
             </div>
           </div>
@@ -416,9 +416,9 @@ export default function RedesignedLandingPage() {
 
       <header className="sticky top-0 z-50 border-b border-border/70 bg-background/95 shadow-sm backdrop-blur-xl">
         <div className="mx-auto flex h-18 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-          <Link to="/" className="imrs-focus-ring flex items-center gap-3 rounded-lg" aria-label="YourQCM">
-            <img src={settings.logoUrl || logo} alt={settings.siteName || "YourQCM"} className="h-10 w-10 rounded-xl object-contain" />
-            <span className="text-lg font-bold tracking-tight text-primary">{settings.siteName || "YourQCM"}</span>
+          <Link to="/" className="imrs-focus-ring flex items-center gap-3 rounded-lg" aria-label="YourQcm">
+            <img src={settings.logoUrl || logo} alt={settings.siteName || "YourQcm"} className="h-10 w-10 rounded-xl object-contain" />
+            <span className="text-lg font-bold tracking-tight">{settings.siteName ? settings.siteName : <><span className="text-[#1a237e] dark:text-blue-300">Your</span><span className="text-[#00b0d4]">Qcm</span></>}</span>
           </Link>
           <nav className="hidden items-center gap-6 lg:flex" aria-label="Navigation principale">
             {[["benefits", text.navigation[0]], ["pricing", text.navigation[1]], ["faq", text.navigation[2]]].map(([id, label]) => (
@@ -697,8 +697,8 @@ function ReviewInvitation({ language }) {
         </h2>
         <p className="mx-auto mt-4 max-w-3xl text-base leading-7 text-muted-foreground sm:text-lg">
           {isFrench
-            ? "YourQCM est né récemment. Et on veut le rendre meilleur grâce à VOUS. Vous avez des idées ? Des remarques ? Des souhaits ? Écrivez-nous. Votre voix est essentielle pour améliorer YourQCM."
-            : "YourQCM was born recently, and we want to make it better with YOU. Have ideas, comments, or wishes? Write to us. Your voice is essential to improving YourQCM."}
+            ? "YourQcm est né récemment. Et on veut le rendre meilleur grâce à VOUS. Vous avez des idées ? Des remarques ? Des souhaits ? Écrivez-nous. Votre voix est essentielle pour améliorer YourQcm."
+            : "YourQcm was born recently, and we want to make it better with YOU. Have ideas, comments, or wishes? Write to us. Your voice is essential to improving YourQcm."}
         </p>
         <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
           <Button size="lg" onClick={() => setOpen(true)} className="h-12 bg-gradient-to-r from-blue-600 to-indigo-600 px-7 text-base text-white hover:from-blue-700 hover:to-indigo-700">
@@ -796,7 +796,7 @@ function LandingFooter({ settings, text }) {
           <div className="xs:col-span-2 md:col-span-1">
             <h2 className="mb-4 flex items-center gap-2 text-xl font-bold">
               <GraduationCap className="h-6 w-6" aria-hidden="true" />
-              {settings.siteName || "YourQCM"}
+              {settings.siteName || "YourQcm"}
             </h2>
             <p className="text-sm leading-relaxed text-slate-400">{text.footer}</p>
           </div>
@@ -814,7 +814,7 @@ function LandingFooter({ settings, text }) {
           </div>
         </div>
         <div className="flex flex-col items-center justify-between gap-4 border-t border-slate-800 pt-8 text-sm text-slate-400 sm:flex-row">
-          <p>© {new Date().getFullYear()} {settings.siteName || "YourQCM"}. Tous droits réservés.</p>
+          <p>© {new Date().getFullYear()} {settings.siteName || "YourQcm"}. Tous droits réservés.</p>
           <div className="flex gap-6">
             <Link className="transition hover:text-white" to="/privacy-policy">{text.privacy}</Link>
             <Link className="transition hover:text-white" to="/terms-of-use">{text.terms}</Link>
@@ -840,7 +840,7 @@ function PricingCard({ plan, popular, text, language, onChoose }) {
   return (
     <article className={`relative rounded-2xl border bg-card p-6 ${popular ? "border-cyan-400 shadow-xl shadow-cyan-950/10" : "border-border"}`}>
       {popular && <span className="absolute -top-3 left-6 rounded-full bg-cyan-500 px-3 py-1 text-xs font-bold text-white">{text.popular}</span>}
-      <p className="text-sm font-semibold text-cyan-700 dark:text-cyan-300">{displaySubscriptionPlanName(plan.name, "YourQCM Premium")}</p>
+      <p className="text-sm font-semibold text-cyan-700 dark:text-cyan-300">{displaySubscriptionPlanName(plan.name, "YourQcm Premium")}</p>
       <div className="mt-5 flex items-baseline gap-1">
         <span className="text-4xl font-bold">{plan.price ?? plan.monthlyPrice ?? "—"}</span>
         {Number(plan.price) > 0 && <span className="text-sm text-muted-foreground">MAD {periodLabel}</span>}
@@ -854,7 +854,7 @@ function PricingCard({ plan, popular, text, language, onChoose }) {
             {feature.included
               ? <Check className="mt-0.5 h-4 w-4 shrink-0 text-cyan-600" />
               : <X className="mt-0.5 h-4 w-4 shrink-0 text-red-500" />}
-            <span className={feature.included ? "" : "text-muted-foreground line-through"}>{displaySubscriptionCopy(feature.text, language)}</span>
+            <span className={feature.included ? "" : "text-muted-foreground line-through"}>{displaySubscriptionFeature(feature.text, language)}</span>
           </li>
         ))}
       </ul>

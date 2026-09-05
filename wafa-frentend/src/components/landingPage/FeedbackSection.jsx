@@ -162,7 +162,7 @@ const FeedbackSection = () => {
           variants={itemVariants}
           className="text-xl text-muted-foreground mb-12 max-w-2xl mx-auto leading-relaxed"
         >
-          YourQCM est né récemment. Et on veut le rendre meilleur grâce à VOUS. Vous avez des idées ? Des remarques ? Des souhaits ? Écrivez-nous. Votre voix est essentielle pour améliorer YourQCM.
+          YourQcm est né récemment. Et on veut le rendre meilleur grâce à VOUS. Vous avez des idées ? Des remarques ? Des souhaits ? Écrivez-nous. Votre voix est essentielle pour améliorer YourQcm.
         </motion.p>
 
         {/* Form or Buttons */}

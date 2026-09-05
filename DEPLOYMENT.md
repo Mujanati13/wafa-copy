@@ -13,8 +13,8 @@ Complete deployment solution for the WAFA e-learning platform using Docker, Ngin
    - Root or sudo access
 
 2. **Domain Configuration**:
-   - `yourqcm.online` → Your VPS IP
-   - `backend.yourqcm.online` → Your VPS IP
+   - `YourQcm.online` → Your VPS IP
+   - `backend.YourQcm.online` → Your VPS IP
 
 3. **Required Services**:
    - Email service (Gmail recommended for nodemailer)
@@ -182,9 +182,9 @@ docker-compose exec backend wget -qO- http://localhost:5010/api/v1/test
 
 ## 🌐 URLs
 
-- **Frontend**: https://yourqcm.online
-- **Backend API**: https://backend.yourqcm.online
-- **API Test**: https://backend.yourqcm.online/api/v1/test
+- **Frontend**: https://YourQcm.online
+- **Backend API**: https://backend.YourQcm.online
+- **API Test**: https://backend.YourQcm.online/api/v1/test
 
 ## 📊 Monitoring
 

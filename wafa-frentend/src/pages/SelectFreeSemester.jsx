@@ -189,7 +189,7 @@ const SelectFreeSemester = () => {
         >
           <img
             src={logo}
-            alt="YourQCM Logo"
+            alt="YourQcm Logo"
             className="h-16 w-auto mx-auto mb-5 drop-shadow-sm"
           />
           

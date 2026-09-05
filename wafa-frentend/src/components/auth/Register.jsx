@@ -39,7 +39,7 @@ const Register = () => {
 
   const completeRegistration = async () => {
     toast.success('Compte créé avec succès', {
-      description: 'Bienvenue sur YourQCM !',
+      description: 'Bienvenue sur YourQcm !',
     });
 
     try {
@@ -526,13 +526,13 @@ const Register = () => {
                 <div className="prose prose-sm max-w-none text-foreground space-y-4">
                   <h3 className="text-lg font-semibold text-foreground">1. Acceptation des conditions</h3>
                   <p>
-                    En accédant et en utilisant la plateforme YourQCM, vous acceptez d'être lié par ces conditions d'utilisation.
+                    En accédant et en utilisant la plateforme YourQcm, vous acceptez d'être lié par ces conditions d'utilisation.
                     Si vous n'acceptez pas ces conditions, veuillez ne pas utiliser notre service.
                   </p>
 
                   <h3 className="text-lg font-semibold text-foreground">2. Description du service</h3>
                   <p>
-                    YourQCM est une plateforme éducative destinée aux étudiants en médecine, offrant des QCM,
+                    YourQcm est une plateforme éducative destinée aux étudiants en médecine, offrant des QCM,
                     des ressources pédagogiques et des outils de suivi de progression.
                   </p>
 
@@ -544,7 +544,7 @@ const Register = () => {
 
                   <h3 className="text-lg font-semibold text-foreground">4. Utilisation du contenu</h3>
                   <p>
-                    Le contenu de YourQCM est protégé par des droits d'auteur. Vous ne pouvez pas reproduire,
+                    Le contenu de YourQcm est protégé par des droits d'auteur. Vous ne pouvez pas reproduire,
                     distribuer ou utiliser ce contenu à des fins commerciales sans notre autorisation écrite.
                   </p>
 

@@ -55,7 +55,7 @@ import { toast } from "sonner";
 import Header from "./landingPage/Header";
 import ThemeToggle from "@/components/ui/ThemeToggle";
 import { subscriptionPlanService } from "@/services/subscriptionPlanService";
-import { displaySubscriptionCopy, displaySubscriptionPeriod, displaySubscriptionPlanName } from "@/utils/subscriptionDisplay";
+import { displaySubscriptionCopy, displaySubscriptionFeature, displaySubscriptionPeriod, displaySubscriptionPlanName } from "@/utils/subscriptionDisplay";
 import axios from "axios";
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -807,7 +807,7 @@ const PricingSection = ({ settings }) => {
                               </div>
                               <div className="flex items-start gap-3 opacity-50">
                                 <span className="text-red-500 flex-shrink-0 mt-0.5">❌</span>
-                                <span className="text-sm text-muted-foreground line-through">Explication des étudiants</span>
+                                <span className="text-sm text-muted-foreground line-through">Explications des étudiants</span>
                               </div>
                               <div className="flex items-start gap-3 opacity-50">
                                 <span className="text-red-500 flex-shrink-0 mt-0.5">❌</span>
@@ -856,7 +856,7 @@ const PricingSection = ({ settings }) => {
                               </div>
                               <div className="flex items-start gap-3">
                                 <span className="text-green-500 flex-shrink-0 mt-0.5">✔️</span>
-                                <span className="text-sm text-foreground">Explication des étudiants</span>
+                                <span className="text-sm text-foreground">Explications des étudiants</span>
                               </div>
                               <div className="flex items-start gap-3 opacity-50">
                                 <span className="text-red-500 flex-shrink-0 mt-0.5">❌</span>
@@ -905,7 +905,7 @@ const PricingSection = ({ settings }) => {
                               </div>
                               <div className="flex items-start gap-3">
                                 <span className="text-green-500 flex-shrink-0 mt-0.5">✔️</span>
-                                <span className="text-sm text-foreground">Explication des étudiants</span>
+                                <span className="text-sm text-foreground">Explications des étudiants</span>
                               </div>
                               <div className="flex items-start gap-3">
                                 <span className="text-green-500 flex-shrink-0 mt-0.5">✔️</span>
@@ -940,7 +940,7 @@ const PricingSection = ({ settings }) => {
                                 <span className={`flex-shrink-0 mt-0.5 ${isIncluded ? 'text-green-500' : 'text-red-500'}`}>
                                   {isIncluded ? '✔️' : '❌'}
                                 </span>
-                                <span className={`text-sm ${isIncluded ? 'text-foreground' : 'text-muted-foreground line-through'}`}>{displaySubscriptionCopy(featureText)}</span>
+                                <span className={`text-sm ${isIncluded ? 'text-foreground' : 'text-muted-foreground line-through'}`}>{displaySubscriptionFeature(featureText)}</span>
                               </div>
                             );
                           })}
@@ -1450,7 +1450,7 @@ const FeedbackSection = ({ settings }) => {
           </h2>
 
           <p className="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto">
-            YourQCM est né récemment. Et on veut le rendre meilleur grâce à VOUS. Vous avez des idées ? Des remarques ? Des souhaits ? Écrivez-nous. Votre voix est essentielle pour améliorer YourQCM.
+            YourQcm est né récemment. Et on veut le rendre meilleur grâce à VOUS. Vous avez des idées ? Des remarques ? Des souhaits ? Écrivez-nous. Votre voix est essentielle pour améliorer YourQcm.
           </p>
 
           <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
@@ -1705,7 +1705,7 @@ const Footer = ({ settings }) => {
         <Separator className="bg-slate-800 mb-8" />
 
         <div className="flex flex-col sm:flex-row justify-between items-center gap-4 text-xs md:text-sm text-slate-400">
-          <p>© 2026 YourQCM. Tous les droits réservés.</p>
+          <p>© 2026 <span className="text-[#1a237e] font-semibold">Your</span><span className="text-[#00b0d4] font-semibold">Qcm</span>. Tous les droits réservés.</p>
           <div className="flex gap-4 md:gap-6">
             <a href="/privacy-policy" className="hover:text-white transition-colors">{t("footer_terms")}</a>
             <a href="/privacy-policy" className="hover:text-white transition-colors">{t("footer_privacy")}</a>
