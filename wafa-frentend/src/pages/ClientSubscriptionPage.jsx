@@ -1,3 +1,4 @@
+import { SUPPORT_PHONE, WHATSAPP_URL } from "@/config/socialLinks";
 import React, { useState, useEffect } from "react";
 import { useLocation } from 'react-router-dom';
 import { motion as Motion } from "framer-motion";
@@ -29,7 +30,7 @@ const ClientSubscriptionPage = () => {
   const [requestLoading, setRequestLoading] = useState(false);
 
   // WhatsApp contact number
-  const WHATSAPP_NUMBER = "0699204386";
+  const WHATSAPP_NUMBER = SUPPORT_PHONE;
 
   const getMaxSemesters = (plan) => (plan ? 1 : 0);
   const isCurrentSubscriptionPlan = (plan) => {
@@ -142,7 +143,7 @@ const ClientSubscriptionPage = () => {
           `Bonjour ! Je souhaite souscrire au plan ${displaySubscriptionPlanName(selectedPlan.name)} (${selectedPlan.price} MAD).\n\nSemestres choisis : ${semestersList}\n\nJ'ai créé une demande de paiement (#${response.data.requestId || 'N/A'}).\n\nMerci de me contacter pour finaliser mon abonnement.`
         );
 
-        const whatsappUrl = `https://wa.me/212${WHATSAPP_NUMBER.replace(/^0/, '')}?text=${message}`;
+        const whatsappUrl = `${WHATSAPP_URL}?text=${message}`;
         window.open(whatsappUrl, '_blank');
 
         setShowConfirmDialog(false);

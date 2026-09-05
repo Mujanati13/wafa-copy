@@ -20,7 +20,8 @@ import LanguageSwitcher from "@/components/shared/LanguageSwitcher";
 import logo from "@/assets/logo.png";
 import { getLandingPageSettings } from "@/services/landingPageService";
 import { subscriptionPlanService } from "@/services/subscriptionPlanService";
-import { INSTAGRAM_URL } from "@/config/socialLinks";
+import FloatingSupport from "@/components/FloatingSupport";
+import { INSTAGRAM_URL, SUPPORT_PHONE, SUPPORT_PHONE_INTERNATIONAL, WHATSAPP_URL } from "@/config/socialLinks";
 import { displaySubscriptionCopy, displaySubscriptionFeature, displaySubscriptionPeriod, displaySubscriptionPlanName } from "@/utils/subscriptionDisplay";
 
 const FALLBACK_SETTINGS = {
@@ -452,7 +453,15 @@ export default function RedesignedLandingPage() {
           <div className="mx-auto grid max-w-7xl gap-12 px-4 pb-20 pt-16 sm:px-6 md:pb-28 md:pt-24 lg:grid-cols-[1.05fr_.95fr] lg:items-center lg:px-8">
             <Motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: .5 }}>
               <span className="imrs-eyebrow"><Sparkles className="h-3.5 w-3.5" />{text.eyebrow}</span>
-              <h1 className="mt-6 max-w-3xl text-4xl font-bold leading-[1.08] tracking-tight text-primary sm:text-5xl lg:text-6xl">{settings.heroTitle}</h1>
+              <h1 className="mt-6 max-w-3xl text-4xl font-bold leading-[1.08] tracking-tight text-primary sm:text-5xl lg:text-6xl">
+                {(settings.heroTitle || FALLBACK_SETTINGS.heroTitle).split(/(\bYourQcm\b)/gi).map((part, index) => (
+                  /^YourQcm$/i.test(part) ? (
+                    <span key={index} className="inline-block whitespace-nowrap">
+                      <span className="text-blue-700 dark:text-blue-400">Your</span><span className="text-cyan-600 dark:text-cyan-400">Qcm</span>
+                    </span>
+                  ) : part
+                ))}
+              </h1>
               <p className="mt-5 max-w-2xl text-lg font-medium text-foreground sm:text-xl">{settings.heroSubtitle}</p>
               <p className="mt-3 max-w-xl text-base leading-7 text-muted-foreground">{settings.heroDescription}</p>
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -555,6 +564,7 @@ export default function RedesignedLandingPage() {
 
       </main>
       <LandingFooter settings={settings} text={text} />
+      <FloatingSupport />
     </div>
   );
 }
@@ -785,12 +795,12 @@ function LandingFooter({ settings, text }) {
   const supportLinks = [
     ["#faq", "FAQ"],
     settings.contactEmail && [`mailto:${settings.contactEmail}`, settings.contactEmail],
-    settings.contactPhone && [`tel:${settings.contactPhone.replace(/[^+\d]/g, "")}`, settings.contactPhone],
-    settings.whatsappNumber && [`https://wa.me/${settings.whatsappNumber.replace(/\D/g, "")}`, "WhatsApp"],
+    [`tel:${SUPPORT_PHONE_INTERNATIONAL}`, SUPPORT_PHONE],
+    [WHATSAPP_URL, "WhatsApp"],
   ].filter(Boolean);
 
   return (
-    <footer className="bg-slate-900 px-4 py-10 text-white sm:px-6 sm:py-12 md:py-16 lg:px-8" role="contentinfo">
+    <footer className="bg-slate-900 px-4 py-10 pb-40 text-white sm:px-6 sm:py-12 md:py-16 lg:px-8" role="contentinfo">
       <div className="mx-auto max-w-7xl">
         <div className="mb-8 grid grid-cols-1 gap-8 xs:grid-cols-2 md:grid-cols-4 md:gap-12">
           <div className="xs:col-span-2 md:col-span-1">

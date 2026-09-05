@@ -25,7 +25,7 @@ const faqs = [
   },
   {
     q: "Puis-je être remboursé ?",
-    a: "Les remboursements ne sont accordés que dans des cas exceptionnels. Pour toute demande, contactez-nous sur WhatsApp 0612345678.",
+    a: "Les remboursements ne sont accordés que dans des cas exceptionnels. Pour toute demande, contactez-nous sur WhatsApp 0725089912.",
     icon: RefreshCcw,
     color: "orange"
   },

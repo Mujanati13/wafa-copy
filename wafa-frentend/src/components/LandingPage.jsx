@@ -39,7 +39,7 @@ import {
   AlertCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { INSTAGRAM_URL } from "@/config/socialLinks";
+import { INSTAGRAM_URL, SUPPORT_PHONE, WHATSAPP_URL } from "@/config/socialLinks";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -1220,9 +1220,9 @@ const FAQSection = ({ settings }) => {
 
 // Quick Contact Line
 const QuickContact = ({ settings }) => {
-  const contactPhone = settings?.contactPhone || "+1234567890";
-  const whatsappNumber = settings?.whatsappNumber || "";
-  const whatsappUrl = `https://wa.me/${whatsappNumber.replace(/[^0-9]/g, '')}`;
+  const contactPhone = SUPPORT_PHONE;
+  const whatsappNumber = SUPPORT_PHONE;
+  const whatsappUrl = WHATSAPP_URL;
 
   return (
     <section className="relative py-6 md:py-8 px-4 sm:px-6 lg:px-8 border-y border-border bg-muted/30">
@@ -1309,7 +1309,7 @@ const ContactSection = () => {
                 </div>
                 <div>
                   <p className="font-semibold text-sm md:text-base">{t("contact_phone_label")}</p>
-                  <p className="text-xs md:text-sm text-muted-foreground">{t("contact_phone_value")}</p>
+                  <p className="text-xs md:text-sm text-muted-foreground">{SUPPORT_PHONE}</p>
                 </div>
               </div>
               <div className="flex items-start gap-4 md:gap-5">
@@ -1615,8 +1615,8 @@ const Footer = ({ settings }) => {
 
   // Use admin settings for contact info and social links
   const contactEmail = settings?.contactEmail || t("contact_email_value");
-  const contactPhone = settings?.contactPhone || t("contact_phone_value");
-  const whatsappNumber = settings?.whatsappNumber || "";
+  const contactPhone = SUPPORT_PHONE;
+  const whatsappNumber = SUPPORT_PHONE;
   const facebookUrl = settings?.facebookUrl || "#";
   const instagramUrl = INSTAGRAM_URL;
   const youtubeUrl = settings?.youtubeUrl || "#";
@@ -1644,7 +1644,7 @@ const Footer = ({ settings }) => {
               {whatsappNumber && (
                 <div className="flex items-center gap-2">
                   <MessageCircle className="h-4 w-4 text-green-400" />
-                  <a href={`https://wa.me/${whatsappNumber.replace(/[^0-9]/g, '')}`} target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">WhatsApp</a>
+                  <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">WhatsApp</a>
                 </div>
               )}
             </div>

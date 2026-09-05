@@ -1,3 +1,4 @@
+import { WHATSAPP_URL } from "@/config/socialLinks";
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -43,7 +44,7 @@ import {
 const Dashboard = () => {
   const { t } = useTranslation(['dashboard', 'common']);
   const navigate = useNavigate();
-  const WHATSAPP_NUMBER = "0699204386";
+
 
   // Use shared semester context instead of local state
   const { selectedSemester: semester, setSelectedSemester: setSemester, userSemesters } = useSemester();
@@ -449,7 +450,7 @@ ${selectedModule.exams?.length ? `\n📋 Examens disponibles:\n${selectedModule.
 
   const handleContactWhatsApp = () => {
     const message = encodeURIComponent("Bonjour, je souhaite activer mon abonnement pour accéder a tous les modules.");
-    const whatsappUrl = `https://wa.me/212${WHATSAPP_NUMBER.replace(/^0/, '')}?text=${message}`;
+    const whatsappUrl = `${WHATSAPP_URL}?text=${message}`;
     window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
   };
 
