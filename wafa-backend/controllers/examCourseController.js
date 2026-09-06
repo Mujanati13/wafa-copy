@@ -38,6 +38,7 @@ import {
     applyQuestionMappingCorrections,
     normalizeMatrixExamTitle,
 } from "../utils/questionMappingMatrix.js";
+import { sortGroupedQuestions } from "../utils/examSessionSort.js";
 
 const COURSE_IMPORT_HEADER_LABELS = {
     semester: "Semestre",
@@ -157,7 +158,7 @@ export const examCourseController = {
                 moduleName: course.moduleId?.name,
                 moduleColor: course.moduleId?.color || course.color || '#6366f1',
                 totalQuestions: questions.length,
-                questions: groupedQuestions,
+                questions: sortGroupedQuestions(groupedQuestions),
             },
         });
     }),

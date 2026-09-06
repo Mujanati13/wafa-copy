@@ -90,6 +90,7 @@ import ReportModal from "@/components/ExamsPage/ReportModal";
 import CommunityModal from "@/components/ExamsPage/CommunityModal";
 import ResumesModal from "@/components/ExamsPage/ResumesModal";
 import PlaylistModal from "@/components/ExamsPage/PlaylistModal";
+import { compareSessionNames, sortGroupedQuestions } from "@/utils/examSessionSort";
 
 // Confetti function (simple implementation without external library)
 const triggerConfetti = () => {
@@ -473,7 +474,7 @@ const ExamPage = () => {
       // If questions is an object with sessions, use it directly
       // Otherwise, fall back to linkedQuestions array
       const questions = Object.keys(questionsData).length > 0
-        ? questionsData
+        ? sortGroupedQuestions(questionsData)
         : { "Session principale": data.linkedQuestions || [] };
 
       return {
@@ -506,7 +507,7 @@ const ExamPage = () => {
         moduleName: data.moduleId?.name || data.moduleName,
         moduleColor: data.moduleId?.color || '#6366f1',
         totalQuestions: questions.length,
-        questions: questionsBySession
+        questions: sortGroupedQuestions(questionsBySession)
       };
     } else if (type === 'playlist') {
       // Playlist has questions array
@@ -530,6 +531,7 @@ const ExamPage = () => {
       moduleId: data.moduleId?._id || data.moduleId,
       moduleName: data.moduleName || data.moduleId?.name,
       moduleColor: data.moduleColor || data.moduleId?.color || '#6366f1',
+    questions: data.questions ? sortGroupedQuestions(data.questions) : data.questions,
     };
   }, []);
 
@@ -635,9 +637,11 @@ const ExamPage = () => {
 
       // Build flat question list with indices for mapping
       const allQuestions = [];
-      Object.values(examData.questions || {}).forEach(sessionQuestions => {
-        sessionQuestions.forEach(q => allQuestions.push(q));
-      });
+      Object.entries(examData.questions || {})
+        .sort(([nameA], [nameB]) => compareSessionNames(nameA, nameB))
+        .forEach(([, sessionQuestions]) => {
+          sessionQuestions.forEach(q => allQuestions.push(q));
+        });
 
       // RESTORE FROM BACKEND FIRST (source of truth)
       let restoredFromBackend = false;
@@ -748,7 +752,9 @@ const ExamPage = () => {
     if (!examData?.questions) return [];
     const allQuestions = [];
 
-    Object.entries(examData.questions).forEach(([sessionName, sessionQuestions]) => {
+    Object.entries(examData.questions)
+      .sort(([nameA], [nameB]) => compareSessionNames(nameA, nameB))
+      .forEach(([sessionName, sessionQuestions]) => {
       // Keep each exam/session contiguous. A global questionNumber sort would
       // interleave Q1, Q2, etc. from different exams.
       const sortedSessionQuestions = sessionQuestions
@@ -2038,7 +2044,9 @@ const ExamPage = () => {
 
                 <ScrollArea className="h-full flex-1">
                   <div className="p-3 space-y-2">
-                    {Object.entries(examData.questions || {}).map(([sessionName, sessionQuestions]) => {
+                    {Object.entries(examData.questions || {})
+                    .sort(([nameA], [nameB]) => compareSessionNames(nameA, nameB))
+                    .map(([sessionName, sessionQuestions]) => {
                       const isCollapsed = collapsedSessions.has(sessionName);
                       return (
                         <div key={sessionName} className="space-y-1">
@@ -3184,7 +3192,9 @@ const ExamPage = () => {
 
               <ScrollArea className="h-[calc(100vh-340px)]">
                 <div className="p-3 space-y-2">
-                  {Object.entries(examData.questions || {}).map(([sessionName, sessionQuestions]) => {
+                  {Object.entries(examData.questions || {})
+                    .sort(([nameA], [nameB]) => compareSessionNames(nameA, nameB))
+                    .map(([sessionName, sessionQuestions]) => {
                     const isCollapsed = collapsedSessions.has(sessionName);
 
                     return (

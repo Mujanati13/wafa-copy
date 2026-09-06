@@ -2,6 +2,7 @@ import examModel from "../models/examParYearModel.js";
 import ExamCoverSettings from "../models/examCoverSettingsModel.js";
 import asyncHandler from '../handlers/asyncHandler.js';
 import QuestionModel from "../models/questionModule.js";
+import { sortGroupedQuestions } from "../utils/examSessionSort.js";
 import { NotificationController } from "./notificationController.js";
 import { getAnsweredCountByExam } from "../utils/answerProgress.js";
 
@@ -192,7 +193,7 @@ export const examController = {
                         ? exam.moduleId.color
                         : '#6366f1',
                 totalQuestions: questions.length,
-                questions: groupedQuestions,
+                questions: sortGroupedQuestions(groupedQuestions),
             }
         });
     }),
