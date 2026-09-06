@@ -645,7 +645,8 @@ const ImportExamParCourse = () => {
                 <div className="mt-4 space-y-1 rounded-lg border bg-background p-3 text-xs text-muted-foreground">
                   <p><strong>Ligne 1 :</strong> numéros des leçons (<code>L1</code>, <code>L2</code>...) à partir de la colonne B.</p>
                   <p><strong>Ligne 2 :</strong> noms des leçons, directement sous leur numéro.</p>
-                  <p><strong>Colonne A :</strong> titres exacts des examens par année déjà enregistrés.</p>
+                  <p><strong>Colonne A :</strong> titres des examens par année déjà enregistrés. Les différences de majuscules, d'espacement et de tirets sont normalisées.</p>
+                  <p><strong>Plusieurs leçons :</strong> une même question peut figurer dans plusieurs colonnes de leçons.</p>
                   <p><strong>Cellules :</strong> numéros comme <code>42</code>, <code>43, 46</code>, <code>38-40</code> ou <code>5, 7-10, 16</code>. Une cellule vide ou <code>-</code> signifie qu'aucune question n'est liée.</p>
                   <p><strong>Import partiel :</strong> vous pouvez conserver seulement 1, 3 ou 4 lignes d'examens. Seules les lignes présentes seront traitées.</p>
                 </div>

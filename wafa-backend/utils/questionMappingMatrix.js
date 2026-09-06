@@ -1,6 +1,17 @@
 import { normalizeImportText, normalizeLessonNumber } from "./courseImport.js";
 import xlsx from "xlsx";
 
+// Use the same title identity for template checks, imported rows and DB records.
+// Preserve meaningful punctuation and words; never fuzzy-match different exams.
+export const normalizeMatrixExamTitle = (value) => String(value ?? "")
+    .normalize("NFKC")
+    .replace(/[\u00ad\u200b-\u200f\u202a-\u202e\u2060\u2066-\u2069\ufeff]/g, "")
+    .replace(/[\u2010-\u2015\u2212]/g, "-")
+    .replace(/\s+/g, " ")
+    .replace(/\s*-\s*/g, "-")
+    .trim()
+    .toLocaleLowerCase("fr");
+
 export const readQuestionMappingWorkbook = (buffer) => {
     const workbook = xlsx.read(buffer, { type: "buffer", cellDates: false, cellNF: true });
     const sheetName = workbook.SheetNames.find(name => name.trim().toLowerCase() === "matrice")
@@ -208,7 +219,8 @@ export const parseQuestionMappingMatrix = (matrix = []) => {
             });
             continue;
         }
-        if (seenExamNames.has(examName)) {
+        const examNameKey = normalizeMatrixExamTitle(examName);
+        if (seenExamNames.has(examNameKey)) {
             errors.push({
                 row: rowIndex + 1,
                 field: `A${rowIndex + 1}`,
@@ -216,7 +228,7 @@ export const parseQuestionMappingMatrix = (matrix = []) => {
             });
             continue;
         }
-        seenExamNames.add(examName);
+        seenExamNames.add(examNameKey);
         examRows.push({ rowIndex, rowNumber: rowIndex + 1, examName });
 
         row.forEach((value, columnIndex) => {

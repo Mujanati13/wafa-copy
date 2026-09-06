@@ -36,6 +36,7 @@ import {
     parseQuestionMappingMatrix,
     readQuestionMappingWorkbook,
     applyQuestionMappingCorrections,
+    normalizeMatrixExamTitle,
 } from "../utils/questionMappingMatrix.js";
 
 const COURSE_IMPORT_HEADER_LABELS = {
@@ -498,7 +499,7 @@ export const examCourseController = {
         }
 
         const duplicateExamNames = exams.reduce((counts, exam) => {
-            const name = String(exam.name || "").trim();
+            const name = normalizeMatrixExamTitle(exam.name);
             counts.set(name, (counts.get(name) || 0) + 1);
             return counts;
         }, new Map());
@@ -581,15 +582,13 @@ export const examCourseController = {
             });
         }
 
-        const submittedExamNames = parsed.examRows.map(examRow => examRow.examName);
         const [courses, exams] = await Promise.all([
             ExamCourse.find({ moduleId: scopedModule._id })
                 .select("_id name lessonNumber linkedQuestions questionSources")
                 .lean(),
-            ExamParYear.find({
-                moduleId: scopedModule._id,
-                name: { $in: submittedExamNames },
-            })
+            // An exact-name DB filter would discard formatting variants before
+            // normalization. Match titles only among this module's exams.
+            ExamParYear.find({ moduleId: scopedModule._id })
                 .select("_id name year")
                 .lean(),
         ]);
@@ -624,21 +623,21 @@ export const examCourseController = {
         });
 
         const examsByName = exams.reduce((result, exam) => {
-            const name = String(exam.name || "").trim();
+            const name = normalizeMatrixExamTitle(exam.name);
             if (!result.has(name)) result.set(name, []);
             result.get(name).push(exam);
             return result;
         }, new Map());
         const examByName = new Map();
         parsed.examRows.forEach((examRow) => {
-            const candidates = examsByName.get(examRow.examName) || [];
+            const candidates = examsByName.get(normalizeMatrixExamTitle(examRow.examName)) || [];
             if (candidates.length !== 1) {
                 addValidationError(
                     examRow.rowNumber,
                     `A${examRow.rowNumber}`,
                     candidates.length === 0
-                        ? `L'examen « ${examRow.examName} » n'existe pas exactement dans le module sélectionné`
-                        : `Plusieurs examens portent le titre exact « ${examRow.examName} »`
+                        ? `L'examen « ${examRow.examName} » est introuvable dans le module sélectionné, même après normalisation du titre`
+                        : `Plusieurs examens correspondent au titre « ${examRow.examName} » après normalisation. Renommez-les pour les distinguer.`
                 );
                 return;
             }
@@ -681,17 +680,7 @@ export const examCourseController = {
             questionMapsByExam.set(examId, questionMap);
         });
 
-        const existingCourseIdsByQuestion = courses.reduce((result, course) => {
-            (course.linkedQuestions || []).forEach((questionId) => {
-                const key = questionId.toString();
-                if (!result.has(key)) result.set(key, new Set());
-                result.get(key).add(course._id.toString());
-            });
-            return result;
-        }, new Map());
-
         const assignments = [];
-        const assignedCourseByQuestion = new Map();
         parsed.mappings.forEach((mapping) => {
             const course = courseByLessonNumber.get(normalizeImportText(mapping.lessonNumber));
             const exam = examByName.get(mapping.examName);
@@ -715,26 +704,6 @@ export const examCourseController = {
                     return;
                 }
                 const question = questionCandidates[0];
-                const existingCourseIds = existingCourseIdsByQuestion.get(question._id.toString()) || new Set();
-                if ([...existingCourseIds].some(courseId => courseId !== course._id.toString())) {
-                    addValidationError(
-                        mapping.rowNumber,
-                        mapping.cell,
-                        `La question ${questionNumber} est déjà liée à une autre leçon dans la base de données`
-                    );
-                    return;
-                }
-                const assignmentKey = `${exam._id}:${question._id}`;
-                const previousCourseId = assignedCourseByQuestion.get(assignmentKey);
-                if (previousCourseId && previousCourseId !== course._id.toString()) {
-                    addValidationError(
-                        mapping.rowNumber,
-                        mapping.cell,
-                        `La question ${questionNumber} est déjà affectée à une autre leçon dans cette matrice`
-                    );
-                    return;
-                }
-                assignedCourseByQuestion.set(assignmentKey, course._id.toString());
                 assignments.push({ course, exam, question, questionNumber });
             });
         });
@@ -743,7 +712,7 @@ export const examCourseController = {
             return res.status(422).json({
                 success: false,
                 code: "MAPPING_QUESTIONS_NOT_FOUND",
-                message: "Certaines questions sont introuvables ou affectées plusieurs fois. Aucun lien n'a été modifié.",
+                message: "Certaines questions sont introuvables ou leur numéro est ambigu dans l'examen. Aucun lien n'a été modifié.",
                 data: {
                     total: assignments.length,
                     imported: 0,

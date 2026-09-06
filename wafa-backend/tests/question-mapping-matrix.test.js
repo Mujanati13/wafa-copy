@@ -13,6 +13,7 @@ import {
     parseQuestionNumberExpression,
     readQuestionMappingWorkbook,
     applyQuestionMappingCorrections,
+    normalizeMatrixExamTitle,
 } from "../utils/questionMappingMatrix.js";
 
 const createResponse = () => ({
@@ -34,6 +35,119 @@ const createMatrixBuffer = (matrix) => {
     xlsx.utils.book_append_sheet(workbook, worksheet, "Matrice");
     return xlsx.write(workbook, { type: "buffer", bookType: "xlsx" });
 };
+
+test("normalizes exam case, Unicode whitespace, hidden characters and dash variants", () => {
+    assert.equal(normalizeMatrixExamTitle("\ufeff 2026\u00a0\u00a0NOR\u200bMAL\u2060 \n"), "2026 normal");
+    for (const dash of ["-", "‐", "‑", "–", "—", "−"]) {
+        assert.equal(normalizeMatrixExamTitle(` ANAT 3 ${dash} 24 NORMAL `), "anat 3-24 normal");
+    }
+    assert.notEqual(normalizeMatrixExamTitle("2026 normal"), normalizeMatrixExamTitle("2026 ratt"));
+    assert.notEqual(normalizeMatrixExamTitle("anat 1 : 24 normal"), normalizeMatrixExamTitle("anat 3 : 24 normal"));
+    const parsed = parseQuestionMappingMatrix([
+        ["EXAMEN", "L1"], ["", "Cours"], ["2026 normal", "1"], ["2026\u00a0NORMAL\u200b", "2"],
+    ]);
+    assert.ok(parsed.errors.some(error => error.field === "A4" && error.reason.includes("double")));
+});
+
+const mockMatrixDatabase = (t, { courses, exams, questions, moduleId }) => {
+    const queries = { exams: [], questions: [], writes: [] };
+    const query = (rows) => {
+        const chain = { select: () => chain, sort: () => chain, lean: async () => rows };
+        return chain;
+    };
+    t.mock.method(Module, "findById", () => query({ _id: moduleId, name: "Anatomie I", semester: "S1" }));
+    t.mock.method(ExamCourse, "find", () => query(courses));
+    t.mock.method(ExamParYear, "find", filter => {
+        queries.exams.push(filter);
+        return query(exams.filter(exam => String(exam.moduleId) === String(filter.moduleId)));
+    });
+    t.mock.method(Question, "find", filter => {
+        queries.questions.push(filter);
+        return query(questions.filter(question => filter.examId.$in.includes(String(question.examId))));
+    });
+    t.mock.method(ExamCourse, "bulkWrite", async operations => {
+        queries.writes.push(operations);
+        return { modifiedCount: operations.length };
+    });
+    t.mock.method(console, "info", () => {});
+    return queries;
+};
+
+test("imports a shared question into two lessons, preserves its existing lesson and remains idempotent", async t => {
+    const moduleId = new mongoose.Types.ObjectId();
+    const examId = new mongoose.Types.ObjectId();
+    const questionId = new mongoose.Types.ObjectId();
+    const examName = "\ufeff2026\u00a0NORMAL\u200b  ";
+    const source = { questionId, examParYearId: examId, yearName: examName, questionNumber: 14 };
+    const courses = [1, 2, 3].map(index => ({
+        _id: new mongoose.Types.ObjectId(), name: `Cours ${index}`, lessonNumber: `L${index}`,
+        linkedQuestions: index === 3 ? [questionId] : [], questionSources: index === 3 ? [source] : [],
+    }));
+    const queries = mockMatrixDatabase(t, {
+        moduleId, courses, exams: [{ _id: examId, moduleId, name: examName }],
+        questions: [{ _id: questionId, examId, questionNumber: 14 }],
+    });
+    const req = {
+        body: { moduleId: String(moduleId) },
+        file: { originalname: "shared.xlsx", buffer: createMatrixBuffer([
+            ["EXAMEN", "L1", "L2"], ["", "Cours 1", "Cours 2"], ["2026 normal", "14,14", "14"],
+        ]) },
+    };
+    const res = createResponse();
+    await examCourseController.importQuestionMappingMatrix(req, res);
+    assert.equal(res.statusCode, 200, JSON.stringify(res.payload));
+    assert.equal(res.payload.data.imported, 2);
+    assert.equal(res.payload.data.lessonsUpdated, 2);
+    assert.deepEqual(queries.exams, [{ moduleId }]);
+    assert.deepEqual(queries.questions[0], { examId: { $in: [String(examId)] } });
+    assert.equal(queries.writes[0].length, 2);
+    for (const operation of queries.writes[0]) {
+        const course = courses.find(item => String(item._id) === String(operation.updateOne.filter._id));
+        assert.notEqual(course, courses[2]);
+        const update = operation.updateOne.update[0].$set;
+        assert.deepEqual(update.linkedQuestions.$setUnion[1], [questionId]);
+        assert.deepEqual(update.questionSources.$setUnion[1], [source]);
+        // On the next request these associations are already stored.
+        course.linkedQuestions = [questionId];
+        course.questionSources = [source];
+    }
+    const repeated = createResponse();
+    await examCourseController.importQuestionMappingMatrix(req, repeated);
+    assert.equal(repeated.statusCode, 200);
+    assert.equal(repeated.payload.data.imported, 0);
+    assert.equal(repeated.payload.data.alreadyLinked, 2);
+    assert.equal(queries.writes.length, 1);
+    assert.deepEqual(courses[2].linkedQuestions, [questionId]);
+});
+
+test("normalized matching rejects missing or ambiguous targets before any writes", async t => {
+    for (const scenario of ["missing", "other-module", "ambiguous-title", "missing-question", "ambiguous-question"]) {
+        await t.test(scenario, async context => {
+            const moduleId = new mongoose.Types.ObjectId();
+            const examId = new mongoose.Types.ObjectId();
+            const exams = [{ _id: examId, moduleId, name: "ANAT 3 – 24 NORMAL\u00a0" }];
+            if (scenario === "missing") exams[0].name = "ANAT 3 – 24 RATT";
+            if (scenario === "other-module") exams[0].moduleId = new mongoose.Types.ObjectId();
+            if (scenario === "ambiguous-title") exams.push({ _id: new mongoose.Types.ObjectId(), moduleId, name: "anat 3-24 normal" });
+            const questions = scenario === "missing-question" ? [] : [{ _id: new mongoose.Types.ObjectId(), examId, questionNumber: 14 }];
+            if (scenario === "ambiguous-question") questions.push({ _id: new mongoose.Types.ObjectId(), examId, questionNumber: 14 });
+            const queries = mockMatrixDatabase(context, {
+                moduleId, exams, questions,
+                courses: [{ _id: new mongoose.Types.ObjectId(), name: "Cours", lessonNumber: "L1" }],
+            });
+            const res = createResponse();
+            await examCourseController.importQuestionMappingMatrix({
+                body: { moduleId: String(moduleId) },
+                file: { buffer: createMatrixBuffer([["EXAMEN", "L1"], ["", "Cours"], ["anat 3-24 normal", "14"]]) },
+            }, res);
+            assert.equal(res.statusCode, 422, JSON.stringify(res.payload));
+            assert.equal(res.payload.data.imported, 0);
+            assert.equal(res.payload.data.errors[0].field, scenario.endsWith("question") ? "B3" : "A3");
+            assert.equal(queries.writes.length, 0);
+            if (scenario === "ambiguous-title") assert.match(res.payload.data.errors[0].reason, /Plusieurs examens/);
+        });
+    }
+});
 
 test("realigns the supplied anatomy header and allows explicit corrections at AA4, AA8 and AA11", () => {
     const names = ["Généralités en anatomie", "clavicule", "scapula", "humérus", "Radius", "ulna",
@@ -343,7 +457,6 @@ test("controller imports only submitted exam rows and ignores dash cells", { con
         assert.equal(res.payload.success, true);
         assert.deepEqual(examFilter, {
             moduleId,
-            name: { $in: ["2020 normal"] },
         });
         assert.equal(bulkOperations.length, 1);
         assert.equal(res.payload.data.total, 1);
