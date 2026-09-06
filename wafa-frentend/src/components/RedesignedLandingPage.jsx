@@ -16,7 +16,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { api } from "@/lib/utils";
 import { toast } from "sonner";
 import ThemeToggle from "@/components/ui/ThemeToggle";
-import LanguageSwitcher from "@/components/shared/LanguageSwitcher";
 import logo from "@/assets/yourqcm-logo.jpeg";
 import { getLandingPageSettings } from "@/services/landingPageService";
 import { subscriptionPlanService } from "@/services/subscriptionPlanService";
@@ -29,8 +28,8 @@ const FALLBACK_SETTINGS = {
   heroTitle: "Faciliter votre préparation avec YourQcm",
   heroSubtitle: "Révisez mieux. En moins de temps.",
   heroDescription: "Préparez-vous efficacement pour les examens avec notre plateforme d'exam, conçue pour les étudiants en médecine de FMPM.",
-  pricingTitle: "Choisissez votre rythme de révision",
-  pricingSubtitle: "Commencez gratuitement, passez à l'illimité quand vous êtes prêt.",
+  pricingTitle: "Nos Abonnements",
+  pricingSubtitle: "Choisissez le plan qui vous convient",
   faqTitle: "Questions fréquentes",
   faqItems: [],
   timerEnabled: false,
@@ -305,8 +304,7 @@ export default function RedesignedLandingPage() {
   const [currentUser, setCurrentUser] = useState(getStoredUser);
 
   useEffect(() => {
-    const locale = localStorage.getItem("i18nextLng") || navigator.language || "fr";
-    setLanguage(locale.startsWith("fr") ? "fr" : "en");
+    setLanguage("fr");
   }, []);
 
   useEffect(() => {
@@ -426,8 +424,8 @@ export default function RedesignedLandingPage() {
               <button key={id} onClick={() => scrollTo(id)} className="imrs-focus-ring rounded text-sm font-medium text-muted-foreground transition hover:text-primary">{label}</button>
             ))}
           </nav>
-          <div className="hidden items-center gap-1 sm:flex">
-            <ThemeToggle /><LanguageSwitcher />
+          <div className="hidden items-center gap-2 sm:flex">
+            <ThemeToggle />
             {hasActiveLogin ? (
               <Button asChild className="bg-primary shadow-lg shadow-blue-950/15 hover:bg-primary/90"><Link to={dashboardPath}>{language === "fr" ? "Mon espace" : "My dashboard"}<ArrowRight className="ml-2 h-4 w-4" /></Link></Button>
             ) : (
@@ -442,7 +440,7 @@ export default function RedesignedLandingPage() {
           <div className="grid gap-1">
             {[["benefits", text.navigation[0]], ["pricing", text.navigation[1]], ["faq", text.navigation[2]]].map(([id, label]) => <button key={id} onClick={() => { setMenuOpen(false); scrollTo(id); }} className="rounded-lg px-3 py-2 text-left text-sm font-medium hover:bg-muted">{label}</button>)}
             {hasActiveLogin ? <Button asChild><Link to={dashboardPath}>{language === "fr" ? "Mon espace" : "My dashboard"}</Link></Button> : <><Link to="/login" className="rounded-lg px-3 py-2 text-sm font-medium hover:bg-muted">{text.login}</Link><Button asChild><Link to="/register">{text.create}</Link></Button></>}
-            <div className="flex items-center justify-between px-2 pt-2"><ThemeToggle /><LanguageSwitcher /></div>
+            <div className="flex items-center justify-between px-2 pt-2"><ThemeToggle /></div>
           </div>
         </div>}
       </header>
@@ -476,8 +474,6 @@ export default function RedesignedLandingPage() {
           </div>
         </section>
 
-        <LandingCountdown settings={settings} language={language} />
-
         <section id="benefits" className="scroll-mt-24 bg-muted/55 py-20">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <SectionHeading eyebrow={language === "fr" ? "01 — Avantages" : "01 — Benefits"} title={text.benefits} copy={text.benefitsCopy} />
@@ -503,7 +499,42 @@ export default function RedesignedLandingPage() {
           </div>
         </section>
 
-        <section id="pricing" className="mx-auto max-w-7xl scroll-mt-24 px-4 py-20 sm:px-6 lg:px-8"><SectionHeading eyebrow={`02 — ${text.plans}`} title={settings.pricingTitle || text.plans} copy={settings.pricingSubtitle || text.plans} centered /><div className="mt-12 grid gap-5 lg:grid-cols-3">{loadingPlans ? <PricingSkeleton /> : displayedPlans.length ? displayedPlans.map((plan) => <PricingCard key={plan._id || plan.name} plan={plan} popular={plan.isPopular} text={text} language={language} onChoose={() => navigate(hasActiveLogin ? "/dashboard/subscription" : "/register", hasActiveLogin ? { state: { selectedPlan: plan } } : undefined)} />) : <div className="rounded-2xl border border-dashed border-border bg-muted/30 p-8 text-center text-sm text-muted-foreground lg:col-span-3">{language === "fr" ? "Les offres sont temporairement indisponibles. Veuillez réessayer plus tard." : "Plans are temporarily unavailable. Please try again later."}</div>}</div></section>
+        <section id="pricing" className="mx-auto max-w-7xl scroll-mt-24 px-4 py-20 sm:px-6 lg:px-8">
+          <LandingCountdown settings={settings} language={language} />
+          <SectionHeading
+            eyebrow={`02 — ${text.plans}`}
+            title={settings.pricingTitle || (language === "fr" ? "Nos Abonnements" : text.plans)}
+            copy={settings.pricingSubtitle || text.plans}
+            centered
+          />
+          <div className="mt-12 grid gap-5 lg:grid-cols-3">
+            {loadingPlans ? (
+              <PricingSkeleton />
+            ) : displayedPlans.length ? (
+              displayedPlans.map((plan) => (
+                <PricingCard
+                  key={plan._id || plan.name}
+                  plan={plan}
+                  popular={plan.isPopular}
+                  text={text}
+                  language={language}
+                  onChoose={() =>
+                    navigate(
+                      hasActiveLogin ? "/dashboard/subscription" : "/register",
+                      hasActiveLogin ? { state: { selectedPlan: plan } } : undefined
+                    )
+                  }
+                />
+              ))
+            ) : (
+              <div className="rounded-2xl border border-dashed border-border bg-muted/30 p-8 text-center text-sm text-muted-foreground lg:col-span-3">
+                {language === "fr"
+                  ? "Les offres sont temporairement indisponibles. Veuillez réessayer plus tard."
+                  : "Plans are temporarily unavailable. Please try again later."}
+              </div>
+            )}
+          </div>
+        </section>
 
         <ApprovedReviewsSection reviews={approvedReviews} language={language} />
 
@@ -586,26 +617,64 @@ function LandingCountdown({ settings, language }) {
   }, [settings.timerEnabled, settings.timerEndDate]);
 
   if (!timeLeft) return null;
-  const labels = language === "fr" ? ["Jours", "Heures", "Minutes", "Secondes"] : ["Days", "Hours", "Minutes", "Seconds"];
+
+  const isFrench = language === "fr";
+  const labels = isFrench
+    ? ["Jours", "Heures", "Minutes", "Secondes"]
+    : ["Days", "Hours", "Minutes", "Seconds"];
   const values = [timeLeft.days, timeLeft.hours, timeLeft.minutes, timeLeft.seconds];
 
   return (
-    <section className="border-y border-blue-200/70 bg-gradient-to-r from-blue-700 via-indigo-700 to-violet-700 px-4 py-7 text-white dark:border-blue-900 sm:px-6" aria-labelledby="landing-countdown-title">
-      <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-6 lg:flex-row">
-        <div className="flex items-center gap-3 text-center lg:text-left">
-          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-white/15"><Clock3 className="h-6 w-6" aria-hidden="true" /></span>
-          <h2 id="landing-countdown-title" className="text-lg font-bold sm:text-xl">{settings.timerTitle || (language === "fr" ? "Offre spéciale se termine dans" : "Special offer ends in")}</h2>
-        </div>
-        <div className="grid grid-cols-4 gap-2 sm:gap-3" aria-label={language === "fr" ? "Temps restant" : "Time remaining"}>
-          {values.map((value, index) => (
-            <div key={labels[index]} className="min-w-16 rounded-xl border border-white/20 bg-white/10 px-2 py-2.5 text-center backdrop-blur-sm sm:min-w-20 sm:px-3">
-              <span className="block text-xl font-extrabold tabular-nums sm:text-2xl">{String(value).padStart(2, "0")}</span>
-              <span className="mt-0.5 block text-[9px] font-semibold uppercase tracking-wide text-blue-100 sm:text-[10px]">{labels[index]}</span>
+    <Motion.div
+      initial={{ opacity: 0, y: -16, scale: 0.98 }}
+      whileInView={{ opacity: 1, y: 0, scale: 1 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.45, ease: "easeOut" }}
+      className="mx-auto mb-10 max-w-2xl px-2"
+      role="timer"
+      aria-live="polite"
+      aria-label={isFrench ? "Compte à rebours de l'offre promotionnelle" : "Promotional countdown timer"}
+    >
+      <div className="relative overflow-hidden rounded-2xl border border-rose-300/40 bg-gradient-to-r from-rose-600 via-orange-600 to-amber-600 p-4 shadow-xl shadow-orange-950/15 sm:rounded-3xl sm:p-5 dark:border-rose-900/50">
+        <div className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-white/15 blur-2xl" />
+        <div className="pointer-events-none absolute -bottom-10 -left-10 h-32 w-32 rounded-full bg-amber-400/25 blur-2xl" />
+
+        <div className="relative flex flex-col items-center justify-between gap-4 text-center sm:flex-row sm:text-left">
+          <div className="flex items-center gap-3">
+            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-white/20 shadow-inner backdrop-blur-sm sm:h-12 sm:w-12">
+              <Clock3 className="h-6 w-6 animate-pulse text-white" aria-hidden="true" />
+            </span>
+            <div>
+              <div className="inline-flex items-center gap-1.5 rounded-full bg-white/20 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wider text-white backdrop-blur-sm">
+                <span className="h-1.5 w-1.5 rounded-full bg-amber-300 animate-ping" />
+                {isFrench ? "Offre Promotionnelle" : "Special Offer"}
+              </div>
+              <h3 className="mt-1 text-sm font-bold text-white sm:text-base">
+                {settings.timerTitle || (isFrench ? "Offre spéciale se termine dans" : "Special offer ends in")}
+              </h3>
             </div>
-          ))}
+          </div>
+
+          <div className="flex items-center gap-1.5 sm:gap-2.5" aria-label={isFrench ? "Temps restant" : "Time remaining"}>
+            {values.map((value, index) => (
+              <div key={labels[index]} className="flex items-center gap-1.5 sm:gap-2.5">
+                <div className="flex min-w-[50px] flex-col items-center justify-center rounded-xl border border-white/25 bg-black/20 px-2 py-2 backdrop-blur-md sm:min-w-[60px] sm:px-3 sm:py-2.5">
+                  <span className="text-xl font-black tabular-nums tracking-tight sm:text-2xl">
+                    {String(value).padStart(2, "0")}
+                  </span>
+                  <span className="mt-0.5 text-[9px] font-semibold uppercase tracking-wider text-amber-100/90 sm:text-[10px]">
+                    {labels[index]}
+                  </span>
+                </div>
+                {index < values.length - 1 && (
+                  <span className="text-base font-bold text-white/60 sm:text-lg -mt-3">:</span>
+                )}
+              </div>
+            ))}
+          </div>
         </div>
       </div>
-    </section>
+    </Motion.div>
   );
 }
 function ApprovedReviewsSection({ reviews, language }) {
