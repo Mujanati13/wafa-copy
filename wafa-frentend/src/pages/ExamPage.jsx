@@ -90,6 +90,7 @@ import ReportModal from "@/components/ExamsPage/ReportModal";
 import CommunityModal from "@/components/ExamsPage/CommunityModal";
 import ResumesModal from "@/components/ExamsPage/ResumesModal";
 import PlaylistModal from "@/components/ExamsPage/PlaylistModal";
+import ImageViewerModal from "@/components/shared/ImageViewerModal";
 import { compareSessionNames, sortGroupedQuestions } from "@/utils/examSessionSort";
 
 // Confetti function (simple implementation without external library)
@@ -327,17 +328,11 @@ const ExamPage = () => {
   const hasPremiumAccess = isPremiumPlan(userPlan);
   const hasPremiumProAccess = isPremiumProPlan(userPlan);
 
-  // Helper to handle feature access with upgrade prompt for PREMIUM PRO features
+  // Helper to handle feature access with immediate redirect for PREMIUM PRO features
   const handlePremiumProFeature = (featureName, action) => {
     if (!hasPremiumProAccess) {
-      toast.error('Fonctionnalité Premium Pro', {
-        description: `${featureName} est disponible uniquement pour les abonnés Premium Pro.`,
-        action: {
-          label: 'Mettre à niveau',
-          onClick: () => navigate('/dashboard/subscription')
-        },
-        duration: 5000,
-      });
+      toast.info(`${featureName} est disponible uniquement pour les abonnés Premium Pro.`);
+      navigate('/dashboard/subscription');
       return;
     }
     action();
@@ -3822,41 +3817,11 @@ const ExamPage = () => {
         )}
       </AnimatePresence>
       {/* Image Zoom Modal */}
-      <AnimatePresence>
-        {showImageZoom && zoomedImageUrl && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[70] touch-pan-y overflow-y-auto overscroll-contain bg-black/90 p-2 backdrop-blur-sm [-webkit-overflow-scrolling:touch] sm:p-4"
-            onClick={() => setShowImageZoom(false)}
-            role="dialog"
-            aria-modal="true"
-            aria-label="Agrandissement de l'image"
-          >
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="relative mx-auto flex min-h-full w-full max-w-5xl items-start justify-center py-12"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <img
-                src={zoomedImageUrl}
-                alt="Image agrandie"
-                className="block h-auto max-w-full rounded-lg object-contain shadow-2xl"
-              />
-              <button
-                onClick={() => setShowImageZoom(false)}
-                className="fixed right-3 top-3 z-10 rounded-full border border-border bg-card p-2 text-foreground shadow-lg transition-colors hover:bg-card/80 sm:right-5 sm:top-5"
-                aria-label="Fermer l'image agrandie"
-              >
-                <X className="h-6 w-6" />
-              </button>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <ImageViewerModal
+        isOpen={showImageZoom && !!zoomedImageUrl}
+        imageUrl={zoomedImageUrl}
+        onClose={() => setShowImageZoom(false)}
+      />
 
     </div>
   );

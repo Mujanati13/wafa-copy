@@ -28,6 +28,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { userService } from "@/services/userService";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { isPremiumPlan } from "@/utils/subscriptionDisplay";
 
 function getInitials(fullName) {
   if (!fullName) return "?";
@@ -184,22 +185,25 @@ const LeaderboardClient = () => {
   }, [sortBy]);
 
   useEffect(() => {
+    try {
+      const cached = JSON.parse(localStorage.getItem('userProfile') || localStorage.getItem('user') || '{}');
+      if (cached?.plan && !isPremiumPlan(cached.plan)) {
+        toast.info("Le classement est réservé aux abonnés.");
+        navigate('/dashboard/subscription', { replace: true });
+        return;
+      }
+    } catch {
+      // ignore JSON parse error
+    }
+
     const fetchUser = async () => {
       try {
         const userData = await userService.getUserProfile();
         setUser(userData);
 
-        const userPlan = userData?.plan || 'Free';
-        if (userPlan === 'Free') {
-          toast.error('Cette fonctionnalité est réservée aux abonnés Premium', {
-            description: 'Mettez à niveau votre plan pour accéder au classement.',
-            action: {
-              label: 'Voir les plans',
-              onClick: () => navigate('/dashboard/subscription')
-            },
-            duration: 5000,
-          });
-          navigate('/dashboard/subscription');
+        if (!isPremiumPlan(userData?.plan)) {
+          toast.info("Le classement est réservé aux abonnés.");
+          navigate('/dashboard/subscription', { replace: true });
           return;
         }
       } catch (error) {

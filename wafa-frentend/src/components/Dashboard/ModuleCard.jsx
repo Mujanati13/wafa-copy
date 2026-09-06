@@ -2,7 +2,7 @@ import React from "react";
 import { useState } from "react";
 import { createPortal } from "react-dom";
 import { motion as Motion, AnimatePresence } from "framer-motion";
-import { HelpCircle, X, BookOpen, Info, Image as ImageIcon, File } from "lucide-react";
+import { HelpCircle, X, BookOpen, Info, Image as ImageIcon, File, Lock, CheckCircle } from "lucide-react";
 
 import {
   Dialog,
@@ -16,7 +16,7 @@ import { resolveMediaUrl } from "@/lib/mediaUrl";
 
 const API_URL = import.meta.env.VITE_API_URL || "";
 
-const ModuleCard = ({ course, handleCourseClick, index }) => {
+const ModuleCard = ({ course, handleCourseClick, index, isLocked = false, isFreeUser = false }) => {
   const [showHelpModal, setShowHelpModal] = useState(false);
   const [showImageModal, setShowImageModal] = useState(false);
   const [showPdfModal, setShowPdfModal] = useState(false);
@@ -109,22 +109,34 @@ const ModuleCard = ({ course, handleCourseClick, index }) => {
             )}
           </div>
 
-          {/* Legacy module help: text, image and PDF */}
-          <Motion.button
-            type="button"
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-sky-200 bg-sky-50 text-sky-600 shadow-sm transition-colors hover:border-sky-300 hover:bg-sky-100 hover:text-sky-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 dark:border-sky-800 dark:bg-sky-950/60 dark:text-sky-300"
-            onClick={(event) => {
-              event.stopPropagation();
-              setShowHelpModal(true);
-            }}
-            onKeyDown={(event) => event.stopPropagation()}
-            whileHover={{ scale: 1.08 }}
-            whileTap={{ scale: 0.94 }}
-            aria-label={`Afficher l'aide du module ${course.name}`}
-            title="Aide et informations"
-          >
-            <HelpCircle className="h-5 w-5" aria-hidden="true" />
-          </Motion.button>
+          {/* Locked badge, Free module badge, or legacy module help */}
+          {isLocked ? (
+            <div className="flex items-center gap-1.5 rounded-full border border-amber-300 bg-amber-50 px-2.5 py-1 text-xs font-bold text-amber-800 shadow-sm dark:border-amber-700/60 dark:bg-amber-950/60 dark:text-amber-300">
+              <Lock className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" aria-hidden="true" />
+              <span>Premium</span>
+            </div>
+          ) : isFreeUser ? (
+            <div className="flex items-center gap-1.5 rounded-full border border-emerald-300 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-800 shadow-sm dark:border-emerald-700/60 dark:bg-emerald-950/60 dark:text-emerald-300">
+              <CheckCircle className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
+              <span>Inclus</span>
+            </div>
+          ) : (
+            <Motion.button
+              type="button"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-sky-200 bg-sky-50 text-sky-600 shadow-sm transition-colors hover:border-sky-300 hover:bg-sky-100 hover:text-sky-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 dark:border-sky-800 dark:bg-sky-950/60 dark:text-sky-300"
+              onClick={(event) => {
+                event.stopPropagation();
+                setShowHelpModal(true);
+              }}
+              onKeyDown={(event) => event.stopPropagation()}
+              whileHover={{ scale: 1.08 }}
+              whileTap={{ scale: 0.94 }}
+              aria-label={`Afficher l'aide du module ${course.name}`}
+              title="Aide et informations"
+            >
+              <HelpCircle className="h-5 w-5" aria-hidden="true" />
+            </Motion.button>
+          )}
         </div>
 
         {/* Module name */}
@@ -132,29 +144,41 @@ const ModuleCard = ({ course, handleCourseClick, index }) => {
           {course.name}
         </h3>
 
-        {/* Module progress */}
-        <div className="rounded-lg border border-blue-100 bg-blue-50/80 px-3 py-2.5 text-slate-800 dark:border-slate-800 dark:bg-slate-900 dark:text-white">
-          <div className="mb-2 flex items-center justify-between gap-3 text-[11px] font-semibold uppercase tracking-wide">
-            <span className="text-slate-500 dark:text-slate-400">Progression</span>
-            <span style={{ color: moduleColor }}>{progress}%</span>
+        {/* Module progress or locked upgrade prompt */}
+        {isLocked ? (
+          <div className="mt-auto flex items-center justify-between rounded-xl border border-amber-200/90 bg-amber-50/80 px-3 py-2.5 text-xs font-semibold text-amber-900 transition-colors group-hover:border-amber-300 group-hover:bg-amber-100/90 dark:border-amber-900/40 dark:bg-amber-950/40 dark:text-amber-200">
+            <span className="flex items-center gap-1.5">
+              <Lock className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" aria-hidden="true" />
+              Débloquer ce module
+            </span>
+            <span className="font-bold text-blue-600 group-hover:underline dark:text-blue-400">
+              S'abonner →
+            </span>
           </div>
-          <div
-            className="h-2 overflow-hidden rounded-full bg-blue-100 dark:bg-slate-800"
-            role="progressbar"
-            aria-label={`Progression du module ${course.name}`}
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-valuenow={progress}
-          >
-            <Motion.div
-              className="h-full rounded-full"
-              style={{ backgroundColor: moduleColor }}
-              initial={{ width: 0 }}
-              animate={{ width: `${progress}%` }}
-              transition={{ duration: 0.8, ease: "easeOut", delay: index * 0.04 }}
-            />
+        ) : (
+          <div className="rounded-lg border border-blue-100 bg-blue-50/80 px-3 py-2.5 text-slate-800 dark:border-slate-800 dark:bg-slate-900 dark:text-white">
+            <div className="mb-2 flex items-center justify-between gap-3 text-[11px] font-semibold uppercase tracking-wide">
+              <span className="text-slate-500 dark:text-slate-400">Progression</span>
+              <span style={{ color: moduleColor }}>{progress}%</span>
+            </div>
+            <div
+              className="h-2 overflow-hidden rounded-full bg-blue-100 dark:bg-slate-800"
+              role="progressbar"
+              aria-label={`Progression du module ${course.name}`}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={progress}
+            >
+              <Motion.div
+                className="h-full rounded-full"
+                style={{ backgroundColor: moduleColor }}
+                initial={{ width: 0 }}
+                animate={{ width: `${progress}%` }}
+                transition={{ duration: 0.8, ease: "easeOut", delay: index * 0.04 }}
+              />
+            </div>
           </div>
-        </div>
+        )}
       </Motion.div>
 
       {/* Help Modal */}

@@ -22,6 +22,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 import { playlistService } from '@/services/playlistService';
+import { isPremiumProPlan } from '@/utils/subscriptionDisplay';
 
 const PLAYLIST_GRADIENTS = [
   "from-blue-600 via-indigo-600 to-violet-600",
@@ -47,8 +48,18 @@ const Myplaylist = () => {
   const [updating, setUpdating] = useState(false);
 
   useEffect(() => {
+    try {
+      const cached = JSON.parse(localStorage.getItem('userProfile') || localStorage.getItem('user') || '{}');
+      if (!isPremiumProPlan(cached?.plan)) {
+        toast.info("Les playlists sont réservées aux abonnés Premium Pro.");
+        navigate('/dashboard/subscription', { replace: true });
+        return;
+      }
+    } catch {
+      // ignore
+    }
     fetchPlaylists();
-  }, []);
+  }, [navigate]);
 
   const fetchPlaylists = async () => {
     try {

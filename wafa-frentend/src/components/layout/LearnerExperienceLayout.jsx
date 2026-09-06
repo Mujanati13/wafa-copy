@@ -25,6 +25,7 @@ import { cn } from "@/lib/utils";
 import { signOut } from "@/services/authService";
 import { moduleService } from "@/services/moduleService";
 import { userService } from "@/services/userService";
+import { toast } from "sonner";
 import { displaySubscriptionPlanName, editableUserPlan, isPremiumPlan, isPremiumProPlan } from "@/utils/subscriptionDisplay";
 
 const navGroups = [
@@ -69,12 +70,11 @@ export default function LearnerExperienceLayout() {
 
   useEffect(() => {
     let active = true;
-    const premiumOnlyPaths = [
+    const proOnlyPaths = [
       "/dashboard/playlist",
       "/dashboard/playlists",
       "/dashboard/note",
       "/dashboard/notes",
-      "/dashboard/statistics",
     ];
 
     const syncAccountAccess = async () => {
@@ -104,8 +104,23 @@ export default function LearnerExperienceLayout() {
       }
 
       const isFree = editableUserPlan(latestUser.plan) === "Free";
-      if (isFree && premiumOnlyPaths.some((path) => location.pathname.startsWith(path))) {
+      const isPro = isPremiumProPlan(latestUser.plan);
+
+      if (!isPro && proOnlyPaths.some((path) => location.pathname.startsWith(path))) {
+        toast.info("Cette fonctionnalité est réservée aux abonnés Premium Pro.");
+        navigate("/dashboard/subscription", { replace: true });
+        return;
+      }
+
+      if (isFree && location.pathname.startsWith("/dashboard/leaderboard")) {
+        toast.info("Le classement est réservé aux abonnés.");
+        navigate("/dashboard/subscription", { replace: true });
+        return;
+      }
+
+      if (isFree && location.pathname.startsWith("/dashboard/statistics")) {
         navigate("/dashboard/home", { replace: true });
+        return;
       }
     };
 
@@ -214,7 +229,7 @@ export default function LearnerExperienceLayout() {
               <div key={group.label} className="mb-5">
                 <p className={cn("mb-2 px-2 text-[10px] font-bold tracking-[.14em] text-slate-500 uppercase dark:text-slate-400", collapsed && "lg:sr-only")}>{group.label}</p>
                 {group.modules ? (
-                  <ModuleNavigation collapsed={collapsed} setCollapsed={setCollapsed} />
+                  <ModuleNavigation collapsed={collapsed} setCollapsed={setCollapsed} user={user} />
                 ) : (
                   <div className="space-y-1">
                     {group.items.map((item) => <NavigationItem key={item.to} item={item} active={isActive(item.to)} collapsed={collapsed} locked={!planAllows(user, item)} />)}
@@ -232,19 +247,55 @@ export default function LearnerExperienceLayout() {
 
         <main className="min-w-0 flex-1 pb-20 lg:pb-8"><div className="mx-auto w-full max-w-[1600px] p-4 sm:p-6 lg:p-8"><Outlet /></div></main>
       </div>
-      <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-4 border-t border-border bg-card/95 px-2 pb-[max(.4rem,env(safe-area-inset-bottom))] pt-2 backdrop-blur lg:hidden" aria-label="Navigation rapide">{bottomItems.map((item) => { const Icon = item.icon; const active = item.to ? isActive(item.to) : location.pathname.startsWith("/dashboard/subjects/"); return item.action === "modules" ? <button key={item.action} type="button" onClick={() => setDrawerOpen(true)} className={cn("imrs-focus-ring flex flex-col items-center gap-1 rounded-lg py-1 text-[10px] font-medium", active ? "text-primary" : "text-muted-foreground")} aria-label="Ouvrir mes modules"><Icon className="h-5 w-5" /><span>{item.label}</span></button> : <NavLink key={item.to} to={item.to} className={cn("imrs-focus-ring flex flex-col items-center gap-1 rounded-lg py-1 text-[10px] font-medium", active ? "text-primary" : "text-muted-foreground")}><Icon className="h-5 w-5" /><span>{item.label}</span></NavLink>; })}</nav>
+      <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-4 border-t border-border bg-card/95 px-2 pb-[max(.4rem,env(safe-area-inset-bottom))] pt-2 backdrop-blur lg:hidden" aria-label="Navigation rapide">{bottomItems.map((item) => { const Icon = item.icon; const active = item.to ? isActive(item.to) : location.pathname.startsWith("/dashboard/subjects/"); return item.action === "modules" ? <button key={item.action} type="button" onClick={() => setDrawerOpen(true)} className={cn("imrs-focus-ring flex flex-col items-center gap-1 rounded-lg py-1 text-[10px] font-medium", active ? "text-primary" : "text-muted-foreground")} aria-label="Ouvrir mes modules"><Icon className="h-5 w-5" /><span>{item.label}</span></button> : <NavLink key={item.to} to={item.to} onClick={(event) => { if (item.to === "/dashboard/leaderboard" && !isPremiumPlan(user?.plan)) { event.preventDefault(); toast.info("Le classement est réservé aux abonnés."); navigate("/dashboard/subscription"); } }} className={cn("imrs-focus-ring flex flex-col items-center gap-1 rounded-lg py-1 text-[10px] font-medium", active ? "text-primary" : "text-muted-foreground")}><Icon className="h-5 w-5" /><span>{item.label}</span></NavLink>; })}</nav>
     </div>
   </SemesterProvider>;
 }
 
 function NavigationItem({ item, active, collapsed, locked }) {
+  const navigate = useNavigate();
   const Icon = item.icon;
-  return <NavLink to={item.to} title={collapsed ? item.label : undefined} className={cn("group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition", active ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-sm shadow-indigo-950/10" : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground", collapsed && "lg:justify-center lg:px-2")}><Icon className="h-5 w-5 shrink-0" /><span className={cn("truncate", collapsed && "lg:hidden")}>{item.label}</span>{locked && <Crown className={cn("ml-auto h-3.5 w-3.5 text-amber-500 dark:text-amber-300", collapsed && "lg:absolute lg:-right-1 lg:-top-1")} aria-label="Fonctionnalité premium" />}</NavLink>;
+  return (
+    <NavLink
+      to={item.to}
+      title={collapsed ? item.label : undefined}
+      onClick={(event) => {
+        if (locked) {
+          event.preventDefault();
+          if (item.premiumPro) {
+            toast.info("Cette fonctionnalité est réservée aux abonnés Premium Pro.");
+          } else {
+            toast.info("Cette fonctionnalité est réservée aux abonnés.");
+          }
+          navigate("/dashboard/subscription");
+        }
+      }}
+      className={cn(
+        "group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition",
+        active
+          ? "bg-sidebar-primary text-sidebar-primary-foreground shadow-sm shadow-indigo-950/10"
+          : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+        collapsed && "lg:justify-center lg:px-2"
+      )}
+    >
+      <Icon className="h-5 w-5 shrink-0" />
+      <span className={cn("truncate", collapsed && "lg:hidden")}>{item.label}</span>
+      {locked && (
+        <Crown
+          className={cn("ml-auto h-3.5 w-3.5 text-amber-500 dark:text-amber-300", collapsed && "lg:absolute lg:-right-1 lg:-top-1")}
+          aria-label="Fonctionnalité premium"
+        />
+      )}
+    </NavLink>
+  );
 }
 
-function ModuleNavigation({ collapsed, setCollapsed }) {
+function ModuleNavigation({ collapsed, setCollapsed, user }) {
   const location = useLocation();
+  const navigate = useNavigate();
   const { selectedSemester, userSemesters } = useSemester();
+  const isFree = !isPremiumPlan(user?.plan);
+  const freeModuleId = String(user?.freeModule?._id || user?.freeModule || "");
   const moduleRouteActive = location.pathname.startsWith("/dashboard/subjects/");
   const [open, setOpen] = useState(moduleRouteActive);
   const [modules, setModules] = useState([]);
@@ -276,17 +327,23 @@ function ModuleNavigation({ collapsed, setCollapsed }) {
     return () => { active = false; };
   }, [reloadKey]);
 
-  const visibleModules = useMemo(() => modules
-    .filter((module) => {
-      if (module.availableInAllSemesters) return true;
-      if (selectedSemester) return module.semester === selectedSemester;
-      if (userSemesters.length) return userSemesters.includes(module.semester);
-      return module.semester === "S1";
-    })
-    .sort((first, second) => {
-      const orderDifference = (Number(first.order) || 0) - (Number(second.order) || 0);
-      return orderDifference || String(first.name || "").localeCompare(String(second.name || ""), "fr");
-    }), [modules, selectedSemester, userSemesters]);
+  const visibleModules = useMemo(() => {
+    if (isFree) {
+      if (!freeModuleId) return [];
+      return modules.filter((module) => String(module._id || module.id) === freeModuleId);
+    }
+    return modules
+      .filter((module) => {
+        if (module.availableInAllSemesters) return true;
+        if (selectedSemester) return module.semester === selectedSemester;
+        if (userSemesters.length) return userSemesters.includes(module.semester);
+        return module.semester === "S1";
+      })
+      .sort((first, second) => {
+        const orderDifference = (Number(first.order) || 0) - (Number(second.order) || 0);
+        return orderDifference || String(first.name || "").localeCompare(String(second.name || ""), "fr");
+      });
+  }, [modules, selectedSemester, userSemesters, isFree, freeModuleId]);
 
   const toggleModules = () => {
     if (collapsed) {
@@ -329,23 +386,37 @@ function ModuleNavigation({ collapsed, setCollapsed }) {
             <p>Modules indisponibles.</p>
             <button type="button" onClick={() => setReloadKey((value) => value + 1)} className="mt-1 font-semibold text-indigo-600 underline underline-offset-2 dark:text-indigo-300">Réessayer</button>
           </div>
-        ) : visibleModules.length ? visibleModules.map((module) => (
-          <NavLink
-            key={module._id || module.id}
-            to={`/dashboard/subjects/${module._id || module.id}`}
-            title={module.name}
-            className={({ isActive }) => cn(
-              "imrs-focus-ring flex min-h-10 items-center gap-2 rounded-lg px-2.5 py-2 text-xs transition",
-              isActive
-                ? "bg-sidebar-accent font-semibold text-sidebar-accent-foreground"
-                : "text-sidebar-foreground/70 hover:bg-sidebar-accent/70 hover:text-sidebar-accent-foreground",
-            )}
-          >
-            <span className="h-2.5 w-2.5 shrink-0 rounded-full ring-2 ring-blue-200 dark:ring-white/10" style={{ backgroundColor: module.color || "#22d3ee" }} aria-hidden="true" />
-            <span className="min-w-0 flex-1 truncate">{module.name}</span>
-            {module.semester && <span className="shrink-0 text-[9px] font-bold text-indigo-600/70 dark:text-indigo-200/55">{module.semester}</span>}
-          </NavLink>
-        )) : (
+        ) : visibleModules.length ? visibleModules.map((module) => {
+          const isModuleLocked = isFree && (!freeModuleId || String(module._id || module.id) !== freeModuleId);
+          return (
+            <NavLink
+              key={module._id || module.id}
+              to={`/dashboard/subjects/${module._id || module.id}`}
+              title={module.name}
+              onClick={(event) => {
+                if (isModuleLocked) {
+                  event.preventDefault();
+                  toast.info("Abonnez-vous pour accéder à tous les modules.");
+                  navigate("/dashboard/subscription");
+                }
+              }}
+              className={({ isActive }) => cn(
+                "imrs-focus-ring flex min-h-10 items-center gap-2 rounded-lg px-2.5 py-2 text-xs transition",
+                isActive
+                  ? "bg-sidebar-accent font-semibold text-sidebar-accent-foreground"
+                  : "text-sidebar-foreground/70 hover:bg-sidebar-accent/70 hover:text-sidebar-accent-foreground",
+              )}
+            >
+              <span className="h-2.5 w-2.5 shrink-0 rounded-full ring-2 ring-blue-200 dark:ring-white/10" style={{ backgroundColor: module.color || "#22d3ee" }} aria-hidden="true" />
+              <span className="min-w-0 flex-1 truncate">{module.name}</span>
+              {isModuleLocked ? (
+                <Crown className="shrink-0 h-3 w-3 text-amber-500" aria-label="Réservé aux abonnés" />
+              ) : module.semester ? (
+                <span className="shrink-0 text-[9px] font-bold text-indigo-600/70 dark:text-indigo-200/55">{module.semester}</span>
+              ) : null}
+            </NavLink>
+          );
+        }) : (
           <p className="px-3 py-3 text-xs leading-5 text-sidebar-foreground/60">Aucun module disponible pour {selectedSemester || "ce semestre"}.</p>
         )}
       </div>

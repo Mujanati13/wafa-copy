@@ -6,13 +6,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { api } from "@/lib/utils";
 import { isPremiumPlan, isPremiumProPlan } from "@/utils/subscriptionDisplay";
+import ImageViewerModal from "@/components/shared/ImageViewerModal";
 
 const MAX_EXPLANATIONS = 3;
 const MAX_IMAGES = 5;
 const MAX_PDF = 1;
 
 const ExplicationModel = ({ question, setShowExplanation, userPlan = "Free" }) => {
-  const [activeTab, setActiveTab] = useState("ai"); // 'ai' or 'user'
+  const [activeTab, setActiveTab] = useState(() => isPremiumProPlan(userPlan) ? "ai" : "user");
   const [activeExplanationIndex, setActiveExplanationIndex] = useState(0);
   const [showSubmitForm, setShowSubmitForm] = useState(false);
   const [submissionText, setSubmissionText] = useState("");
@@ -33,6 +34,7 @@ const ExplicationModel = ({ question, setShowExplanation, userPlan = "Free" }) =
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
   const [aiExplanationData, setAiExplanationData] = useState(null);
   const [isDeletingAI, setIsDeletingAI] = useState(false);
+  const [previewImageUrl, setPreviewImageUrl] = useState(null);
 
   useEffect(() => () => {
     uploadedImagesRef.current.forEach(({ previewUrl }) => {
@@ -582,7 +584,7 @@ const ExplicationModel = ({ question, setShowExplanation, userPlan = "Free" }) =
                             key={`${src}-${idx}`}
                             type="button"
                             className="group relative aspect-video w-full overflow-hidden rounded-xl border border-border bg-muted/30 hover:border-blue-400 transition-all shadow-sm hover:shadow-md"
-                            onClick={() => window.open(fullImgUrl, "_blank", "noopener,noreferrer")}
+                            onClick={() => setPreviewImageUrl(fullImgUrl)}
                             title="Lors de la click d'image : agrandir"
                           >
                             <img
@@ -762,7 +764,7 @@ const ExplicationModel = ({ question, setShowExplanation, userPlan = "Free" }) =
                             key={idx}
                             type="button"
                             className="group relative aspect-video w-full overflow-hidden rounded-xl border border-border bg-muted/30 hover:border-purple-400 transition-all shadow-sm hover:shadow-md"
-                            onClick={() => window.open(fullImgUrl, "_blank", "noopener,noreferrer")}
+                            onClick={() => setPreviewImageUrl(fullImgUrl)}
                             title="Lors de la click d'image : agrandir"
                           >
                             <img
@@ -1046,6 +1048,11 @@ const ExplicationModel = ({ question, setShowExplanation, userPlan = "Free" }) =
           </div>
         )}
       </div>
+      <ImageViewerModal
+        isOpen={!!previewImageUrl}
+        imageUrl={previewImageUrl}
+        onClose={() => setPreviewImageUrl(null)}
+      />
     </div>
   );
 };

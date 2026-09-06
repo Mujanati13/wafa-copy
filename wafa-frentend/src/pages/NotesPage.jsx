@@ -28,10 +28,13 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 import { cn, api } from "@/lib/utils";
+import { isPremiumProPlan } from "@/utils/subscriptionDisplay";
 
 const NotesPage = () => {
   const { t } = useTranslation(['dashboard', 'common']);
+  const navigate = useNavigate();
   const [notes, setNotes] = useState([]);
   const [modules, setModules] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -54,9 +57,19 @@ const NotesPage = () => {
   const [savingNote, setSavingNote] = useState(false);
 
   useEffect(() => {
+    try {
+      const cached = JSON.parse(localStorage.getItem('userProfile') || localStorage.getItem('user') || '{}');
+      if (!isPremiumProPlan(cached?.plan)) {
+        toast.info("Les notes personnelles sont réservées aux abonnés Premium Pro.");
+        navigate('/dashboard/subscription', { replace: true });
+        return;
+      }
+    } catch {
+      // ignore
+    }
     fetchNotes();
     fetchModules();
-  }, []);
+  }, [navigate]);
 
   const fetchModules = async () => {
     try {

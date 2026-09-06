@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { api } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
+import { isPremiumProPlan } from "@/utils/subscriptionDisplay";
 
 const PlaylistsPage = () => {
   const { t } = useTranslation(['dashboard', 'common']);
@@ -30,8 +31,18 @@ const PlaylistsPage = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    try {
+      const cached = JSON.parse(localStorage.getItem('userProfile') || localStorage.getItem('user') || '{}');
+      if (!isPremiumProPlan(cached?.plan)) {
+        toast.info("Les playlists sont réservées aux abonnés Premium Pro.");
+        navigate('/dashboard/subscription', { replace: true });
+        return;
+      }
+    } catch {
+      // ignore
+    }
     fetchPlaylists();
-  }, []);
+  }, [navigate]);
 
   const fetchPlaylists = async () => {
     setLoading(true);
