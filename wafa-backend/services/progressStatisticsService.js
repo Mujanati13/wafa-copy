@@ -127,6 +127,37 @@ const getCourseModuleId = (course, moduleNameToId, moduleIds) => {
   return moduleNameToId.get(course.moduleName || course.module || "") || "";
 };
 
+export const isNonCourseItem = (course) => {
+  if (!course) return false;
+  if (course.isSupplemental) return true;
+  const id = String(course._id || course.courseId || course.id || "");
+  if (id.startsWith("exam-year-") || id.startsWith("annual-") || id.startsWith("qcm-bank-")) {
+    return true;
+  }
+  const category = String(course.category || "").trim().toLowerCase();
+  if (
+    category === "exam par years" ||
+    category === "exam par year" ||
+    category === "exam par année" ||
+    category === "examens par année" ||
+    category === "qcm banque" ||
+    category === "banque de qcm" ||
+    category.includes("year") ||
+    category.includes("année") ||
+    category.includes("annale")
+  ) {
+    return true;
+  }
+  const name = String(course.name || course.courseName || "").trim().toLowerCase();
+  if (/^\s*(?:19|20)\d{2}\b/.test(name)) {
+    return true;
+  }
+  if (/\b(?:session\s+normale|session\s+rattrapage|rattrapage|\bratt\b)\b/i.test(name) && /\b(?:19|20)\d{2}\b/.test(name)) {
+    return true;
+  }
+  return false;
+};
+
 export const buildCompleteActivitySources = ({
   courses = [],
   annualExams = [],
@@ -162,6 +193,7 @@ export const buildCompleteActivitySources = ({
       moduleId: exam.moduleId,
       category: "Exam par année",
       status: "active",
+      isSupplemental: true,
       linkedQuestions: questionsByAnnualExam.get(asId(exam._id)) || [],
     })),
     ...qcmBanks.map((qcm) => ({
@@ -170,6 +202,7 @@ export const buildCompleteActivitySources = ({
       moduleId: qcm.moduleId,
       category: "Banque de QCM",
       status: "active",
+      isSupplemental: true,
       linkedQuestions: questionsByQcmBank.get(asId(qcm._id)) || [],
     })),
   ].filter((source) => source.linkedQuestions.length > 0);
@@ -192,10 +225,11 @@ export const buildProgressStatistics = ({ modules = [], courses = [], answeredQu
 
   const moduleStats = modules.map((module) => {
     const moduleId = asId(module._id);
-    const storedCourses = coursesByModule.get(moduleId) || [];
+    const allStoredSources = coursesByModule.get(moduleId) || [];
+    const storedCourses = allStoredSources.filter((course) => !isNonCourseItem(course));
     const existingNames = new Set(storedCourses.map((course) => String(course.name || "").trim().toLocaleLowerCase("fr")));
     const legacyCourses = (module.courseNames || [])
-      .filter((name) => name && !existingNames.has(String(name).trim().toLocaleLowerCase("fr")))
+      .filter((name) => name && !existingNames.has(String(name).trim().toLocaleLowerCase("fr")) && !isNonCourseItem({ name }))
       .map((name, index) => ({
         _id: `legacy-${moduleId}-${index}`,
         name,
@@ -224,7 +258,7 @@ export const buildProgressStatistics = ({ modules = [], courses = [], answeredQu
       })
       .sort((left, right) => byName(left, right));
 
-    const moduleQuestionIds = storedCourses.flatMap((course) => course.linkedQuestions || []);
+    const moduleQuestionIds = allStoredSources.flatMap((source) => source.linkedQuestions || []);
     const stats = buildStats(moduleQuestionIds, answers);
 
     return {

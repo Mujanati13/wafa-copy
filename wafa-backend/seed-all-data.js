@@ -105,6 +105,24 @@ const runSeeder = async () => {
       faculty: 'Faculté de Médecine et de Pharmacie'
     },
     {
+      username: 'admin2',
+      name: 'Super Administrateur 2',
+      email: 'admin2@wafa.ma',
+      password: hashedPassword,
+      role: 'admin',
+      isAdmin: true,
+      adminRole: 'super_admin',
+      permissions: ['users', 'content', 'analytics', 'payments', 'notifications', 'reports', 'settings'],
+      isVerified: true,
+      emailVerified: true,
+      isAactive: true,
+      plan: 'Premium',
+      currentYear: 'S10',
+      semesters: ['S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8', 'S9', 'S10'],
+      university: 'Université Mohammed V - Rabat',
+      faculty: 'Faculté de Médecine et de Pharmacie'
+    },
+    {
       username: 'subadmin',
       name: 'Gestionnaire Contenu',
       email: 'subadmin@wafa.ma',

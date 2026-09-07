@@ -130,6 +130,20 @@ const seedDemoData = async () => {
     faculty: "Médecine",
     currentYear: "S10",
   });
+  const admin2 = await ensureUser({
+    username: "Demo Administrator 2",
+    name: "Demo Administrator 2",
+    email: "demo.admin2@wafa.test",
+    isAdmin: true,
+    adminRole: "super_admin",
+    permissions: ["users", "content", "analytics", "payments", "notifications", "reports", "settings"],
+    plan: "Premium",
+    semesters: ["S1", "S2", "S3", "S4", "S5", "S6", "S7", "S8", "S9", "S10"],
+    hasUsedFreeSemester: true,
+    university: "Université de démonstration",
+    faculty: "Médecine",
+    currentYear: "S10",
+  });
 
   const anatomyExam = await ensure(ExamParYear, {
     name: "Démo Anatomie — Examen 2025",

@@ -23,7 +23,7 @@ import {
 
 const labels = {
   year: { title: "Examens par année", description: "Entraînez-vous avec des sessions complètes.", icon: CalendarDays },
-  course: { title: "Examens par cours", description: "Ciblez un chapitre ou une notion précise.", icon: BookOpen },
+  course: { title: "Examens par cours", description: "", icon: BookOpen },
   qcm: { title: "Banque de QCM", description: "Révisez librement avec des questions variées.", icon: Library },
 };
 
@@ -109,6 +109,7 @@ function ExamCard({ exam, type, moduleColor, moduleName, isLocked = false, lockL
     ? Math.round((answeredQuestions / totalQuestions) * 100)
     : providedProgress;
   const isStarted = progress > 0;
+  const hasHelpText = Boolean(exam?.helpText && String(exam.helpText).trim().length > 0);
   const imageUrl = exam.imageUrl
     ? resolveMediaUrl(exam.imageUrl, {
       folder: type === "year" ? "exams" : type === "course" ? "courses" : "qcm",
@@ -131,10 +132,10 @@ function ExamCard({ exam, type, moduleColor, moduleName, isLocked = false, lockL
         aria-label={`Commencer ${displayName}`}
       >
         <div className="h-1 w-full shrink-0" style={{ backgroundColor: moduleColor }} aria-hidden="true" />
-        <CardContent className="flex flex-col px-4 pb-4 pt-3.5 sm:px-5">
+        <CardContent className="flex flex-col px-4 pb-4 pt-2.5 sm:px-5 sm:pt-3">
           <div className="flex items-start justify-between gap-3">
-            <div className="relative grid h-13 w-13 shrink-0 place-items-center overflow-hidden rounded-xl bg-transparent text-blue-700 dark:text-sky-300">
-              {!imageUrl && <BookOpen className="h-8 w-8" strokeWidth={1.6} aria-hidden="true" />}
+            <div className="relative -mt-0.5 grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-2xl bg-transparent text-blue-700 sm:h-[68px] sm:w-[68px] dark:text-sky-300">
+              {!imageUrl && <BookOpen className="h-9 w-9 sm:h-10 sm:w-10" strokeWidth={1.6} aria-hidden="true" />}
               {imageUrl && (
                 <img
                   src={imageUrl}
@@ -145,7 +146,7 @@ function ExamCard({ exam, type, moduleColor, moduleName, isLocked = false, lockL
               )}
             </div>
 
-            <div className="mr-1 flex items-center gap-1.5 sm:mr-2">
+            <div className="mr-1 mt-0.5 flex items-center gap-1.5 sm:mr-2">
               {isLocked ? (
                 <Badge variant="outline" className="flex items-center gap-1 rounded-full border-amber-300 bg-amber-50 px-2.5 py-1 text-xs font-bold text-amber-800 dark:border-amber-700/60 dark:bg-amber-950/60 dark:text-amber-300">
                   <Lock className="h-3 w-3 text-amber-600 dark:text-amber-400" aria-hidden="true" />
@@ -156,7 +157,8 @@ function ExamCard({ exam, type, moduleColor, moduleName, isLocked = false, lockL
                   <Sparkles className="h-3 w-3 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
                   Inclus
                 </Badge>
-              ) : (
+              ) : null}
+              {hasHelpText && (
                 <Button
                   type="button"
                   variant="ghost"
@@ -180,7 +182,7 @@ function ExamCard({ exam, type, moduleColor, moduleName, isLocked = false, lockL
             </div>
           </div>
 
-          <h2 className="mb-3 mt-3 line-clamp-2 text-left text-base font-bold leading-snug text-slate-950 dark:text-white">
+          <h2 className="mb-3 mt-2 line-clamp-2 text-left text-base font-bold leading-snug text-slate-950 dark:text-white">
             {displayName}
           </h2>
 
@@ -233,8 +235,8 @@ function ExamCard({ exam, type, moduleColor, moduleName, isLocked = false, lockL
   return <Card className="group overflow-hidden border-border bg-card shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg">
     <CardContent className="p-5">
       <div className="flex items-start justify-between gap-3">
-        <div className="relative grid h-11 w-11 place-items-center overflow-hidden rounded-xl bg-transparent" style={{ color: moduleColor }}>
-          {!imageUrl && <Icon className="h-5 w-5" />}
+        <div className="relative -mt-0.5 grid h-13 w-13 shrink-0 place-items-center overflow-hidden rounded-xl bg-transparent" style={{ color: moduleColor }}>
+          {!imageUrl && <Icon className="h-6 w-6" />}
           {imageUrl && (
             <img
               src={imageUrl}
@@ -256,7 +258,22 @@ function ExamCard({ exam, type, moduleColor, moduleName, isLocked = false, lockL
               Inclus
             </Badge>
           ) : null}
-          {exam.helpText && <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onHelp(exam)} aria-label={`Informations sur ${exam.name}`}><HelpCircle className="h-4 w-4 text-muted-foreground" /></Button>}
+          {hasHelpText && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 rounded-full text-sky-600 hover:bg-sky-50 hover:text-sky-700 dark:text-sky-300 dark:hover:bg-sky-950"
+              onClick={(event) => {
+                event.stopPropagation();
+                onHelp(exam);
+              }}
+              onKeyDown={(event) => event.stopPropagation()}
+              aria-label={`Informations sur ${exam.name}`}
+            >
+              <HelpCircle className="h-4 w-4" />
+            </Button>
+          )}
           {exam.year && <Badge variant="outline">{exam.year}</Badge>}
         </div>
       </div>
@@ -555,10 +572,12 @@ export default function SubjectsPage() {
           <TypeIcon className="h-5 w-5" style={{ color: moduleThemeColor }} />
           <h2 className="text-xl font-bold">{getSectionTitle(module, activeType)}</h2>
         </div>
-        <p className="mt-1 text-sm text-muted-foreground">{labels[activeType].description}</p>
+        {activeType !== "course" && labels[activeType]?.description && (
+          <p className="mt-1 text-sm text-muted-foreground">{labels[activeType].description}</p>
+        )}
       </div>
       {activeType === "course" && categories.length > 1 && (
-        <div className="flex max-w-full gap-2 overflow-x-auto">
+        <div className="grid grid-cols-2 gap-2 w-full sm:flex sm:flex-wrap sm:w-auto">
           {categories.map((item) => {
             const isActive = category === item;
             return (
@@ -567,7 +586,10 @@ export default function SubjectsPage() {
                 size="sm"
                 variant="outline"
                 style={isActive ? activeThemeStyle : undefined}
-                className={cn(isActive && "shadow-sm hover:brightness-90")}
+                className={cn(
+                  "h-9 w-full min-w-0 justify-center px-3 text-center text-xs font-medium sm:h-8 sm:w-auto sm:text-sm",
+                  isActive && "shadow-sm hover:brightness-90"
+                )}
                 onClick={() => {
                   if (isTpTd('course', item) && !hasPremiumProAccess) {
                     toast.info("Cette catégorie TP/TD est réservée aux abonnés Premium Pro.");
@@ -578,9 +600,9 @@ export default function SubjectsPage() {
                 }}
                 aria-pressed={isActive}
               >
-                {item === "all" ? "Toutes catégories" : item}
+                <span className="truncate">{item === "all" ? "Toutes catégories" : item}</span>
                 {isTpTd('course', item) && !hasPremiumProAccess && (
-                  <Lock className="h-3 w-3 ml-1 text-amber-500" />
+                  <Lock className="h-3 w-3 ml-1 text-amber-500 shrink-0" />
                 )}
               </Button>
             );

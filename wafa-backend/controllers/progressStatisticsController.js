@@ -63,7 +63,20 @@ export const getProgressStatistics = asyncHandler(async (req, res) => {
                 { module: { $in: moduleNames } },
               ],
             },
-            { category: { $nin: ["Exam par years", "QCM banque"] } },
+            {
+              category: {
+                $nin: [
+                  "Exam par years",
+                  "Exam par year",
+                  "exam par years",
+                  "exam par year",
+                  "Exam par année",
+                  "Examens par année",
+                  "QCM banque",
+                  "qcm banque",
+                ],
+              },
+            },
             { status: { $ne: "archived" } },
           ],
         }, {

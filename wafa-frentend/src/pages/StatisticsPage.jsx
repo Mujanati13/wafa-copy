@@ -41,6 +41,30 @@ const formatActivityDate = (value) => {
   return new Intl.DateTimeFormat("fr-FR", { day: "2-digit", month: "short" }).format(date);
 };
 
+const isYearlyExam = (item) => {
+  if (!item) return false;
+  const id = String(item.courseId || item._id || item.id || "");
+  if (id.startsWith("exam-year-") || id.startsWith("annual-") || id.startsWith("qcm-bank-")) return true;
+  const category = String(item.category || "").trim().toLowerCase();
+  if (
+    category === "exam par years" ||
+    category === "exam par year" ||
+    category === "exam par année" ||
+    category === "examens par année" ||
+    category === "qcm banque" ||
+    category === "banque de qcm" ||
+    category.includes("year") ||
+    category.includes("année") ||
+    category.includes("annale")
+  ) {
+    return true;
+  }
+  const name = String(item.courseName || item.name || "").trim().toLowerCase();
+  if (/^\s*(?:19|20)\d{2}\b/.test(name)) return true;
+  if (/\b(?:session\s+normale|session\s+rattrapage|rattrapage|\bratt\b)\b/i.test(name) && /\b(?:19|20)\d{2}\b/.test(name)) return true;
+  return false;
+};
+
 function AnswerBar({ correctPercentage = 0, incorrectPercentage = 0, completionPercentage = 0 }) {
   return (
     <div
@@ -162,9 +186,11 @@ function ModuleProgressCard({ module, expanded, onToggle }) {
             </div>
             <Badge variant="secondary">Taux de réussite {module.successRate || 0}%</Badge>
           </div>
-          {module.courses?.length ? (
+          {module.courses?.filter((course) => !isYearlyExam(course)).length ? (
             <div className="grid gap-3 lg:grid-cols-2">
-              {module.courses.map((course) => <CourseProgressRow key={course.courseId} course={course} />)}
+              {module.courses
+                .filter((course) => !isYearlyExam(course))
+                .map((course) => <CourseProgressRow key={course.courseId} course={course} />)}
             </div>
           ) : <EmptyInline message="Aucun cours n’est encore associé à ce module." />}
         </div>
@@ -197,7 +223,12 @@ function HighlightItem({ icon, label, course, tone }) {
 }
 
 function HighlightsCard({ module }) {
-  const { highlights } = module;
+  const { highlights = {} } = module;
+  const lowest = !isYearlyExam(highlights.lowest) ? highlights.lowest : null;
+  const highest = !isYearlyExam(highlights.highest) ? highlights.highest : null;
+  const recent = !isYearlyExam(highlights.recent) ? highlights.recent : null;
+  const untouched = (highlights.untouched || []).filter((course) => !isYearlyExam(course));
+
   return (
     <Card className="overflow-hidden border-border">
       <CardContent className="p-0">
@@ -206,14 +237,14 @@ function HighlightsCard({ module }) {
           <span className="h-3 w-3 shrink-0 rounded-full" style={{ backgroundColor: module.color || "#3b82f6" }} />
         </div>
         <div className="grid gap-3 p-4 sm:p-5">
-          <HighlightItem icon={<TrendingDown className="h-4 w-4" />} label="Score le plus faible" course={highlights.lowest} tone="red" />
-          <HighlightItem icon={<TrendingUp className="h-4 w-4" />} label="Meilleur score" course={highlights.highest} tone="green" />
-          <HighlightItem icon={<Clock3 className="h-4 w-4" />} label="En cours / récent" course={highlights.recent} tone="blue" />
+          <HighlightItem icon={<TrendingDown className="h-4 w-4" />} label="Score le plus faible" course={lowest} tone="red" />
+          <HighlightItem icon={<TrendingUp className="h-4 w-4" />} label="Meilleur score" course={highest} tone="green" />
+          <HighlightItem icon={<Clock3 className="h-4 w-4" />} label="En cours / récent" course={recent} tone="blue" />
           <div className="rounded-xl border border-dashed border-border bg-muted/35 p-4">
             <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground"><CircleGauge className="h-4 w-4" />Non commencés</div>
-            {highlights.untouched?.length ? (
+            {untouched.length ? (
               <div className="mt-3 flex flex-wrap gap-2">
-                {highlights.untouched.map((course) => <Badge key={course.courseId} variant="secondary" className="font-normal">{course.courseName}</Badge>)}
+                {untouched.map((course) => <Badge key={course.courseId} variant="secondary" className="font-normal">{course.courseName}</Badge>)}
               </div>
             ) : <p className="mt-3 text-sm text-muted-foreground">Tous les cours ont une activité.</p>}
           </div>

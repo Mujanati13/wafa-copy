@@ -113,11 +113,64 @@ test("includes unmapped annual-exam and QCM-bank activity without double countin
     },
   });
 
-  assert.equal(result.summary.courseCount, 3);
+  assert.equal(result.summary.courseCount, 1);
   assert.equal(result.summary.totalQuestions, 3);
   assert.equal(result.summary.answeredQuestions, 3);
   assert.equal(result.summary.correctAnswers, 2);
   assert.equal(result.summary.incorrectAnswers, 1);
   assert.equal(result.summary.completionPercentage, 100);
-  assert.equal(result.modules[0].highlights.recent.courseName, "Entraînement");
+  assert.equal(result.modules[0].highlights.recent.courseName, "Cours thématique");
+  assert.equal(result.modules[0].courses.length, 1);
+  assert.equal(result.modules[0].courses[0].courseName, "Cours thématique");
+});
+
+test("strictly excludes yearly exams from courses and highlights (untouched, recent, lowest, highest)", () => {
+  const sources = buildCompleteActivitySources({
+    courses: [{
+      _id: "course-1",
+      name: "Anatomie du Coeur",
+      moduleId: "module-1",
+      linkedQuestions: ["q1"],
+    }, {
+      _id: "course-2",
+      name: "Anatomie topographique de membre supérieur",
+      moduleId: "module-1",
+      linkedQuestions: ["q2"],
+    }],
+    annualExams: [
+      { _id: "exam-1", name: "2025 ratt", moduleId: "module-1" },
+      { _id: "exam-2", name: "2026 normal", moduleId: "module-1" },
+    ],
+    questions: [
+      { _id: "q1" },
+      { _id: "q2" },
+      { _id: "q3", examId: "exam-1" },
+      { _id: "q4", examId: "exam-2" },
+    ],
+  });
+
+  const result = buildProgressStatistics({
+    modules: [{ _id: "module-1", name: "Anatomie I", semester: "S1" }],
+    courses: sources,
+    answeredQuestions: {
+      q1: { isVerified: true, isCorrect: true, answeredAt: "2026-09-06T10:00:00.000Z" },
+    },
+  });
+
+  assert.equal(result.modules[0].courseCount, 2);
+  assert.equal(result.modules[0].courses.length, 2);
+  assert.deepEqual(result.modules[0].courses.map((c) => c.courseName), [
+    "Anatomie du Coeur",
+    "Anatomie topographique de membre supérieur",
+  ]);
+  assert.equal(result.modules[0].highlights.recent.courseName, "Anatomie du Coeur");
+  assert.deepEqual(result.modules[0].highlights.untouched.map((c) => c.courseName), [
+    "Anatomie topographique de membre supérieur",
+  ]);
+  // Verify '2025 ratt' is not in untouched, recent, or courses
+  assert.equal(result.modules[0].highlights.untouched.some((c) => c.courseName.includes("2025")), false);
+  assert.equal(result.modules[0].courses.some((c) => c.courseName.includes("2025")), false);
+  // But all 4 questions in module are counted in module total
+  assert.equal(result.modules[0].totalQuestions, 4);
+  assert.equal(result.modules[0].answeredQuestions, 1);
 });
