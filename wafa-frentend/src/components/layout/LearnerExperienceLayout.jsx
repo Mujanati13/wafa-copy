@@ -162,7 +162,7 @@ export default function LearnerExperienceLayout() {
       <header className="sticky top-0 z-40 flex h-16 items-center justify-between border-b border-border bg-background/90 px-3 backdrop-blur-xl sm:px-5">
         <div className="flex min-w-0 items-center gap-2 sm:gap-3">
           <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setDrawerOpen(true)} aria-label="Ouvrir la navigation"><Menu className="h-5 w-5" /></Button>
-          <Link to="/dashboard/home" className="imrs-focus-ring flex min-w-0 items-center gap-2 rounded-lg"><img src={logo} alt="YourQcm" className="h-10 w-10 shrink-0 rounded-full object-contain" /><span className="hidden text-base font-bold xs:inline"><span className="text-[#1a237e] dark:text-blue-300">Your</span><span className="text-[#00b0d4]">Qcm</span></span></Link>
+          <Link to="/dashboard/home" className="imrs-focus-ring flex min-w-0 items-center gap-2 rounded-lg"><img src={logo} alt="YourQcm" className="h-10 w-10 shrink-0 rounded-full object-contain" /><span className="text-base font-bold"><span className="text-[#1a237e] dark:text-blue-300">Your</span><span className="text-[#00b0d4]">Qcm</span></span></Link>
           <div className="hidden h-6 w-px bg-border sm:block" />
           <p className="hidden truncate text-sm text-muted-foreground sm:block">Bienvenue, <span className="font-semibold text-foreground">{firstName}</span></p>
         </div>
@@ -223,7 +223,17 @@ export default function LearnerExperienceLayout() {
       <div className="flex min-h-[calc(100vh-4rem)]">
         {drawerOpen && <button aria-label="Fermer la navigation" onClick={() => setDrawerOpen(false)} className="fixed inset-0 z-40 bg-slate-950/45 lg:hidden" />}
         <aside className={cn("fixed inset-y-16 left-0 z-50 flex w-72 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground transition-transform duration-200 lg:sticky lg:top-16 lg:h-[calc(100vh-4rem)] lg:translate-x-0", drawerOpen ? "translate-x-0" : "-translate-x-full", collapsed && "lg:w-20")}>
-          <div className="flex h-14 items-center justify-between border-b border-sidebar-border px-4"><span className={cn("text-xs font-semibold tracking-[.14em] text-indigo-700 uppercase dark:text-indigo-300", collapsed && "lg:hidden")}>Espace étudiant</span><Button variant="ghost" size="icon" className="text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" onClick={() => { if (window.innerWidth < 1024) setDrawerOpen(false); else setCollapsed((value) => !value); }} aria-label="Réduire la navigation">{drawerOpen ? <X className="lg:hidden" /> : <ChevronLeft className={cn("hidden lg:block transition-transform", collapsed && "rotate-180")} />}</Button></div>
+          <div className="flex h-14 items-center justify-between border-b border-sidebar-border px-4">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <img src={logo} alt="YourQcm" className="h-7 w-7 shrink-0 rounded-full object-contain" />
+              <span className={cn("text-xs font-semibold tracking-[.14em] text-indigo-700 uppercase dark:text-indigo-300 truncate", collapsed && "lg:hidden")}>
+                Espace étudiant
+              </span>
+            </div>
+            <Button variant="ghost" size="icon" className="text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" onClick={() => { if (window.innerWidth < 1024) setDrawerOpen(false); else setCollapsed((value) => !value); }} aria-label="Réduire la navigation">
+              {drawerOpen ? <X className="lg:hidden" /> : <ChevronLeft className={cn("hidden lg:block transition-transform", collapsed && "rotate-180")} />}
+            </Button>
+          </div>
           <nav className="flex-1 overflow-y-auto px-3 py-4" aria-label="Navigation étudiant">
             {navGroups.map((group) => (
               <div key={group.label} className="mb-5">

@@ -149,10 +149,10 @@ const TopBar = ({ onMenuClick, loginPath = "/login" }) => {
             <Menu className="h-4 w-4 sm:h-5 sm:w-5" />
           </Button>
 
-          {/* Logo - Hidden on mobile, visible on sm and up */}
-          <div className="hidden sm:flex items-center gap-2 flex-shrink-0">
-            <img src={logo} alt="YourQcm" className="h-10 w-10 shrink-0 rounded-full object-contain" />
-            <div className="hidden sm:flex flex-col">
+          {/* Logo in title header */}
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <img src={logo} alt="YourQcm" className="h-9 w-9 sm:h-10 sm:w-10 shrink-0 rounded-full object-contain" />
+            <div className="flex flex-col">
               <span className="text-sm font-bold leading-none">{landingSettings.siteName ? landingSettings.siteName : <><span className="text-[#1a237e] dark:text-blue-300">Your</span><span className="text-[#00b0d4]">Qcm</span></>}</span>
               <span className="text-xs text-muted-foreground">{landingSettings.siteVersion || 'v1.1'}</span>
             </div>
