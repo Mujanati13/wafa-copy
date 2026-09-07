@@ -132,14 +132,13 @@ const SelectFreeSemester = () => {
       const response = await userService.selectFreeSemester(selectedSemester, module._id);
 
       if (response.success) {
-        toast.success('Examen gratuit activé !', {
-          description: 'L’examen le plus récent de ce module va s’ouvrir.',
+        toast.success('Module activé avec succès !', {
+          description: 'Bienvenue sur votre tableau de bord.',
           duration: 3000,
         });
 
         userService.clearProfileCache();
-        const examId = response.data?.user?.freeExam;
-        navigate(examId ? `/exam/${examId}?type=exam` : '/dashboard/home', { replace: true });
+        navigate('/dashboard/home', { replace: true });
       }
     } catch (error) {
       const message = error.response?.data?.message || 'Une erreur est survenue';
@@ -202,7 +201,7 @@ const SelectFreeSemester = () => {
             Choisissez votre module gratuit
           </h1>
           <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-            Le plan gratuit donne accès à <span className="font-semibold text-primary">un examen dans un seul module</span>. Choisissez votre semestre et votre module : l’examen le plus récent s’ouvrira automatiquement.
+            Le plan gratuit donne accès à <span className="font-semibold text-primary">un examen dans un seul module</span>. Choisissez votre semestre et votre module pour commencer sur votre tableau de bord.
           </p>
         </Motion.div>
 
