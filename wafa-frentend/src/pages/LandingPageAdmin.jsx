@@ -843,7 +843,7 @@ const LandingPageAdmin = () => {
                   <Label htmlFor="contactPhone">Téléphone</Label>
                   <Input
                     id="contactPhone"
-                    placeholder="+212 6XX XXX XXX"
+                    placeholder="0725089912"
                     value={settings.contactPhone}
                     onChange={(e) => handleChange("contactPhone", e.target.value)}
                   />

@@ -863,10 +863,9 @@ function LandingFooter({ settings, text }) {
   ].filter((item) => item.href && item.href !== "#");
   const supportLinks = [
     ["#faq", "FAQ"],
-    settings.contactEmail && [`mailto:${settings.contactEmail}`, settings.contactEmail],
     [`tel:${SUPPORT_PHONE_INTERNATIONAL}`, SUPPORT_PHONE],
     [WHATSAPP_URL, "WhatsApp"],
-  ].filter(Boolean);
+  ];
 
   return (
     <footer className="bg-slate-900 px-4 py-10 pb-40 text-white sm:px-6 sm:py-12 md:py-16 lg:px-8" role="contentinfo">
