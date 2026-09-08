@@ -14,6 +14,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { PageHeader } from "@/components/shared";
 import { toast } from "sonner";
 import NewExamForm from "@/components/admin/NewExamForm";
+import ImportYearExamsDialog from "@/components/admin/ImportYearExamsDialog";
 import { api } from "@/lib/utils";
 
 const DEFAULT_EXAM_IMAGE = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSMC9M_cEyx3SqKeJVj_RbrtTxkDXhVP1k_2A&s";
@@ -488,7 +489,8 @@ const ExamParYears = () => {
             <h2 className="text-2xl font-bold text-black mb-1">Répertoire des Examens</h2>
             <p className="text-muted-foreground">Total: <span className="font-semibold text-black">{filteredExams.length}</span> examens</p>
           </div>
-          <div className="flex flex-col gap-2 sm:flex-row">
+          <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+            <ImportYearExamsDialog modules={modules} onImported={fetchExams} />
             <label className="inline-flex h-11 cursor-pointer items-center justify-center gap-2 rounded-md border border-blue-200 bg-white px-5 font-medium text-blue-700 shadow-sm transition hover:bg-blue-50 focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2">
               <ImageUp className="h-5 w-5" />
               Image globale

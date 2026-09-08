@@ -1,5 +1,6 @@
 import express from "express";
 import { examController } from "../controllers/examController.js";
+import { downloadYearExamTemplate, importYearExams } from "../controllers/yearExamImportController.js";
 import { hasExamAccess, isAdmin, isAuthenticated } from "../middleware/authMiddleware.js";
 import ExamParYearSchema from "../validators/ExamParYearSchema.js"
 import validate from "../middleware/validateSchema.js";
@@ -8,6 +9,25 @@ import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
 const router = express.Router();
+
+const yearExamUpload = multer({
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 5 * 1024 * 1024, files: 1, fields: 1 },
+    fileFilter: (_req, file, callback) => callback(
+        /\.(xlsx|xls)$/i.test(file.originalname) ? null : new Error('Formats acceptés : .xlsx et .xls.'), true
+    ),
+}).single('file');
+
+router.get('/import-template', isAuthenticated, isAdmin, downloadYearExamTemplate);
+router.post('/import', isAuthenticated, isAdmin, (req, res, next) => {
+    yearExamUpload(req, res, error => {
+        if (!error) return next();
+        res.status(error.code === 'LIMIT_FILE_SIZE' ? 413 : 400).json({
+            success: false,
+            message: error.code === 'LIMIT_FILE_SIZE' ? 'Le fichier dépasse 5 Mo.' : 'Téléversement invalide. Utilisez un seul fichier .xlsx ou .xls de 5 Mo maximum.',
+        });
+    });
+}, importYearExams);
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
