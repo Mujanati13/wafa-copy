@@ -1,12 +1,12 @@
 export const PROFILE_UPDATED_EVENT = 'user-profile-updated';
 
 // Storage writes alone do not notify React or other listeners in the same tab.
-export function publishUserProfile(user) {
+export function publishUserProfile(user, { notify = false } = {}) {
   const serialized = JSON.stringify(user);
   const changed = localStorage.getItem('userProfile') !== serialized;
   localStorage.setItem('userProfile', serialized);
   localStorage.setItem('user', serialized);
-  if (changed) window.dispatchEvent(new CustomEvent(PROFILE_UPDATED_EVENT, { detail: user }));
+  if (changed || notify) window.dispatchEvent(new CustomEvent(PROFILE_UPDATED_EVENT, { detail: user }));
 }
 
 export function resolveProfileSemester(user, currentSemester) {

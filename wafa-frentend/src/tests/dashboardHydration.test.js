@@ -107,3 +107,19 @@ test('free-module activation publishes returned access before navigation', async
   assert.equal(state.events[0].detail.freeModule, 'anatomie');
   assert.equal((await state.userService.getUserProfile()).freeModule, 'anatomie');
 });
+
+
+test('forced profile refresh rejects instead of accepting an incomplete cached login profile', async () => {
+  const state = await setup(async () => { throw new Error('profile offline'); });
+  state.localStorage.setItem('user', JSON.stringify({ _id: 'user', plan: 'Free', semesters: ['S3'] }));
+  await assert.rejects(state.userService.getUserProfile(true), /profile offline/);
+});
+
+test('access resolution can notify mounted consumers even when storage already has that profile', async () => {
+  const state = await setup(async () => ({}));
+  const user = { _id: 'user', plan: 'Free', freeModule: 'anatomy', semesters: ['S3'] };
+  state.localStorage.setItem('userProfile', JSON.stringify(user));
+  state.profile.publishUserProfile(user, { notify: true });
+  assert.equal(state.events.length, 1);
+  assert.equal(state.events[0].detail.freeModule, 'anatomy');
+});

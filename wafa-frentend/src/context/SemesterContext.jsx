@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
 import { userService } from '@/services/userService';
 import { PROFILE_UPDATED_EVENT, resolveProfileSemester } from '@/utils/profileState';
 
@@ -40,6 +40,9 @@ export const SemesterProvider = ({ children }) => {
         return [];
     });
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [reloadKey, setReloadKey] = useState(0);
+    const refreshProfile = useCallback(() => setReloadKey(value => value + 1), []);
 
     useEffect(() => {
         if (selectedSemester) {
@@ -54,8 +57,9 @@ export const SemesterProvider = ({ children }) => {
         let active = true;
         let requestVersion = 0;
         const applyProfile = (profile) => {
-            setUser(profile);
-            setUserSemesters(Array.isArray(profile?.semesters) ? profile.semesters : []);
+            setUser(current => JSON.stringify(current) === JSON.stringify(profile) ? current : profile);
+            const semesters = Array.isArray(profile?.semesters) ? profile.semesters : [];
+            setUserSemesters(current => JSON.stringify(current) === JSON.stringify(semesters) ? current : semesters);
             setSelectedSemester(current => resolveProfileSemester(profile, current));
         };
         const handleProfileUpdated = (event) => {
@@ -64,11 +68,13 @@ export const SemesterProvider = ({ children }) => {
         const fetchUserSemesters = async () => {
             const version = ++requestVersion;
             setLoading(true);
+            setError(null);
             try {
                 const userProfile = await userService.getUserProfile(true);
                 if (!active || version !== requestVersion) return;
                 applyProfile(userProfile);
             } catch (error) {
+                if (active && version === requestVersion) setError(error);
                 console.error("Error fetching user semesters:", error);
                 // Fallback to localStorage - already initialized above
             } finally {
@@ -89,10 +95,12 @@ export const SemesterProvider = ({ children }) => {
             window.removeEventListener(PROFILE_UPDATED_EVENT, handleProfileUpdated);
             window.removeEventListener('auth-state-changed', handleAuthStateChanged);
         };
-    }, []);
+    }, [reloadKey]);
 
     const value = {
         user,
+        error,
+        refreshProfile,
         selectedSemester,
         setSelectedSemester,
         userSemesters,

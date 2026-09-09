@@ -142,6 +142,7 @@ export const userService = {
             console.error('Error fetching user profile:', error);
             
             // Return cached data from localStorage as fallback
+            if (forceRefresh) throw error;
             const cached = localStorage.getItem('userProfile') || localStorage.getItem('user');
             if (cached) {
                 try {

@@ -7,14 +7,14 @@ import ModuleCard from "@/components/Dashboard/ModuleCard";
 import PromotionalUpgradeBanner from "@/components/Dashboard/PromotionalUpgradeBanner";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useSemester } from "@/context/SemesterContext";
-import { moduleService } from "@/services/moduleService";
+import { getLearnerModules } from "@/services/learnerModuleService";
 import { dashboardService } from "@/services/dashboardService";
 import { displaySubscriptionPlanName, isPremiumPlan } from "@/utils/subscriptionDisplay";
 import { cn } from "@/lib/utils";
 
 export default function LearnerDashboard() {
   const navigate = useNavigate();
-  const { user, selectedSemester, setSelectedSemester, userSemesters, loading: semesterLoading } = useSemester();
+  const { user, selectedSemester, setSelectedSemester, userSemesters, loading: semesterLoading, error: profileError, refreshProfile } = useSemester();
   const [modules, setModules] = useState([]);
   const [stats, setStats] = useState(null);
   const [rank, setRank] = useState(0);
@@ -24,17 +24,17 @@ export default function LearnerDashboard() {
   const accessKey = JSON.stringify([user?._id, user?.plan, user?.freeModule?._id || user?.freeModule, userSemesters]);
   const [loadedKey, setLoadedKey] = useState(null);
   const requestKey = JSON.stringify([accessKey, selectedSemester, reloadKey]);
-  const pending = semesterLoading || loading || loadedKey !== requestKey;
+  const pending = semesterLoading || (!profileError && (loading || loadedKey !== requestKey));
 
   useEffect(() => {
-    if (semesterLoading) return;
+    if (semesterLoading || profileError) return;
     let active = true;
     setLoading(true);
     setError(false);
     setModules([]);
     setStats(null);
     setRank(0);
-    Promise.allSettled([moduleService.getAllmodules(true), dashboardService.getUserStats(selectedSemester, true), dashboardService.getLeaderboardRank(selectedSemester, true)])
+    Promise.allSettled([getLearnerModules(user), dashboardService.getUserStats(selectedSemester, true), dashboardService.getLeaderboardRank(selectedSemester, true)])
       .then(([moduleResult, statsResult, rankResult]) => {
         if (!active) return;
         if (moduleResult.status === "fulfilled") {
@@ -48,7 +48,7 @@ export default function LearnerDashboard() {
       })
       .finally(() => active && setLoading(false));
     return () => { active = false; };
-  }, [selectedSemester, semesterLoading, accessKey, reloadKey, requestKey]);
+  }, [selectedSemester, semesterLoading, accessKey, reloadKey, requestKey, user, profileError]);
 
   const semesterModules = useMemo(() => {
     const moduleProgress = stats?.moduleProgress || [];
@@ -208,7 +208,7 @@ export default function LearnerDashboard() {
       />
     </section>
 
-    {pending ? <DashboardSkeleton /> : error ? <div role="alert" className="rounded-xl border border-amber-300 bg-amber-50 p-5 text-amber-900"><p>Impossible de charger votre tableau de bord. Vos données n’ont pas été modifiées.</p><Button variant="outline" className="mt-3" onClick={() => setReloadKey(value => value + 1)}>Réessayer</Button></div> : <>
+    {pending ? <DashboardSkeleton /> : error || profileError ? <div role="alert" className="rounded-xl border border-amber-300 bg-amber-50 p-5 text-amber-900"><p>Impossible de charger votre tableau de bord. Vos données n’ont pas été modifiées.</p><Button variant="outline" className="mt-3" onClick={() => { refreshProfile(); setReloadKey(value => value + 1); }}>Réessayer</Button></div> : <>
 
 
       <section className="hidden gap-4 lg:grid lg:grid-cols-2 xl:grid-cols-4">
