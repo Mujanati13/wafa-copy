@@ -5,6 +5,7 @@ import {
   Home, Library, Loader2, LogOut, Menu, NotebookPen, Settings, Trophy, UserRound, X,
 } from "lucide-react";
 import { SemesterProvider } from "@/context/SemesterContext";
+import { PROFILE_UPDATED_EVENT } from "@/utils/profileState";
 import { useSemester } from "@/context/SemesterContext";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -65,7 +66,8 @@ export default function LearnerExperienceLayout() {
     const sync = () => setUser(parseUser());
     window.addEventListener("storage", sync);
     window.addEventListener("auth-state-changed", sync);
-    return () => { window.removeEventListener("storage", sync); window.removeEventListener("auth-state-changed", sync); };
+    window.addEventListener(PROFILE_UPDATED_EVENT, sync);
+    return () => { window.removeEventListener("storage", sync); window.removeEventListener("auth-state-changed", sync); window.removeEventListener(PROFILE_UPDATED_EVENT, sync); };
   }, []);
 
   useEffect(() => {
@@ -303,7 +305,7 @@ function NavigationItem({ item, active, collapsed, locked }) {
 function ModuleNavigation({ collapsed, setCollapsed, user }) {
   const location = useLocation();
   const navigate = useNavigate();
-  const { selectedSemester, userSemesters } = useSemester();
+  const { selectedSemester, userSemesters, loading: profileLoading } = useSemester();
   const isFree = !isPremiumPlan(user?.plan);
   const freeModuleId = String(user?.freeModule?._id || user?.freeModule || "");
   const moduleRouteActive = location.pathname.startsWith("/dashboard/subjects/");
@@ -382,14 +384,14 @@ function ModuleNavigation({ collapsed, setCollapsed, user }) {
       >
         <BookOpen className="h-5 w-5 shrink-0" aria-hidden="true" />
         <span className={cn("min-w-0 flex-1 truncate text-left", collapsed && "lg:hidden")}>Mes modules</span>
-        {!collapsed && !loading && (
+        {!collapsed && !loading && !profileLoading && (
           <span className="rounded-full bg-indigo-100 px-1.5 text-[10px] font-semibold text-indigo-700 dark:bg-indigo-300/15 dark:text-indigo-200" aria-label={`${visibleModules.length} modules`}>{visibleModules.length}</span>
         )}
         <ChevronDown className={cn("h-4 w-4 shrink-0 transition-transform", open && "rotate-180", collapsed && "lg:hidden")} aria-hidden="true" />
       </button>
 
       <div id="learner-sidebar-modules" hidden={!open || collapsed} className="ml-5 mt-1 space-y-1 border-l border-indigo-200 pl-2 dark:border-indigo-300/20">
-        {loading ? (
+        {loading || profileLoading ? (
           <div className="flex items-center gap-2 px-3 py-3 text-xs text-sidebar-foreground/60"><Loader2 className="h-4 w-4 animate-spin" />Chargement des modules…</div>
         ) : error ? (
           <div className="px-3 py-3 text-xs text-sidebar-foreground/65">

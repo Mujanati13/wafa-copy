@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { BookOpen, ChevronDown, CircleAlert, Crown, Lock, Medal, Star, TrendingUp } from "lucide-react";
+import { BookOpen, ChevronDown, Crown, Medal, Star, TrendingUp } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import ModuleCard from "@/components/Dashboard/ModuleCard";
@@ -12,31 +12,29 @@ import { dashboardService } from "@/services/dashboardService";
 import { displaySubscriptionPlanName, isPremiumPlan } from "@/utils/subscriptionDisplay";
 import { cn } from "@/lib/utils";
 
-const getCachedUser = () => {
-  try { return JSON.parse(localStorage.getItem("userProfile") || localStorage.getItem("user") || "{}"); } catch { return {}; }
-};
-
 export default function LearnerDashboard() {
   const navigate = useNavigate();
-  const { selectedSemester, setSelectedSemester, userSemesters, loading: semesterLoading } = useSemester();
-  const [user, setUser] = useState(getCachedUser);
+  const { user, selectedSemester, setSelectedSemester, userSemesters, loading: semesterLoading } = useSemester();
   const [modules, setModules] = useState([]);
   const [stats, setStats] = useState(null);
   const [rank, setRank] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
+  const accessKey = JSON.stringify([user?._id, user?.plan, user?.freeModule?._id || user?.freeModule, userSemesters]);
+  const [loadedKey, setLoadedKey] = useState(null);
+  const requestKey = JSON.stringify([accessKey, selectedSemester, reloadKey]);
+  const pending = semesterLoading || loading || loadedKey !== requestKey;
 
   useEffect(() => {
-    const syncUser = () => setUser(getCachedUser());
-    window.addEventListener("auth-state-changed", syncUser);
-    return () => window.removeEventListener("auth-state-changed", syncUser);
-  }, []);
-
-  useEffect(() => {
+    if (semesterLoading) return;
     let active = true;
     setLoading(true);
     setError(false);
-    Promise.allSettled([moduleService.getAllmodules(), dashboardService.getUserStats(selectedSemester), dashboardService.getLeaderboardRank(selectedSemester)])
+    setModules([]);
+    setStats(null);
+    setRank(0);
+    Promise.allSettled([moduleService.getAllmodules(true), dashboardService.getUserStats(selectedSemester, true), dashboardService.getLeaderboardRank(selectedSemester, true)])
       .then(([moduleResult, statsResult, rankResult]) => {
         if (!active) return;
         if (moduleResult.status === "fulfilled") {
@@ -45,11 +43,12 @@ export default function LearnerDashboard() {
         }
         if (statsResult.status === "fulfilled") setStats(statsResult.value?.data?.stats || statsResult.value?.stats || null);
         if (rankResult.status === "fulfilled") setRank(rankResult.value?.rank || 0);
-        if (moduleResult.status === "rejected") setError(true);
+        setError([moduleResult, statsResult, rankResult].some(result => result.status === "rejected"));
+        setLoadedKey(requestKey);
       })
       .finally(() => active && setLoading(false));
     return () => { active = false; };
-  }, [selectedSemester]);
+  }, [selectedSemester, semesterLoading, accessKey, reloadKey, requestKey]);
 
   const semesterModules = useMemo(() => {
     const moduleProgress = stats?.moduleProgress || [];
@@ -104,35 +103,27 @@ export default function LearnerDashboard() {
     return semesterModules;
   }, [isFreeUser, freeModuleId, modules, stats, semesterModules]);
 
-  const availableSemesters = useMemo(() => {
-    const fromModules = Array.from(new Set(modules.map((m) => m.semester).filter(Boolean)));
-    if (fromModules.length) {
-      return fromModules.sort((a, b) => {
-        const numA = parseInt(a.replace(/\D/g, ""), 10) || 0;
-        const numB = parseInt(b.replace(/\D/g, ""), 10) || 0;
-        return numA - numB;
-      });
-    }
-    return userSemesters.length ? userSemesters : ["S1", "S2", "S3", "S4", "S5", "S6"];
-  }, [modules, userSemesters]);
-
   const freeModuleSemester = useMemo(() => {
     if (!isFreeUser || !freeModuleId) return null;
     const found = modules.find((m) => String(m._id || m.id) === freeModuleId);
     return found?.semester || null;
   }, [isFreeUser, freeModuleId, modules]);
 
-  const displayedSemesters = isFreeUser
-    ? (freeModuleSemester ? [freeModuleSemester] : availableSemesters)
-    : (userSemesters.length ? userSemesters : availableSemesters);
+  // Show only confirmed access; never flash the full catalog during hydration.
+  const displayedSemesters = useMemo(() => {
+    if (semesterLoading) return [];
+    if (isFreeUser && freeModuleSemester) return [freeModuleSemester];
+    return [...new Set(userSemesters)];
+  }, [semesterLoading, isFreeUser, freeModuleSemester, userSemesters]);
 
   useEffect(() => {
+    if (semesterLoading) return;
     if (isFreeUser && freeModuleSemester && selectedSemester !== freeModuleSemester) {
       setSelectedSemester(freeModuleSemester);
     } else if (!selectedSemester && displayedSemesters.length) {
       setSelectedSemester(displayedSemesters[0]);
     }
-  }, [isFreeUser, freeModuleSemester, selectedSemester, displayedSemesters, setSelectedSemester]);
+  }, [isFreeUser, freeModuleSemester, selectedSemester, displayedSemesters, setSelectedSemester, semesterLoading]);
 
   const handleCourseClick = (module) => {
     const moduleId = module._id || module.id;
@@ -182,9 +173,9 @@ export default function LearnerDashboard() {
         <p className="mt-2 max-w-xl text-sm leading-6 text-slate-600 dark:text-blue-100">Une petite session aujourd'hui construit de grands résultats demain.</p>
       </div>
       <div className="relative mt-6 grid grid-cols-3 border-t border-white/70 pt-5 dark:border-white/15">
-        <DashboardStat icon={<Medal className="h-6 w-6" aria-hidden="true" />} label="Classement" value={loading ? "…" : rank ? `#${rank}` : "—"} tone="amber" onClick={handleLeaderboardClick} />
-        <DashboardStat icon={<TrendingUp className="h-6 w-6" aria-hidden="true" />} label="Progression" value={loading ? "…" : `${semesterProgress}%`} tone="emerald" />
-        <DashboardStat icon={<Star className="h-6 w-6" aria-hidden="true" />} label="Points" value={loading ? "…" : totalPoints.toLocaleString("fr-FR")} tone="gold" />
+        <DashboardStat icon={<Medal className="h-6 w-6" aria-hidden="true" />} label="Classement" value={pending ? "…" : error ? "\u2014" : rank ? `#${rank}` : "—"} tone="amber" onClick={handleLeaderboardClick} />
+        <DashboardStat icon={<TrendingUp className="h-6 w-6" aria-hidden="true" />} label="Progression" value={pending ? "…" : error ? "\u2014" : `${semesterProgress}%`} tone="emerald" />
+        <DashboardStat icon={<Star className="h-6 w-6" aria-hidden="true" />} label="Points" value={pending ? "…" : error ? "\u2014" : totalPoints.toLocaleString("fr-FR")} tone="gold" />
       </div>
     </section>
 
@@ -212,15 +203,13 @@ export default function LearnerDashboard() {
       <DesktopSemesterPicker
         current={selectedSemester}
         semesters={displayedSemesters}
-        userSemesters={userSemesters}
-        isFreeUser={isFreeUser}
         onChange={setSelectedSemester}
         disabled={semesterLoading}
       />
     </section>
 
-    {loading ? <DashboardSkeleton /> : <>
-      {error && <div role="alert" className="flex items-start gap-3 rounded-2xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900 dark:bg-amber-950/30 dark:text-amber-100"><CircleAlert className="mt-0.5 h-5 w-5 shrink-0" /><div><strong>Les derniers contenus ne sont pas disponibles.</strong><p className="mt-1">Réessayez dans un instant. Vos pages de révision restent accessibles.</p></div></div>}
+    {pending ? <DashboardSkeleton /> : error ? <div role="alert" className="rounded-xl border border-amber-300 bg-amber-50 p-5 text-amber-900"><p>Impossible de charger votre tableau de bord. Vos données n’ont pas été modifiées.</p><Button variant="outline" className="mt-3" onClick={() => setReloadKey(value => value + 1)}>Réessayer</Button></div> : <>
+
 
       <section className="hidden gap-4 lg:grid lg:grid-cols-2 xl:grid-cols-4">
         <StatCard label="Progression" value={`${progress}%`} description="Dans ce semestre" tone="cyan" />
@@ -241,8 +230,6 @@ export default function LearnerDashboard() {
           <MobileSemesterPicker
             current={selectedSemester}
             semesters={displayedSemesters}
-            userSemesters={userSemesters}
-            isFreeUser={isFreeUser}
             onChange={setSelectedSemester}
             disabled={semesterLoading}
           />
@@ -271,37 +258,31 @@ export default function LearnerDashboard() {
   </div>;
 }
 
-function MobileSemesterPicker({ current, semesters, userSemesters = [], isFreeUser = false, onChange, disabled }) {
-  const options = semesters.length ? semesters : current ? [current] : [];
+function MobileSemesterPicker({ current, semesters, onChange, disabled }) {
+  const options = semesters;
   return (
     <label className="relative shrink-0">
       <span className="sr-only">Choisir un semestre</span>
       <select
-        value={current || ""}
+        value={options.includes(current) ? current : ""}
         disabled={disabled || !options.length}
         onChange={(event) => onChange(event.target.value)}
         className="imrs-focus-ring h-10 appearance-none rounded-xl border border-blue-200 bg-primary py-0 pl-4 pr-9 text-sm font-bold text-primary-foreground shadow-md disabled:cursor-not-allowed disabled:opacity-60 [&>option]:bg-white [&>option]:text-slate-900"
       >
         {!options.length && <option value="">—</option>}
-        {options.map((semester) => {
-          const isSubscribed = !isFreeUser || userSemesters.includes(semester);
-          return (
-            <option key={semester} value={semester}>
-              {semester}{isFreeUser && !isSubscribed ? " 🔒" : ""}
-            </option>
-          );
-        })}
+        {options.map((semester) => (
+          <option key={semester} value={semester}>{semester}</option>
+        ))}
       </select>
       <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-primary-foreground" aria-hidden="true" />
     </label>
   );
 }
 
-function DesktopSemesterPicker({ current, semesters, userSemesters = [], isFreeUser = false, onChange, disabled }) {
+function DesktopSemesterPicker({ current, semesters, onChange, disabled }) {
   return (
     <div className="flex flex-wrap gap-2" aria-label="Choisir un semestre">
-      {(semesters.length ? semesters : current ? [current] : []).map((semester) => {
-        const isSubscribed = !isFreeUser || userSemesters.includes(semester);
+      {semesters.map((semester) => {
         const isSelected = current === semester;
         return (
           <button
@@ -316,9 +297,7 @@ function DesktopSemesterPicker({ current, semesters, userSemesters = [], isFreeU
             }`}
           >
             <span>{semester}</span>
-            {isFreeUser && !isSubscribed && (
-              <Lock className="h-3 w-3 opacity-60" aria-hidden="true" />
-            )}
+
           </button>
         );
       })}

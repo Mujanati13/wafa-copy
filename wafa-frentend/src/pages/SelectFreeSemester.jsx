@@ -137,7 +137,6 @@ const SelectFreeSemester = () => {
           duration: 3000,
         });
 
-        userService.clearProfileCache();
         navigate('/dashboard/home', { replace: true });
       }
     } catch (error) {

@@ -80,7 +80,7 @@ export const moduleService = {
             
             // Return cached data as fallback
             const cached = localStorage.getItem('modules');
-            if (cached) {
+            if (cached && !forceRefresh) {
                 return { data: { data: JSON.parse(cached) } };
             }
             throw error;

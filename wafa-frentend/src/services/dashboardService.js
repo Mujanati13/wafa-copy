@@ -39,13 +39,13 @@ export const dashboardService = {
   },
 
   // Get user stats - optionally filtered by semester with caching
-  getUserStats: async (semester = null) => {
+  getUserStats: async (semester = null, forceRefresh = false) => {
     try {
       const cacheKey = semester || 'all';
       const now = Date.now();
 
       // Return cached if valid
-      if (statsCache[cacheKey] && statsCacheTime[cacheKey] && 
+      if (!forceRefresh && statsCache[cacheKey] && statsCacheTime[cacheKey] &&
           (now - statsCacheTime[cacheKey]) < STATS_CACHE_EXPIRY) {
         return statsCache[cacheKey];
       }
@@ -78,13 +78,13 @@ export const dashboardService = {
   },
 
   // Get leaderboard rank for current user - grouped by year (2 semesters) with caching
-  getLeaderboardRank: async (semester = null) => {
+  getLeaderboardRank: async (semester = null, forceRefresh = false) => {
     try {
       const cacheKey = semester || 'all';
       const now = Date.now();
 
       // Return cached if valid
-      if (leaderboardCache[cacheKey] && leaderboardCacheTime[cacheKey] && 
+      if (!forceRefresh && leaderboardCache[cacheKey] && leaderboardCacheTime[cacheKey] &&
           (now - leaderboardCacheTime[cacheKey]) < LEADERBOARD_CACHE_EXPIRY) {
         return leaderboardCache[cacheKey];
       }
@@ -125,6 +125,7 @@ export const dashboardService = {
       return result;
     } catch (error) {
       console.error("Error fetching leaderboard rank:", error);
+      if (forceRefresh) throw error;
       return { rank: 0, leaderboard: [] };
     }
   },

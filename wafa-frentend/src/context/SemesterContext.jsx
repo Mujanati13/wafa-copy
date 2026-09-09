@@ -1,5 +1,6 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { userService } from '@/services/userService';
+import { PROFILE_UPDATED_EVENT, resolveProfileSemester } from '@/utils/profileState';
 
 const SemesterContext = createContext();
 const SELECTED_SEMESTER_STORAGE_KEY = 'selectedSemester';
@@ -16,6 +17,7 @@ const getCachedUserProfile = () => {
 };
 
 export const SemesterProvider = ({ children }) => {
+    const [user, setUser] = useState(getCachedUserProfile);
     // Initialize from persisted selected semester for stable UX across route transitions
     const [selectedSemester, setSelectedSemester] = useState(() => {
         const persisted = localStorage.getItem(SELECTED_SEMESTER_STORAGE_KEY);
@@ -37,7 +39,7 @@ export const SemesterProvider = ({ children }) => {
         }
         return [];
     });
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         if (selectedSemester) {
@@ -49,44 +51,32 @@ export const SemesterProvider = ({ children }) => {
 
     // Fetch user profile to get subscribed semesters
     useEffect(() => {
+        let active = true;
+        let requestVersion = 0;
+        const applyProfile = (profile) => {
+            setUser(profile);
+            setUserSemesters(Array.isArray(profile?.semesters) ? profile.semesters : []);
+            setSelectedSemester(current => resolveProfileSemester(profile, current));
+        };
+        const handleProfileUpdated = (event) => {
+            if (active) applyProfile(event.detail);
+        };
         const fetchUserSemesters = async () => {
+            const version = ++requestVersion;
+            setLoading(true);
             try {
-                // Only show loading if we don't have cached data
-                if (userSemesters.length === 0) {
-                    setLoading(true);
-                }
-                
                 const userProfile = await userService.getUserProfile(true);
-                const semesters = Array.isArray(userProfile?.semesters) ? userProfile.semesters : [];
-                setUserSemesters(semesters);
-
-                // Keep selected semester if still valid; otherwise fallback safely
-                setSelectedSemester((currentSemester) => {
-                    if (semesters.length === 0) return null;
-
-                    if (currentSemester && semesters.includes(currentSemester)) {
-                        return currentSemester;
-                    }
-
-                    const persisted = localStorage.getItem(SELECTED_SEMESTER_STORAGE_KEY);
-                    if (persisted && semesters.includes(persisted)) {
-                        return persisted;
-                    }
-
-                    return semesters[0];
-                });
-
-                // Update localStorage with latest user data
-                localStorage.setItem("user", JSON.stringify(userProfile));
-                localStorage.setItem("userProfile", JSON.stringify(userProfile));
+                if (!active || version !== requestVersion) return;
+                applyProfile(userProfile);
             } catch (error) {
                 console.error("Error fetching user semesters:", error);
                 // Fallback to localStorage - already initialized above
             } finally {
-                setLoading(false);
+                if (active && version === requestVersion) setLoading(false);
             }
         };
 
+        window.addEventListener(PROFILE_UPDATED_EVENT, handleProfileUpdated);
         fetchUserSemesters();
 
         const handleAuthStateChanged = () => {
@@ -95,11 +85,14 @@ export const SemesterProvider = ({ children }) => {
 
         window.addEventListener('auth-state-changed', handleAuthStateChanged);
         return () => {
+            active = false;
+            window.removeEventListener(PROFILE_UPDATED_EVENT, handleProfileUpdated);
             window.removeEventListener('auth-state-changed', handleAuthStateChanged);
         };
     }, []);
 
     const value = {
+        user,
         selectedSemester,
         setSelectedSemester,
         userSemesters,

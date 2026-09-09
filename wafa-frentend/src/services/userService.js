@@ -1,4 +1,5 @@
 import { api } from '../lib/utils.js';
+import { publishUserProfile } from '../utils/profileState.js';
 
 export const userService = {
     // Get all users with pagination
@@ -88,9 +89,12 @@ export const userService = {
     _profileCacheTime: null,
     _profileCacheExpiry: 30000, // 30 seconds cache
     _pendingProfileRequest: null,
+    _profileGeneration: 0,
 
     // Get current user profile with caching
     getUserProfile: async (forceRefresh = false) => {
+        const generation = userService._profileGeneration;
+        let request;
         try {
             const now = Date.now();
             
@@ -107,9 +111,8 @@ export const userService = {
                 return userService._pendingProfileRequest;
             }
 
-            // Clear cached user data if force refresh is requested
+            // Keep the current snapshot available while refreshing it.
             if (forceRefresh) {
-                localStorage.removeItem('userProfile');
                 userService._profileCache = null;
             }
 
@@ -119,18 +122,23 @@ export const userService = {
                 const user = response.data.data.user;
 
                 // Update cache
+                if (generation !== userService._profileGeneration) {
+                    return userService.getUserProfile();
+                }
                 userService._profileCache = user;
                 userService._profileCacheTime = Date.now();
-                localStorage.setItem('userProfile', JSON.stringify(user));
+                publishUserProfile(user);
 
                 return user;
             })();
 
-            const result = await userService._pendingProfileRequest;
-            userService._pendingProfileRequest = null;
+            request = userService._pendingProfileRequest;
+            const result = await request;
+            if (userService._pendingProfileRequest === request) userService._pendingProfileRequest = null;
             return result;
         } catch (error) {
-            userService._pendingProfileRequest = null;
+            if (request && userService._pendingProfileRequest === request) userService._pendingProfileRequest = null;
+            if (generation !== userService._profileGeneration) return userService.getUserProfile();
             console.error('Error fetching user profile:', error);
             
             // Return cached data from localStorage as fallback
@@ -149,6 +157,8 @@ export const userService = {
 
     // Clear profile cache (call this on logout or profile update)
     clearProfileCache: () => {
+        userService._profileGeneration += 1;
+        userService._pendingProfileRequest = null;
         userService._profileCache = null;
         userService._profileCacheTime = null;
         localStorage.removeItem('userProfile');
@@ -268,9 +278,18 @@ export const userService = {
     // Select free semester for new users
     selectFreeSemester: async (semester, moduleId) => {
         try {
-            // Clear profile cache since we're updating the user
-            userService.clearProfileCache();
             const response = await api.post('/users/select-free-semester', { semester, moduleId });
+            // Commit access before navigation; invalidate requests started before selection.
+            userService.clearProfileCache();
+            const selectedUser = response.data?.data?.user;
+            if (selectedUser) {
+                let previous = {};
+                try { previous = JSON.parse(localStorage.getItem('user') || '{}'); } catch { /* No usable snapshot. */ }
+                const profile = { ...(previous?._id === selectedUser._id ? previous : {}), ...selectedUser };
+                userService._profileCache = profile;
+                userService._profileCacheTime = Date.now();
+                publishUserProfile(profile);
+            }
             return response.data;
         } catch (error) {
             console.error('Error selecting free semester:', error);
