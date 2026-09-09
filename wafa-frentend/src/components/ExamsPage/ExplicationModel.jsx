@@ -616,7 +616,7 @@ const ExplicationModel = ({ question, setShowExplanation, userPlan = "Free" }) =
                   </h4>
                   <p className="text-muted-foreground text-sm mb-4">
                     Cliquez sur le bouton ci-dessous pour générer une explication<br />
-                    avec l'intelligence artificielle Gemini.
+                    avec l'intelligence artificielle.
                   </p>
                   <Button
                     onClick={handleGenerateAIExplanation}
@@ -631,7 +631,7 @@ const ExplicationModel = ({ question, setShowExplanation, userPlan = "Free" }) =
                     ) : (
                       <>
                         <Sparkles className="h-4 w-4" />
-                        Générer avec Gemini AI
+                        Générer avec l'IA
                       </>
                     )}
                   </Button>

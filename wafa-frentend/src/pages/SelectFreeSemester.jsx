@@ -6,7 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { userService } from '@/services/userService';
 import { moduleService } from '@/services/moduleService';
-import logo from '@/assets/yourqcm-logo.jpeg';
+import logo from '@/assets/yourqcm-logo-transparent.png';
 import { cn } from '@/lib/utils';
 
 const getYearText = (semesterId) => {
@@ -188,7 +188,7 @@ const SelectFreeSemester = () => {
           <img
             src={logo}
             alt="YourQcm Logo"
-            className="h-16 w-auto mx-auto mb-5 drop-shadow-sm"
+            className="h-16 w-16 rounded-full object-contain mx-auto mb-5 drop-shadow-sm"
           />
           
           <div className="inline-flex items-center gap-2 bg-amber-500/15 text-amber-800 dark:text-amber-300 border border-amber-500/30 px-4 py-1.5 rounded-full mb-4 text-sm font-semibold backdrop-blur-sm">

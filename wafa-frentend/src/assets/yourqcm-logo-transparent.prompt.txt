@@ -1,0 +1,4 @@
+Tool: built-in image_gen
+Source: logo-circle.png
+
+Use case: background-extraction. Edit the supplied circular YourQcm logo: remove only the black background outside the blue circular border and make that exterior genuinely transparent (PNG alpha). Preserve the original blue and cyan logo, the exact Qcm lettering, all internal shapes, the white interior of the circle, the border, proportions and framing. Do not redesign or add shadows. Output a transparent PNG.

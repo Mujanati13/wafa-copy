@@ -19,7 +19,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import ThemeToggle from "@/components/ui/ThemeToggle";
-import LanguageSwitcher from "@/components/shared/LanguageSwitcher";
 import NotificationDropdown from "@/components/layout/NotificationDropdown";
 import logo from "@/assets/yourqcm-logo.jpeg";
 import { cn } from "@/lib/utils";
@@ -169,7 +168,6 @@ export default function LearnerExperienceLayout() {
           <p className="hidden truncate text-sm text-muted-foreground sm:block">Bienvenue, <span className="font-semibold text-foreground">{firstName}</span></p>
         </div>
         <div className="flex items-center gap-1 sm:gap-2">
-          <div className="hidden lg:block"><LanguageSwitcher /></div>
           <ThemeToggle />
           <NotificationDropdown />
           <DropdownMenu>
