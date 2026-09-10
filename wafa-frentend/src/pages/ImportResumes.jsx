@@ -147,9 +147,10 @@ const ImportResumes = () => {
       fetchData();
     } catch (error) {
       console.error("Error uploading resume:", error);
-      const message = error.response?.data?.message
+      const responseData = error.response?.data;
+      const message = responseData?.message
         || (error.response?.status === 413
-          ? "Le fichier dépasse la limite autorisée de 50 Mo."
+          ? "Le serveur a refusé l’envoi avant sa validation. Réessayez dans quelques instants."
           : "Erreur lors de l'import du résumé. Veuillez réessayer.");
       setUploadError(message);
       toast.error(message);

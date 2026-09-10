@@ -325,29 +325,22 @@ export default function SubjectsPage() {
   const isFreeUser = !isPremiumPlan(user?.plan);
   const hasPremiumProAccess = isPremiumProPlan(user?.plan);
   const freeModuleId = String(user?.freeModule?._id || user?.freeModule || "");
-  const freeExamId = String(user?.freeExam?._id || user?.freeExam || "");
 
   const visibleExamsByType = useMemo(() => {
     if (!isFreeUser) return examsByType;
-    if (!freeExamId) return { year: [], course: [], qcm: [] };
     return {
-      year: (examsByType.year || []).filter((item) => String(item.id) === freeExamId),
-      course: (examsByType.course || []).filter((item) => String(item.id) === freeExamId),
-      qcm: (examsByType.qcm || []).filter((item) => String(item.id) === freeExamId),
+      // Every yearly exam is included in the free plan. Course and TP/TD
+      // content remains unavailable through their premium-only endpoints.
+      year: examsByType.year || [],
+      course: [],
+      qcm: [],
     };
-  }, [isFreeUser, freeExamId, examsByType]);
+  }, [isFreeUser, examsByType]);
 
-  // For free users, ensure active tab matches the one containing their free exam
+  // Yearly exams are the free-plan entry point, regardless of old freeExam data.
   useEffect(() => {
-    if (isFreeUser && freeExamId) {
-      for (const [type, list] of Object.entries(examsByType)) {
-        if (list.some((item) => String(item.id) === freeExamId)) {
-          setActiveType(type);
-          break;
-        }
-      }
-    }
-  }, [isFreeUser, freeExamId, examsByType]);
+    if (isFreeUser) setActiveType("year");
+  }, [isFreeUser, examsByType]);
 
   // If a non-pro user lands on a TP/TD active tab, switch away to year
   useEffect(() => {
@@ -445,7 +438,7 @@ export default function SubjectsPage() {
     color: getThemeTextColor(moduleThemeColor),
   };
   const startExam = (id, type) => {
-    const isExamLocked = isFreeUser && (!freeExamId || String(id) !== freeExamId);
+    const isExamLocked = isFreeUser && type !== "year";
     if (isExamLocked) {
       toast.info("Abonnez-vous pour débloquer cet examen.");
       navigate("/dashboard/subscription");
@@ -525,6 +518,8 @@ export default function SubjectsPage() {
         const sectionTitle = getSectionTitle(module, type);
         const isSectionTpTd = isTpTd(type, sectionTitle);
         const isTpTdLocked = isSectionTpTd && !hasPremiumProAccess;
+        const isFreeSectionLocked = isFreeUser && type !== "year";
+        const shouldHideAvailability = isFreeUser && (type === "course" || isSectionTpTd);
         const count = visibleExamsByType[type]?.length || 0;
 
         return (
@@ -539,6 +534,11 @@ export default function SubjectsPage() {
             onClick={() => {
               if (isTpTdLocked) {
                 toast.info("La section TP/TD est réservée aux abonnés Premium Pro.");
+                navigate("/dashboard/subscription");
+                return;
+              }
+              if (isFreeSectionLocked) {
+                toast.info("Cette section est réservée aux abonnés Premium.");
                 navigate("/dashboard/subscription");
                 return;
               }
@@ -558,9 +558,11 @@ export default function SubjectsPage() {
                   </Badge>
                 )}
               </span>
-              <span className="block text-xs opacity-75">
-                {count} disponible{count > 1 ? "s" : ""}
-              </span>
+              {!shouldHideAvailability && (
+                <span className="block text-xs opacity-75">
+                  {count} disponible{count > 1 ? "s" : ""}
+                </span>
+              )}
             </span>
           </Button>
         );
@@ -615,7 +617,7 @@ export default function SubjectsPage() {
         {currentExams.map((exam) => {
           const isExamTpTd = isTpTd(activeType, getSectionTitle(module, activeType))
             || isTpTd(activeType, exam.category || exam.name);
-          const isExamLocked = (isFreeUser && (!freeExamId || String(exam.id) !== freeExamId))
+          const isExamLocked = (isFreeUser && activeType !== "year")
             || (isExamTpTd && !hasPremiumProAccess);
           const lockLabel = isExamTpTd && !hasPremiumProAccess ? "Pro" : "Premium";
 

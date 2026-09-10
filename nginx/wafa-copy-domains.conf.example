@@ -5,6 +5,9 @@ server {
     listen 80;
     listen [::]:80;
     server_name yourqcm.online;
+    # Keep the public proxy aligned with the application's 100 MiB largest
+    # attachment allowance, including multipart form overhead.
+    client_max_body_size 105M;
 
     location / {
         proxy_pass http://127.0.0.1:8081;
@@ -22,6 +25,7 @@ server {
     listen 80;
     listen [::]:80;
     server_name backend.yourqcm.online;
+    client_max_body_size 105M;
 
     location /api/ {
         proxy_pass http://127.0.0.1:8081;

@@ -4,6 +4,7 @@
 import jwt from "jsonwebtoken";
 import { refreshSingleSession } from "../services/singleSessionService.js";
 import { normalizeUserPlan, userHasPremiumAccess } from "../utils/planAccess.js";
+import ExamParYear from "../models/examParYearModel.js";
 
 const shouldLogAuthFailures = () => (
   process.env.AUTH_FAILURE_LOGGING === "true" || process.env.NODE_ENV !== "production"
@@ -125,10 +126,11 @@ export const hasActiveSubscription = (req, res, next) => {
 };
 
 /**
- * Restrict free users to the single exam selected during onboarding.
+ * Free users can access every yearly exam. Course and TP/TD content remain
+ * restricted to paid plans.
  * Must run after isAuthenticated. Paid users and admins are unaffected.
  */
-export const hasExamAccess = (req, res, next) => {
+export const hasExamAccess = async (req, res, next) => {
   const user = req.user;
 
   if (!user) {
@@ -148,16 +150,17 @@ export const hasExamAccess = (req, res, next) => {
   }
 
   const requestedExamId = req.params.examId || req.params.id || req.body?.examId || req.body?.qcmBanqueId;
-  const freeExamId = user.freeExam?.toString();
 
-  if (requestedExamId && freeExamId && requestedExamId.toString() === freeExamId) {
+  // Enforce the yearly-exam exception here as well as in the dashboard, so a
+  // direct URL has exactly the same access rule.
+  if (requestedExamId && await ExamParYear.exists({ _id: requestedExamId })) {
     return next();
   }
 
   return res.status(403).json({
     success: false,
     code: "FREE_PLAN_EXAM_LIMIT",
-    message: "The free plan includes one exam from one module. Upgrade to access this exam.",
+    message: "The free plan includes yearly exams. Upgrade to access this content.",
   });
 };
 

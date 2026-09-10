@@ -29,13 +29,9 @@ export const ThemeProvider = ({ children }) => {
   const [currentTheme, setCurrentTheme] = useState(() => {
     try {
       const savedTheme = localStorage.getItem("theme");
-      if (savedTheme) return savedTheme;
+      if (savedTheme === "light" || savedTheme === "dark") return savedTheme;
     } catch (e) {}
-    // Fallback to system preference
-    if (typeof window !== "undefined" && window.matchMedia) {
-      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-    }
-    return 'light';
+    return 'dark';
   });
 
   useEffect(() => {

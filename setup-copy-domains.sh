@@ -231,6 +231,7 @@ EOF
         listen [::]:443 ssl;
         http2 on;
         server_name YourQcm.online;
+        client_max_body_size 105M;
 
         ssl_certificate /etc/letsencrypt/live/YourQcm.online/fullchain.pem;
         ssl_certificate_key /etc/letsencrypt/live/YourQcm.online/privkey.pem;
@@ -256,6 +257,7 @@ EOF
         listen [::]:443 ssl;
         http2 on;
         server_name backend.YourQcm.online;
+        client_max_body_size 105M;
 
         ssl_certificate /etc/letsencrypt/live/YourQcm.online/fullchain.pem;
         ssl_certificate_key /etc/letsencrypt/live/YourQcm.online/privkey.pem;
@@ -347,6 +349,7 @@ server {
     listen 443 ssl http2;
     listen [::]:443 ssl http2;
     server_name YourQcm.online;
+    client_max_body_size 105M;
 
     ssl_certificate /etc/letsencrypt/live/YourQcm.online/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/YourQcm.online/privkey.pem;
@@ -367,6 +370,7 @@ server {
     listen 443 ssl http2;
     listen [::]:443 ssl http2;
     server_name backend.YourQcm.online;
+    client_max_body_size 105M;
 
     ssl_certificate /etc/letsencrypt/live/YourQcm.online/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/YourQcm.online/privkey.pem;
