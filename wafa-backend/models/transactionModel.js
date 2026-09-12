@@ -69,6 +69,7 @@ const transactionSchema = new mongoose.Schema(
 transactionSchema.index({ user: 1, createdAt: -1 });
 transactionSchema.index({ user: 1, status: 1, createdAt: -1 });
 transactionSchema.index({ status: 1, createdAt: -1 });
+transactionSchema.index({ paymentMethod: 1, createdAt: -1, _id: -1 });
 
 const Transaction = mongoose.model("Transaction", transactionSchema);
 

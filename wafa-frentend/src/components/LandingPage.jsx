@@ -55,7 +55,7 @@ import { toast } from "sonner";
 import Header from "./landingPage/Header";
 import ThemeToggle from "@/components/ui/ThemeToggle";
 import { subscriptionPlanService } from "@/services/subscriptionPlanService";
-import { displaySubscriptionCopy, displaySubscriptionFeature, displaySubscriptionPeriod, displaySubscriptionPlanName } from "@/utils/subscriptionDisplay";
+import { displaySubscriptionCopy, displaySubscriptionFeature, displaySubscriptionPeriod, displaySubscriptionPlanName, isPremiumProPlan } from "@/utils/subscriptionDisplay";
 import axios from "axios";
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -604,7 +604,7 @@ const PricingSection = ({ settings }) => {
           // Sort plans by order if available, otherwise maintain order
           const sortedPlans = (plansData.sort((a, b) => (a.order || 0) - (b.order || 0))).map(plan => ({
             ...plan,
-            isPopular: plan.isPopular || plan.name === "PREMIUM PRO" || plan.name === "Premium Pro"
+            isPopular: isPremiumProPlan(plan.name)
           }));
           setPlans(sortedPlans);
         } else {

@@ -21,7 +21,7 @@ import { getLandingPageSettings } from "@/services/landingPageService";
 import { subscriptionPlanService } from "@/services/subscriptionPlanService";
 import FloatingSupport from "@/components/FloatingSupport";
 import { INSTAGRAM_URL, SUPPORT_PHONE, SUPPORT_PHONE_INTERNATIONAL, WHATSAPP_URL } from "@/config/socialLinks";
-import { displaySubscriptionCopy, displaySubscriptionFeature, displaySubscriptionPeriod, displaySubscriptionPlanName } from "@/utils/subscriptionDisplay";
+import { displaySubscriptionCopy, displaySubscriptionFeature, displaySubscriptionPeriod, displaySubscriptionPlanName, isPremiumProPlan } from "@/utils/subscriptionDisplay";
 
 const FALLBACK_SETTINGS = {
   siteName: "YourQcm",
@@ -515,7 +515,7 @@ export default function RedesignedLandingPage() {
                 <PricingCard
                   key={plan._id || plan.name}
                   plan={plan}
-                  popular={plan.isPopular}
+                  popular={isPremiumProPlan(plan.name)}
                   text={text}
                   language={language}
                   onChoose={() =>
@@ -916,7 +916,7 @@ function PricingCard({ plan, popular, text, language, onChoose }) {
   const periodLabel = normalizedPeriod ? `/ ${normalizedPeriod}` : "";
 
   return (
-    <article className={`relative rounded-2xl border bg-card p-6 ${popular ? "border-cyan-400 shadow-xl shadow-cyan-950/10" : "border-border"}`}>
+    <article className={`relative rounded-2xl border bg-card p-6 ${popular ? "border-primary shadow-xl shadow-primary/10" : "border-border"}`}>
       {popular && <span className="absolute -top-3 left-6 rounded-full bg-cyan-500 px-3 py-1 text-xs font-bold text-white">{text.popular}</span>}
       <p className="text-sm font-semibold text-cyan-700 dark:text-cyan-300">{displaySubscriptionPlanName(plan.name, "YourQcm Premium")}</p>
       <div className="mt-5 flex items-baseline gap-1">

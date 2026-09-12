@@ -45,6 +45,15 @@ const ExamCourses = () => {
   const [importFile, setImportFile] = useState(null);
   const [importing, setImporting] = useState(false);
   const [importResult, setImportResult] = useState(null);
+  const [showBulkImageDialog, setShowBulkImageDialog] = useState(false);
+  const [bulkImageSemester, setBulkImageSemester] = useState("");
+  const [bulkImageModuleId, setBulkImageModuleId] = useState("");
+  const [bulkImageCategoryId, setBulkImageCategoryId] = useState("");
+  const [bulkImageFile, setBulkImageFile] = useState(null);
+  const [bulkImagePreview, setBulkImagePreview] = useState("");
+  const [bulkAssigning, setBulkAssigning] = useState(false);
+  const bulkImageInputRef = useRef(null);
+  const bulkImagePreviewRef = useRef("");
   const [formData, setFormData] = useState({
     courseName: "",
     moduleName: "",
@@ -142,6 +151,10 @@ const ExamCourses = () => {
     fetchCourseCategories();
   }, [fetchCourses, fetchModules, fetchCourseCategories]);
 
+  useEffect(() => () => {
+    if (bulkImagePreviewRef.current) URL.revokeObjectURL(bulkImagePreviewRef.current);
+  }, []);
+
   const filteredCourses = useMemo(() => {
     const term = searchTerm.toLowerCase();
     return examCourses.filter((course) => {
@@ -214,6 +227,21 @@ const ExamCourses = () => {
     () => modules.filter((module) => module.semester === importSemester),
     [modules, importSemester]
   );
+  const bulkImageModules = useMemo(
+    () => modules.filter((module) => module.semester === bulkImageSemester),
+    [modules, bulkImageSemester]
+  );
+  const bulkImageCategories = useMemo(
+    () => courseCategories.filter((category) => {
+      const categoryModuleId = category.moduleId?._id || category.moduleId;
+      return String(categoryModuleId || "") === String(bulkImageModuleId);
+    }),
+    [courseCategories, bulkImageModuleId]
+  );
+  const selectedBulkImageCategory = useMemo(
+    () => bulkImageCategories.find((category) => String(category._id) === bulkImageCategoryId),
+    [bulkImageCategories, bulkImageCategoryId]
+  );
 
   const resetImport = () => {
     setShowImportDialog(false);
@@ -222,6 +250,73 @@ const ExamCourses = () => {
     setImportFile(null);
     setImportResult(null);
     if (importInputRef.current) importInputRef.current.value = "";
+  };
+
+  const clearBulkImageSelection = ({ resetInput = true } = {}) => {
+    if (bulkImagePreviewRef.current) {
+      URL.revokeObjectURL(bulkImagePreviewRef.current);
+      bulkImagePreviewRef.current = "";
+    }
+    setBulkImageFile(null);
+    setBulkImagePreview("");
+    if (resetInput && bulkImageInputRef.current) bulkImageInputRef.current.value = "";
+  };
+
+  const resetBulkImageAssignment = () => {
+    setShowBulkImageDialog(false);
+    setBulkImageSemester("");
+    setBulkImageModuleId("");
+    setBulkImageCategoryId("");
+    clearBulkImageSelection({ resetInput: false });
+  };
+
+  const handleBulkImageFileSelect = (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error("Veuillez sÃ©lectionner une image valide");
+      event.target.value = "";
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("L'image ne doit pas dÃ©passer 5 Mo");
+      event.target.value = "";
+      return;
+    }
+    clearBulkImageSelection();
+    const previewUrl = URL.createObjectURL(file);
+    bulkImagePreviewRef.current = previewUrl;
+    setBulkImageFile(file);
+    setBulkImagePreview(previewUrl);
+  };
+
+  const handleBulkImageAssignment = async () => {
+    if (!bulkImageCategoryId || !bulkImageFile) {
+      toast.error("SÃ©lectionnez une catÃ©gorie et une image");
+      return;
+    }
+
+    const submitData = new FormData();
+    submitData.append("courseImage", bulkImageFile);
+    setBulkAssigning(true);
+    try {
+      const { data } = await api.post(
+        `/exam-courses/category/${bulkImageCategoryId}/assign-image`,
+        submitData,
+        { headers: { "Content-Type": "multipart/form-data" } }
+      );
+      const updatedCount = data?.data?.updatedCount ?? 0;
+      toast.success(updatedCount === 1
+        ? "L'image a Ã©tÃ© appliquÃ©e Ã  1 cours"
+        : `L'image a Ã©tÃ© appliquÃ©e Ã  ${updatedCount} cours`);
+      resetBulkImageAssignment();
+      await Promise.all([fetchCourses(), fetchCourseCategories()]);
+    } catch (error) {
+      console.error("Error assigning image to category courses:", error);
+      toast.error(error.response?.data?.message || "Impossible d'appliquer l'image Ã  la catÃ©gorie");
+    } finally {
+      setBulkAssigning(false);
+    }
   };
 
   const handleImportFileSelect = (event) => {
@@ -583,6 +678,15 @@ const ExamCourses = () => {
               size="lg"
               variant="outline"
               className="w-full gap-2 sm:w-auto"
+              onClick={() => setShowBulkImageDialog(true)}
+            >
+              <Upload className="h-5 w-5" />
+              Image par catÃ©gorie
+            </Button>
+            <Button
+              size="lg"
+              variant="outline"
+              className="w-full gap-2 sm:w-auto"
               onClick={() => setShowImportDialog(true)}
             >
               <FileSpreadsheet className="h-5 w-5" />
@@ -919,6 +1023,114 @@ const ExamCourses = () => {
             <Button type="button" onClick={handleCourseImport} disabled={!importSemester || !importModuleId || !importFile || importing} className="gap-2 bg-purple-600 text-white hover:bg-purple-700">
               {importing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
               {importing ? "Import en cours..." : "Importer les cours"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showBulkImageDialog} onOpenChange={(open) => { if (!open && !bulkAssigning) resetBulkImageAssignment(); }}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Upload className="h-5 w-5 text-purple-600" />
+              Appliquer une image Ã  une catÃ©gorie
+            </DialogTitle>
+            <DialogDescription>
+              L'image sera appliquÃ©e Ã  tous les cours existants de la catÃ©gorie choisie.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-5 py-2">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="bulk-image-semester">Semestre</Label>
+                <Select
+                  value={bulkImageSemester}
+                  onValueChange={(value) => {
+                    setBulkImageSemester(value);
+                    setBulkImageModuleId("");
+                    setBulkImageCategoryId("");
+                  }}
+                  disabled={bulkAssigning}
+                >
+                  <SelectTrigger id="bulk-image-semester"><SelectValue placeholder="Choisir un semestre" /></SelectTrigger>
+                  <SelectContent>
+                    {["S1", "S2", "S3", "S4", "S5", "S6", "S7", "S8", "S9", "S10", "EXT"].map((semester) => (
+                      <SelectItem key={semester} value={semester}>{semester}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="bulk-image-module">Module</Label>
+                <Select
+                  value={bulkImageModuleId}
+                  onValueChange={(value) => {
+                    setBulkImageModuleId(value);
+                    setBulkImageCategoryId("");
+                  }}
+                  disabled={!bulkImageSemester || bulkAssigning}
+                >
+                  <SelectTrigger id="bulk-image-module"><SelectValue placeholder="Choisir un module" /></SelectTrigger>
+                  <SelectContent>
+                    {bulkImageModules.map((module) => <SelectItem key={module._id} value={module._id}>{module.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="bulk-image-category">CatÃ©gorie</Label>
+              <Select value={bulkImageCategoryId} onValueChange={setBulkImageCategoryId} disabled={!bulkImageModuleId || bulkAssigning}>
+                <SelectTrigger id="bulk-image-category"><SelectValue placeholder="Choisir une catÃ©gorie" /></SelectTrigger>
+                <SelectContent>
+                  {bulkImageCategories.map((category) => (
+                    <SelectItem key={category._id} value={String(category._id)}>
+                      {category.name}{typeof category.examCourseCount === "number" ? ` (${category.examCourseCount} cours)` : ""}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {bulkImageModuleId && bulkImageCategories.length === 0 && (
+                <p className="text-sm text-amber-700">Aucune catÃ©gorie n'est disponible pour ce module.</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="bulk-course-image">Image de couverture</Label>
+              <input
+                ref={bulkImageInputRef}
+                id="bulk-course-image"
+                type="file"
+                accept="image/*"
+                onChange={handleBulkImageFileSelect}
+                disabled={!bulkImageCategoryId || bulkAssigning}
+                className="block w-full rounded-md border border-input bg-background px-3 py-2 text-sm file:mr-3 file:rounded-md file:border-0 file:bg-purple-100 file:px-3 file:py-2 file:font-medium file:text-purple-800 hover:file:bg-purple-200"
+              />
+              <p className="text-xs text-muted-foreground">JPG, PNG, GIF ou WebP â€” 5 Mo maximum.</p>
+              {bulkImagePreview && (
+                <div className="relative h-40 overflow-hidden rounded-lg border bg-muted">
+                  <img src={bulkImagePreview} alt="AperÃ§u de l'image de catÃ©gorie" className="h-full w-full object-cover" />
+                  <Button type="button" variant="destructive" size="icon" className="absolute right-2 top-2 h-8 w-8" onClick={clearBulkImageSelection} disabled={bulkAssigning}>
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
+            </div>
+
+            {selectedBulkImageCategory && (
+              <p className="rounded-lg border border-purple-200 bg-purple-50 p-3 text-sm text-purple-900">
+                L'image remplacera la couverture de {selectedBulkImageCategory.examCourseCount ?? 0} cours dans « {selectedBulkImageCategory.name} ».
+              </p>
+            )}
+          </div>
+
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button type="button" variant="outline" onClick={resetBulkImageAssignment} disabled={bulkAssigning}>Annuler</Button>
+            <Button type="button" onClick={handleBulkImageAssignment} disabled={!bulkImageCategoryId || !bulkImageFile || bulkAssigning} className="gap-2 bg-purple-600 text-white hover:bg-purple-700">
+              {bulkAssigning ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+              {bulkAssigning ? "Application en cours..." : "Appliquer Ã  la catÃ©gorie"}
             </Button>
           </DialogFooter>
         </DialogContent>

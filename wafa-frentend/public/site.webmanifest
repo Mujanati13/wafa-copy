@@ -1,0 +1,16 @@
+{
+  "id": "/",
+  "name": "YourQcm",
+  "short_name": "YourQcm",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "icons": [
+    {
+      "src": "/yourqcm-icon-v2.png",
+      "sizes": "1254x1254",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

@@ -26,4 +26,5 @@ const reportQuestions = new mongoose.Schema(
     { timestamps: true }
 );
 
+reportQuestions.index({ createdAt: -1, _id: -1 });
 export default mongoose.model("ReportQuestions", reportQuestions);

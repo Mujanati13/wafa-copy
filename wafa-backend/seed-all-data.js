@@ -743,7 +743,7 @@ const runSeeder = async () => {
       oldPrice: 299,
       period: 'Semestre',
       order: 2,
-      isPopular: true,
+      isPopular: false,
       status: 'Active',
       features: [
         { text: 'Accès complet à tous les modules du semestre', included: true },
@@ -760,7 +760,7 @@ const runSeeder = async () => {
       oldPrice: 599,
       period: 'Semestre',
       order: 3,
-      isPopular: false,
+      isPopular: true,
       status: 'Active',
       features: [
         { text: 'Accès intégral à tous les modules du semestre choisi', included: true },

@@ -79,4 +79,5 @@ const explanation = new mongoose.Schema(
     { timestamps: true }
 );
 
+explanation.index({ createdAt: -1, _id: -1 });
 export default mongoose.model("Explanation", explanation);

@@ -55,6 +55,19 @@ const uploadCourseImage = multer({
     }
 }).single("courseImage");
 
+const handleCourseImageUpload = (req, res, next) => {
+    uploadCourseImage(req, res, (error) => {
+        if (!error) return next();
+        const status = error instanceof multer.MulterError && error.code === "LIMIT_FILE_SIZE" ? 413 : 400;
+        return res.status(status).json({
+            success: false,
+            message: error instanceof multer.MulterError && error.code === "LIMIT_FILE_SIZE"
+                ? "L'image ne doit pas dÃ©passer 5 Mo."
+                : error.message || "Veuillez tÃ©lÃ©charger une image valide.",
+        });
+    });
+};
+
 // Admin seed endpoint
 router.post("/admin/createCategoriesForCourses", examCourseController.createCategoriesForCourses);
 
@@ -99,6 +112,17 @@ router.get("/", examCourseController.getAll);
 // Bulk Excel import (admin only). Keep static routes before /:id.
 router.get("/import-template", isAuthenticated, isAdmin, examCourseController.downloadImportTemplate);
 router.post("/import", isAuthenticated, isAdmin, handleCourseExcelUpload, examCourseController.importFromExcel);
+router.post(
+    "/category/:categoryId/assign-image",
+    isAuthenticated,
+    isAdmin,
+    handleCourseImageUpload,
+    (req, res, next) => {
+        if (req.file) req.body.imageUrl = `/uploads/courses/${req.file.filename}`;
+        next();
+    },
+    examCourseController.assignImageToCategoryCourses
+);
 router.get("/question-import-template", isAuthenticated, isAdmin, examCourseController.downloadQuestionImportTemplate);
 router.post("/:id/import-questions", isAuthenticated, isAdmin, handleCourseExcelUpload, examCourseController.importQuestionsFromExcel);
 router.get("/question-mapping-template", isAuthenticated, isAdmin, examCourseController.downloadQuestionMappingTemplate);

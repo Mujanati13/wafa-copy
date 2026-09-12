@@ -12,7 +12,7 @@ import { dashboardService } from "@/services/dashboardService";
 import { subscriptionPlanService } from "@/services/subscriptionPlanService";
 import { toast } from "sonner";
 import { api, cn } from "@/lib/utils";
-import { displaySubscriptionCopy, displaySubscriptionFeature, displaySubscriptionPlanName, editableUserPlan } from "@/utils/subscriptionDisplay";
+import { displaySubscriptionCopy, displaySubscriptionFeature, displaySubscriptionPlanName, editableUserPlan, isPremiumProPlan } from "@/utils/subscriptionDisplay";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -241,6 +241,7 @@ const ClientSubscriptionPage = () => {
                 {allPlans.map((plan, index) => {
                   const isCurrentPlan = isCurrentSubscriptionPlan(plan);
                   const isFree = plan.price === 0;
+                  const isRecommendedPlan = isPremiumProPlan(plan.name);
 
                   return (
                     <Motion.div
@@ -252,22 +253,31 @@ const ClientSubscriptionPage = () => {
                       <Card
                         className={cn(
                           "flex flex-col h-full relative rounded-2xl bg-card border-border text-card-foreground hover:shadow-lg transition-all duration-300",
-                          isCurrentPlan
-                            ? "ring-2 ring-primary border-primary shadow-md shadow-primary/10"
+                          isRecommendedPlan
+                            ? "border-2 border-primary shadow-md shadow-primary/10"
                             : ""
                         )}
                       >
+                        {isRecommendedPlan && (
+                          <div className="absolute -top-3 left-5">
+                            <Badge className="bg-primary text-primary-foreground px-3.5 py-1 shadow-md text-xs font-semibold">
+                              <Sparkles className="w-3.5 h-3.5 mr-1" />
+                              Le plus choisi
+                            </Badge>
+                          </div>
+                        )}
+
                         {/* Current Plan Badge */}
                         {isCurrentPlan && (
-                          <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                            <Badge className="bg-primary text-primary-foreground px-3.5 py-1 shadow-md text-xs font-semibold">
+                          <div className="px-6 pt-6">
+                            <Badge variant="secondary" className="px-3.5 py-1 text-xs font-semibold">
                               <ShieldCheck className="w-3.5 h-3.5 mr-1" />
                               Plan Actuel
                             </Badge>
                           </div>
                         )}
 
-                        <CardHeader className={isCurrentPlan ? 'pt-8' : ''}>
+                        <CardHeader className={isCurrentPlan || isRecommendedPlan ? 'pt-8' : ''}>
                           <CardTitle className="text-2xl font-bold text-foreground">{displaySubscriptionPlanName(plan.name)}</CardTitle>
                           <CardDescription className="text-muted-foreground text-xs leading-relaxed min-h-[32px]">
                             {displaySubscriptionCopy(plan.description)}
@@ -475,9 +485,11 @@ const ClientSubscriptionPage = () => {
                               "w-full rounded-xl font-semibold h-11 text-xs sm:text-sm",
                               isCurrentPlan || isFree
                                 ? 'opacity-50 cursor-default'
-                                : 'bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm'
+                                : isRecommendedPlan
+                                  ? 'bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm'
+                                  : ''
                             )}
-                            variant={isCurrentPlan ? 'outline' : 'default'}
+                            variant={isRecommendedPlan && !isCurrentPlan && !isFree ? 'default' : 'outline'}
                           >
                             {isCurrentPlan ? (
                               'Plan Actuel'

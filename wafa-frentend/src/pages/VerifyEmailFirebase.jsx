@@ -10,7 +10,6 @@ import { toast } from 'sonner';
 import logo from '@/assets/yourqcm-logo.jpeg';
 import { auth } from '@/config/firebase';
 import { sendEmailVerification, applyActionCode } from 'firebase/auth';
-import LanguageSwitcher from '@/components/shared/LanguageSwitcher';
 
 const VerifyEmailFirebase = () => {
   const { t } = useTranslation(['auth', 'common']);
@@ -169,10 +168,6 @@ const VerifyEmailFirebase = () => {
           <div className="flex justify-center pt-8 pb-2">
             <img src={logo} alt="Logo" className="h-16 w-auto" />
           </div>
-          <div className="flex justify-center pb-4">
-            <LanguageSwitcher />
-          </div>
-
           <CardHeader className="text-center pb-4">
             <motion.div
               initial={{ scale: 0 }}

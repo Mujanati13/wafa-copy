@@ -56,7 +56,7 @@ const seedSubscriptionPlans = async () => {
                 ],
                 status: 'Active',
                 order: 2,
-                isPopular: true
+                isPopular: false
             },
             {
                 name: 'Premium Pro',
@@ -80,7 +80,7 @@ const seedSubscriptionPlans = async () => {
                 ],
                 status: 'Active',
                 order: 3,
-                isPopular: false
+                isPopular: true
             }
         ]);
 

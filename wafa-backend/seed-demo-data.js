@@ -339,8 +339,8 @@ const seedDemoData = async () => {
 
   const plans = [
     { name: "Démo Gratuit", description: "Accès à un module", price: 0, period: "Gratuit", order: 90, isPopular: false },
-    { name: "Démo Premium Semestre", description: "Accès à tous les modules d'un semestre", price: 49, oldPrice: 69, period: "Semestre", order: 91, isPopular: true },
-    { name: "Démo Premium Pro", description: "Accès complet aux modules d'un semestre", price: 399, oldPrice: 499, period: "Semestre", order: 92, isPopular: false },
+    { name: "Démo Premium Semestre", description: "Accès à tous les modules d'un semestre", price: 49, oldPrice: 69, period: "Semestre", order: 91, isPopular: false },
+    { name: "Démo Premium Pro", description: "Accès complet aux modules d'un semestre", price: 399, oldPrice: 499, period: "Semestre", order: 92, isPopular: true },
   ];
   for (const plan of plans) {
     await ensure(SubscriptionPlan, { name: plan.name }, {

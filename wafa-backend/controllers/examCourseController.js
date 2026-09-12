@@ -3,6 +3,7 @@ import ExamCourse from "../models/examCourseModel.js";
 import Question from "../models/questionModule.js";
 import ExamParYear from "../models/examParYearModel.js";
 import Module from "../models/moduleModel.js";
+import CourseCategory from "../models/courseCategoryModel.js";
 import xlsx from "xlsx";
 import mongoose from "mongoose";
 import {
@@ -39,6 +40,7 @@ import {
     normalizeMatrixExamTitle,
 } from "../utils/questionMappingMatrix.js";
 import { sortGroupedQuestions } from "../utils/examSessionSort.js";
+import { getCourseCategoryUsageFilter } from "../utils/courseCategoryRelations.js";
 
 const COURSE_IMPORT_HEADER_LABELS = {
     semester: "Semestre",
@@ -286,6 +288,57 @@ export const examCourseController = {
         res.status(200).json({
             success: true,
             message: "Cours supprimé avec succès",
+        });
+    }),
+
+    // Apply one cover image to every course belonging to a course category.
+    // The category ID is deliberately used instead of a free-text name so that
+    // categories with the same label in separate modules cannot be mixed.
+    assignImageToCategoryCourses: asyncHandler(async (req, res) => {
+        const { categoryId } = req.params;
+
+        if (!mongoose.isValidObjectId(categoryId)) {
+            return res.status(400).json({
+                success: false,
+                message: "CatÃ©gorie invalide.",
+            });
+        }
+
+        if (!req.body.imageUrl) {
+            return res.status(400).json({
+                success: false,
+                message: "Veuillez fournir une image de couverture.",
+            });
+        }
+
+        const category = await CourseCategory.findById(categoryId)
+            .select("_id name moduleId")
+            .lean();
+
+        if (!category) {
+            return res.status(404).json({
+                success: false,
+                message: "CatÃ©gorie non trouvÃ©e.",
+            });
+        }
+
+        const imageUrl = req.body.imageUrl;
+        const courseFilter = getCourseCategoryUsageFilter(category);
+        const [courseUpdate] = await Promise.all([
+            ExamCourse.updateMany(courseFilter, { $set: { imageUrl } }),
+            CourseCategory.findByIdAndUpdate(categoryId, { $set: { imageUrl } }),
+        ]);
+
+        return res.status(200).json({
+            success: true,
+            data: {
+                categoryId: category._id,
+                categoryName: category.name,
+                updatedCount: courseUpdate.modifiedCount,
+                matchedCount: courseUpdate.matchedCount,
+                imageUrl,
+            },
+            message: `${courseUpdate.modifiedCount} cours ont reÃ§u la nouvelle image.`,
         });
     }),
 

@@ -13,7 +13,6 @@ import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
 import { loginWithEmail, loginWithGoogle } from '@/services/authService';
 import { userService } from '@/services/userService';
-import LanguageSwitcher from '@/components/shared/LanguageSwitcher';
 import AuthVisualPanel from './AuthVisualPanel';
 
 const Login = () => {
@@ -227,10 +226,6 @@ const Login = () => {
           <ArrowLeft className="mr-2 h-4 w-4" />
           {t('common:back')}
         </Link>
-
-        <div className="mb-4 flex justify-end">
-            <LanguageSwitcher />
-        </div>
 
         {/* Login Card */}
         <Card className="shadow-2xl border-primary/10">

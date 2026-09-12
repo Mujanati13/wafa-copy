@@ -5,6 +5,9 @@ import ExamCourse from "../models/examCourseModel.js";
 import Module from "../models/moduleModel.js";
 import Transaction from "../models/transactionModel.js";
 import User from "../models/userModel.js";
+import Report from '../models/reportQuestions.js';
+import Explanation from '../models/explanationModel.js';
+import Contact from '../models/contactModel.js';
 
 dotenv.config();
 
@@ -14,6 +17,9 @@ const indexedModels = [
   ExamCourse,
   Transaction,
   User,
+  Report,
+  Explanation,
+  Contact,
 ];
 
 const syncPerformanceIndexes = async () => {

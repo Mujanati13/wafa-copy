@@ -10,7 +10,6 @@ import { toast } from 'sonner';
 import axios from 'axios';
 import logo from '@/assets/yourqcm-logo.jpeg';
 import { resendVerificationEmail, getCurrentUser } from '@/services/authService';
-import LanguageSwitcher from '@/components/shared/LanguageSwitcher';
 
 const VerifyEmail = () => {
   const { t } = useTranslation(['auth', 'common']);
@@ -167,10 +166,6 @@ const VerifyEmail = () => {
             <img src={logo} alt="YourQcm Logo" className="h-16 w-auto mx-auto object-contain" />
           </Link>
         </div>
-        <div className="flex justify-center mb-4">
-          <LanguageSwitcher />
-        </div>
-
         <Card className="shadow-2xl border-primary/10">
           {status === 'pending' && (
             <>

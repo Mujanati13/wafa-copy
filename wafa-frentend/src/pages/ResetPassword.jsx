@@ -11,7 +11,6 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { verifyPasswordResetCodeService, confirmPasswordResetService } from '@/services/authService';
 import { toast } from 'sonner';
 import logo from '@/assets/yourqcm-logo.jpeg';
-import LanguageSwitcher from '@/components/shared/LanguageSwitcher';
 
 const ResetPassword = () => {
   const { t } = useTranslation(['auth', 'common']);
@@ -152,9 +151,6 @@ const ResetPassword = () => {
             <div className="flex justify-center pt-8">
               <img src={logo} alt="Logo" className="h-16 w-auto" />
             </div>
-            <div className="flex justify-center pb-4">
-              <LanguageSwitcher />
-            </div>
             <CardContent className="p-8 text-center space-y-6">
               <motion.div
                 initial={{ scale: 0 }}
@@ -210,9 +206,6 @@ const ResetPassword = () => {
             <div className="flex justify-center pt-8">
               <img src={logo} alt="Logo" className="h-16 w-auto" />
             </div>
-            <div className="flex justify-center pb-4">
-              <LanguageSwitcher />
-            </div>
             <CardContent className="p-8 text-center space-y-6">
               <div className="h-20 w-20 rounded-full bg-gradient-to-br from-red-100 to-rose-100 flex items-center justify-center mx-auto">
                 <AlertCircle className="w-12 h-12 text-red-600" />
@@ -254,10 +247,6 @@ const ResetPassword = () => {
           <div className="flex justify-center pt-8 pb-2">
             <img src={logo} alt="Logo" className="h-16 w-auto" />
           </div>
-          <div className="flex justify-center pb-4">
-            <LanguageSwitcher />
-          </div>
-
           <CardHeader className="text-center space-y-2 pb-4">
             <motion.div
               initial={{ scale: 0 }}
