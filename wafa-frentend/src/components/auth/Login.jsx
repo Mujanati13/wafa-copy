@@ -1,5 +1,6 @@
+import { getLoginDestination } from '@/utils/authNavigation';
 import React, { useState } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion as Motion } from 'framer-motion';
 import { Eye, EyeOff, ArrowLeft, Loader2 } from 'lucide-react';
@@ -18,7 +19,6 @@ import AuthVisualPanel from './AuthVisualPanel';
 const Login = () => {
   const { t } = useTranslation(['auth', 'common']);
   const navigate = useNavigate();
-  const location = useLocation();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -27,8 +27,6 @@ const Login = () => {
     rememberMe: false
   });
 
-  // Get the page user was trying to access before being redirected to login
-  const from = location.state?.from?.pathname || null;
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -109,31 +107,8 @@ const Login = () => {
         description: t('auth:login_success'),
       });
 
-      // Check if user needs to select free semester (for non-admin free users)
-      if (!result.user?.isAdmin) {
-        try {
-          const semesterStatus = await userService.checkFreeSemesterStatus();
-          if (semesterStatus.data?.needsToSelectSemester) {
-            setTimeout(() => {
-              navigate('/select-semester');
-            }, 1000);
-            return;
-          }
-        } catch (error) {
-          console.error('Error checking semester status:', error);
-          // Continue with normal flow if check fails
-        }
-      }
-
-      // Redirect based on user role
-      setTimeout(() => {
-        if (result.user?.isAdmin) {
-          navigate('/admin/analytics');
-        } else {
-          // Redirect to the page they were trying to access, or default to dashboard
-          navigate(from || '/dashboard/home');
-        }
-      }, 1000);
+      // A fresh login always starts at the role's dashboard.
+      navigate(getLoginDestination(result.user), { replace: true });
     } catch (error) {
       showLoginError(error);
     } finally {
@@ -169,31 +144,8 @@ const Login = () => {
         description: t('auth:login_success'),
       });
 
-      // Check if user needs to select free semester (for non-admin free users)
-      if (!result.user?.isAdmin) {
-        try {
-          const semesterStatus = await userService.checkFreeSemesterStatus();
-          if (semesterStatus.data?.needsToSelectSemester) {
-            setTimeout(() => {
-              navigate('/select-semester');
-            }, 1000);
-            return;
-          }
-        } catch (error) {
-          console.error('Error checking semester status:', error);
-          // Continue with normal flow if check fails
-        }
-      }
-
-      // Redirect based on user role
-      setTimeout(() => {
-        if (result.user?.isAdmin) {
-          navigate('/admin/analytics');
-        } else {
-          // Redirect to the page they were trying to access, or default to dashboard
-          navigate(from || '/dashboard/home');
-        }
-      }, 1000);
+      // A fresh login always starts at the role's dashboard.
+      navigate(getLoginDestination(result.user), { replace: true });
     } catch (error) {
       showLoginError(error);
     } finally {

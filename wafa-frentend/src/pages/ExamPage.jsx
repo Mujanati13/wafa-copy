@@ -1,6 +1,7 @@
+import { exitExam } from '@/utils/authNavigation';
 import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useTranslation } from 'react-i18next';
-import { useParams, useNavigate, useSearchParams, useLocation } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { publishExamCompletedCount } from "@/utils/examProgress";
 import { dashboardService } from "@/services/dashboardService";
 import { motion, AnimatePresence } from "framer-motion";
@@ -132,21 +133,12 @@ const ExamPage = () => {
   const { examId } = useParams();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const location = useLocation();
+
 
   // Get exam type from query params (default: exam-years)
   const examType = searchParams.get('type') || 'exam'; // 'exam', 'course', 'qcm'
 
-  // Safe back navigation that prevents going to login
-  const handleGoBack = () => {
-    // Check if there's a valid previous page in history
-    if (location.key !== 'default' && window.history.length > 1) {
-      navigate(-1);
-    } else {
-      // Fallback to dashboard if no history or coming from external link
-      navigate('/dashboard');
-    }
-  };
+  const handleGoBack = useCallback(() => exitExam(navigate), [navigate]);
 
   // Helper function to darken/lighten color
   const adjustColor = (color, amount) => {
@@ -186,8 +178,6 @@ const ExamPage = () => {
   const [showOverview, setShowOverview] = useState(false);
   const [showVueEnsemble, setShowVueEnsemble] = useState(false);
   const [showImageGallery, setShowImageGallery] = useState(false);
-  const [showExitConfirm, setShowExitConfirm] = useState(false);
-  const [isSavingBeforeExit, setIsSavingBeforeExit] = useState(false);
   const [showImageZoom, setShowImageZoom] = useState(false);
   const [zoomedImageUrl, setZoomedImageUrl] = useState(null);
 
@@ -352,97 +342,6 @@ const ExamPage = () => {
       return;
     }
     action();
-  };
-
-  // Handle exit with save
-  const handleExitWithSave = async () => {
-    // Check if user has any answers (verified or unverified)
-    const hasAnyAnswers = Object.keys(selectedAnswers).length > 0 || Object.keys(verifiedQuestions).length > 0;
-    
-    if (!hasAnyAnswers) {
-      // No answers at all, exit immediately
-      handleGoBack();
-      return;
-    }
-
-    // Has answers, show confirmation modal to save before exit
-    setShowExitConfirm(true);
-  };
-
-  // Save all data before exiting
-  const saveBeforeExit = async () => {
-    setIsSavingBeforeExit(true);
-    try {
-      const currentUserId = userProfile?._id;
-      if (!currentUserId) {
-        navigate(-1);
-        return;
-      }
-
-      // Save to localStorage
-      const storageKey = `exam_progress_${currentUserId}_${examType}_${examId}`;
-      const progress = {
-        userId: currentUserId,
-        answers: selectedAnswers,
-        currentQ: currentQuestion,
-        timeSpent: timeElapsed,
-        flags: Array.from(flaggedQuestions),
-        verified: verifiedQuestions
-      };
-      localStorage.setItem(storageKey, JSON.stringify(progress));
-
-      // Save verified answers to backend
-      const verifiedAnswers = Object.keys(verifiedQuestions)
-        .filter(qIndex => {
-          const v = verifiedQuestions[qIndex];
-          return v?.verified || v === true;
-        })
-        .map(qIndex => ({
-          questionId: questions[qIndex]?._id,
-          selectedAnswers: selectedAnswers[qIndex] || [],
-          isVerified: true,
-          isCorrect: verifiedQuestions[qIndex]?.isCorrect || false,
-          examId: examData._id || examId,
-          moduleId: examData.module?._id || examData.moduleId
-        }))
-        .filter(item => item.questionId);
-
-      // Save unverified answers as well
-      const unverifiedAnswers = Object.keys(selectedAnswers)
-        .filter(qIndex => {
-          const hasAnswer = selectedAnswers[qIndex]?.length > 0;
-          const isVerified = verifiedQuestions[qIndex]?.verified || verifiedQuestions[qIndex] === true;
-          return hasAnswer && !isVerified;
-        })
-        .map(qIndex => ({
-          questionId: questions[qIndex]?._id,
-          selectedAnswers: selectedAnswers[qIndex],
-          isVerified: false,
-          isCorrect: false,
-          examId: examData._id || examId,
-          moduleId: examData.module?._id || examData.moduleId
-        }))
-        .filter(item => item.questionId);
-
-      const allAnswers = [...verifiedAnswers, ...unverifiedAnswers];
-
-      if (allAnswers.length > 0) {
-        await Promise.allSettled(
-          allAnswers.map(answerData =>
-            api.post('/questions/save-answer', answerData)
-          )
-        );
-      }
-
-      toast.success('Session enregistrée avec succès');
-    } catch (error) {
-      console.error('Error saving before exit:', error);
-      toast.error('Erreur lors de l\'enregistrement');
-    } finally {
-      setIsSavingBeforeExit(false);
-      setShowExitConfirm(false);
-      handleGoBack();
-    }
   };
 
   // Get the API endpoint based on exam type
@@ -1487,6 +1386,11 @@ const ExamPage = () => {
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        handleGoBack();
+        return;
+      }
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
 
       switch (e.key) {
@@ -1516,19 +1420,12 @@ const ExamPage = () => {
         case '?':
           setShowKeyboardShortcuts(true);
           break;
-        case 'Escape':
-          setShowKeyboardShortcuts(false);
-          setShowSidebar(false);
-          setShowConfirmSubmit(false);
-          setShowImageZoom(false);
-          setShowImageGallery(false);
-          break;
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [currentQuestion, goToNext, goToPrevious, toggleFlag, handleAnswerSelect, showResults, currentQuestionData, verifiedQuestions, handleVerifyQuestion]);
+  }, [currentQuestion, goToNext, goToPrevious, toggleFlag, handleAnswerSelect, showResults, currentQuestionData, verifiedQuestions, handleVerifyQuestion, handleGoBack]);
 
   // Auto-expand current question's session in sidebar when sidebar opens
   useEffect(() => {
@@ -1822,7 +1719,7 @@ const ExamPage = () => {
               <Menu className="h-4 w-4" />
             </button>
             <button
-              onClick={handleExitWithSave}
+              onClick={handleGoBack}
               className="flex items-center gap-1 px-2 py-1 rounded-lg bg-muted hover:bg-muted/80 active:bg-muted transition-colors text-foreground border border-border"
             >
               <LogOut className="h-3.5 w-3.5" />
@@ -1886,7 +1783,7 @@ const ExamPage = () => {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={handleExitWithSave}
+                onClick={handleGoBack}
                 className="gap-1.5 text-foreground hover:bg-muted border-border"
               >
                 <LogOut className="h-4 w-4" />
@@ -3606,71 +3503,6 @@ const ExamPage = () => {
                     Fermer
                   </Button>
                 </div>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Exit Confirmation Modal */}
-      <AnimatePresence>
-        {showExitConfirm && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-            onClick={() => setShowExitConfirm(false)}
-          >
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-card text-card-foreground border border-border rounded-2xl shadow-2xl max-w-md sm:max-w-lg w-full p-4 sm:p-6"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="text-center space-y-4">
-                <div className="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400">
-                  {isSavingBeforeExit ? (
-                    <div className="w-6 h-6 sm:w-8 sm:h-8 border-4 border-amber-600 border-t-transparent rounded-full animate-spin" />
-                  ) : (
-                    <AlertCircle className="h-6 w-6 sm:h-8 sm:w-8" />
-                  )}
-                </div>
-                <h3 className="text-lg sm:text-xl font-bold text-foreground">
-                  {isSavingBeforeExit ? 'Enregistrement en cours...' : 'Modifications non enregistrées'}
-                </h3>
-                <p className="text-xs sm:text-sm text-muted-foreground">
-                  {isSavingBeforeExit
-                    ? 'Veuillez patienter pendant que nous enregistrons vos réponses...'
-                    : 'Voulez-vous enregistrer vos réponses avant de quitter ?'}
-                </p>
-                {!isSavingBeforeExit && (
-                  <div className="flex flex-col gap-2 sm:gap-3 pt-4 w-full">
-                    <Button
-                      variant="outline"
-                      className="w-full text-xs sm:text-sm py-2 h-auto"
-                      onClick={() => setShowExitConfirm(false)}
-                    >
-                      Annuler
-                    </Button>
-                    <Button
-                      className="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm py-2 h-auto"
-                      onClick={saveBeforeExit}
-                    >
-                      Enregistrer et quitter
-                    </Button>
-                    <Button
-                      className="w-full bg-red-600 hover:bg-red-700 text-white text-xs sm:text-sm py-2 h-auto"
-                      onClick={() => {
-                        setShowExitConfirm(false);
-                        handleGoBack();
-                      }}
-                    >
-                      Quitter sans enregistrer
-                    </Button>
-                  </div>
-                )}
               </div>
             </motion.div>
           </motion.div>
