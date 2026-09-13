@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import {
   ArrowLeft, BookOpen, CalendarDays, FileQuestion,
   HelpCircle, Library, Lock, Play, Sparkles,
+  Search,
 } from "lucide-react";
 import { toast } from "sonner";
 import { moduleService } from "@/services/moduleService";
@@ -85,6 +86,11 @@ const getExamDisplayName = (examName, moduleName) => {
 
   return remainder.slice(separator[0].length).trim() || title;
 };
+
+const normalizeSearchText = (value) => String(value || "")
+  .normalize("NFD")
+  .replace(/[\u0300-\u036f]/g, "")
+  .toLocaleLowerCase();
 
 
 const isTpTd = (type, title) => {
@@ -312,6 +318,7 @@ export default function SubjectsPage() {
   const [examsByType, setExamsByType] = useState({ year: [], course: [], qcm: [] });
   const [activeType, setActiveType] = useState("year");
   const [category, setCategory] = useState("all");
+  const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [helpExam, setHelpExam] = useState(null);
@@ -429,7 +436,17 @@ export default function SubjectsPage() {
   }, [courseId]);
 
   const categories = useMemo(() => ["all", ...new Set(visibleExamsByType.course.map((item) => item.category).filter(Boolean))], [visibleExamsByType.course]);
-  const currentExams = (visibleExamsByType[activeType] || []).filter((item) => activeType !== "course" || category === "all" || item.category === category);
+  const currentExams = useMemo(() => {
+    const query = activeType === "year" || activeType === "course"
+      ? normalizeSearchText(searchQuery.trim())
+      : "";
+    return (visibleExamsByType[activeType] || []).filter((item) => {
+      const belongsToCategory = activeType !== "course" || category === "all" || item.category === category;
+      if (!belongsToCategory || !query) return belongsToCategory;
+      return [item.name, item.category, module?.name]
+        .some((value) => normalizeSearchText(value).includes(query));
+    });
+  }, [activeType, category, module?.name, searchQuery, visibleExamsByType]);
   const moduleThemeColor = module?.color || "#0e2854";
   const moduleSemesterLabel = formatSemesterLabel(module?.semester || selectedSemester);
   const activeThemeStyle = {
@@ -612,6 +629,27 @@ export default function SubjectsPage() {
         </div>
       )}
     </div>
+    {(activeType === "year" || activeType === "course") && (
+      <div className="relative max-w-xl">
+        <label htmlFor="library-exam-search" className="sr-only">
+          Rechercher un examen ou un cours
+        </label>
+        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+        <input
+          id="library-exam-search"
+          type="search"
+          value={searchQuery}
+          onChange={(event) => setSearchQuery(event.target.value)}
+          placeholder={activeType === "year" ? "Rechercher un examen par année…" : "Rechercher un examen ou un cours…"}
+          className="h-10 w-full rounded-xl border border-input bg-background pl-10 pr-3 text-sm outline-none transition focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+        />
+      </div>
+    )}
+    {!currentExams.length && searchQuery.trim() && (activeType === "year" || activeType === "course") && (
+      <p role="status" className="text-sm text-muted-foreground">
+        Aucun résultat pour « {searchQuery.trim()} ».
+      </p>
+    )}
     {currentExams.length ? (
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {currentExams.map((exam) => {
