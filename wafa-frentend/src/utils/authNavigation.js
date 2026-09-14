@@ -1,8 +1,8 @@
 export const DASHBOARD_PATH = '/dashboard/home';
 
-// Replace the exam history entry so Back cannot immediately reopen it.
+// Return to the route that launched the exam (including its filters and scroll state).
 // Exiting an exam is navigation only; authentication is not modified here.
-export const exitExam = (navigate) => navigate(DASHBOARD_PATH, { replace: true });
+export const exitExam = (navigate) => navigate(-1);
 
 // Never restore a pre-login URL, especially an active /exam/* route.
 export const getLoginDestination = (user) => (

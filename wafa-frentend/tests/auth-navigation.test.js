@@ -2,15 +2,15 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { exitExam, getLoginDestination } from '../src/utils/authNavigation.js';
 
-test('exit replaces the exam with dashboard even when login is the preceding history entry', () => {
-  const history = ['/login', '/exam/123'];
+test('exit returns to the route that opened the exam without changing authentication', () => {
+  const history = ['/dashboard/modules/anatomie', '/exam/123'];
   const token = 'existing-session';
   const storage = new Map([['token', token], ['user', '{"name":"Student"}']]);
-  exitExam((path, options) => {
-    assert.equal(options.replace, true);
-    history[history.length - 1] = path;
+  exitExam((delta) => {
+    assert.equal(delta, -1);
+    history.pop();
   });
-  assert.deepEqual(history, ['/login', '/dashboard/home']);
+  assert.deepEqual(history, ['/dashboard/modules/anatomie']);
   assert.equal(storage.get('token'), token);
 });
 

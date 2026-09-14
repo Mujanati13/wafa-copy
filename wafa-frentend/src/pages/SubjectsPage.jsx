@@ -87,12 +87,6 @@ const getExamDisplayName = (examName, moduleName) => {
   return remainder.slice(separator[0].length).trim() || title;
 };
 
-const normalizeSearchText = (value) => String(value || "")
-  .normalize("NFD")
-  .replace(/[\u0300-\u036f]/g, "")
-  .toLocaleLowerCase();
-
-
 const isTpTd = (type, title) => {
   const normTitle = String(title || "").trim().toLowerCase();
   return type === "tp" || normTitle === "tp/td" || normTitle === "tp" || normTitle === "td" || normTitle.includes("tp/td") || /\b(tp|td)\b/i.test(normTitle);
@@ -438,13 +432,15 @@ export default function SubjectsPage() {
   const categories = useMemo(() => ["all", ...new Set(visibleExamsByType.course.map((item) => item.category).filter(Boolean))], [visibleExamsByType.course]);
   const currentExams = useMemo(() => {
     const query = activeType === "year" || activeType === "course"
-      ? normalizeSearchText(searchQuery.trim())
+      ? searchQuery.trim().toLocaleLowerCase()
       : "";
     return (visibleExamsByType[activeType] || []).filter((item) => {
       const belongsToCategory = activeType !== "course" || category === "all" || item.category === category;
       if (!belongsToCategory || !query) return belongsToCategory;
-      return [item.name, item.category, module?.name]
-        .some((value) => normalizeSearchText(value).includes(query));
+      const visibleTitle = activeType === "year"
+        ? getExamDisplayName(item.name, module?.name)
+        : String(item.name || "").trim();
+      return visibleTitle.toLocaleLowerCase().includes(query);
     });
   }, [activeType, category, module?.name, searchQuery, visibleExamsByType]);
   const moduleThemeColor = module?.color || "#0e2854";
