@@ -181,17 +181,18 @@ const ExamPage = () => {
   const [showImageZoom, setShowImageZoom] = useState(false);
   const [zoomedImageUrl, setZoomedImageUrl] = useState(null);
 
-  // Keep the page behind image overlays fixed while allowing the overlay's
-  // own native scroll surface to handle mouse wheels and mobile touch panning.
+  // The gallery owns its scroll lock. ImageViewerModal owns its own lock, so
+  // it must not be included here or the two cleanup functions can restore an
+  // already-locked body after the zoom modal closes.
   useEffect(() => {
-    if (!showImageGallery && !showImageZoom) return undefined;
+    if (!showImageGallery) return undefined;
 
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
       document.body.style.overflow = previousOverflow;
     };
-  }, [showImageGallery, showImageZoom]);
+  }, [showImageGallery]);
 
   // Save status tracking
   const [isSaved, setIsSaved] = useState(true);
