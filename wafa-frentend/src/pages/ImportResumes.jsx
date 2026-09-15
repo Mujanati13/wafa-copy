@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { motion as Motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, ChevronRight, Loader2, Upload, ArrowRight, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -26,6 +26,8 @@ const getResumeFileError = (selectedFile) => {
   return "";
 };
 
+const getSemesterRank = (semester) => Number.parseInt(String(semester || "").replace(/\D/g, ""), 10) || Number.MAX_SAFE_INTEGER;
+
 const ImportResumes = () => {
 
   const [modules, setModules] = useState([]);
@@ -35,11 +37,28 @@ const ImportResumes = () => {
   const [expandedModules, setExpandedModules] = useState({});
 
   // Import form states
+  const [selectedSemester, setSelectedSemester] = useState("");
   const [selectedModule, setSelectedModule] = useState("");
   const [courseName, setCourseName] = useState("");
   const [resumeName, setResumeName] = useState("");
   const [file, setFile] = useState(null);
   const [uploadError, setUploadError] = useState("");
+
+  const semesters = useMemo(() => (
+    [...new Set(modules.map((module) => String(module.semester || "").trim()).filter(Boolean))]
+      .sort((left, right) => getSemesterRank(left) - getSemesterRank(right))
+  ), [modules]);
+
+  const filteredModules = useMemo(() => (
+    selectedSemester
+      ? modules.filter((module) => module.availableInAllSemesters || module.semester === selectedSemester)
+      : []
+  ), [modules, selectedSemester]);
+
+  const handleSemesterChange = (semester) => {
+    setSelectedSemester(semester);
+    setSelectedModule("");
+  };
 
   useEffect(() => {
     fetchData();
@@ -136,6 +155,7 @@ const ImportResumes = () => {
       toast.success("Résumé importé avec succès !");
       
       // Reset form
+      setSelectedSemester("");
       setSelectedModule("");
       setCourseName("");
       setResumeName("");
@@ -204,18 +224,37 @@ const ImportResumes = () => {
               Select your module hierarchy and provide the file details
             </p>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+              {/* Semester Select */}
+              <div className="space-y-2">
+                <Label className="font-medium text-foreground">
+                  Semester <span className="text-red-500">*</span>
+                </Label>
+                <Select value={selectedSemester} onValueChange={handleSemesterChange}>
+                  <SelectTrigger className="h-10">
+                    <SelectValue placeholder="Choose a semester" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {semesters.map((semester) => (
+                      <SelectItem key={semester} value={semester}>
+                        {semester}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
               {/* Module Select */}
               <div className="space-y-2">
                 <Label className="font-medium text-foreground">
                   Module <span className="text-red-500">*</span>
                 </Label>
                 <Select value={selectedModule} onValueChange={setSelectedModule}>
-                  <SelectTrigger className="h-10">
-                    <SelectValue placeholder="Choose a module" />
+                  <SelectTrigger className="h-10" disabled={!selectedSemester}>
+                    <SelectValue placeholder={selectedSemester ? "Choose a module" : "Choose a semester first"} />
                   </SelectTrigger>
                   <SelectContent>
-                    {modules.map((module) => (
+                    {filteredModules.map((module) => (
                       <SelectItem key={module._id} value={module._id}>
                         {module.name}
                       </SelectItem>

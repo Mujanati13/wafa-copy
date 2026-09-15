@@ -22,6 +22,7 @@ import { subscriptionPlanService } from "@/services/subscriptionPlanService";
 import FloatingSupport from "@/components/FloatingSupport";
 import { INSTAGRAM_URL, SUPPORT_PHONE, SUPPORT_PHONE_INTERNATIONAL, WHATSAPP_URL } from "@/config/socialLinks";
 import { displaySubscriptionCopy, displaySubscriptionFeature, displaySubscriptionPeriod, displaySubscriptionPlanName, isPremiumProPlan } from "@/utils/subscriptionDisplay";
+import { getStoredAuthToken } from "@/utils/authStorage";
 
 const FALLBACK_SETTINGS = {
   siteName: "YourQcm",
@@ -192,6 +193,24 @@ const getStoredUser = () => {
   }
 };
 
+const isYourQcmBrand = (value) => /^your\s*qcm$/i.test(String(value || "").trim());
+
+function BrandWordmark({ className = "", compact = false }) {
+  return (
+    <span className={`inline-flex items-baseline whitespace-nowrap font-black leading-none tracking-[-0.065em] ${className}`}>
+      <span className="text-slate-950 dark:text-white">Your</span>
+      <span
+        className={compact
+          ? "relative ml-[0.07em] text-cyan-600 dark:text-cyan-300"
+          : "relative ml-[0.1em] rounded-[0.22em] bg-gradient-to-br from-cyan-400 via-cyan-500 to-blue-600 px-[0.14em] pb-[0.07em] text-white shadow-[0_0.16em_0.45em_rgba(8,145,178,0.28)]"}
+      >
+        Qcm
+        {!compact && <span className="absolute -right-[0.11em] -top-[0.12em] h-[0.18em] w-[0.18em] rounded-full bg-amber-300 ring-[0.08em] ring-white/65" aria-hidden="true" />}
+      </span>
+    </span>
+  );
+}
+
 function HeroStudyPreview({ text, language }) {
   const reduceMotion = useReducedMotion();
   const floatTransition = reduceMotion ? undefined : { duration: 4.5, repeat: Infinity, ease: "easeInOut" };
@@ -216,7 +235,7 @@ function HeroStudyPreview({ text, language }) {
               <GraduationCap className="h-5 w-5" aria-hidden="true" />
             </div>
             <div>
-              <p className="text-sm font-bold text-slate-900 dark:text-white"><span className="text-[#1a237e] dark:text-blue-300">Your</span><span className="text-[#00b0d4]">Qcm</span></p>
+              <p className="text-sm"><BrandWordmark compact /></p>
               <p className="text-[11px] text-slate-500 dark:text-slate-400">{text.previewTitle}</p>
             </div>
           </div>
@@ -318,7 +337,7 @@ export default function RedesignedLandingPage() {
     };
   }, []);
 
-  const hasActiveLogin = Boolean(currentUser && localStorage.getItem("token"));
+  const hasActiveLogin = Boolean(currentUser && getStoredAuthToken());
   const dashboardPath = currentUser?.isAdmin ? "/admin/analytics" : "/dashboard/home";
 
   // Public landing requests do not pass through authenticated middleware, so
@@ -417,7 +436,9 @@ export default function RedesignedLandingPage() {
         <div className="mx-auto flex h-18 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           <Link to="/" className="imrs-focus-ring flex items-center gap-3 rounded-lg" aria-label="YourQcm">
             <img src={logo} alt={settings.siteName || "YourQcm"} className="h-12 w-12 shrink-0 rounded-full object-contain" />
-            <span className="text-lg font-bold tracking-tight">{settings.siteName ? settings.siteName : <><span className="text-[#1a237e] dark:text-blue-300">Your</span><span className="text-[#00b0d4]">Qcm</span></>}</span>
+            {isYourQcmBrand(settings.siteName || FALLBACK_SETTINGS.siteName)
+              ? <BrandWordmark className="text-xl sm:text-[1.35rem]" compact />
+              : <span className="text-lg font-bold tracking-tight">{settings.siteName}</span>}
           </Link>
           <nav className="hidden items-center gap-6 lg:flex" aria-label="Navigation principale">
             {[["benefits", text.navigation[0]], ["pricing", text.navigation[1]], ["faq", text.navigation[2]]].map(([id, label]) => (
@@ -429,7 +450,7 @@ export default function RedesignedLandingPage() {
             {hasActiveLogin ? (
               <Button asChild className="bg-primary shadow-lg shadow-blue-950/15 hover:bg-primary/90"><Link to={dashboardPath}>{language === "fr" ? "Mon espace" : "My dashboard"}<ArrowRight className="ml-2 h-4 w-4" /></Link></Button>
             ) : (
-              <><Button asChild variant="ghost"><Link to="/login">{text.login}</Link></Button><Button asChild className="bg-primary shadow-lg shadow-blue-950/15 hover:bg-primary/90"><Link to="/register">{text.create}<ArrowRight className="ml-2 h-4 w-4" /></Link></Button></>
+              <><Button asChild variant="outline" className="h-10 border-primary/35 bg-background px-4 text-primary shadow-sm transition-colors hover:border-primary/60 hover:bg-primary/5 hover:text-primary"><Link to="/login">{text.login}</Link></Button><Button asChild className="bg-primary shadow-lg shadow-blue-950/15 hover:bg-primary/90"><Link to="/register">{text.create}<ArrowRight className="ml-2 h-4 w-4" /></Link></Button></>
             )}
           </div>
           <button onClick={() => setMenuOpen((open) => !open)} className="imrs-focus-ring rounded-lg p-2 text-primary sm:hidden" aria-label={text.menu} aria-expanded={menuOpen}>
@@ -439,7 +460,7 @@ export default function RedesignedLandingPage() {
         {menuOpen && <div className="max-h-[calc(100dvh-4.5rem)] overflow-y-auto overscroll-contain border-t border-border bg-card px-4 py-4 sm:hidden">
           <div className="grid gap-1">
             {[["benefits", text.navigation[0]], ["pricing", text.navigation[1]], ["faq", text.navigation[2]]].map(([id, label]) => <button key={id} onClick={() => { setMenuOpen(false); scrollTo(id); }} className="rounded-lg px-3 py-2 text-left text-sm font-medium hover:bg-muted">{label}</button>)}
-            {hasActiveLogin ? <Button asChild><Link to={dashboardPath}>{language === "fr" ? "Mon espace" : "My dashboard"}</Link></Button> : <><Link to="/login" className="rounded-lg px-3 py-2 text-sm font-medium hover:bg-muted">{text.login}</Link><Button asChild><Link to="/register">{text.create}</Link></Button></>}
+            {hasActiveLogin ? <Button asChild><Link to={dashboardPath}>{language === "fr" ? "Mon espace" : "My dashboard"}</Link></Button> : <><Link to="/login" className="imrs-focus-ring rounded-lg border border-primary/35 px-3 py-2 text-sm font-medium text-primary transition-colors hover:border-primary/60 hover:bg-primary/5">{text.login}</Link><Button asChild><Link to="/register">{text.create}</Link></Button></>}
             <div className="flex items-center justify-between px-2 pt-2"><ThemeToggle /></div>
           </div>
         </div>}
@@ -454,9 +475,7 @@ export default function RedesignedLandingPage() {
               <h1 className="mt-6 max-w-3xl text-4xl font-bold leading-[1.08] tracking-tight text-primary sm:text-5xl lg:text-6xl">
                 {(settings.heroTitle || FALLBACK_SETTINGS.heroTitle).split(/(\bYourQcm\b)/gi).map((part, index) => (
                   /^YourQcm$/i.test(part) ? (
-                    <span key={index} className="inline-block whitespace-nowrap">
-                      <span className="text-blue-700 dark:text-blue-400">Your</span><span className="text-cyan-600 dark:text-cyan-400">Qcm</span>
-                    </span>
+                    <BrandWordmark key={index} />
                   ) : part
                 ))}
               </h1>

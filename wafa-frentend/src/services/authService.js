@@ -11,6 +11,7 @@ import { auth } from '@/config/firebase';
 import axios from 'axios';
 import { userService } from '@/services/userService';
 import { dashboardService } from '@/services/dashboardService';
+import { clearStoredAuthToken, getStoredAuthToken, storeAuthToken } from '@/utils/authStorage';
 
 const API_URL = import.meta.env.VITE_API_URL;
 const AUTH_CLIENT_ID_KEY = 'authClientId';
@@ -35,7 +36,7 @@ const googleProvider = new GoogleAuthProvider();
 /**
  * Register with email and password (using backend local strategy - no email verification required)
  */
-export const registerWithEmail = async (email, password, userData) => {
+export const registerWithEmail = async (email, password, userData, { rememberMe = true } = {}) => {
   try {
     // First check with backend if email exists
     try {
@@ -55,18 +56,21 @@ export const registerWithEmail = async (email, password, userData) => {
     const response = await axios.post(`${API_URL}/auth/register`, {
       email,
       password,
-      username: `${userData.firstName} ${userData.lastName}`.trim(),
-      firstName: userData.firstName,
-      lastName: userData.lastName,
+      fullName: userData.fullName,
       newsletter: userData.newsletter
     }, {
       withCredentials: true,
       headers: getAuthClientHeaders()
     });
 
+    storeAuthToken(response.data.token, rememberMe);
+    dashboardService.clearCache();
+    userService.clearProfileCache();
+
     return {
       success: true,
       user: response.data.user,
+      token: response.data.token,
       needsVerification: response.data.requiresVerification || false, // Backend now returns false
       message: response.data.message || 'Inscription réussie! Vous pouvez maintenant vous connecter.'
     };
@@ -85,7 +89,7 @@ export const registerWithEmail = async (email, password, userData) => {
 /**
  * Login with email and password (using backend local strategy - no email verification required)
  */
-export const loginWithEmail = async (email, password) => {
+export const loginWithEmail = async (email, password, { rememberMe = true } = {}) => {
   try {
     // Login directly with backend (MongoDB + Passport local strategy)
     const response = await axios.post(`${API_URL}/auth/login`, {
@@ -97,9 +101,7 @@ export const loginWithEmail = async (email, password) => {
     });
 
     // Store JWT token
-    if (response.data.token) {
-      localStorage.setItem('token', response.data.token);
-    }
+    storeAuthToken(response.data.token, rememberMe);
 
     // Ensure stale dashboard/profile caches are reset for the new session.
     dashboardService.clearCache();
@@ -120,7 +122,7 @@ export const loginWithEmail = async (email, password) => {
 /**
  * Login with Google
  */
-export const loginWithGoogle = async () => {
+export const loginWithGoogle = async ({ rememberMe = true } = {}) => {
   try {
     // Sign in with Google popup
     const result = await signInWithPopup(auth, googleProvider);
@@ -137,7 +139,7 @@ export const loginWithGoogle = async () => {
     });
 
     // Store JWT token
-    localStorage.setItem('token', response.data.token);
+    storeAuthToken(response.data.token, rememberMe);
 
     // Ensure stale dashboard/profile caches are reset for the new session.
     dashboardService.clearCache();
@@ -258,7 +260,7 @@ export const confirmPasswordResetService = async (oobCode, newPassword) => {
 export const signOut = async () => {
   try {
     // Call backend logout endpoint to destroy session
-    const token = localStorage.getItem('token');
+    const token = getStoredAuthToken();
     let logoutError = null;
     for (let attempt = 0; attempt < 2; attempt += 1) {
       try {
@@ -290,7 +292,7 @@ export const signOut = async () => {
     }
 
     // Clear all auth tokens and user data
-    localStorage.removeItem('token');
+    clearStoredAuthToken();
     localStorage.removeItem('user');
     localStorage.removeItem('userProfile');
     localStorage.removeItem('pendingVerificationEmail');
@@ -315,7 +317,7 @@ export const signOut = async () => {
   } catch (error) {
     console.error('Sign out error:', error);
     // Force local cleanup even on error
-    localStorage.removeItem('token');
+    clearStoredAuthToken();
     localStorage.removeItem('user');
     localStorage.removeItem('userProfile');
     dashboardService.clearCache();
@@ -336,7 +338,7 @@ export const getCurrentUser = () => {
  * Check if user is authenticated
  */
 export const isAuthenticated = () => {
-  return auth.currentUser !== null && localStorage.getItem('token') !== null;
+  return auth.currentUser !== null && getStoredAuthToken() !== null;
 };
 
 /**
@@ -373,5 +375,7 @@ const handleAuthError = (error) => {
     'auth/account-exists-with-different-credential': 'Un compte existe déjà avec cette adresse email mais avec une méthode de connexion différente'
   };
 
-  return new Error(errorMessages[error.code] || error.message || 'Une erreur est survenue');
+  const authError = new Error(errorMessages[error.code] || error.message || 'Une erreur est survenue');
+  authError.code = error.code;
+  return authError;
 };

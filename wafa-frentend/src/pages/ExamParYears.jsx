@@ -47,6 +47,7 @@ const ExamParYears = () => {
     year: "",
     imageUrl: "",
     helpText: "",
+    isOfficialCorrection: true,
     courseCategoryId: "",
   });
 
@@ -165,6 +166,7 @@ const ExamParYears = () => {
         year: parseInt(formData.year),
         imageUrl: formData.imageUrl || globalCoverUrl || DEFAULT_EXAM_IMAGE,
         infoText: formData.helpText || "",
+        isOfficialCorrection: formData.isOfficialCorrection,
         courseCategoryId: formData.courseCategoryId || null,
       });
 
@@ -176,6 +178,7 @@ const ExamParYears = () => {
         year: "",
         imageUrl: "",
         helpText: "",
+        isOfficialCorrection: true,
         courseCategoryId: "",
       });
       toast.success(t('admin:exam_added_success'));
@@ -259,6 +262,7 @@ const ExamParYears = () => {
       year: String(exam.year || ""),
       imageUrl: (exam.imageUrl === placeholderImage || !exam.imageUrl) ? DEFAULT_EXAM_IMAGE : exam.imageUrl,
       helpText: exam.helpText || "",
+      isOfficialCorrection: exam.isOfficialCorrection !== false,
       courseCategoryId: exam.courseCategoryId || "",
     });
     setEditingExam(exam);
@@ -284,6 +288,7 @@ const ExamParYears = () => {
         year: parseInt(formData.year),
         imageUrl: formData.imageUrl || globalCoverUrl || DEFAULT_EXAM_IMAGE,
         infoText: formData.helpText || "",
+        isOfficialCorrection: formData.isOfficialCorrection,
         courseCategoryId: formData.courseCategoryId || null,
       });
 
@@ -297,6 +302,8 @@ const ExamParYears = () => {
           year: "",
           imageUrl: "",
           helpText: "",
+          isOfficialCorrection: true,
+          courseCategoryId: "",
         });
         toast.success("Examen mis à jour avec succès");
         fetchExams();
@@ -337,6 +344,7 @@ const ExamParYears = () => {
         imageUrl: getImageSrc(e?.imageUrl) || placeholderImage,
         totalQuestions: e?.totalQuestions || 0, // Use totalQuestions from backend
         helpText: e?.infoText || "",
+        isOfficialCorrection: e?.isOfficialCorrection !== false,
         courseCategoryId: e?.courseCategoryId || "",
         status: "active",
       }));
@@ -625,6 +633,7 @@ const ExamParYears = () => {
                     <TableHead>Année</TableHead>
                     <TableHead>Image</TableHead>
                     <TableHead>Texte d'aide</TableHead>
+                    <TableHead>Correction</TableHead>
                     <TableHead>Questions</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
@@ -632,7 +641,7 @@ const ExamParYears = () => {
                 <TableBody>
                   {currentExams.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={8} className="text-center py-12 text-muted-foreground">
+                      <TableCell colSpan={10} className="text-center py-12 text-muted-foreground">
                         Aucun examen trouvé
                       </TableCell>
                     </TableRow>
@@ -659,6 +668,11 @@ const ExamParYears = () => {
                         </TableCell>
                         <TableCell className="max-w-xs truncate" title={exam.helpText}>
                           {exam.helpText || "—"}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={exam.isOfficialCorrection ? "default" : "secondary"}>
+                            {exam.isOfficialCorrection ? "Officielle" : "Étudiants"}
+                          </Badge>
                         </TableCell>
                         <TableCell>{exam.totalQuestions}</TableCell>
                         <TableCell className="text-right">
@@ -884,6 +898,18 @@ const ExamParYears = () => {
                     />
                   </div>
 
+                  <div className="flex items-center justify-between gap-4 rounded-lg border border-gray-200 bg-background p-3">
+                    <div>
+                      <Label htmlFor="official-correction" className="text-black font-medium">Correction officielle</Label>
+                      <p className="text-xs text-muted-foreground">Décochez pour indiquer une correction proposée par des étudiants.</p>
+                    </div>
+                    <Checkbox
+                      id="official-correction"
+                      checked={formData.isOfficialCorrection}
+                      onCheckedChange={(checked) => handleFormChange("isOfficialCorrection", checked === true)}
+                    />
+                  </div>
+
                   <DialogFooter className="gap-2 pt-4">
                     <Button
                       type="button"
@@ -893,7 +919,7 @@ const ExamParYears = () => {
                         setShowAddExamForm(false);
                         setEditingExam(null);
                         setFormSemesterFilter("all");
-                        setFormData({ examName: "", moduleName: "", year: "", imageUrl: "", helpText: "" });
+                        setFormData({ examName: "", moduleName: "", year: "", imageUrl: "", helpText: "", isOfficialCorrection: true, courseCategoryId: "" });
                       }}
                     >
                       Annuler

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
@@ -22,9 +22,9 @@ const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const googleSignUpAttemptRef = useRef(null);
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
+    fullName: '',
     email: '',
     password: '',
     confirmPassword: '',
@@ -104,11 +104,7 @@ const Register = () => {
     setIsLoading(true);
 
     try {
-      const userData = {
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        newsletter: formData.newsletter
-      };
+      const userData = { fullName: formData.fullName.trim(), newsletter: formData.newsletter };
 
       const result = await registerWithEmail(
         formData.email,
@@ -125,7 +121,15 @@ const Register = () => {
         // Redirect to Firebase email verification page
         navigate('/verify-email-firebase', { state: { email: formData.email } });
       } else {
-        await completeRegistration();
+        if (!result.token || !result.user) {
+          throw new Error("La session n'a pas pu être créée. Veuillez réessayer.");
+        }
+
+        localStorage.setItem('user', JSON.stringify(result.user));
+        localStorage.setItem('userProfile', JSON.stringify(result.user));
+        window.dispatchEvent(new Event('auth-state-changed'));
+        toast.success('Compte créé avec succès', { description: 'Bienvenue sur YourQcm !' });
+        navigate('/select-semester', { replace: true });
       }
     } catch (error) {
       const errorMessage = error.message || 'Une erreur est survenue. Veuillez réessayer.';
@@ -152,6 +156,10 @@ const Register = () => {
   };
 
   const handleGoogleSignUp = async () => {
+    if (googleSignUpAttemptRef.current) return;
+
+    const attemptId = Symbol('google-signup');
+    googleSignUpAttemptRef.current = attemptId;
     setIsLoading(true);
 
     try {
@@ -164,11 +172,20 @@ const Register = () => {
 
       await completeRegistration();
     } catch (error) {
+      // Always unlock the registration form before notifying a user who closed
+      // or cancelled the provider popup.
+      if (googleSignUpAttemptRef.current === attemptId) {
+        googleSignUpAttemptRef.current = null;
+        setIsLoading(false);
+      }
       toast.error(t('auth:authentication_error'), {
         description: error.message || t('auth:authentication_error'),
       });
     } finally {
-      setIsLoading(false);
+      if (googleSignUpAttemptRef.current === attemptId) {
+        googleSignUpAttemptRef.current = null;
+        setIsLoading(false);
+      }
     }
   };
 
@@ -222,34 +239,40 @@ const Register = () => {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Name Fields */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="lastName">Nom</Label>
-                  <Input
-                    type="text"
-                    id="lastName"
-                    name="lastName"
-                    value={formData.lastName}
-                    onChange={handleInputChange}
-                    placeholder="Nom"
-                    required
-                    disabled={isLoading}
-                  />
+              {/* Google Sign Up Button */}
+              <Button
+                variant="outline"
+                type="button"
+                disabled={isLoading}
+                onClick={handleGoogleSignUp}
+                className="w-full"
+              >
+                {isLoading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <FcGoogle className="mr-2 h-5 w-5" />}
+                {t('auth:google_login')}
+              </Button>
+
+              {/* Divider between Google and email registration */}
+              <div className="relative my-6">
+                <Separator />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="bg-card px-2 text-xs text-muted-foreground">{t('auth:or')}</span>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="firstName">Prénom</Label>
-                  <Input
-                    type="text"
-                    id="firstName"
-                    name="firstName"
-                    value={formData.firstName}
-                    onChange={handleInputChange}
-                    placeholder="Prénom"
-                    required
-                    disabled={isLoading}
-                  />
-                </div>
+              </div>
+
+              {/* Full name */}
+              <div className="space-y-2">
+                <Label htmlFor="fullName">Nom et prénom</Label>
+                <Input
+                  type="text"
+                  id="fullName"
+                  name="fullName"
+                  value={formData.fullName}
+                  onChange={handleInputChange}
+                  placeholder="Nom et prénom"
+                  autoComplete="name"
+                  required
+                  disabled={isLoading}
+                />
               </div>
 
               {/* Email Input */}
@@ -449,31 +472,6 @@ const Register = () => {
                 )}
               </Button>
 
-              {/* Divider */}
-              <div className="relative my-6">
-                <Separator />
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="bg-card px-2 text-xs text-muted-foreground">
-                    {t('auth:or_continue_with')}
-                  </span>
-                </div>
-              </div>
-
-              {/* Google Sign Up Button */}
-              <Button
-                variant="outline"
-                type="button"
-                disabled={isLoading}
-                onClick={handleGoogleSignUp}
-                className="w-full"
-              >
-                {isLoading ? (
-                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                ) : (
-                  <FcGoogle className="mr-2 h-5 w-5" />
-                )}
-                {t('auth:google_login')}
-              </Button>
             </form>
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">

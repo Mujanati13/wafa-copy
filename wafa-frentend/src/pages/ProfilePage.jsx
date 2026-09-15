@@ -4,8 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { debounce } from 'lodash';
 import { 
   User, Mail, Phone, MapPin, Calendar, GraduationCap, 
-  BookOpen, Trophy, Medal, Star, Clock, Edit, Save, X, Camera, Loader2, Check,
-  ShieldCheck, AlertTriangle
+  BookOpen, Trophy, Medal, Star, Clock, Edit, Save, X, Camera, Loader2, Check
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -17,14 +16,6 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { PageHeader, StatCard } from '@/components/shared';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import { userService } from '@/services/userService';
 import { api } from '@/lib/utils';
@@ -41,12 +32,7 @@ const ProfilePage = () => {
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const fileInputRef = useRef(null);
   
-  // Email verification states
-  const [showVerificationModal, setShowVerificationModal] = useState(false);
-  const [verificationCode, setVerificationCode] = useState('');
-  const [isVerifying, setIsVerifying] = useState(false);
-  const [isSendingCode, setIsSendingCode] = useState(false);
-  const [pendingChanges, setPendingChanges] = useState(null);
+  const [isSavingPersonal, setIsSavingPersonal] = useState(false);
   
   const [profileData, setProfileData] = useState({
     firstName: '',
@@ -156,7 +142,7 @@ const ProfilePage = () => {
     fetchData();
   }, []);
 
-  // Auto-save profile function (only for academic data - no verification needed)
+  // Auto-save profile function for academic data.
   const autoSaveAcademic = useCallback(
     debounce(async (data) => {
       if (!isEditingAcademic) return;
@@ -188,21 +174,6 @@ const ProfilePage = () => {
       autoSaveAcademic(editData);
     }
   }, [editData.university, editData.faculty, isEditingAcademic]);
-
-  // Send verification code for personal info changes
-  const sendVerificationCode = async () => {
-    setIsSendingCode(true);
-    try {
-      await api.post('/auth/send-profile-verification');
-      toast.success('Code de vérification envoyé à votre email');
-      setShowVerificationModal(true);
-    } catch (error) {
-      console.error('Failed to send verification:', error);
-      toast.error(error.response?.data?.message || 'Échec de l\'envoi du code');
-    } finally {
-      setIsSendingCode(false);
-    }
-  };
 
   // Handle profile photo upload
   const handlePhotoUpload = async (event) => {
@@ -248,44 +219,31 @@ const ProfilePage = () => {
     }
   };
 
-  // Verify code and save personal info
-  const verifyAndSavePersonal = async () => {
-    if (verificationCode.length !== 6) {
-      toast.error('Veuillez entrer le code à 6 chiffres');
-      return;
-    }
-
-    setIsVerifying(true);
+  // Save personal information directly for the authenticated user.
+  const savePersonalChanges = async () => {
+    setIsSavingPersonal(true);
     try {
-      // Verify the code
-      await api.post('/auth/verify-profile-code', { code: verificationCode });
-      
-      // If verified, save the personal info
       const updateData = {
-        name: `${pendingChanges.firstName} ${pendingChanges.lastName}`.trim(),
-        phone: pendingChanges.phone,
-        dateOfBirth: pendingChanges.birthDate,
-        address: pendingChanges.location,
-        bio: pendingChanges.bio
+        name: `${editData.firstName} ${editData.lastName}`.trim(),
+        phone: editData.phone,
+        dateOfBirth: editData.birthDate,
+        address: editData.location,
+        bio: editData.bio
       };
-      
+
       const updatedUser = await userService.updateUserProfile(updateData);
       setUser(updatedUser);
-      setProfileData({ ...profileData, ...pendingChanges });
-      setEditData({ ...profileData, ...pendingChanges });
-      
-      setShowVerificationModal(false);
-      setVerificationCode('');
-      setPendingChanges(null);
+      setProfileData({ ...profileData, ...editData });
+      setEditData({ ...profileData, ...editData });
       setIsEditing(false);
       setLastSaved(new Date());
-      
+
       toast.success('Profil mis à jour avec succès');
     } catch (error) {
-      console.error('Verification failed:', error);
-      toast.error(error.response?.data?.message || 'Code de vérification invalide');
+      console.error('Profile save failed:', error);
+      toast.error(error.response?.data?.message || 'Échec de la mise à jour du profil');
     } finally {
-      setIsVerifying(false);
+      setIsSavingPersonal(false);
     }
   };
 
@@ -354,16 +312,7 @@ const ProfilePage = () => {
       editData.bio !== profileData.bio;
     
     if (personalChanged) {
-      // Store pending changes and request verification
-      setPendingChanges({
-        firstName: editData.firstName,
-        lastName: editData.lastName,
-        phone: editData.phone,
-        birthDate: editData.birthDate,
-        location: editData.location,
-        bio: editData.bio
-      });
-      await sendVerificationCode();
+      await savePersonalChanges();
     } else {
       setIsEditing(false);
       toast.info('Aucune modification détectée');
@@ -467,9 +416,9 @@ const ProfilePage = () => {
                     </Button>
                   ) : (
                     <div className="flex gap-2">
-                      <Button onClick={handleSave} className="gap-2">
-                        <Save className="h-4 w-4" />
-                        {t('common:save')}
+                      <Button onClick={handleSave} disabled={isSavingPersonal} className="gap-2">
+                        {isSavingPersonal ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                        {isSavingPersonal ? t('dashboard:saving', 'Sauvegarde...') : t('common:save')}
                       </Button>
                       <Button onClick={handleCancel} variant="outline" className="gap-2">
                         <X className="h-4 w-4" />
@@ -487,12 +436,6 @@ const ProfilePage = () => {
                   </TabsList>
                   
                   <TabsContent value="personal" className="space-y-4 mt-4">
-                    {/* Info banner for email verification */}
-                    <div className="flex items-center gap-2 p-3 bg-blue-50 text-blue-700 rounded-lg text-sm">
-                      <ShieldCheck className="h-4 w-4 flex-shrink-0" />
-                      <span>Les modifications de vos informations personnelles nécessitent une vérification par email.</span>
-                    </div>
-
                     <div className="grid md:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="firstName">{t('dashboard:first_name')}</Label>
@@ -852,70 +795,6 @@ const ProfilePage = () => {
         </div>
       </div>
 
-      {/* Email Verification Modal */}
-      <Dialog open={showVerificationModal} onOpenChange={setShowVerificationModal}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <ShieldCheck className="h-5 w-5 text-blue-600" />
-              Vérification requise
-            </DialogTitle>
-            <DialogDescription>
-              Un code de vérification a été envoyé à votre email <strong>{profileData.email}</strong>. 
-              Veuillez entrer le code pour confirmer vos modifications.
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-4 py-4">
-            <div className="flex justify-center">
-              <Input
-                value={verificationCode}
-                onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                placeholder="000000"
-                className="text-center text-2xl font-bold tracking-[0.5em] w-48"
-                maxLength={6}
-              />
-            </div>
-
-            <p className="text-center text-sm text-muted-foreground">
-              Vous n'avez pas reçu le code?{' '}
-              <button 
-                onClick={sendVerificationCode}
-                disabled={isSendingCode}
-                className="text-blue-600 hover:underline disabled:opacity-50"
-              >
-                {isSendingCode ? 'Envoi...' : 'Renvoyer'}
-              </button>
-            </p>
-          </div>
-
-          <DialogFooter className="gap-2">
-            <Button 
-              variant="outline" 
-              onClick={() => {
-                setShowVerificationModal(false);
-                setVerificationCode('');
-                setPendingChanges(null);
-              }}
-            >
-              Annuler
-            </Button>
-            <Button 
-              onClick={verifyAndSavePersonal}
-              disabled={isVerifying || verificationCode.length !== 6}
-            >
-              {isVerifying ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Vérification...
-                </>
-              ) : (
-                'Vérifier et sauvegarder'
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };

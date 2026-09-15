@@ -21,6 +21,10 @@ const examParYearSchema = new mongoose.Schema(
         infoText: {
                 type: String,
         },
+        isOfficialCorrection: {
+                type: Boolean,
+                default: true,
+        },
         courseCategoryId: {
                 type: mongoose.Schema.Types.ObjectId,
                 ref: "CourseCategory",

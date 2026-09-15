@@ -19,6 +19,9 @@ const examParYearSchema = joi.object({
     infoText: joi.string().allow('', null).messages({
         'string.base': 'Info text must be a string'
     }),
+    isOfficialCorrection: joi.boolean().default(true).messages({
+        'boolean.base': 'Official correction must be a boolean'
+    }),
     courseCategoryId: joi.string().allow('', null).messages({
         'string.base': 'Course Category ID must be a string'
     })
@@ -39,6 +42,9 @@ const updateExamParYearSchema = joi.object({
     }),
     infoText: joi.string().allow('', null).messages({
         'string.base': 'Info text must be a string'
+    }),
+    isOfficialCorrection: joi.boolean().messages({
+        'boolean.base': 'Official correction must be a boolean'
     }),
     courseCategoryId: joi.string().allow('', null).messages({
         'string.base': 'Course Category ID must be a string'

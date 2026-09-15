@@ -9,7 +9,7 @@ import { getAnsweredCountByExam } from "../utils/answerProgress.js";
 export const examController = {
     create: asyncHandler(async (req, res) => {
 
-        const { name, moduleId, year, imageUrl, infoText, courseCategoryId } = req.body;
+        const { name, moduleId, year, imageUrl, infoText, courseCategoryId, isOfficialCorrection = true } = req.body;
         const globalCover = imageUrl
             ? null
             : await ExamCoverSettings.findOne({ key: "global" }).select("imageUrl").lean();
@@ -20,6 +20,7 @@ export const examController = {
             year,
             imageUrl: imageUrl || globalCover?.imageUrl || "",
             infoText,
+            isOfficialCorrection,
             courseCategoryId: courseCategoryId || null
         });
         res.status(201).json({
@@ -75,7 +76,7 @@ export const examController = {
 
     update: asyncHandler(async (req, res) => {
         const { id } = req.params;
-        const { name, moduleId, year, imageUrl, infoText, courseCategoryId } = req.body;
+        const { name, moduleId, year, imageUrl, infoText, courseCategoryId, isOfficialCorrection } = req.body;
         
         const updatedExam = await examModel.findByIdAndUpdate(
             id,
@@ -85,6 +86,7 @@ export const examController = {
                 year,
                 imageUrl,
                 infoText,
+                ...(typeof isOfficialCorrection === "boolean" ? { isOfficialCorrection } : {}),
                 courseCategoryId: courseCategoryId || null
             },
             { new: true }
@@ -119,7 +121,7 @@ export const examController = {
     getAll: asyncHandler(async (req, res) => {
         // Get all exams and populate related module name and color
         const exams = await examModel.find()
-            .select('name moduleId year imageUrl infoText courseCategoryId')
+            .select('name moduleId year imageUrl infoText isOfficialCorrection courseCategoryId')
             .populate('moduleId', 'name color')
             .lean();
         
@@ -203,7 +205,7 @@ export const examController = {
         const { moduleId } = req.params;
 
         const exams = await examModel.find({ moduleId })
-            .select('name moduleId year imageUrl infoText courseCategoryId')
+            .select('name moduleId year imageUrl infoText isOfficialCorrection courseCategoryId')
             .populate('moduleId', 'name color')
             .lean();
 

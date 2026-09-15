@@ -14,6 +14,7 @@ import {
 import { buildProfileActivityStatistics } from "../services/profileStatisticsService.js";
 import { classifyFirebaseAdminError } from "../utils/firebaseError.js";
 import { applyAdminPlanTransition, normalizeUserPlan, SUPPORTED_USER_PLANS } from "../utils/planAccess.js";
+import { buildUserListFilter } from "../utils/userListFilters.js";
 
 const getPagination = (query, defaultLimit = 10, maxLimit = 100) => {
     const page = Math.max(Number.parseInt(query.page, 10) || 1, 1);
@@ -319,14 +320,15 @@ export const UserController = {
         try {
             const { page, limit, skip } = getPagination(req.query);
 
+            const filter = buildUserListFilter(req.query);
             const [users, totalUsers] = await Promise.all([
-                User.find({})
+                User.find(filter)
                     .select('-resetCode')
                     .sort({ createdAt: -1 })
                     .skip(skip)
                     .limit(limit)
                     .lean(),
-                User.countDocuments({})
+                User.countDocuments(filter)
             ]);
 
             // Add hasPassword field and remove actual password
@@ -367,7 +369,7 @@ export const UserController = {
     getFreeUsers: async (req, res) => {
         try {
             const { page, limit, skip } = getPagination(req.query);
-            const filter = { plan: "Free" };
+            const filter = buildUserListFilter(req.query, { plan: "Free" });
             const [users, totalFreeUsers] = await Promise.all([
                 User.find(filter)
                     .select('-password -resetCode')
@@ -406,7 +408,7 @@ export const UserController = {
     getPayingUsers: async (req, res) => {
         try {
             const { page, limit, skip } = getPagination(req.query);
-            const filter = { plan: { $ne: "Free" } };
+            const filter = buildUserListFilter(req.query, { plan: { $ne: "Free" } });
             const [users, totalPayingUsers] = await Promise.all([
                 User.find(filter)
                     .select('-password -resetCode')

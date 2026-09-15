@@ -24,6 +24,7 @@ import NotificationDropdown from "./NotificationDropdown";
 import ThemeToggle from "@/components/ui/ThemeToggle";
 import { userService } from "@/services/userService";
 import { signOut } from "@/services/authService";
+import { clearStoredAuthToken } from "@/utils/authStorage";
 import { api } from "@/lib/utils";
 
 const parseStorageJSON = (key, fallback = null) => {
@@ -127,7 +128,7 @@ const TopBar = ({ onMenuClick, loginPath = "/login" }) => {
     } catch (error) {
       console.error("Logout error:", error);
       // Force logout even if there's an error
-      localStorage.removeItem("token");
+      clearStoredAuthToken();
       localStorage.removeItem("user");
       localStorage.removeItem("userProfile");
       userService.clearProfileCache();

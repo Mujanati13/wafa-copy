@@ -59,7 +59,9 @@ export const AuthController = {
 
   register: async (req, res) => {
     try {
-      const { username, email, password } = req.body;
+      const rawFullName = req.body.fullName ?? req.body.name ?? req.body.username;
+      const username = String(rawFullName || "").replace(/\s+/g, " ").trim();
+      const { email, password } = req.body;
       if (!username || !email || !password) {
         return res.status(400).json({ message: "All fields are required" });
       }
@@ -110,15 +112,26 @@ export const AuthController = {
         emailVerified: true, // Auto-verified - no email verification required
       });
 
-      // Registration successful - user can log in immediately
+      let token;
+      try {
+        // A newly created account must receive the same authenticated session as
+        // a normal sign-in so onboarding can continue without a second login.
+        token = await completeSessionLogin(req, newUser);
+      } catch (sessionError) {
+        return sendSessionError(res, sessionError);
+      }
+
       res.status(201).json({
         success: true,
-        message: "Registration successful! You can now log in with your credentials.",
+        message: "Registration successful! Your session is ready.",
+        token,
         user: {
           id: newUser._id,
           username: newUser.username,
+          name: newUser.name,
           email: newUser.email,
           emailVerified: newUser.emailVerified,
+          plan: newUser.plan,
         },
         requiresVerification: false,
       });

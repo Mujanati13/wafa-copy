@@ -2189,6 +2189,16 @@ const ExamPage = () => {
                             })()}
                           </span>
                         </div>
+                        {examType === 'exam' && (
+                          <span className={cn(
+                            "shrink-0 rounded-full border px-2 py-1 text-[10px] font-semibold sm:text-xs",
+                            examData?.isOfficialCorrection === false
+                              ? "border-amber-300 bg-amber-50 text-amber-800 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200"
+                              : "border-emerald-300 bg-emerald-50 text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200"
+                          )}>
+                            {examData?.isOfficialCorrection === false ? "Correction par des étudiants" : "Correction officielle"}
+                          </span>
+                        )}
                       </div>
 
                       {/* Right: Desktop action buttons + Mobile 3-dot menu */}

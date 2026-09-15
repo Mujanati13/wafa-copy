@@ -1,6 +1,7 @@
 import { clsx } from "clsx";
 import { twMerge } from "tailwind-merge"
 import axios from "axios";
+import { getStoredAuthToken } from "@/utils/authStorage";
 
 export function cn(...inputs) {
   return twMerge(clsx(inputs));
@@ -24,7 +25,7 @@ api.interceptors.request.use(
     console.log(`API Request: ${config.method?.toUpperCase()} ${config.url}`);
     
     // Add token to requests if available
-    const token = localStorage.getItem('token');
+    const token = getStoredAuthToken();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -69,6 +70,7 @@ api.interceptors.response.use(
 
     if (status === 401 && errorCode === 'SESSION_INVALID') {
       localStorage.removeItem('token');
+      sessionStorage.removeItem('token');
       localStorage.removeItem('user');
       localStorage.removeItem('userProfile');
       window.dispatchEvent(new Event('auth-state-changed'));

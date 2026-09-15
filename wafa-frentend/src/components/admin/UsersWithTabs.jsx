@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { Button } from "../ui/button";
 import {
   Card,
@@ -94,6 +94,15 @@ const paymentModeOptions = [
   { value: "Manual", label: "Manuel" },
 ];
 
+const serializeDateFilter = (value, endOfDay = false) => {
+  if (!value) return undefined;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return undefined;
+  if (endOfDay) date.setHours(23, 59, 59, 999);
+  else date.setHours(0, 0, 0, 0);
+  return date.toISOString();
+};
+
 const UsersWithTabs = () => {
   const [activeTab, setActiveTab] = useState("free"); // "free" or "paying"
   const [searchTerm, setSearchTerm] = useState("");
@@ -122,26 +131,37 @@ const UsersWithTabs = () => {
   const [endDate, setEndDate] = useState(undefined);
   const [paymentStartDate, setPaymentStartDate] = useState(undefined);
   const [paymentEndDate, setPaymentEndDate] = useState(undefined);
+  const usersRequestId = useRef(0);
+
+  const requestFilters = useMemo(() => ({
+    search: searchTerm.trim() || undefined,
+    academicYear: studentYear !== "all" ? studentYear : undefined,
+    startDate: serializeDateFilter(startDate),
+    endDate: serializeDateFilter(endDate, true),
+    paymentStartDate: serializeDateFilter(paymentStartDate),
+    paymentEndDate: serializeDateFilter(paymentEndDate, true),
+  }), [searchTerm, studentYear, startDate, endDate, paymentStartDate, paymentEndDate]);
 
   // Fetch users based on active tab
   const fetchUsers = async () => {
+    const requestId = ++usersRequestId.current;
     setLoading(true);
     try {
       let data;
       if (activeTab === "free") {
-        data = await userService.getFreeUsers(currentPage, itemsPerPage);
+        data = await userService.getFreeUsers(currentPage, itemsPerPage, requestFilters);
       } else {
-        data = await userService.getPayingUsers(currentPage, itemsPerPage);
+        data = await userService.getPayingUsers(currentPage, itemsPerPage, requestFilters);
       }
 
-      if (data.success) {
+      if (data.success && requestId === usersRequestId.current) {
         setUsers(data.data.users);
         setPagination(data.data.pagination);
       }
     } catch (error) {
       console.error("Error fetching users:", error);
     } finally {
-      setLoading(false);
+      if (requestId === usersRequestId.current) setLoading(false);
     }
   };
 
@@ -160,7 +180,7 @@ const UsersWithTabs = () => {
 
   useEffect(() => {
     fetchUsers();
-  }, [activeTab, currentPage]);
+  }, [activeTab, currentPage, requestFilters]);
 
   useEffect(() => {
     fetchStats();
@@ -314,34 +334,8 @@ const UsersWithTabs = () => {
       : "bg-red-100 text-red-800 border-red-200";
   };
 
-  // Filter users based on search term and filters
-  const filteredUsers = users.filter((user) => {
-    // Search filter
-    const matchesSearch =
-      user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email?.toLowerCase().includes(searchTerm.toLowerCase());
-
-    // Student year filter
-    const matchesYear = studentYear === "all" || user.currentYear === studentYear;
-
-    // Registration date filter
-    const userRegDate = new Date(user.createdAt);
-    const matchesRegDate =
-      (!startDate || userRegDate >= startDate) &&
-      (!endDate || userRegDate <= endDate);
-
-    // Payment date filter (only for paying users)
-    let matchesPaymentDate = true;
-    if (activeTab === "paying" && user.paymentDate) {
-      const userPayDate = new Date(user.paymentDate);
-      matchesPaymentDate =
-        (!paymentStartDate || userPayDate >= paymentStartDate) &&
-        (!paymentEndDate || userPayDate <= paymentEndDate);
-    }
-
-    return matchesSearch && matchesYear && matchesRegDate && matchesPaymentDate;
-  });
+  // The API applies all filters before calculating pagination.
+  const filteredUsers = users;
 
   const handleClearFilters = () => {
     setSearchTerm("");
@@ -350,6 +344,7 @@ const UsersWithTabs = () => {
     setEndDate(undefined);
     setPaymentStartDate(undefined);
     setPaymentEndDate(undefined);
+    setCurrentPage(1);
   };
 
   const activeFilterCount =
@@ -764,13 +759,17 @@ const UsersWithTabs = () => {
           <CardContent className="p-3 sm:p-4 md:p-6">
             <TableFilters
               searchValue={searchTerm}
-              onSearchChange={setSearchTerm}
+              onSearchChange={(value) => {
+                setSearchTerm(value);
+                setCurrentPage(1);
+              }}
               searchPlaceholder="Rechercher par nom, username ou email..."
               startDate={startDate}
               endDate={endDate}
               onDateChange={({ startDate: sd, endDate: ed }) => {
                 setStartDate(sd);
                 setEndDate(ed);
+                setCurrentPage(1);
               }}
               showDateFilter={true}
               additionalFilters={[
@@ -778,7 +777,10 @@ const UsersWithTabs = () => {
                   key: "studentYear",
                   label: "Année d'étude",
                   value: studentYear,
-                  onChange: setStudentYear,
+                  onChange: (value) => {
+                    setStudentYear(value);
+                    setCurrentPage(1);
+                  },
                   options: studentYears,
                 },
                 ...(activeTab === "paying" ? [{
@@ -790,6 +792,7 @@ const UsersWithTabs = () => {
                       setPaymentStartDate(undefined);
                       setPaymentEndDate(undefined);
                     }
+                    setCurrentPage(1);
                   },
                   options: [
                     { value: "last7days", label: "7 derniers jours" },
@@ -809,7 +812,7 @@ const UsersWithTabs = () => {
           <CardHeader className="p-3 sm:p-4 md:p-6">
             <CardTitle className="text-base sm:text-lg md:text-xl font-bold">
               {activeTab === "free" ? "Free Users" : "Paying Users"} (
-              {filteredUsers.length})
+              {pagination.totalUsers || 0})
             </CardTitle>
             <CardDescription className="text-xs sm:text-sm">
               {activeTab === "free"

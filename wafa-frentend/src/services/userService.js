@@ -3,10 +3,9 @@ import { publishUserProfile } from '../utils/profileState.js';
 
 export const userService = {
     // Get all users with pagination
-    getAllUsers: async (page = 1, limit = 10) => {
+    getAllUsers: async (page = 1, limit = 10, filters = {}) => {
         try {
-            console.log(`Fetching all users from: /users?page=${page}&limit=${limit}`);
-            const response = await api.get(`/users?page=${page}&limit=${limit}`);
+            const response = await api.get('/users', { params: { page, limit, ...filters } });
             return response.data;
         } catch (error) {
             console.error('Error fetching all users:', error);
@@ -27,10 +26,9 @@ export const userService = {
     },
 
     // Get free users
-    getFreeUsers: async (page = 1, limit = 10) => {
+    getFreeUsers: async (page = 1, limit = 10, filters = {}) => {
         try {
-            console.log(`Fetching free users from: /users/free?page=${page}&limit=${limit}`);
-            const response = await api.get(`/users/free?page=${page}&limit=${limit}`);
+            const response = await api.get('/users/free', { params: { page, limit, ...filters } });
             return response.data;
         } catch (error) {
             console.error('Error fetching free users:', error);
@@ -39,10 +37,9 @@ export const userService = {
     },
 
     // Get paying users
-    getPayingUsers: async (page = 1, limit = 10) => {
+    getPayingUsers: async (page = 1, limit = 10, filters = {}) => {
         try {
-            console.log(`Fetching paying users from: /users/paying?page=${page}&limit=${limit}`);
-            const response = await api.get(`/users/paying?page=${page}&limit=${limit}`);
+            const response = await api.get('/users/paying', { params: { page, limit, ...filters } });
             return response.data;
         } catch (error) {
             console.error('Error fetching paying users:', error);

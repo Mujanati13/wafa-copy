@@ -1,5 +1,5 @@
 import { getLoginDestination } from '@/utils/authNavigation';
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion as Motion } from 'framer-motion';
@@ -21,6 +21,7 @@ const Login = () => {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const googleLoginAttemptRef = useRef(null);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -72,7 +73,7 @@ const Login = () => {
     setIsLoading(true);
 
     try {
-      const result = await loginWithEmail(formData.email, formData.password);
+      const result = await loginWithEmail(formData.email, formData.password, { rememberMe: formData.rememberMe });
 
       if (result.needsVerification) {
         toast.warning(t('auth:email_verification'), {
@@ -86,9 +87,6 @@ const Login = () => {
       }
 
       // Store JWT token and user data
-      if (result.token) {
-        localStorage.setItem('token', result.token);
-      }
       localStorage.setItem('user', JSON.stringify(result.user));
       localStorage.setItem('userProfile', JSON.stringify(result.user));
 
@@ -117,15 +115,16 @@ const Login = () => {
   };
 
   const handleGoogleLogin = async () => {
+    if (googleLoginAttemptRef.current) return;
+
+    const attemptId = Symbol('google-login');
+    googleLoginAttemptRef.current = attemptId;
     setIsLoading(true);
 
     try {
-      const result = await loginWithGoogle();
+      const result = await loginWithGoogle({ rememberMe: formData.rememberMe });
 
       // Store JWT token and user data
-      if (result.token) {
-        localStorage.setItem('token', result.token);
-      }
       localStorage.setItem('user', JSON.stringify(result.user));
       localStorage.setItem('userProfile', JSON.stringify(result.user));
 
@@ -147,9 +146,18 @@ const Login = () => {
       // A fresh login always starts at the role's dashboard.
       navigate(getLoginDestination(result.user), { replace: true });
     } catch (error) {
+      // Firebase reports a closed/cancelled popup here. Release the form before
+      // showing its message so the user can immediately choose another method.
+      if (googleLoginAttemptRef.current === attemptId) {
+        googleLoginAttemptRef.current = null;
+        setIsLoading(false);
+      }
       showLoginError(error);
     } finally {
-      setIsLoading(false);
+      if (googleLoginAttemptRef.current === attemptId) {
+        googleLoginAttemptRef.current = null;
+        setIsLoading(false);
+      }
     }
   };
 
@@ -189,6 +197,26 @@ const Login = () => {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Google Login Button */}
+              <Button
+                variant="outline"
+                type="button"
+                disabled={isLoading}
+                onClick={handleGoogleLogin}
+                className="w-full"
+              >
+                {isLoading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <FcGoogle className="mr-2 h-5 w-5" />}
+                {t('auth:google_login')}
+              </Button>
+
+              {/* Divider between Google and email/password login */}
+              <div className="relative my-6">
+                <Separator />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="bg-card px-2 text-xs text-muted-foreground">{t('auth:or')}</span>
+                </div>
+              </div>
+
               {/* Email Input */}
               <div className="space-y-2">
                 <Label htmlFor="email">{t('common:email')}</Label>
@@ -279,33 +307,6 @@ const Login = () => {
                 )}
               </Button>
 
-              {/* Divider */}
-              <div className="relative my-6">
-                <Separator />
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="bg-card px-2 text-xs text-muted-foreground">
-                    {t('auth:or')}
-                  </span>
-                </div>
-              </div>
-
-              {/* Google Login Button */}
-              <div className="grid grid-cols-1 gap-4">
-                <Button
-                  variant="outline"
-                  type="button"
-                  disabled={isLoading}
-                  onClick={handleGoogleLogin}
-                  className="w-full"
-                >
-                  {isLoading ? (
-                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                  ) : (
-                    <FcGoogle className="mr-2 h-5 w-5" />
-                  )}
-                  {t('auth:google_login')}
-                </Button>
-              </div>
             </form>
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">

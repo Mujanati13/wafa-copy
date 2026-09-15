@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
+import { clearStoredAuthToken, getStoredAuthToken } from '@/utils/authStorage';
 
 const ProtectedRoute = ({ children }) => {
   const [loading, setLoading] = useState(true);
@@ -7,9 +8,9 @@ const ProtectedRoute = ({ children }) => {
   const location = useLocation();
 
   useEffect(() => {
-    // Check for JWT token in localStorage (backend authentication)
+    // Check for a remembered or tab-only JWT token.
     const checkAuth = () => {
-      const token = localStorage.getItem('token');
+      const token = getStoredAuthToken();
       const user = localStorage.getItem('user');
       
       // User is authenticated if both token and user data exist
@@ -25,7 +26,7 @@ const ProtectedRoute = ({ children }) => {
             
             if (isExpired) {
               console.log('Token expired, redirecting to login');
-              localStorage.removeItem('token');
+              clearStoredAuthToken();
               localStorage.removeItem('user');
               localStorage.removeItem('userProfile');
               setAuthenticated(false);
