@@ -91,10 +91,12 @@ const Login = () => {
       localStorage.setItem('userProfile', JSON.stringify(result.user));
 
       // Fetch full profile to ensure we have latest data
+      let destinationUser = result.user;
       try {
         const fullProfile = await userService.getUserProfile(true);
         localStorage.setItem('userProfile', JSON.stringify(fullProfile));
         localStorage.setItem('user', JSON.stringify(fullProfile));
+        destinationUser = fullProfile;
       } catch (profileError) {
         console.error('Error fetching full profile:', profileError);
       }
@@ -106,7 +108,7 @@ const Login = () => {
       });
 
       // A fresh login always starts at the role's dashboard.
-      navigate(getLoginDestination(result.user), { replace: true });
+      navigate(getLoginDestination(destinationUser), { replace: true });
     } catch (error) {
       showLoginError(error);
     } finally {
@@ -129,10 +131,12 @@ const Login = () => {
       localStorage.setItem('userProfile', JSON.stringify(result.user));
 
       // Fetch full profile to ensure we have latest data
+      let destinationUser = result.user;
       try {
         const fullProfile = await userService.getUserProfile(true);
         localStorage.setItem('userProfile', JSON.stringify(fullProfile));
         localStorage.setItem('user', JSON.stringify(fullProfile));
+        destinationUser = fullProfile;
       } catch (profileError) {
         console.error('Error fetching full profile:', profileError);
       }
@@ -144,7 +148,7 @@ const Login = () => {
       });
 
       // A fresh login always starts at the role's dashboard.
-      navigate(getLoginDestination(result.user), { replace: true });
+      navigate(getLoginDestination(destinationUser), { replace: true });
     } catch (error) {
       // Firebase reports a closed/cancelled popup here. Release the form before
       // showing its message so the user can immediately choose another method.

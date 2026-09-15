@@ -167,7 +167,24 @@ export const userService = {
         try {
             console.log('Updating user profile at: /users/profile');
             const response = await api.put('/users/profile', profileData);
-            return response.data.data.user;
+            const updatedUser = response.data.data.user;
+
+            // Profile updates are also valid for Firebase/Google accounts.
+            // Preserve fields omitted by the compact update response (such as
+            // semesters and plan), then publish the new name to every active
+            // layout instead of leaving the provider display name in storage.
+            let storedUser = {};
+            try {
+                storedUser = JSON.parse(localStorage.getItem('userProfile') || localStorage.getItem('user') || '{}');
+            } catch {
+                // A malformed cache must not prevent a server-confirmed edit.
+            }
+            const profile = { ...storedUser, ...userService._profileCache, ...updatedUser };
+            userService._profileCache = profile;
+            userService._profileCacheTime = Date.now();
+            publishUserProfile(profile);
+
+            return profile;
         } catch (error) {
             console.error('Error updating user profile:', error);
             throw error;

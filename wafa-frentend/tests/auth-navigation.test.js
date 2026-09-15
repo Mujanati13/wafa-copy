@@ -20,3 +20,9 @@ test('fresh student login cannot restore an exam destination', () => {
   }
   assert.equal(getLoginDestination({ isAdmin: true }), '/admin/analytics');
 });
+
+test('an authenticated student without a semester is sent to onboarding', () => {
+  assert.equal(getLoginDestination({ isAdmin: false, semesters: [] }), '/select-semester');
+  assert.equal(getLoginDestination({ isAdmin: false, semesters: [''] }), '/select-semester');
+  assert.equal(getLoginDestination({ isAdmin: false, semesters: ['S4'] }), '/dashboard/home');
+});

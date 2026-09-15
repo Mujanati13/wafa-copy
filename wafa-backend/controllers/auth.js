@@ -519,7 +519,14 @@ export const AuthController = {
   googleCallback: async (req, res) => {
     try {
       await establishSingleSession(req, req.user);
-      return res.redirect(`${process.env.FRONTEND_URL}/dashboard/home`);
+      // OAuth can create a user without any academic data. Do this check at
+      // the callback boundary so the dashboard is never rendered with an
+      // incomplete profile.
+      const profile = await User.findById(req.user._id).select("semesters").lean();
+      const hasSemester = Array.isArray(profile?.semesters)
+        && profile.semesters.some((semester) => String(semester || "").trim());
+      const destination = hasSemester ? "/dashboard/home" : "/select-semester";
+      return res.redirect(`${process.env.FRONTEND_URL}${destination}`);
     } catch (error) {
       if (error instanceof ActiveSessionError) {
         return res.redirect(`${process.env.FRONTEND_URL}/login?error=account_active`);
@@ -600,6 +607,7 @@ export const AuthController = {
               permissions: user.permissions || [],
               plan: user.plan,
               role: user.role,
+              semesters: user.semesters || [],
             },
           });
         } catch (error) {
@@ -667,6 +675,7 @@ export const AuthController = {
               permissions: user.permissions || [],
               plan: user.plan,
               role: user.role,
+              semesters: user.semesters || [],
             },
           });
         } catch (error) {
@@ -723,6 +732,7 @@ export const AuthController = {
             permissions: newUser.permissions || [],
             plan: newUser.plan || "Free",
             role: newUser.role,
+            semesters: newUser.semesters || [],
           },
         });
       } catch (error) {
