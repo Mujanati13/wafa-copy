@@ -2,6 +2,7 @@ import Passport from "passport";
 import { Strategy } from "passport-local";
 import user from "../models/userModel.js";
 import bcrypt from "bcrypt";
+import { buildCaseInsensitiveEmailLookup, normalizeEmail } from "../utils/emailIdentity.js";
 
 const shouldLogAuth = () => (
   process.env.AUTH_FAILURE_LOGGING === "true" || process.env.NODE_ENV !== "production"
@@ -30,12 +31,12 @@ Passport.deserializeUser(async (id, done) => {
 export default Passport.use(
   new Strategy({ usernameField: "email" }, async (email, password, done) => {
     try {
-      const normalizedEmail = typeof email === "string" ? email.trim() : email;
+      const normalizedEmail = normalizeEmail(email);
       if (shouldLogAuth()) {
         console.log("Login attempt:", normalizedEmail);
       }
 
-      const foundUser = await user.findOne({ email: normalizedEmail });
+      const foundUser = await user.findOne(buildCaseInsensitiveEmailLookup(normalizedEmail));
       if (!foundUser) {
         throw new Error("User not found");
       }

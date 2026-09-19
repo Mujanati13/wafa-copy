@@ -914,6 +914,26 @@ const ExamPage = () => {
   }, [hasUnsavedChanges, showResults, examData, selectedAnswers, verifiedQuestions, questions, userProfile, examType, examId]);
 
   const currentQuestionData = questions[currentQuestion];
+  const examNavigationTitle = (() => {
+    const moduleName = examData?.moduleName || 'Module';
+    const examYear = examData?.year || '';
+    const examName = examData?.name || examData?.title || '';
+    const sessionName = currentQuestionData?.sessionLabel || '';
+    const parts = [moduleName];
+
+    if (examYear) parts.push(examYear);
+    if (examName && examName !== examYear && examName !== moduleName) parts.push(examName);
+    if (sessionName && sessionName !== 'Session principale' && sessionName !== examName) parts.push(sessionName);
+
+    return parts.join(' > ');
+  })();
+  const hasCorrectionSource = examType === 'exam';
+  const correctionSourceLabel = examData?.isOfficialCorrection === false
+    ? 'Correction non officielle'
+    : 'Correction officielle';
+  const correctionSourceClassName = examData?.isOfficialCorrection === false
+    ? 'border-amber-300 bg-amber-50 text-amber-800 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200'
+    : 'border-emerald-300 bg-emerald-50 text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200';
 
   // Helper to check if we should show number in the colored box
   // If questionNumber exists from Excel, don't show it in box (it's already in Q-label)
@@ -1760,6 +1780,11 @@ const ExamPage = () => {
           </div>
         </div>
 
+        <div className="flex min-w-0 items-center gap-1.5 px-3 pb-1.5 text-xs font-semibold text-foreground">
+          <BookOpen className="h-3.5 w-3.5 shrink-0" style={{ color: moduleColor }} aria-hidden="true" />
+          <span className="truncate" title={examNavigationTitle}>{examNavigationTitle}</span>
+        </div>
+
         {/* Thin progress bar */}
         <div className="h-1 bg-muted">
           <motion.div
@@ -1777,9 +1802,9 @@ const ExamPage = () => {
       {/* ============== DESKTOP HEADER ============== */}
       <header className="hidden lg:block bg-card/95 backdrop-blur-xl border-b border-border sticky top-0 z-40 shadow-sm">
         <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8">
-          <div className="flex items-center justify-between h-12 sm:h-14 md:h-16">
+          <div className="grid h-12 grid-cols-[minmax(0,1fr)_minmax(12rem,24rem)_minmax(0,1fr)] items-center gap-3 sm:h-14 md:h-16">
             {/* Left Section - Menu button far left */}
-            <div className="flex items-center gap-1.5 sm:gap-3 min-w-0 flex-1">
+            <div className="flex min-w-0 items-center gap-1.5 sm:gap-3">
               {/* Exit Button */}
               <Button
                 variant="outline"
@@ -1820,8 +1845,15 @@ const ExamPage = () => {
               </Badge>
             </div>
 
+            <div className="min-w-0 px-1">
+              <div className="flex min-w-0 items-center justify-center gap-2 rounded-lg border border-border bg-muted/50 px-3 py-2 text-sm font-semibold text-foreground shadow-sm">
+                <BookOpen className="h-4 w-4 shrink-0" style={{ color: moduleColor }} aria-hidden="true" />
+                <span className="truncate" title={examNavigationTitle}>{examNavigationTitle}</span>
+              </div>
+            </div>
+
             {/* Right Section - Font controls + Verify Shortcut + Profile */}
-            <div className="flex items-center gap-2 md:gap-3">
+            <div className="flex items-center justify-end gap-2 md:gap-3">
               {/* Font Size Controls Popup */}
               <div className="relative">
                 <div className="flex items-center gap-1 bg-muted rounded-lg p-1 border border-border">
@@ -2121,10 +2153,10 @@ const ExamPage = () => {
                   {/* Question Header - Compact unified row */}
                   <div className="bg-muted/40 dark:bg-muted/20 border-b border-border px-2 sm:px-4 md:px-6 py-2 sm:py-2.5">
                     <div className="flex items-center justify-between gap-1.5 sm:gap-2">
-                      {/* Left: Verify button + Breadcrumb */}
+                      {/* Left: Verify button and correction source */}
                       <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 flex-1">
                         {/* Verification Status / Verify Button - Desktop Only */}
-                        <div className="hidden lg:flex items-center gap-2">
+                        <div className="hidden lg:flex flex-col items-start gap-1">
                           {currentQuestionData.isAnnulled ? (
                             /* Hide verification UI for annulled questions */
                             null
@@ -2152,9 +2184,17 @@ const ExamPage = () => {
                               )}
                             </Button>
                           ) : null}
+                          {hasCorrectionSource && (
+                            <span className={cn(
+                              "rounded-full border px-2 py-1 text-[10px] font-semibold sm:text-xs",
+                              correctionSourceClassName,
+                            )}>
+                              {correctionSourceLabel}
+                            </span>
+                          )}
                         </div>
                         {/* Breadcrumb */}
-                        <div className="flex items-center gap-1.5 text-[10px] sm:text-xs text-foreground bg-card px-2.5 py-1.5 sm:py-2 rounded-lg flex-wrap border border-border shadow-sm">
+                        <div className="hidden">
                           <BookOpen className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0 text-muted-foreground" />
                           <span className="break-words font-medium max-w-full leading-relaxed">
                             {(() => {
@@ -2162,8 +2202,6 @@ const ExamPage = () => {
                               const examYear = examData?.year || '';
                               const examName = examData?.name || examData?.title || '';
                               const sessionName = currentQuestionData?.sessionLabel || '';
-                              const examType = examData?.examType || examData?.category || '';
-
                               // Build breadcrumb with full hierarchy
                               const parts = [];
                               
@@ -2191,7 +2229,7 @@ const ExamPage = () => {
                         </div>
                         {examType === 'exam' && (
                           <span className={cn(
-                            "shrink-0 rounded-full border px-2 py-1 text-[10px] font-semibold sm:text-xs",
+                            "hidden shrink-0 rounded-full border px-2 py-1 text-[10px] font-semibold sm:text-xs",
                             examData?.isOfficialCorrection === false
                               ? "border-amber-300 bg-amber-50 text-amber-800 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200"
                               : "border-emerald-300 bg-emerald-50 text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200"

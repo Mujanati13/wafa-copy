@@ -116,30 +116,37 @@ function ExamCard({ exam, type, moduleColor, moduleName, isLocked = false, lockL
     })
     : "";
 
-  if (type === "year") {
+  if (type === "year" || type === "course") {
+    const isYearExam = type === "year";
+    const cardTitle = isYearExam ? displayName : exam.name;
+
     return (
       <Card
-        className="group mx-auto w-full max-w-[400px] cursor-pointer overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-md transition hover:-translate-y-0.5 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:ring-offset-2 dark:border-slate-700 dark:bg-slate-950"
-        onClick={() => onStart(exam.id, type)}
+        className={cn(
+          "group mx-auto w-full max-w-[400px] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-md transition hover:-translate-y-0.5 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:ring-offset-2 dark:border-slate-700 dark:bg-slate-950",
+          isYearExam && "cursor-pointer",
+        )}
+        onClick={isYearExam ? () => onStart(exam.id, type) : undefined}
         onKeyDown={(event) => {
+          if (!isYearExam) return;
           if (event.key === "Enter" || event.key === " ") {
             event.preventDefault();
             onStart(exam.id, type);
           }
         }}
-        role="button"
-        tabIndex={0}
-        aria-label={`Commencer ${displayName}`}
+        role={isYearExam ? "button" : undefined}
+        tabIndex={isYearExam ? 0 : undefined}
+        aria-label={isYearExam ? `Commencer ${cardTitle}` : undefined}
       >
         <div className="h-1 w-full shrink-0" style={{ backgroundColor: moduleColor }} aria-hidden="true" />
         <CardContent className="flex flex-col px-4 pb-4 pt-2.5 sm:px-5 sm:pt-3">
           <div className="flex items-start justify-between gap-3">
-            <div className="relative -mt-0.5 grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-2xl bg-transparent text-blue-700 sm:h-[68px] sm:w-[68px] dark:text-sky-300">
-              {!imageUrl && <BookOpen className="h-9 w-9 sm:h-10 sm:w-10" strokeWidth={1.6} aria-hidden="true" />}
+            <div className="relative -mt-0.5 grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-2xl bg-transparent text-blue-700 sm:h-[68px] sm:w-[68px] dark:text-sky-300" style={!imageUrl && !isYearExam ? { color: moduleColor } : undefined}>
+              {!imageUrl && <Icon className="h-9 w-9 sm:h-10 sm:w-10" strokeWidth={1.6} aria-hidden="true" />}
               {imageUrl && (
                 <img
                   src={imageUrl}
-                  alt={displayName}
+                  alt={cardTitle}
                   className="absolute inset-0 h-full w-full bg-transparent object-contain"
                   onError={(event) => { event.currentTarget.style.display = "none"; }}
                 />
@@ -169,7 +176,7 @@ function ExamCard({ exam, type, moduleColor, moduleName, isLocked = false, lockL
                     onHelp(exam);
                   }}
                   onKeyDown={(event) => event.stopPropagation()}
-                  aria-label={`Informations sur ${displayName}`}
+                  aria-label={`Informations sur ${cardTitle}`}
                 >
                   <HelpCircle className="h-4 w-4" aria-hidden="true" />
                 </Button>
@@ -183,7 +190,7 @@ function ExamCard({ exam, type, moduleColor, moduleName, isLocked = false, lockL
           </div>
 
           <h2 className="mb-3 mt-2 line-clamp-2 text-left text-base font-bold leading-snug text-slate-950 dark:text-white">
-            {displayName}
+            {cardTitle}
           </h2>
 
           {isLocked ? (
@@ -215,7 +222,7 @@ function ExamCard({ exam, type, moduleColor, moduleName, isLocked = false, lockL
               <div
                 className="h-1.5 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800"
                 role="progressbar"
-                aria-label={`Progression de ${displayName}`}
+                aria-label={`Progression de ${cardTitle}`}
                 aria-valuemin={0}
                 aria-valuemax={100}
                 aria-valuenow={progress}
@@ -226,6 +233,19 @@ function ExamCard({ exam, type, moduleColor, moduleName, isLocked = false, lockL
                 />
               </div>
             </div>
+          )}
+          {!isYearExam && (
+            isLocked ? (
+              <Button onClick={() => onStart(exam.id, type)} className="mt-5 w-full gap-2 bg-gradient-to-r from-amber-500 to-amber-600 font-semibold text-white shadow-sm hover:from-amber-600 hover:to-amber-700">
+                <Lock className="h-4 w-4" />
+                {lockLabel === "Pro" ? "DÃ©bloquer avec Premium Pro" : "DÃ©bloquer avec Premium"}
+              </Button>
+            ) : (
+              <Button onClick={() => onStart(exam.id, type)} className="mt-5 w-full gap-2" variant="outline">
+                <Play className="h-4 w-4" />
+                {isStarted ? "Reprendre" : "Commencer"}
+              </Button>
+            )
           )}
         </CardContent>
       </Card>

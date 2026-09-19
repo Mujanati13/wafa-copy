@@ -13,6 +13,7 @@ import {
   isFirebaseInitialized 
 } from "../config/firebase.js";
 import { validateEmailAddress } from "../utils/emailValidator.js";
+import { buildCaseInsensitiveEmailLookup, normalizeEmail } from "../utils/emailIdentity.js";
 import {
   ActiveSessionError,
   createSingleSessionToken,
@@ -62,12 +63,13 @@ export const AuthController = {
       const rawFullName = req.body.fullName ?? req.body.name ?? req.body.username;
       const username = String(rawFullName || "").replace(/\s+/g, " ").trim();
       const { email, password } = req.body;
-      if (!username || !email || !password) {
+      const normalizedEmail = normalizeEmail(email);
+      if (!username || !normalizedEmail || !password) {
         return res.status(400).json({ message: "All fields are required" });
       }
 
       // Validate email address (format, disposable domains, DNS check)
-      const emailValidation = await validateEmailAddress(email);
+      const emailValidation = await validateEmailAddress(normalizedEmail);
       if (!emailValidation.valid) {
         return res.status(400).json({
           success: false,
@@ -77,7 +79,7 @@ export const AuthController = {
       }
 
       // Check if user already exists in database
-      const existingUser = await User.findOne({ email });
+      const existingUser = await User.findOne(buildCaseInsensitiveEmailLookup(normalizedEmail));
       if (existingUser) {
         return res.status(400).json({
           message: "Email already exists",
@@ -87,7 +89,7 @@ export const AuthController = {
       // Check if email exists in Firebase
       if (isFirebaseInitialized()) {
         try {
-          const firebaseUser = await getFirebaseUserByEmail(email);
+          const firebaseUser = await getFirebaseUserByEmail(normalizedEmail);
           if (firebaseUser) {
             return res.status(400).json({
               message: "This email is already registered with Google. Please sign in with Google.",
@@ -106,7 +108,7 @@ export const AuthController = {
       const newUser = await User.create({
         username,
         name: username, // Set name to username if not provided
-        email,
+        email: normalizedEmail,
         password: hashPassword,
         university: "",
         emailVerified: true, // Auto-verified - no email verification required
@@ -242,15 +244,16 @@ export const AuthController = {
   resendVerification: async (req, res) => {
     try {
       const { email } = req.body;
+      const normalizedEmail = normalizeEmail(email);
 
-      if (!email) {
+      if (!normalizedEmail) {
         return res.status(400).json({
           success: false,
           message: "Email is required",
         });
       }
 
-      const user = await User.findOne({ email });
+      const user = await User.findOne(buildCaseInsensitiveEmailLookup(normalizedEmail));
 
       if (!user) {
         return res.status(404).json({
@@ -296,15 +299,16 @@ export const AuthController = {
   forgotPassword: async (req, res) => {
     try {
       const { email } = req.body;
+      const normalizedEmail = normalizeEmail(email);
 
-      if (!email) {
+      if (!normalizedEmail) {
         return res.status(400).json({
           success: false,
           message: "Email is required",
         });
       }
 
-      const user = await User.findOne({ email });
+      const user = await User.findOne(buildCaseInsensitiveEmailLookup(normalizedEmail));
 
       if (!user) {
         // Don't reveal that user doesn't exist for security
@@ -318,7 +322,7 @@ export const AuthController = {
       if (user.firebaseUid && isFirebaseInitialized()) {
         try {
           // Generate Firebase password reset link
-          const firebaseResetLink = await generatePasswordResetLink(email);
+          const firebaseResetLink = await generatePasswordResetLink(normalizedEmail);
           
           // Send Firebase reset email (you can customize this to use your email service)
           await sendPasswordResetEmail(user.email, user.username, null, firebaseResetLink);
@@ -563,6 +567,14 @@ export const AuthController = {
       }
 
       const { uid, email, name, picture, email_verified } = decodedToken;
+      const normalizedEmail = normalizeEmail(email);
+
+      if (!normalizedEmail) {
+        return res.status(400).json({
+          success: false,
+          message: "Firebase account does not provide an email address.",
+        });
+      }
 
       // Check if user exists with Firebase UID
       let user = await User.findOne({ firebaseUid: uid });
@@ -616,7 +628,7 @@ export const AuthController = {
       }
 
       // Check if user exists with this email
-      user = await User.findOne({ email });
+      user = await User.findOne(buildCaseInsensitiveEmailLookup(normalizedEmail));
 
       if (user) {
         // Check if user is blocked
@@ -684,7 +696,7 @@ export const AuthController = {
       }
 
       // Create new user with Firebase authentication
-      const username = email.split('@')[0] + '_' + Math.random().toString(36).substring(7);
+      const username = normalizedEmail.split('@')[0] + '_' + Math.random().toString(36).substring(7);
       
       // Build full name from firstName and lastName if provided, otherwise use Firebase name or username
       let fullName = name || username;
@@ -698,7 +710,7 @@ export const AuthController = {
       
       const newUser = await User.create({
         firebaseUid: uid,
-        email,
+        email: normalizedEmail,
         username,
         name: fullName,
         university: "",
@@ -709,7 +721,7 @@ export const AuthController = {
 
       // Send welcome email
       try {
-        await sendWelcomeEmail(email, fullName);
+        await sendWelcomeEmail(normalizedEmail, fullName);
       } catch (emailError) {
         console.error("Error sending welcome email:", emailError);
       }
@@ -740,6 +752,12 @@ export const AuthController = {
       }
     } catch (error) {
       console.error("Firebase authentication error:", error);
+      if (error.code === 11000) {
+        return res.status(400).json({
+          success: false,
+          message: "Email already exists",
+        });
+      }
       res.status(500).json({
         success: false,
         message: "Firebase authentication failed",
@@ -754,8 +772,9 @@ export const AuthController = {
   checkEmail: async (req, res) => {
     try {
       const { email } = req.body;
+      const normalizedEmail = normalizeEmail(email);
 
-      if (!email) {
+      if (!normalizedEmail) {
         return res.status(400).json({
           success: false,
           message: "Email is required",
@@ -763,7 +782,7 @@ export const AuthController = {
       }
 
       // Check in database
-      const user = await User.findOne({ email });
+      const user = await User.findOne(buildCaseInsensitiveEmailLookup(normalizedEmail));
 
       if (user) {
         // Determine auth provider
@@ -781,7 +800,7 @@ export const AuthController = {
       // Check Firebase if initialized
       if (isFirebaseInitialized()) {
         try {
-          const firebaseUser = await getFirebaseUserByEmail(email);
+          const firebaseUser = await getFirebaseUserByEmail(normalizedEmail);
           if (firebaseUser) {
             return res.status(200).json({
               exists: true,

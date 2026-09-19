@@ -1,6 +1,7 @@
 import Passport from "passport";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import User from "../models/userModel.js";
+import { buildCaseInsensitiveEmailLookup, normalizeEmail } from "../utils/emailIdentity.js";
 
 // Configure Google OAuth Strategy only if credentials are provided
 if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
@@ -13,6 +14,9 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
       },
       async (accessToken, refreshToken, profile, done) => {
       try {
+        const email = normalizeEmail(profile.emails?.[0]?.value);
+        if (!email) return done(new Error("Google account does not provide an email address."));
+
         // Check if user already exists with this Google ID
         let user = await User.findOne({ googleId: profile.id });
 
@@ -21,7 +25,7 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
         }
 
         // Check if user exists with this email
-        user = await User.findOne({ email: profile.emails[0].value });
+        user = await User.findOne(buildCaseInsensitiveEmailLookup(email));
 
         if (user) {
           // Link Google account to existing user
@@ -37,8 +41,8 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
         // Create new user
         const newUser = await User.create({
           googleId: profile.id,
-          email: profile.emails[0].value,
-          username: profile.displayName || profile.emails[0].value.split('@')[0],
+          email,
+          username: profile.displayName || email.split('@')[0],
           name: profile.displayName,
           university: "",
           emailVerified: true,
