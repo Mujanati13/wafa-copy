@@ -18,6 +18,11 @@ export const parseSessionInfo = (sessionName) => {
         const fallbackMatch = str.match(/\b(\d{4})\b/);
         if (fallbackMatch) {
             year = parseInt(fallbackMatch[1], 10);
+        } else {
+            // Legacy session labels abbreviate 2000–2099 as "16 normale".
+            // Limit this to year-first session labels, not course/question numbers.
+            const shortYear = str.match(/^(\d{2})(?=\s*(?:$|[-–:/]?\s*(?:norm|princ|ord|ratt|extra|s[12]\b)))/i);
+            if (shortYear) year = 2000 + Number(shortYear[1]);
         }
     }
 
