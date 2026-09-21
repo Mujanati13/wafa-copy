@@ -914,19 +914,6 @@ const ExamPage = () => {
   }, [hasUnsavedChanges, showResults, examData, selectedAnswers, verifiedQuestions, questions, userProfile, examType, examId]);
 
   const currentQuestionData = questions[currentQuestion];
-  const examNavigationTitle = (() => {
-    const moduleName = examData?.moduleName || 'Module';
-    const examYear = examData?.year || '';
-    const examName = examData?.name || examData?.title || '';
-    const sessionName = currentQuestionData?.sessionLabel || '';
-    const parts = [moduleName];
-
-    if (examYear) parts.push(examYear);
-    if (examName && examName !== examYear && examName !== moduleName) parts.push(examName);
-    if (sessionName && sessionName !== 'Session principale' && sessionName !== examName) parts.push(sessionName);
-
-    return parts.join(' > ');
-  })();
   const hasCorrectionSource = examType === 'exam';
   const correctionSourceLabel = examData?.isOfficialCorrection === false
     ? 'Correction non officielle'
@@ -1780,11 +1767,6 @@ const ExamPage = () => {
           </div>
         </div>
 
-        <div className="flex min-w-0 items-center gap-1.5 px-3 pb-1.5 text-xs font-semibold text-foreground">
-          <BookOpen className="h-3.5 w-3.5 shrink-0" style={{ color: moduleColor }} aria-hidden="true" />
-          <span className="truncate" title={examNavigationTitle}>{examNavigationTitle}</span>
-        </div>
-
         {/* Thin progress bar */}
         <div className="h-1 bg-muted">
           <motion.div
@@ -1802,7 +1784,7 @@ const ExamPage = () => {
       {/* ============== DESKTOP HEADER ============== */}
       <header className="hidden lg:block bg-card/95 backdrop-blur-xl border-b border-border sticky top-0 z-40 shadow-sm">
         <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-8">
-          <div className="grid h-12 grid-cols-[minmax(0,1fr)_minmax(12rem,24rem)_minmax(0,1fr)] items-center gap-3 sm:h-14 md:h-16">
+          <div className="grid h-12 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 sm:h-14 md:h-16">
             {/* Left Section - Menu button far left */}
             <div className="flex min-w-0 items-center gap-1.5 sm:gap-3">
               {/* Exit Button */}
@@ -1843,13 +1825,6 @@ const ExamPage = () => {
                 )}
                 <span className="hidden sm:inline">{isSaved ? 'Enregistré' : 'Enregistrement...'}</span>
               </Badge>
-            </div>
-
-            <div className="min-w-0 px-1">
-              <div className="flex min-w-0 items-center justify-center gap-2 rounded-lg border border-border bg-muted/50 px-3 py-2 text-sm font-semibold text-foreground shadow-sm">
-                <BookOpen className="h-4 w-4 shrink-0" style={{ color: moduleColor }} aria-hidden="true" />
-                <span className="truncate" title={examNavigationTitle}>{examNavigationTitle}</span>
-              </div>
             </div>
 
             {/* Right Section - Font controls + Verify Shortcut + Profile */}
@@ -2153,7 +2128,7 @@ const ExamPage = () => {
                   {/* Question Header - Compact unified row */}
                   <div className="bg-muted/40 dark:bg-muted/20 border-b border-border px-2 sm:px-4 md:px-6 py-2 sm:py-2.5">
                     <div className="flex items-center justify-between gap-1.5 sm:gap-2">
-                      {/* Left: Verify button and correction source */}
+                        {/* Left: Verify button and exam reference */}
                       <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 flex-1">
                         {/* Verification Status / Verify Button - Desktop Only */}
                         <div className="hidden lg:flex flex-col items-start gap-1">
@@ -2184,17 +2159,9 @@ const ExamPage = () => {
                               )}
                             </Button>
                           ) : null}
-                          {hasCorrectionSource && (
-                            <span className={cn(
-                              "rounded-full border px-2 py-1 text-[10px] font-semibold sm:text-xs",
-                              correctionSourceClassName,
-                            )}>
-                              {correctionSourceLabel}
-                            </span>
-                          )}
                         </div>
                         {/* Breadcrumb */}
-                        <div className="hidden">
+                        <div className="hidden min-w-0 items-center gap-1.5 lg:flex">
                           <BookOpen className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0 text-muted-foreground" />
                           <span className="break-words font-medium max-w-full leading-relaxed">
                             {(() => {
@@ -2423,6 +2390,14 @@ const ExamPage = () => {
 
                     {/* Question Text */}
                     <div className="space-y-2">
+                      {hasCorrectionSource && (
+                        <span className={cn(
+                          "inline-flex rounded-full border px-2 py-1 text-[10px] font-semibold sm:text-xs",
+                          correctionSourceClassName,
+                        )}>
+                          {correctionSourceLabel}
+                        </span>
+                      )}
                       <div className="text-sm font-semibold text-muted-foreground">
                         Q{sessionQuestionInfo.position}/{sessionQuestionInfo.total}
                       </div>

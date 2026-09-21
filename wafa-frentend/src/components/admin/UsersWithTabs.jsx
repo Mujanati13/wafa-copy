@@ -421,8 +421,8 @@ const UsersWithTabs = () => {
   // Update user
   const handleUpdateUser = async () => {
     if (!selectedUser) return;
-    if (editFormData.plan !== "Free" && (editFormData.semesters || []).length !== 1) {
-      toast.error("Sélectionnez exactement un semestre pour cet abonnement");
+    if (editFormData.plan !== "Free" && (editFormData.semesters || []).length === 0) {
+      toast.error("Sélectionnez au moins un semestre pour cet abonnement");
       return;
     }
     setActionLoading(true);
@@ -1308,9 +1308,6 @@ const UsersWithTabs = () => {
                   onChange={(e) => setEditFormData({
                     ...editFormData,
                     plan: e.target.value,
-                    semesters: e.target.value === "Free"
-                      ? editFormData.semesters
-                      : (editFormData.semesters || []).slice(0, 1),
                   })}
                 >
                   <option value="Free">Gratuit</option>
@@ -1331,22 +1328,12 @@ const UsersWithTabs = () => {
                       checked={editFormData.semesters?.includes(sem.value) || false}
                       onChange={(e) => {
                         const currentSemesters = editFormData.semesters || [];
-                        if (e.target.checked && editFormData.plan !== "Free") {
-                          setEditFormData({
-                            ...editFormData,
-                            semesters: [sem.value],
-                          });
-                        } else if (e.target.checked) {
-                          setEditFormData({
-                            ...editFormData, 
-                            semesters: [...currentSemesters, sem.value].sort() 
-                          });
-                        } else {
-                          setEditFormData({ 
-                            ...editFormData, 
-                            semesters: currentSemesters.filter(s => s !== sem.value) 
-                          });
-                        }
+                        setEditFormData({
+                          ...editFormData,
+                          semesters: e.target.checked
+                            ? [...currentSemesters, sem.value].sort()
+                            : currentSemesters.filter(s => s !== sem.value),
+                        });
                       }}
                       className="rounded"
                     />

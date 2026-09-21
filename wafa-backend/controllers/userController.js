@@ -15,6 +15,7 @@ import { buildProfileActivityStatistics } from "../services/profileStatisticsSer
 import { classifyFirebaseAdminError } from "../utils/firebaseError.js";
 import { applyAdminPlanTransition, normalizeUserPlan, SUPPORTED_USER_PLANS } from "../utils/planAccess.js";
 import { buildUserListFilter } from "../utils/userListFilters.js";
+import { normalizeSemesterAccess } from "../utils/semesterAccess.js";
 
 const getPagination = (query, defaultLimit = 10, maxLimit = 100) => {
     const page = Math.max(Number.parseInt(query.page, 10) || 1, 1);
@@ -149,11 +150,19 @@ export const UserController = {
                 sendPasswordEmail = true
             } = req.body;
             const normalizedPlan = normalizeUserPlan(plan);
+            const normalizedSemesters = normalizeSemesterAccess(semesters);
 
-            if (normalizedPlan !== "Free" && [...new Set(semesters)].length !== 1) {
+            if (!normalizedSemesters) {
                 return res.status(400).json({
                     success: false,
-                    message: 'A paid subscription requires exactly one semester'
+                    message: 'Semesters must be an array containing only S1 through S10'
+                });
+            }
+
+            if (normalizedPlan !== "Free" && normalizedSemesters.length === 0) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'A paid subscription requires at least one semester'
                 });
             }
 
@@ -258,8 +267,8 @@ export const UserController = {
                 password: hashedPassword,
                 phone: phone || null,
                 plan: normalizedPlan,
-                currentYear: currentYear || getAcademicYearFromSemesters(semesters),
-                semesters: semesters || [],
+                currentYear: currentYear || getAcademicYearFromSemesters(normalizedSemesters),
+                semesters: normalizedSemesters,
                 emailVerified: true, // Admin-created users are pre-verified
                 isAactive: true,
                 firebaseUid,
@@ -623,21 +632,21 @@ export const UserController = {
                 }
             });
 
+            if (Object.prototype.hasOwnProperty.call(updates, 'semesters')) {
+                const normalizedSemesters = normalizeSemesterAccess(updates.semesters);
+                if (!normalizedSemesters) {
+                    return res.status(400).json({
+                        success: false,
+                        message: 'Semesters must be an array containing only S1 through S10'
+                    });
+                }
+                updates.semesters = normalizedSemesters;
+            }
+
             if (updates.plan && !SUPPORTED_USER_PLANS.includes(updates.plan)) {
                 return res.status(400).json({
                     success: false,
                     message: 'Invalid plan type'
-                });
-            }
-
-            if (
-                updates.plan && updates.plan !== "Free" &&
-                Object.prototype.hasOwnProperty.call(updates, 'semesters') &&
-                [...new Set(updates.semesters || [])].length !== 1
-            ) {
-                return res.status(400).json({
-                    success: false,
-                    message: 'A paid subscription requires exactly one semester'
                 });
             }
 
@@ -671,11 +680,22 @@ export const UserController = {
                 }
             }
 
-            const existingUser = await User.findById(userId).select("plan").lean();
+            const existingUser = await User.findById(userId).select("plan semesters").lean();
             if (!existingUser) {
                 return res.status(404).json({
                     success: false,
                     message: 'User not found'
+                });
+            }
+
+            const effectivePlan = normalizeUserPlan(updates.plan ?? existingUser.plan);
+            const effectiveSemesters = Object.prototype.hasOwnProperty.call(updates, 'semesters')
+                ? updates.semesters
+                : existingUser.semesters || [];
+            if (effectivePlan !== "Free" && effectiveSemesters.length === 0) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'A paid subscription requires at least one semester'
                 });
             }
 

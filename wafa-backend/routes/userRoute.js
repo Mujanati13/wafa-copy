@@ -21,7 +21,7 @@ router.get("/paying", UserController.getPayingUsers);
 router.get("/stats", UserController.getUserStats);
 
 // Admin create user endpoint
-router.post("/admin/create", UserController.createAdminUser);
+router.post("/admin/create", isAuthenticated, isAdmin, UserController.createAdminUser);
 
 // User profile routes (authenticated)
 router.get("/profile", isAuthenticated, UserController.getProfile);

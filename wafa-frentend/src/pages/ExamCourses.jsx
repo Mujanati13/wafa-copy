@@ -56,6 +56,7 @@ const ExamCourses = () => {
   const bulkImagePreviewRef = useRef("");
   const [formData, setFormData] = useState({
     courseName: "",
+    lessonNumber: "",
     moduleName: "",
     category: "",
     customCategory: "",
@@ -416,8 +417,12 @@ const ExamCourses = () => {
     const categoryToUse = useCustomCategory ? formData.customCategory : formData.category;
     
     // Better validation with specific error messages
-    if (!formData.courseName) {
+    if (!formData.courseName.trim()) {
       toast.error("Veuillez entrer le nom du cours");
+      return;
+    }
+    if (!formData.lessonNumber.trim()) {
+      toast.error("Veuillez entrer le num\u00e9ro de le\u00e7on");
       return;
     }
     if (!formData.moduleName) {
@@ -435,7 +440,8 @@ const ExamCourses = () => {
 
       // Use FormData for file upload
       const submitData = new FormData();
-      submitData.append("name", formData.courseName);
+      submitData.append("name", formData.courseName.trim());
+      submitData.append("lessonNumber", formData.lessonNumber.trim());
       submitData.append("moduleId", selectedModule._id);
       submitData.append("category", categoryToUse);
       submitData.append("description", formData.helpText || "");
@@ -465,6 +471,7 @@ const ExamCourses = () => {
     clearImage();
     setFormData({
       courseName: "",
+      lessonNumber: "",
       moduleName: "",
       category: "",
       customCategory: "",
@@ -551,6 +558,7 @@ const ExamCourses = () => {
     
     setFormData({
       courseName: course.courseName,
+      lessonNumber: course.lessonNumber || "",
       moduleName: course.moduleName,
       category: course.category || "",
       customCategory: "",
@@ -571,8 +579,12 @@ const ExamCourses = () => {
     const categoryToUse = useCustomCategory ? formData.customCategory : formData.category;
     
     // Better validation with specific error messages
-    if (!formData.courseName) {
+    if (!formData.courseName.trim()) {
       toast.error("Veuillez entrer le nom du cours");
+      return;
+    }
+    if (!formData.lessonNumber.trim()) {
+      toast.error("Veuillez entrer le num\u00e9ro de le\u00e7on");
       return;
     }
     if (!formData.moduleName) {
@@ -589,7 +601,8 @@ const ExamCourses = () => {
 
       // Use FormData for file upload
       const submitData = new FormData();
-      submitData.append("name", formData.courseName);
+      submitData.append("name", formData.courseName.trim());
+      submitData.append("lessonNumber", formData.lessonNumber.trim());
       submitData.append("moduleId", selectedModule._id);
       submitData.append("category", categoryToUse);
       submitData.append("description", formData.helpText || "");
@@ -1163,6 +1176,16 @@ const ExamCourses = () => {
                       placeholder="Ex: Système Cardiovasculaire - Anatomie 1"
                       value={formData.courseName}
                       onChange={(e) => handleFormChange("courseName", e.target.value)}
+                      className="bg-background border-gray-300 text-black placeholder:text-muted-foreground focus:border-purple-500 focus:ring-purple-500"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-black font-medium">Le\u00e7on *</Label>
+                    <Input
+                      placeholder="Ex: L1"
+                      value={formData.lessonNumber}
+                      onChange={(e) => handleFormChange("lessonNumber", e.target.value)}
                       className="bg-background border-gray-300 text-black placeholder:text-muted-foreground focus:border-purple-500 focus:ring-purple-500"
                     />
                   </div>

@@ -110,8 +110,8 @@ const NewUserForm = ({ setShowNewUserForm, onUserCreated }) => {
   const watchPlan = form.watch("plan");
 
   const onSubmit = async (data) => {
-    if (data.plan !== "Free" && selectedSemesters.length !== 1) {
-      toast.error("Sélectionnez exactement un semestre pour cet abonnement");
+    if (data.plan !== "Free" && selectedSemesters.length === 0) {
+      toast.error("Sélectionnez au moins un semestre pour cet abonnement");
       return;
     }
     setIsSubmitting(true);
@@ -179,7 +179,7 @@ const NewUserForm = ({ setShowNewUserForm, onUserCreated }) => {
   const toggleSemester = (semValue) => {
     setSelectedSemesters((previous) => {
       if (previous.includes(semValue)) return previous.filter((semester) => semester !== semValue);
-      return watchPlan === "Free" ? [...previous, semValue].sort() : [semValue];
+      return [...previous, semValue].sort();
     });
   };
 
@@ -472,9 +472,6 @@ const NewUserForm = ({ setShowNewUserForm, onUserCreated }) => {
                                   checked={field.value === plan.value}
                                   onChange={(event) => {
                                     field.onChange(event);
-                                    if (event.target.value !== "Free") {
-                                      setSelectedSemesters((semesters) => semesters.slice(0, 1));
-                                    }
                                   }}
                                   className="sr-only"
                                 />
