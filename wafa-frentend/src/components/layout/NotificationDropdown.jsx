@@ -21,6 +21,7 @@ const NotificationDropdown = () => {
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
+  const [expandedNotificationIds, setExpandedNotificationIds] = useState(() => new Set());
   const navigate = useNavigate();
 
   // Fetch notifications
@@ -82,6 +83,11 @@ const NotificationDropdown = () => {
     try {
       await notificationService.deleteNotification(notificationId);
       setNotifications((prev) => prev.filter((n) => n._id !== notificationId));
+      setExpandedNotificationIds((prev) => {
+        const next = new Set(prev);
+        next.delete(notificationId);
+        return next;
+      });
       const deletedNotification = notifications.find((n) => n._id === notificationId);
       if (deletedNotification && !deletedNotification.read) {
         setUnreadCount((prev) => Math.max(0, prev - 1));
@@ -91,6 +97,16 @@ const NotificationDropdown = () => {
       console.error("Error deleting notification:", error);
       toast.error("Erreur lors de la suppression");
     }
+  };
+
+  const toggleNotificationMessage = (event, notificationId) => {
+    event.stopPropagation();
+    setExpandedNotificationIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(notificationId)) next.delete(notificationId);
+      else next.add(notificationId);
+      return next;
+    });
   };
 
   // Initial load
@@ -223,6 +239,9 @@ const NotificationDropdown = () => {
                 {notifications.map((notification, index) => {
                   const Icon = getNotificationIcon(notification.type);
                   const colorClass = getNotificationColor(notification.type);
+                  const message = String(notification.message || "");
+                  const isLongMessage = message.length > 140;
+                  const isExpanded = expandedNotificationIds.has(notification._id);
 
                   return (
                     <motion.div
@@ -232,37 +251,56 @@ const NotificationDropdown = () => {
                       exit={{ opacity: 0, x: -100 }}
                       transition={{ delay: index * 0.03 }}
                     >
-                      <button
-                        onClick={() => handleNotificationClick(notification)}
-                        className={cn(
-                          "w-full px-3.5 py-3 flex items-start gap-3 hover:bg-muted/50 transition-colors text-left",
-                          !notification.read && "bg-blue-50/40 dark:bg-blue-950/20"
+                      <div className={cn(
+                        "px-3.5 py-3",
+                        !notification.read && "bg-blue-50/40 dark:bg-blue-950/20"
+                      )}>
+                        <div className="flex items-start gap-1">
+                          <button
+                            type="button"
+                            onClick={() => handleNotificationClick(notification)}
+                            className="flex min-w-0 flex-1 items-start gap-3 rounded-md text-left transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                          >
+                            <div className={cn("p-2 rounded-lg flex-shrink-0 mt-0.5", colorClass)}>
+                              <Icon className="h-4 w-4" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-start justify-between gap-2 mb-0.5">
+                                <p className={cn("text-xs sm:text-sm font-medium text-foreground", !notification.read && "font-semibold")}>
+                                  {notification.title}
+                                </p>
+                                {!notification.read && (
+                                  <span className="w-2 h-2 rounded-full bg-cyan-500 flex-shrink-0 mt-1" aria-label="Non lue" />
+                                )}
+                              </div>
+                              <p className={cn(
+                                "text-xs text-muted-foreground leading-relaxed break-words",
+                                !isExpanded && "line-clamp-2"
+                              )}>{message}</p>
+                              <p className="text-[11px] text-muted-foreground/80 mt-1">{getRelativeTime(notification.createdAt)}</p>
+                            </div>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={(e) => handleDelete(e, notification._id)}
+                            className="p-1 hover:bg-muted rounded text-muted-foreground hover:text-destructive transition-colors flex-shrink-0"
+                            title="Supprimer"
+                            aria-label={`Supprimer la notification : ${notification.title || "sans titre"}`}
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                        {isLongMessage && (
+                          <button
+                            type="button"
+                            onClick={(event) => toggleNotificationMessage(event, notification._id)}
+                            className="ml-11 mt-1 text-xs font-medium text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                            aria-expanded={isExpanded}
+                          >
+                            {isExpanded ? "Voir moins" : "Voir plus"}
+                          </button>
                         )}
-                      >
-                        <div className={cn("p-2 rounded-lg flex-shrink-0 mt-0.5", colorClass)}>
-                          <Icon className="h-4 w-4" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-start justify-between gap-2 mb-0.5">
-                            <p className={cn("text-xs sm:text-sm font-medium text-foreground", !notification.read && "font-semibold")}>
-                              {notification.title}
-                            </p>
-                            {!notification.read && (
-                              <div className="w-2 h-2 rounded-full bg-cyan-500 flex-shrink-0 mt-1" />
-                            )}
-                          </div>
-                          <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">{notification.message}</p>
-                          <p className="text-[11px] text-muted-foreground/80 mt-1">{getRelativeTime(notification.createdAt)}</p>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={(e) => handleDelete(e, notification._id)}
-                          className="p-1 hover:bg-muted rounded text-muted-foreground hover:text-destructive transition-colors flex-shrink-0"
-                          title="Supprimer"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </button>
-                      </button>
+                      </div>
                     </motion.div>
                   );
                 })}

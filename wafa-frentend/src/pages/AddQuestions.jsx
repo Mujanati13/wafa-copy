@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -108,6 +109,7 @@ const AddQuestions = () => {
     { id: cryptoCompat.randomUUID(), text: "", isCorrect: false },
   ]);
   const [note, setNote] = useState("");
+  const [isAnnulled, setIsAnnulled] = useState(false);
   const [imageFile, setImageFile] = useState(null);
   const [showPreview, setShowPreview] = useState(false);
   const [examQuestions, setExamQuestions] = useState([]);
@@ -309,7 +311,14 @@ const AddQuestions = () => {
     return false;
   })();
 
-  const canSubmit = hasContextSelected && hasBasicQuestion && hasAtLeastOneCorrect;
+  const canSubmit = hasContextSelected && hasBasicQuestion && (isAnnulled || hasAtLeastOneCorrect);
+
+  const handleAnnulledChange = (checked) => {
+    setIsAnnulled(checked);
+    if (checked) {
+      setOptions((currentOptions) => currentOptions.map((option) => ({ ...option, isCorrect: false })));
+    }
+  };
 
   // Fetch all questions on mount or with filters
   const fetchAllQuestions = async () => {
@@ -470,8 +479,9 @@ const AddQuestions = () => {
         text: questionText,
         options: options.map(opt => ({
           text: opt.text,
-          isCorrect: opt.isCorrect
+          isCorrect: isAnnulled ? false : opt.isCorrect
         })),
+        isAnnulled,
         sessionLabel: sessionLabel.trim() || "Session principale",
         note: note || undefined,
         images: imageUrls,
@@ -489,6 +499,7 @@ const AddQuestions = () => {
         { id: cryptoCompat.randomUUID(), text: "", isCorrect: false },
       ]);
       setNote("");
+      setIsAnnulled(false);
       setImageFile(null);
 
       // Refresh questions list
@@ -891,11 +902,19 @@ const AddQuestions = () => {
                   {t('admin:add_option')}
                 </Button>
               </div>
+              <div className="flex items-center justify-between gap-4 rounded-lg border border-amber-300 bg-amber-50 p-3 dark:border-amber-800 dark:bg-amber-950/30">
+                <div className="space-y-0.5">
+                  <Label htmlFor="question-annulled" className="font-semibold text-amber-900 dark:text-amber-200">Annulé</Label>
+                  <p className="text-xs text-amber-800 dark:text-amber-300">Cette question ne possède pas de correction. Les réponses correctes sont désactivées.</p>
+                </div>
+                <Switch id="question-annulled" checked={isAnnulled} onCheckedChange={handleAnnulledChange} aria-label="Marquer la question comme annulée" />
+              </div>
               <div className="space-y-3">
                 {options.map((opt, index) => (
                   <div key={opt.id} className="flex items-center gap-3">
                     <Checkbox
                       checked={!!opt.isCorrect}
+                      disabled={isAnnulled}
                       onCheckedChange={(checked) =>
                         setOptions((prev) =>
                           prev.map((o) =>
@@ -922,7 +941,9 @@ const AddQuestions = () => {
                   </div>
                 ))}
               </div>
-              <p className="text-xs text-muted-foreground">{t('admin:check_correct_answers')}</p>
+              <p className="text-xs text-muted-foreground">
+                {isAnnulled ? "Question annulée : aucune réponse correcte n'est enregistrée." : t('admin:check_correct_answers')}
+              </p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -957,6 +978,7 @@ const AddQuestions = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="font-medium text-foreground">{questionText || "—"}</div>
+              {isAnnulled && <Badge variant="outline" className="w-fit border-amber-300 bg-amber-50 text-amber-800 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200">Question annulée</Badge>}
               {imageFile && (
                 <div className="border rounded-md p-3 bg-muted">
                   <span className="text-sm text-muted-foreground">{t('admin:image_attached')}: {imageFile.name}</span>
@@ -1194,10 +1216,10 @@ const AddQuestions = () => {
                       const examYear = q.examId?.year || "";
                       // Get correct options
                       const correctOptions = q.options?.filter(opt => opt.isCorrect) || [];
-                      const correctAnswerText = correctOptions.map((opt, i) => {
+                      const correctAnswerText = q.isAnnulled ? "Annulée" : (correctOptions.map((opt, i) => {
                         const optIndex = q.options.indexOf(opt);
                         return String.fromCharCode(65 + optIndex);
-                      }).join(", ") || "—";
+                      }).join(", ") || "—");
                       
                       // Determine question reference (which model/type)
                       const getQuestionReference = () => {
@@ -1258,7 +1280,7 @@ const AddQuestions = () => {
                             </div>
                           </TableCell>
                           <TableCell className="max-w-[120px]">
-                            <Badge variant="secondary" className="bg-green-100 text-green-800 text-xs">
+                            <Badge variant="secondary" className={q.isAnnulled ? "bg-amber-100 text-amber-800 text-xs" : "bg-green-100 text-green-800 text-xs"}>
                               {correctAnswerText}
                             </Badge>
                           </TableCell>
@@ -1292,7 +1314,7 @@ const AddQuestions = () => {
                                 className="h-8 w-8 text-green-600 hover:text-green-700 hover:bg-green-50"
                                 title="Modifier"
                                 onClick={() => {
-                                  setEditingQuestion(q);
+                                  setEditingQuestion({ ...q, isAnnulled: !!q.isAnnulled });
                                   setShowEditDialog(true);
                                 }}
                               >
@@ -1597,10 +1619,29 @@ const AddQuestions = () => {
                 {/* Options */}
                 <div className="space-y-3">
                   <Label>Options (cochez les réponses correctes)</Label>
+                  <div className="flex items-center justify-between gap-4 rounded-lg border border-amber-300 bg-amber-50 p-3 dark:border-amber-800 dark:bg-amber-950/30">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="edit-question-annulled" className="font-semibold text-amber-900 dark:text-amber-200">Annulé</Label>
+                      <p className="text-xs text-amber-800 dark:text-amber-300">Aucune réponse correcte ne sera enregistrée pour cette question.</p>
+                    </div>
+                    <Switch
+                      id="edit-question-annulled"
+                      checked={!!editingQuestion.isAnnulled}
+                      onCheckedChange={(checked) => setEditingQuestion((current) => ({
+                        ...current,
+                        isAnnulled: checked,
+                        options: checked
+                          ? current.options.map((option) => ({ ...option, isCorrect: false }))
+                          : current.options,
+                      }))}
+                      aria-label="Marquer la question comme annulée"
+                    />
+                  </div>
                   {editingQuestion.options?.map((opt, idx) => (
                     <div key={idx} className="flex items-center gap-3">
                       <Checkbox
                         checked={opt.isCorrect}
+                        disabled={editingQuestion.isAnnulled}
                         onCheckedChange={(checked) => {
                           const newOptions = [...editingQuestion.options];
                           newOptions[idx] = { ...opt, isCorrect: checked };
@@ -1687,7 +1728,8 @@ const AddQuestions = () => {
                       options: editingQuestion.options,
                       note: editingQuestion.note,
                       questionNumber: editingQuestion.questionNumber,
-                      images: updatedImages
+                      images: updatedImages,
+                      isAnnulled: !!editingQuestion.isAnnulled,
                     });
                     
                     toast.success("Question mise à jour avec succès");

@@ -8,30 +8,38 @@ import xlsx from "xlsx";
 import { normalizeQuestionImages } from "../utils/questionImagePath.js";
 import { buildAnsweredCountByExam } from "../utils/answerProgress.js";
 import { normalizeUserPlan } from "../utils/planAccess.js";
+import { normalizeAnnulledQuestion } from "../utils/questionAnnulment.js";
 
 export const questionController = {
     create: asyncHandler(async (req, res) => {
-        const { examId, text, options, note, images, sessionLabel } = req.body;
+        const { examId, text, options, note, images, sessionLabel, isAnnulled } = req.body;
+        const normalizedQuestion = normalizeAnnulledQuestion(options, isAnnulled);
         const newQuestion = await QuestionModel.create({
             examId,
             text,
-            options,
+            options: normalizedQuestion.options,
             note,
             images: normalizeQuestionImages(images),
-            sessionLabel
+            sessionLabel,
+            isAnnulled: normalizedQuestion.isAnnulled,
         });
         res.status(201).json({ success: true, data: newQuestion });
     }),
 
     update: asyncHandler(async (req, res) => {
         const { id } = req.params;
-        const { examId, text, options, note, images, sessionLabel, questionNumber } = req.body;
+        const { examId, text, options, note, images, sessionLabel, questionNumber, isAnnulled } = req.body;
         
         const updateData = { text, options, note };
         if (images !== undefined) updateData.images = normalizeQuestionImages(images);
         if (examId) updateData.examId = examId;
         if (sessionLabel !== undefined) updateData.sessionLabel = sessionLabel;
         if (questionNumber !== undefined) updateData.questionNumber = questionNumber;
+        if (isAnnulled !== undefined) {
+            const normalizedQuestion = normalizeAnnulledQuestion(options, isAnnulled);
+            updateData.isAnnulled = normalizedQuestion.isAnnulled;
+            if (normalizedQuestion.options !== undefined) updateData.options = normalizedQuestion.options;
+        }
         
         const updated = await QuestionModel.findByIdAndUpdate(
             id,

@@ -58,6 +58,7 @@ import PlaylistsPage from "./pages/PlaylistsPage";
 import NotesPage from "./pages/NotesPage";
 import SupportPage from "./pages/SupportPage";
 import NotificationAdmin from "./pages/NotificationAdmin";
+import NotificationsPage from "./pages/NotificationsPage";
 import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
 import TermsOfUsePage from "./pages/TermsOfUsePage";
 import SubAdminPage from "./pages/SubAdminPage";
@@ -114,6 +115,7 @@ export default function App() {
           />
           <Route path="profile" element={<ProfilePage />} />
           <Route path="settings" element={<SettingsPage />} />
+          <Route path="notifications" element={<NotificationsPage />} />
           <Route path="support" element={<SupportPage />} />
         </Route>
         <Route path="/admin" element={<ProtectedAdminRoute><AdminLayout /></ProtectedAdminRoute>}>
