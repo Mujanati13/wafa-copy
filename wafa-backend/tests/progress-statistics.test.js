@@ -17,6 +17,60 @@ test("strictly keeps only modules from the selected semester", () => {
   assert.deepEqual(modules.map((module) => module._id), ["m1"]);
 });
 
+for (const answerFormat of ["Map", "plain object"]) {
+  test(`690 shared questions remain 690 after 10 course retries (${answerFormat})`, () => {
+    const questionIds = Array.from({ length: 690 }, (_, index) => `question-${index}`);
+    const modules = [{ _id: "anatomy", name: "Anatomie I", semester: "S1" }];
+    const courses = buildCompleteActivitySources({
+      courses: [
+        { _id: "course-a", name: "A", moduleId: "anatomy", linkedQuestions: questionIds.slice(0, 350) },
+        // Some questions also belong to more than one course.
+        { _id: "course-b", name: "B", moduleId: "anatomy", linkedQuestions: questionIds.slice(340, 680) },
+      ],
+      annualExams: [{ _id: "exam", name: "2026 normal", moduleId: "anatomy" }],
+      questions: questionIds.map((_id) => ({ _id, examId: "exam" })),
+    });
+    const answers = new Map();
+    const progress = () => buildProgressStatistics({
+      modules,
+      courses,
+      answeredQuestions: answerFormat === "Map" ? answers : Object.fromEntries(answers),
+    });
+    const assertCounts = (answered, correct, incorrect) => {
+      const result = progress();
+      for (const stats of [result.modules[0], result.summary]) {
+        assert.equal(stats.totalQuestions, 690);
+        assert.equal(stats.answeredQuestions, answered);
+        assert.equal(stats.correctAnswers, correct);
+        assert.equal(stats.incorrectAnswers, incorrect);
+        assert.equal(stats.correctAnswers + stats.incorrectAnswers, stats.answeredQuestions);
+        assert.equal(stats.completionPercentage, Math.round(answered / 690 * 100));
+      }
+      return result;
+    };
+
+    assertCounts(0, 0, 0);
+    questionIds.forEach((id) => answers.set(id, {
+      examId: "exam", isVerified: true, isCorrect: false,
+    }));
+    assertCounts(690, 0, 690);
+
+    // Persistence is keyed by question ID, even when the exam context changes.
+    questionIds.slice(0, 10).forEach((id, index) => {
+      answers.set(id, { examId: "course-a", isVerified: true, isCorrect: true });
+      assertCounts(690, index + 1, 689 - index);
+    });
+    const result = progress();
+    assert.equal(result.modules[0].courses[0].answeredQuestions, 350);
+    assert.equal(result.modules[0].courses[0].correctAnswers, 10);
+    assert.equal(result.modules[0].courses[1].answeredQuestions, 340);
+
+    // Answers outside the module must not increase its numerator.
+    answers.set("unrelated-question", { isVerified: true, isCorrect: true });
+    assertCounts(690, 10, 680);
+  });
+}
+
 test("calculates module/course progress and deterministic highlights", () => {
   const result = buildProgressStatistics({
     modules: [{ _id: "module-1", name: "Cardiologie", semester: "S6", courseNames: ["Cours vide"] }],

@@ -278,7 +278,7 @@ const ProfilePage = () => {
     },
     { 
       label: t('dashboard:exams_taken'), 
-      value: userStats?.examsCompleted || 0, 
+      value: userStats?.examsStarted || 0,
       icon: <BookOpen className="h-4 w-4" /> 
     },
     { 

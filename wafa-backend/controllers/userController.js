@@ -12,6 +12,7 @@ import {
     withAcademicYear,
 } from "../utils/academicYear.js";
 import { buildProfileActivityStatistics } from "../services/profileStatisticsService.js";
+import { loadProfileExams } from "../services/profileExamService.js";
 import { classifyFirebaseAdminError } from "../utils/firebaseError.js";
 import { applyAdminPlanTransition, normalizeUserPlan, SUPPORTED_USER_PLANS } from "../utils/planAccess.js";
 import { buildUserListFilter } from "../utils/userListFilters.js";
@@ -1040,12 +1041,12 @@ export const UserController = {
             totalQuestionsAttempted: userStats.totalQuestionsAttempted,
             totalCorrectAnswers: userStats.totalCorrectAnswers,
             averageScore: userStats.averageScore,
-            totalExamsCompleted: userStats.totalExamsCompleted,
-            totalExams: userStats.totalExams,
+            exams: await loadProfileExams(userStats.answeredQuestions),
         });
 
         // Calculate additional stats
         const stats = {
+            examsStarted: activityStats.examsStarted,
             examsCompleted: activityStats.examsCompleted,
             averageScore: activityStats.averageScore,
             studyTimeSeconds: userStats.totalTimeSpent || 0,

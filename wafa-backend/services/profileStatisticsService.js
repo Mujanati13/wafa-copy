@@ -29,8 +29,7 @@ export const buildProfileActivityStatistics = ({
   totalQuestionsAttempted = 0,
   totalCorrectAnswers = 0,
   averageScore = 0,
-  totalExamsCompleted = 0,
-  totalExams = 0,
+  exams = [],
 } = {}) => {
   const verifiedAnswers = answerValues(answeredQuestions)
     .map((answer) => answer?.toObject?.() || answer || {})
@@ -43,16 +42,34 @@ export const buildProfileActivityStatistics = ({
   const correctAnswers = hasVerifiedAnswers
     ? verifiedAnswers.filter((answer) => answer.isCorrect === true).length
     : Math.min(questionsAttempted, nonNegativeNumber(totalCorrectAnswers));
-  const examIds = new Set(
-    verifiedAnswers.map((answer) => asId(answer.examId)).filter(Boolean),
-  );
-  const legacyExamCount = Math.max(
-    nonNegativeNumber(totalExamsCompleted),
-    nonNegativeNumber(totalExams),
-  );
+  const entries = answeredQuestions instanceof Map
+    ? [...answeredQuestions.entries()]
+    : Object.entries(answeredQuestions || {});
+  const answersByExam = new Map();
+  for (const [questionId, answer] of entries) {
+    const examId = asId(answer?.examId);
+    if (!examId) continue;
+    if (!answersByExam.has(examId)) answersByExam.set(examId, new Map());
+    answersByExam.get(examId).set(asId(questionId), answer);
+  }
+  let examsStarted = 0;
+  let examsCompleted = 0;
+  const seenExams = new Set();
+  for (const exam of exams) {
+    const examId = asId(exam._id);
+    if (!examId || seenExams.has(examId)) continue;
+    seenExams.add(examId);
+    const questionIds = [...new Set((exam.questionIds || []).map(asId).filter(Boolean))];
+    const answers = answersByExam.get(examId);
+    if (!questionIds.length || !answers) continue;
+    if (questionIds.some((id) => answers.get(id)?.isVerified === true
+      || answers.get(id)?.selectedAnswers?.length > 0)) examsStarted += 1;
+    if (questionIds.every((id) => answers.get(id)?.isVerified === true)) examsCompleted += 1;
+  }
 
   return {
-    examsCompleted: examIds.size || legacyExamCount,
+    examsStarted,
+    examsCompleted,
     averageScore: questionsAttempted > 0
       ? percentage(correctAnswers, questionsAttempted)
       : Math.min(100, nonNegativeNumber(averageScore)),

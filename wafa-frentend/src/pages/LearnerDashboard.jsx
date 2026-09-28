@@ -213,7 +213,7 @@ export default function LearnerDashboard() {
 
       <section className="hidden gap-4 lg:grid lg:grid-cols-2 xl:grid-cols-4">
         <StatCard label="Progression" value={`${progress}%`} description="Dans ce semestre" tone="cyan" />
-        <StatCard label="Examens terminés" value={completed} description="Tentatives complétées" tone="blue" />
+        <StatCard label="Examens terminés" value={completed} description="Toutes les questions vérifiées" tone="blue" />
         <StatCard label="Score moyen" value={`${average}%`} description="Sur vos dernières sessions" tone="green" />
         <StatCard label="Classement" value={rank ? `#${rank}` : "—"} description="Dans votre promotion" tone="amber" onClick={handleLeaderboardClick} />
       </section>
