@@ -1,6 +1,5 @@
 import {
-  signInWithRedirect,
-  getRedirectResult,
+  signInWithPopup,
   GoogleAuthProvider,
   sendEmailVerification,
   sendPasswordResetEmail as firebaseSendPasswordResetEmail,
@@ -16,7 +15,6 @@ import { clearStoredAuthToken, getStoredAuthToken, storeAuthToken } from '@/util
 
 const API_URL = import.meta.env.VITE_API_URL;
 const AUTH_CLIENT_ID_KEY = 'authClientId';
-const GOOGLE_REDIRECT_KEY = 'googleSignInRedirect';
 
 const getAuthClientId = () => {
   const existingId = localStorage.getItem(AUTH_CLIENT_ID_KEY);
@@ -36,19 +34,6 @@ const getAuthClientHeaders = () => ({
 const googleProvider = new GoogleAuthProvider();
 googleProvider.setCustomParameters({ prompt: 'select_account' });
 
-export const hasPendingGoogleRedirect = () => Boolean(sessionStorage.getItem(GOOGLE_REDIRECT_KEY));
-
-const startGoogleRedirect = async (rememberMe) => {
-  sessionStorage.setItem(GOOGLE_REDIRECT_KEY, JSON.stringify({ rememberMe }));
-  try {
-    await signInWithRedirect(auth, googleProvider);
-    return { redirecting: true };
-  } catch (error) {
-    sessionStorage.removeItem(GOOGLE_REDIRECT_KEY);
-    throw error;
-  }
-};
-
 const finishGoogleLogin = async (user, rememberMe) => {
   const idToken = await user.getIdToken();
   const response = await axios.post(`${API_URL}/auth/firebase`, { idToken }, {
@@ -60,29 +45,6 @@ const finishGoogleLogin = async (user, rememberMe) => {
   dashboardService.clearCache();
   userService.clearProfileCache();
   return { success: true, user: response.data.user, token: response.data.token };
-};
-
-let redirectCompletionPromise = null;
-export const completeGoogleRedirect = () => {
-  if (!hasPendingGoogleRedirect()) return Promise.resolve(null);
-  if (redirectCompletionPromise) return redirectCompletionPromise;
-
-  redirectCompletionPromise = (async () => {
-    try {
-      const { rememberMe = true } = JSON.parse(sessionStorage.getItem(GOOGLE_REDIRECT_KEY) || '{}');
-      const result = await getRedirectResult(auth);
-      if (!result?.user) {
-        throw new Error('La connexion Google n’a pas pu être terminée. Veuillez réessayer.');
-      }
-      return await finishGoogleLogin(result.user, rememberMe);
-    } catch (error) {
-      throw handleAuthError(error);
-    } finally {
-      sessionStorage.removeItem(GOOGLE_REDIRECT_KEY);
-      redirectCompletionPromise = null;
-    }
-  })();
-  return redirectCompletionPromise;
 };
 
 /**
@@ -176,7 +138,8 @@ export const loginWithEmail = async (email, password, { rememberMe = true } = {}
  */
 export const loginWithGoogle = async ({ rememberMe = true } = {}) => {
   try {
-    return await startGoogleRedirect(rememberMe);
+    const result = await signInWithPopup(auth, googleProvider);
+    return await finishGoogleLogin(result.user, rememberMe);
   } catch (error) {
     console.error('Google login error:', error);
     throw handleAuthError(error);

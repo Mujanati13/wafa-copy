@@ -11,7 +11,6 @@ import { Toaster } from "@/components/ui/sonner";
 import RedesignedLandingPage from "./components/RedesignedLandingPage";
 import Login from "./components/auth/Login";
 import Register from "./components/auth/Register";
-import GoogleRedirectHandler from "./components/auth/GoogleRedirectHandler";
 import LearnerExperienceLayout from "./components/layout/LearnerExperienceLayout";
 import LearnerDashboard from "./pages/LearnerDashboard";
 import ExamPage from "./pages/ExamPage";
@@ -79,8 +78,7 @@ export default function App() {
   return (
     <Router>
       <Toaster position="top-right" />
-      <GoogleRedirectHandler>
-        <Routes>
+      <Routes>
         <Route path="/" element={<RedesignedLandingPage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/admin/login" element={<AdminLogin />} />
@@ -165,8 +163,7 @@ export default function App() {
 
         {/* 404 Not Found - Must be last */}
         <Route path="*" element={<NotFound />} />
-        </Routes>
-      </GoogleRedirectHandler>
+      </Routes>
     </Router>
   );
 }

@@ -164,7 +164,6 @@ const Register = () => {
 
     try {
       const result = await loginWithGoogle();
-      if (result.redirecting) return;
       if (result?.user) {
         localStorage.setItem('user', JSON.stringify(result.user));
         localStorage.setItem('userProfile', JSON.stringify(result.user));

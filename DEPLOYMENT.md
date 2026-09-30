@@ -61,19 +61,22 @@ Complete deployment solution for the WAFA e-learning platform using Docker, Ngin
 
 ### Google sign-in
 
-The frontend uses a full-page Firebase redirect on every device and asks Google
-to show the account chooser on every attempt. Its Nginx container
-proxies `/__/auth/` to `elearning-8af75.firebaseapp.com` so the sign-in helper
-is served from `yourqcm.online` and Safari can retain redirect state.
+The frontend uses the same Firebase popup flow as the WAFA project. Google is
+asked to show the account chooser on each attempt, and the Firebase ID token is
+sent to `/auth/firebase` to establish the application session. The configured
+Firebase auth domain is `elearning-8af75.firebaseapp.com`.
 
-Before deploying this frontend change, confirm these provider settings:
+In Firebase project `elearning-8af75`, enable Google under Authentication >
+Sign-in method and authorize `yourqcm.online` under Authentication > Settings >
+Authorized domains. If Google reports `redirect_uri_mismatch`, inspect the
+`client_id` and `redirect_uri` in its error details, then check **Authorized
+redirect URIs** for that exact OAuth web client in Google Cloud. The standard
+Firebase helper URI is
+`https://elearning-8af75.firebaseapp.com/__/auth/handler`.
 
-1. In Firebase Authentication > Settings > Authorized domains, add `yourqcm.online`.
-2. In the Google OAuth web client used by this Firebase project, authorize
-   `https://yourqcm.online/__/auth/handler` as a redirect URI.
-3. Rebuild the frontend image. Check that
-   `https://yourqcm.online/__/auth/handler` serves the Firebase helper rather
-   than the React app, then complete a Google sign-in on iOS Safari.
+Popup blockers may still prevent Google login in some mobile or in-app browsers.
+Resolving that limitation with a full-page redirect requires the production
+OAuth client to authorize `https://yourqcm.online/__/auth/handler` as well.
 
 The script will:
 - ✅ Install Docker & Docker Compose (if needed)
