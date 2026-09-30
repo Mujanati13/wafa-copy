@@ -7,6 +7,7 @@ import UserStats from "../models/userStatsModel.js";
 import examCourseModel from "../models/examCourseModel.js";
 import qcmBanqueModel from "../models/qcmBanqueModel.js";
 import { buildModulePayload, ModulePayloadError } from "../utils/modulePayload.js";
+import { questionLogicalKey, uniqueQuestionsByLogicalKey } from "../utils/questionIdentity.js";
 import {
     CategoryLabelsError,
     DEFAULT_CATEGORY_LABELS,
@@ -23,7 +24,7 @@ const MODULE_LIST_CACHE_TTL_MS = 60 * 1000;
 let moduleListCache = null;
 let moduleListCacheExpiresAt = 0;
 
-const clearModuleListCache = () => {
+export const invalidateModuleListCache = () => {
     moduleListCache = null;
     moduleListCacheExpiresAt = 0;
 };
@@ -63,7 +64,7 @@ export const moduleController = {
             ...labels,
         };
         await module.save();
-        clearModuleListCache();
+        invalidateModuleListCache();
 
         return res.status(200).json({
             success: true,
@@ -85,7 +86,7 @@ export const moduleController = {
         }
 
         const newModule = await moduleSchema.create(createData);
-        clearModuleListCache();
+        invalidateModuleListCache();
         res.status(201).json({
             success: true,
             data: newModule
@@ -123,7 +124,7 @@ export const moduleController = {
         existingModule.set(updateData);
         const updatedModule = await existingModule.save();
 
-        clearModuleListCache();
+        invalidateModuleListCache();
 
         res.status(200).json({
             success: true,
@@ -143,7 +144,7 @@ export const moduleController = {
             });
         }
 
-        clearModuleListCache();
+        invalidateModuleListCache();
 
         res.status(200).json({
             success: true,
@@ -165,24 +166,51 @@ export const moduleController = {
             .sort({ semester: 1, order: 1, _id: 1 })
             .lean();
 
-        // Get all ExamParYears for all modules
+        // A module total is the number of distinct question documents from its
+        // active yearly exams, QCM banks and course-owned questions.
         const moduleIds = modules.map(m => m._id);
-        const examParYears = await examParYearModel.find({ moduleId: { $in: moduleIds } })
-            .select('name moduleId year imageUrl infoText courseCategoryId')
-            .lean();
+        const [examParYears, qcmBanques, examCourses] = await Promise.all([
+            examParYearModel.find({ moduleId: { $in: moduleIds } })
+                .select('name moduleId year imageUrl infoText courseCategoryId')
+                .lean(),
+            qcmBanqueModel.find({ moduleId: { $in: moduleIds } })
+                .select('_id moduleId')
+                .lean(),
+            examCourseModel.find({ moduleId: { $in: moduleIds }, status: { $ne: "archived" } })
+                .select('_id moduleId')
+                .lean(),
+        ]);
 
         const allExamParYearIds = examParYears.map(epy => epy._id);
-        const questionData = includeQuestions
-            ? await questionModule.find({ examId: { $in: allExamParYearIds } }).lean()
-            : (allExamParYearIds.length ? await questionModule.aggregate([
-                { $match: { examId: { $in: allExamParYearIds } } },
-                { $group: { _id: '$examId', count: { $sum: 1 } } }
-            ]) : []);
+        const allQcmBanqueIds = qcmBanques.map(qcm => qcm._id);
+        const allExamCourseIds = examCourses.map(course => course._id);
+        const questionSourceFilters = [
+            ...(allExamParYearIds.length ? [{ examId: { $in: allExamParYearIds } }] : []),
+            ...(allQcmBanqueIds.length ? [{ qcmBanqueId: { $in: allQcmBanqueIds } }] : []),
+            ...(allExamCourseIds.length ? [{ examCourseId: { $in: allExamCourseIds } }] : []),
+        ];
+        const questionData = questionSourceFilters.length === 0
+            ? []
+            : includeQuestions
+                ? await questionModule.find({ $or: questionSourceFilters }).lean()
+                : await questionModule.aggregate([
+                    { $match: { $or: questionSourceFilters } },
+                    { $project: { _id: 1, examId: 1, qcmBanqueId: 1, examCourseId: 1, sessionLabel: 1, questionNumber: 1 } },
+                ]);
 
-        // Build a map from examParYearId -> moduleId
+        // Build source ID -> module ID maps. A question is counted once, even
+        // when historical data mistakenly stores more than one source field.
         const examIdToModuleId = {};
         examParYears.forEach(epy => {
             examIdToModuleId[epy._id.toString()] = epy.moduleId.toString();
+        });
+        const qcmIdToModuleId = {};
+        qcmBanques.forEach(qcm => {
+            qcmIdToModuleId[qcm._id.toString()] = qcm.moduleId.toString();
+        });
+        const courseIdToModuleId = {};
+        examCourses.forEach(course => {
+            courseIdToModuleId[course._id.toString()] = course.moduleId.toString();
         });
 
         // Group exams by moduleId
@@ -193,31 +221,29 @@ export const moduleController = {
             moduleIdToExams[moduleId].push(epy);
         });
 
-        const moduleIdToQuestionCount = {};
+        const moduleIdToQuestionIds = {};
         const moduleIdToQuestions = includeQuestions ? {} : null;
-
-        if (includeQuestions) {
-            questionData.forEach(question => {
-                const moduleId = examIdToModuleId[question.examId?.toString()];
-                if (!moduleId) return;
-                moduleIdToQuestionCount[moduleId] = (moduleIdToQuestionCount[moduleId] || 0) + 1;
+        questionData.forEach(question => {
+            const moduleId = examIdToModuleId[question.examId?.toString()]
+                || qcmIdToModuleId[question.qcmBanqueId?.toString()]
+                || courseIdToModuleId[question.examCourseId?.toString()];
+            if (!moduleId) return;
+            if (!moduleIdToQuestionIds[moduleId]) moduleIdToQuestionIds[moduleId] = new Set();
+            const logicalQuestionId = questionLogicalKey(question);
+            if (moduleIdToQuestionIds[moduleId].has(logicalQuestionId)) return;
+            moduleIdToQuestionIds[moduleId].add(logicalQuestionId);
+            if (includeQuestions) {
                 if (!moduleIdToQuestions[moduleId]) moduleIdToQuestions[moduleId] = [];
                 moduleIdToQuestions[moduleId].push(question);
-            });
-        } else {
-            questionData.forEach(({ _id, count }) => {
-                const moduleId = examIdToModuleId[_id.toString()];
-                if (!moduleId) return;
-                moduleIdToQuestionCount[moduleId] = (moduleIdToQuestionCount[moduleId] || 0) + count;
-            });
-        }
+            }
+        });
 
         // Attach question count to each module
         const modulesWithRelations = modules.map(m => {
             const moduleId = m._id.toString();
             return {
                 ...m,
-                totalQuestions: moduleIdToQuestionCount[moduleId] || 0,
+                totalQuestions: moduleIdToQuestionIds[moduleId]?.size || 0,
                 exams: moduleIdToExams[moduleId] || [],
                 ...(includeQuestions ? { questions: moduleIdToQuestions[moduleId] || [] } : {})
             };
@@ -249,14 +275,28 @@ export const moduleController = {
             });
         }
 
-        // Get all ExamParYears for this module - only select necessary fields
-        const examParYears = await examParYearModel.find({ moduleId: id })
-            .select('name year imageUrl infoText')
-            .lean();
+        // Count the same active sources as the dashboard so the two views can
+        // never disagree about a module total.
+        const [examParYears, qcmBanques, examCourses] = await Promise.all([
+            examParYearModel.find({ moduleId: id }).select('name year imageUrl infoText').lean(),
+            qcmBanqueModel.find({ moduleId: id }).select('_id').lean(),
+            examCourseModel.find({ moduleId: id, status: { $ne: "archived" } }).select('_id').lean(),
+        ]);
         const examParYearIds = examParYears.map(epy => epy._id);
-
-        // Only count questions, don't fetch them all (huge performance improvement)
-        const questionCount = await questionModule.countDocuments({ examId: { $in: examParYearIds } });
+        const qcmBanqueIds = qcmBanques.map(qcm => qcm._id);
+        const examCourseIds = examCourses.map(course => course._id);
+        const questionSourceFilters = [
+            ...(examParYearIds.length ? [{ examId: { $in: examParYearIds } }] : []),
+            ...(qcmBanqueIds.length ? [{ qcmBanqueId: { $in: qcmBanqueIds } }] : []),
+            ...(examCourseIds.length ? [{ examCourseId: { $in: examCourseIds } }] : []),
+        ];
+        const sourceQuestions = questionSourceFilters.length
+            ? await questionModule.find({ $or: questionSourceFilters })
+                .select("_id examId qcmBanqueId examCourseId sessionLabel questionNumber")
+                .sort({ createdAt: -1, _id: -1 })
+                .lean()
+            : [];
+        const questionCount = uniqueQuestionsByLogicalKey(sourceQuestions).length;
 
         res.status(200).json({
             success: true,
@@ -276,7 +316,7 @@ export const moduleController = {
         const [module, examParYears, examCourses, qcmBanques, userStats] = await Promise.all([
             moduleSchema.findById(id).select("name").lean(),
             examParYearModel.find({ moduleId: id }).select("_id").lean(),
-            examCourseModel.find({ moduleId: id }).select("linkedQuestions").lean(),
+            examCourseModel.find({ moduleId: id, status: { $ne: "archived" } }).select("_id").lean(),
             qcmBanqueModel.find({ moduleId: id }).select("_id").lean(),
             UserStats.findOne({ userId }).select("answeredQuestions").lean()
         ]);
@@ -290,16 +330,18 @@ export const moduleController = {
 
         const yearExamIds = examParYears.map(exam => exam._id);
         const qcmIds = qcmBanques.map(qcm => qcm._id);
-        const linkedQuestionIds = examCourses.flatMap(course => course.linkedQuestions || []);
+        const courseIds = examCourses.map(course => course._id);
 
-        // This endpoint only needs identifiers to calculate progress.
-        const questions = await questionModule.find({
+        // Use source membership, rather than cached course links, so orphaned
+        // questions cannot alter a learner's total after an exam is replaced.
+        const sourceQuestions = await questionModule.find({
             $or: [
                 { examId: { $in: yearExamIds } },
                 { qcmBanqueId: { $in: qcmIds } },
-                { _id: { $in: linkedQuestionIds } }
+                { examCourseId: { $in: courseIds } }
             ]
-        }).select("_id").lean();
+        }).select("_id examId qcmBanqueId examCourseId sessionLabel questionNumber").sort({ createdAt: -1, _id: -1 }).lean();
+        const questions = uniqueQuestionsByLogicalKey(sourceQuestions);
         
         const totalQuestions = questions.length;
 

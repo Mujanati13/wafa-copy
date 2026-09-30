@@ -2161,7 +2161,7 @@ const ExamPage = () => {
                           ) : null}
                         </div>
                         {/* Breadcrumb */}
-                        <div className="hidden min-w-0 items-center gap-1.5 lg:flex">
+                        <div className="flex min-w-0 items-center gap-1.5">
                           <BookOpen className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0 text-muted-foreground" />
                           <span className="break-words font-medium max-w-full leading-relaxed">
                             {(() => {

@@ -164,13 +164,22 @@ export const buildCompleteActivitySources = ({
   qcmBanks = [],
   questions = [],
 }) => {
+  const activeQuestions = uniqueQuestionsByLogicalKey(questions);
+  const existingQuestionIds = new Set(activeQuestions.map((question) => asId(question._id)).filter(Boolean));
+  const activeCourses = courses.map((course) => ({
+    ...course,
+    // A course can retain an obsolete ID after an old exam is removed. Count
+    // only question documents that still exist in an active source.
+    linkedQuestions: (course.linkedQuestions || [])
+      .filter((questionId) => existingQuestionIds.has(asId(questionId))),
+  }));
   const linkedQuestionIds = new Set(
-    courses.flatMap((course) => course.linkedQuestions || []).map(asId).filter(Boolean),
+    activeCourses.flatMap((course) => course.linkedQuestions || []).map(asId).filter(Boolean),
   );
   const questionsByAnnualExam = new Map();
   const questionsByQcmBank = new Map();
 
-  questions.forEach((question) => {
+  activeQuestions.forEach((question) => {
     const questionId = asId(question._id);
     if (!questionId || linkedQuestionIds.has(questionId)) return;
 
@@ -207,7 +216,7 @@ export const buildCompleteActivitySources = ({
     })),
   ].filter((source) => source.linkedQuestions.length > 0);
 
-  return [...courses, ...supplementalSources];
+  return [...activeCourses, ...supplementalSources];
 };
 
 export const buildProgressStatistics = ({ modules = [], courses = [], answeredQuestions = {} }) => {
@@ -299,3 +308,4 @@ export const buildProgressStatistics = ({ modules = [], courses = [], answeredQu
     modules: moduleStats,
   };
 };
+import { uniqueQuestionsByLogicalKey } from "../utils/questionIdentity.js";

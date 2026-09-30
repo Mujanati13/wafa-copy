@@ -2,6 +2,9 @@ import QCMBanque from "../models/qcmBanqueModel.js";
 import asyncHandler from '../handlers/asyncHandler.js';
 import QuestionModel from "../models/questionModule.js";
 import { getAnsweredCountByExam } from "../utils/answerProgress.js";
+import { deleteQuestionsAndUnlink } from "../services/questionDeletionService.js";
+import { invalidateModuleListCache } from "./moduleController.js";
+import { uniqueQuestionsByLogicalKey } from "../utils/questionIdentity.js";
 
 export const qcmBanqueController = {
     create: asyncHandler(async (req, res) => {
@@ -12,6 +15,7 @@ export const qcmBanqueController = {
             imageUrl,
             infoText
         });
+        invalidateModuleListCache();
         res.status(201).json({
             success: true,
             data: newQCM
@@ -32,6 +36,7 @@ export const qcmBanqueController = {
                 message: "QCM Banque not found"
             });
         }
+        invalidateModuleListCache();
         res.status(200).json({
             success: true,
             data: updatedQCM
@@ -40,17 +45,21 @@ export const qcmBanqueController = {
 
     delete: asyncHandler(async (req, res) => {
         const { id } = req.params;
-        const deletedQCM = await QCMBanque.findByIdAndDelete(id);
-        if (!deletedQCM) {
+        const qcm = await QCMBanque.findById(id).select("_id").lean();
+        if (!qcm) {
             return res.status(404).json({
                 success: false,
                 message: "QCM Banque not found"
             });
         }
+        const { deletedCount } = await deleteQuestionsAndUnlink({ qcmBanqueId: qcm._id });
+        const deletedQCM = await QCMBanque.findByIdAndDelete(qcm._id);
+        invalidateModuleListCache();
         res.status(200).json({
             success: true,
             message: "QCM Banque deleted successfully",
-            data: deletedQCM
+            data: deletedQCM,
+            deletedQuestions: deletedCount,
         });
     }),
 
@@ -97,9 +106,10 @@ export const qcmBanqueController = {
             });
         }
 
-        const questions = await QuestionModel.find({ qcmBanqueId: id })
-            .sort({ questionNumber: 1, createdAt: 1 })
+        const sourceQuestions = await QuestionModel.find({ qcmBanqueId: id })
+            .sort({ createdAt: -1, _id: -1 })
             .lean();
+        const questions = uniqueQuestionsByLogicalKey(sourceQuestions);
 
         res.status(200).json({
             success: true,

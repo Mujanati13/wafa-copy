@@ -5,6 +5,9 @@ import QuestionModel from "../models/questionModule.js";
 import { sortGroupedQuestions } from "../utils/examSessionSort.js";
 import { NotificationController } from "./notificationController.js";
 import { getAnsweredCountByExam } from "../utils/answerProgress.js";
+import { deleteQuestionsAndUnlink } from "../services/questionDeletionService.js";
+import { invalidateModuleListCache } from "./moduleController.js";
+import { uniqueQuestionsByLogicalKey } from "../utils/questionIdentity.js";
 
 export const examController = {
     create: asyncHandler(async (req, res) => {
@@ -23,6 +26,7 @@ export const examController = {
             isOfficialCorrection,
             courseCategoryId: courseCategoryId || null
         });
+        invalidateModuleListCache();
         res.status(201).json({
             success: true,
             data: newExam
@@ -97,6 +101,7 @@ export const examController = {
                 message: "Exam not found"
             });
         }
+        invalidateModuleListCache();
         res.status(200).json({
             success: true,
             data: updatedExam
@@ -105,17 +110,25 @@ export const examController = {
 
     delete: asyncHandler(async (req, res) => {
         const { id } = req.params;
-        const deletedExam = await examModel.findByIdAndDelete(id);
-        if (!deletedExam) {
+        const exam = await examModel.findById(id).select("_id").lean();
+        if (!exam) {
             return res.status(404).json({
                 success: false,
                 message: "Exam not found"
             });
         }
+
+        // An exam is the owner of its questions. Clean both the question
+        // documents and any course references before removing the exam itself.
+        const { deletedCount } = await deleteQuestionsAndUnlink({ examId: exam._id });
+        const deletedExam = await examModel.findByIdAndDelete(exam._id);
+        invalidateModuleListCache();
+
         res.status(200).json({
             success: true,
             message: "Exam deleted successfully",
-            data: deletedExam
+            data: deletedExam,
+            deletedQuestions: deletedCount,
         });
     }),
     getAll: asyncHandler(async (req, res) => {
@@ -167,9 +180,10 @@ export const examController = {
         }
 
         // Get questions related to this exam, sorted by questionNumber then by createdAt
-        const questions = await QuestionModel.find({ examId: id })
-            .sort({ questionNumber: 1, createdAt: 1 })
+        const sourceQuestions = await QuestionModel.find({ examId: id })
+            .sort({ createdAt: -1, _id: -1 })
             .lean();
+        const questions = uniqueQuestionsByLogicalKey(sourceQuestions);
 
         // Build default session name from exam name and year
         const defaultSessionName = exam.name || (exam.year ? `Exam ${exam.year}` : "Session principale");

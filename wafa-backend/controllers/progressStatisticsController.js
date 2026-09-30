@@ -103,13 +103,15 @@ export const getProgressStatistics = asyncHandler(async (req, res) => {
 
   const annualExamIds = annualExams.map((exam) => exam._id);
   const qcmBankIds = qcmBanks.map((qcm) => qcm._id);
-  const questions = annualExamIds.length || qcmBankIds.length
+  const courseIds = courses.map((course) => course._id);
+  const questions = annualExamIds.length || qcmBankIds.length || courseIds.length
     ? await Question.find({
         $or: [
           ...(annualExamIds.length ? [{ examId: { $in: annualExamIds } }] : []),
           ...(qcmBankIds.length ? [{ qcmBanqueId: { $in: qcmBankIds } }] : []),
+          ...(courseIds.length ? [{ examCourseId: { $in: courseIds } }] : []),
         ],
-      }).select("examId qcmBanqueId").lean()
+      }).select("_id examId qcmBanqueId examCourseId sessionLabel questionNumber").sort({ createdAt: -1, _id: -1 }).lean()
     : [];
 
   const activitySources = buildCompleteActivitySources({

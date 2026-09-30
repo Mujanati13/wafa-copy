@@ -6,7 +6,11 @@ import { getAnalytics } from 'firebase/analytics';
 // Your web app's Firebase configuration
 const firebaseConfig = {
   apiKey: "AIzaSyAyMy6qkzlpzn9WPt0cJy6moHOxiOBI068",
-  authDomain: "elearning-8af75.firebaseapp.com",
+  // The production Nginx server proxies /__/auth/ on this same domain.
+  // Keeping the helper first-party makes redirect sign-in work in Safari.
+  authDomain: typeof window !== 'undefined' && window.location.hostname === 'yourqcm.online'
+    ? 'yourqcm.online'
+    : 'elearning-8af75.firebaseapp.com',
   projectId: "elearning-8af75",
   storageBucket: "elearning-8af75.firebasestorage.app",
   messagingSenderId: "769145725342",

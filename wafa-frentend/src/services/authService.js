@@ -1,5 +1,6 @@
 import {
-  signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   GoogleAuthProvider,
   sendEmailVerification,
   sendPasswordResetEmail as firebaseSendPasswordResetEmail,
@@ -15,6 +16,7 @@ import { clearStoredAuthToken, getStoredAuthToken, storeAuthToken } from '@/util
 
 const API_URL = import.meta.env.VITE_API_URL;
 const AUTH_CLIENT_ID_KEY = 'authClientId';
+const GOOGLE_REDIRECT_KEY = 'googleSignInRedirect';
 
 const getAuthClientId = () => {
   const existingId = localStorage.getItem(AUTH_CLIENT_ID_KEY);
@@ -32,6 +34,56 @@ const getAuthClientHeaders = () => ({
 
 // Google Auth Provider
 const googleProvider = new GoogleAuthProvider();
+googleProvider.setCustomParameters({ prompt: 'select_account' });
+
+export const hasPendingGoogleRedirect = () => Boolean(sessionStorage.getItem(GOOGLE_REDIRECT_KEY));
+
+const startGoogleRedirect = async (rememberMe) => {
+  sessionStorage.setItem(GOOGLE_REDIRECT_KEY, JSON.stringify({ rememberMe }));
+  try {
+    await signInWithRedirect(auth, googleProvider);
+    return { redirecting: true };
+  } catch (error) {
+    sessionStorage.removeItem(GOOGLE_REDIRECT_KEY);
+    throw error;
+  }
+};
+
+const finishGoogleLogin = async (user, rememberMe) => {
+  const idToken = await user.getIdToken();
+  const response = await axios.post(`${API_URL}/auth/firebase`, { idToken }, {
+    withCredentials: true,
+    headers: getAuthClientHeaders()
+  });
+
+  storeAuthToken(response.data.token, rememberMe);
+  dashboardService.clearCache();
+  userService.clearProfileCache();
+  return { success: true, user: response.data.user, token: response.data.token };
+};
+
+let redirectCompletionPromise = null;
+export const completeGoogleRedirect = () => {
+  if (!hasPendingGoogleRedirect()) return Promise.resolve(null);
+  if (redirectCompletionPromise) return redirectCompletionPromise;
+
+  redirectCompletionPromise = (async () => {
+    try {
+      const { rememberMe = true } = JSON.parse(sessionStorage.getItem(GOOGLE_REDIRECT_KEY) || '{}');
+      const result = await getRedirectResult(auth);
+      if (!result?.user) {
+        throw new Error('La connexion Google n’a pas pu être terminée. Veuillez réessayer.');
+      }
+      return await finishGoogleLogin(result.user, rememberMe);
+    } catch (error) {
+      throw handleAuthError(error);
+    } finally {
+      sessionStorage.removeItem(GOOGLE_REDIRECT_KEY);
+      redirectCompletionPromise = null;
+    }
+  })();
+  return redirectCompletionPromise;
+};
 
 /**
  * Register with email and password (using backend local strategy - no email verification required)
@@ -124,32 +176,7 @@ export const loginWithEmail = async (email, password, { rememberMe = true } = {}
  */
 export const loginWithGoogle = async ({ rememberMe = true } = {}) => {
   try {
-    // Sign in with Google popup
-    const result = await signInWithPopup(auth, googleProvider);
-
-    // Get Firebase ID token
-    const idToken = await result.user.getIdToken();
-
-    // Authenticate with backend
-    const response = await axios.post(`${API_URL}/auth/firebase`, {
-      idToken
-    }, {
-      withCredentials: true,
-      headers: getAuthClientHeaders()
-    });
-
-    // Store JWT token
-    storeAuthToken(response.data.token, rememberMe);
-
-    // Ensure stale dashboard/profile caches are reset for the new session.
-    dashboardService.clearCache();
-    userService.clearProfileCache();
-
-    return {
-      success: true,
-      user: response.data.user,
-      token: response.data.token
-    };
+    return await startGoogleRedirect(rememberMe);
   } catch (error) {
     console.error('Google login error:', error);
     throw handleAuthError(error);
@@ -370,6 +397,9 @@ const handleAuthError = (error) => {
     'auth/invalid-credential': 'Email ou mot de passe incorrect',
     'auth/too-many-requests': 'Trop de tentatives. Veuillez réessayer plus tard',
     'auth/network-request-failed': 'Erreur de connexion réseau',
+    'auth/popup-blocked': 'Votre navigateur a bloqué la fenêtre de connexion Google. Veuillez réessayer.',
+    'auth/unauthorized-domain': 'Ce domaine n’est pas autorisé pour la connexion Google. Veuillez contacter le support.',
+    'auth/web-storage-unsupported': 'Ce navigateur ne permet pas de terminer la connexion Google. Ouvrez le site dans Safari ou Chrome.',
     'auth/popup-closed-by-user': 'Connexion annulée',
     'auth/cancelled-popup-request': 'Connexion annulée',
     'auth/account-exists-with-different-credential': 'Un compte existe déjà avec cette adresse email mais avec une méthode de connexion différente'

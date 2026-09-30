@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import NewExamForm from "@/components/admin/NewExamForm";
 import ImportYearExamsDialog from "@/components/admin/ImportYearExamsDialog";
 import { api } from "@/lib/utils";
+import { moduleService } from "@/services/moduleService";
 
 const DEFAULT_EXAM_IMAGE = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSMC9M_cEyx3SqKeJVj_RbrtTxkDXhVP1k_2A&s";
 
@@ -169,6 +170,7 @@ const ExamParYears = () => {
         isOfficialCorrection: formData.isOfficialCorrection,
         courseCategoryId: formData.courseCategoryId || null,
       });
+      moduleService.clearCache();
 
       setShowAddExamForm(false);
       setFormSemesterFilter("all");
@@ -205,6 +207,7 @@ const ExamParYears = () => {
 
     try {
       await api.delete(`/exams/delete/${examId}`);
+      moduleService.clearCache();
       toast.success("Examen supprimé avec succès");
       fetchExams();
     } catch (err) {
@@ -240,6 +243,7 @@ const ExamParYears = () => {
       await Promise.all(
         Array.from(selectedItems).map(id => api.delete(`/exams/delete/${id}`))
       );
+      moduleService.clearCache();
       toast.success(`${selectedItems.size} examen(s) supprimé(s) avec succès`);
       setSelectedItems(new Set());
       fetchExams();

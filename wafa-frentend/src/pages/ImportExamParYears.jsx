@@ -17,6 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, Trash2, Upload, FileText, Calendar, Loader2 } from "lucide-react";
 import { api } from "@/lib/utils";
 import { cryptoCompat } from "@/lib/cryptoCompat";
+import { moduleService } from "@/services/moduleService";
 import { toast } from "sonner";
 
 const ImportExamParYears = () => {
@@ -118,6 +119,7 @@ const ImportExamParYears = () => {
 
       // Don't set Content-Type manually - axios handles it for FormData
       await api.post('/questions/import', formData);
+      moduleService.clearCache();
 
       toast.success("Questions importées avec succès");
       setExcelFile(null);

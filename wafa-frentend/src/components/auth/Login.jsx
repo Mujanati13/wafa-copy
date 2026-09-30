@@ -125,6 +125,7 @@ const Login = () => {
 
     try {
       const result = await loginWithGoogle({ rememberMe: formData.rememberMe });
+      if (result.redirecting) return;
 
       // Store JWT token and user data
       localStorage.setItem('user', JSON.stringify(result.user));

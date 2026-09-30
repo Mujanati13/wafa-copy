@@ -41,6 +41,7 @@ import {
 } from "../utils/questionMappingMatrix.js";
 import { sortGroupedQuestions } from "../utils/examSessionSort.js";
 import { getCourseCategoryUsageFilter } from "../utils/courseCategoryRelations.js";
+import { uniqueQuestionsByLogicalKey } from "../utils/questionIdentity.js";
 
 const COURSE_IMPORT_HEADER_LABELS = {
     semester: "Semestre",
@@ -131,7 +132,7 @@ export const examCourseController = {
             });
         }
 
-        const questions = course.linkedQuestions || [];
+        const questions = uniqueQuestionsByLogicalKey(course.linkedQuestions || []);
         const questionSources = course.questionSources || [];
         
         // Create a map of questionId to source info (yearName)

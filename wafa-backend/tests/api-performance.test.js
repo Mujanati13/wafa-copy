@@ -7,6 +7,7 @@ import { moduleController } from "../controllers/moduleController.js";
 import CourseCategory from "../models/courseCategoryModel.js";
 import ExamCourse from "../models/examCourseModel.js";
 import ExamParYear from "../models/examParYearModel.js";
+import QCMBanque from "../models/qcmBanqueModel.js";
 import Module from "../models/moduleModel.js";
 import Question from "../models/questionModule.js";
 import Transaction from "../models/transactionModel.js";
@@ -38,6 +39,8 @@ test("module summary counts questions without loading question documents", { con
   const originals = {
     moduleFind: Module.find,
     examFind: ExamParYear.find,
+    courseFind: ExamCourse.find,
+    qcmFind: QCMBanque.find,
     questionFind: Question.find,
     questionAggregate: Question.aggregate,
   };
@@ -54,13 +57,22 @@ test("module summary counts questions without loading question documents", { con
         lean: async () => [{ _id: examId, moduleId, name: "2026", year: 2026 }],
       }),
     });
+    ExamCourse.find = () => ({
+      select: () => ({ lean: async () => [] }),
+    });
+    QCMBanque.find = () => ({
+      select: () => ({ lean: async () => [] }),
+    });
     Question.find = () => {
       fullQuestionFindCalled = true;
       return {
         lean: async () => [{ _id: new mongoose.Types.ObjectId(), examId, text: "Q1" }],
       };
     };
-    Question.aggregate = async () => [{ _id: examId, count: 37 }];
+    Question.aggregate = async () => Array.from({ length: 37 }, () => ({
+      _id: new mongoose.Types.ObjectId(),
+      examId,
+    }));
 
     const res = createResponse();
     await moduleController.getAll({ query: {} }, res);
@@ -79,6 +91,8 @@ test("module summary counts questions without loading question documents", { con
   } finally {
     Module.find = originals.moduleFind;
     ExamParYear.find = originals.examFind;
+    ExamCourse.find = originals.courseFind;
+    QCMBanque.find = originals.qcmFind;
     Question.find = originals.questionFind;
     Question.aggregate = originals.questionAggregate;
   }

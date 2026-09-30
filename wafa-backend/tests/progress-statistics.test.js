@@ -178,6 +178,52 @@ test("includes unmapped annual-exam and QCM-bank activity without double countin
   assert.equal(result.modules[0].courses[0].courseName, "Cours thématique");
 });
 
+test("ignores a stale course link left by a deleted exam", () => {
+  const sources = buildCompleteActivitySources({
+    courses: [{
+      _id: "course-1",
+      name: "Cours thÃ©matique",
+      moduleId: "module-1",
+      linkedQuestions: ["deleted-question", "active-question"],
+    }],
+    annualExams: [{ _id: "exam-1", name: "2026 normal", moduleId: "module-1" }],
+    questions: [{ _id: "active-question", examId: "exam-1" }],
+  });
+
+  const result = buildProgressStatistics({
+    modules: [{ _id: "module-1", name: "MÃ©thodologie", semester: "S1" }],
+    courses: sources,
+    answeredQuestions: {},
+  });
+
+  assert.equal(result.modules[0].totalQuestions, 1);
+  assert.equal(result.modules[0].courses[0].totalQuestions, 1);
+});
+
+test("counts a re-imported question number only once before data repair runs", () => {
+  const sources = buildCompleteActivitySources({
+    courses: [{
+      _id: "course-1",
+      name: "Communication",
+      moduleId: "module-1",
+      linkedQuestions: ["old-question", "new-question"],
+    }],
+    annualExams: [{ _id: "exam-2025", name: "2025 normal", moduleId: "module-1" }],
+    questions: [
+      { _id: "new-question", examId: "exam-2025", sessionLabel: "2025 normal", questionNumber: 12 },
+      { _id: "old-question", examId: "exam-2025", sessionLabel: "2025 normal", questionNumber: 12 },
+    ],
+  });
+
+  const result = buildProgressStatistics({
+    modules: [{ _id: "module-1", name: "Communication", semester: "S1" }],
+    courses: sources,
+  });
+
+  assert.equal(result.modules[0].totalQuestions, 1);
+  assert.equal(result.modules[0].courses[0].totalQuestions, 1);
+});
+
 test("strictly excludes yearly exams from courses and highlights (untouched, recent, lowest, highest)", () => {
   const sources = buildCompleteActivitySources({
     courses: [{

@@ -18,6 +18,7 @@ import { Plus, Trash2, Upload, FileText, Database, FolderOpen, Loader2 } from "l
 import { toast } from "sonner";
 import { api } from "@/lib/utils";
 import { cryptoCompat } from "@/lib/cryptoCompat";
+import { moduleService } from "@/services/moduleService";
 
 const ImportQCMBanque = () => {
   const { t } = useTranslation(['admin', 'common']);
@@ -127,6 +128,7 @@ const ImportQCMBanque = () => {
       await api.post('/questions/import', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
+      moduleService.clearCache();
 
       toast.success("Questions importées avec succès");
       setExcelFile(null);

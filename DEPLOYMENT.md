@@ -59,6 +59,22 @@ Complete deployment solution for the WAFA e-learning platform using Docker, Ngin
    sudo ./deploy-vps.sh
    ```
 
+### Google sign-in
+
+The frontend uses a full-page Firebase redirect on every device and asks Google
+to show the account chooser on every attempt. Its Nginx container
+proxies `/__/auth/` to `elearning-8af75.firebaseapp.com` so the sign-in helper
+is served from `yourqcm.online` and Safari can retain redirect state.
+
+Before deploying this frontend change, confirm these provider settings:
+
+1. In Firebase Authentication > Settings > Authorized domains, add `yourqcm.online`.
+2. In the Google OAuth web client used by this Firebase project, authorize
+   `https://yourqcm.online/__/auth/handler` as a redirect URI.
+3. Rebuild the frontend image. Check that
+   `https://yourqcm.online/__/auth/handler` serves the Firebase helper rather
+   than the React app, then complete a Google sign-in on iOS Safari.
+
 The script will:
 - ✅ Install Docker & Docker Compose (if needed)
 - ✅ Build all Docker images

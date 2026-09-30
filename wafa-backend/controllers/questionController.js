@@ -9,6 +9,8 @@ import { normalizeQuestionImages } from "../utils/questionImagePath.js";
 import { buildAnsweredCountByExam } from "../utils/answerProgress.js";
 import { normalizeUserPlan } from "../utils/planAccess.js";
 import { normalizeAnnulledQuestion } from "../utils/questionAnnulment.js";
+import { deleteQuestionsAndUnlink } from "../services/questionDeletionService.js";
+import { invalidateModuleListCache } from "./moduleController.js";
 
 export const questionController = {
     create: asyncHandler(async (req, res) => {
@@ -23,6 +25,7 @@ export const questionController = {
             sessionLabel,
             isAnnulled: normalizedQuestion.isAnnulled,
         });
+        invalidateModuleListCache();
         res.status(201).json({ success: true, data: newQuestion });
     }),
 
@@ -49,16 +52,19 @@ export const questionController = {
         if (!updated) {
             return res.status(404).json({ success: false, message: "Question not found" });
         }
+        invalidateModuleListCache();
         res.status(200).json({ success: true, data: updated });
     }),
 
     delete: asyncHandler(async (req, res) => {
         const { id } = req.params;
-        const deleted = await QuestionModel.findByIdAndDelete(id);
-        if (!deleted) {
+        const question = await QuestionModel.findById(id).select("_id").lean();
+        if (!question) {
             return res.status(404).json({ success: false, message: "Question not found" });
         }
-        res.status(200).json({ success: true, message: "Question deleted successfully", data: deleted });
+        const { deletedCount } = await deleteQuestionsAndUnlink({ _id: question._id });
+        invalidateModuleListCache();
+        res.status(200).json({ success: true, message: "Question deleted successfully", deletedCount });
     }),
 
     getAll: asyncHandler(async (req, res) => {
@@ -224,17 +230,14 @@ export const questionController = {
     bulkDelete: asyncHandler(async (req, res) => {
         const { examId, questionIds, moduleId, courseName } = req.body;
 
-        let deleteFilter = {};
         let deletedCount = 0;
 
         if (questionIds && Array.isArray(questionIds) && questionIds.length > 0) {
             // Delete specific questions by IDs
-            const result = await QuestionModel.deleteMany({ _id: { $in: questionIds } });
-            deletedCount = result.deletedCount;
+            ({ deletedCount } = await deleteQuestionsAndUnlink({ _id: { $in: questionIds } }));
         } else if (examId) {
             // Delete all questions for a specific exam
-            const result = await QuestionModel.deleteMany({ examId });
-            deletedCount = result.deletedCount;
+            ({ deletedCount } = await deleteQuestionsAndUnlink({ examId }));
         } else if (moduleId || courseName) {
             // Delete questions by module or course
             const examFilter = {};
@@ -244,8 +247,7 @@ export const questionController = {
             const exams = await ExamParYear.find(examFilter).select('_id');
             const examIds = exams.map(e => e._id);
 
-            const result = await QuestionModel.deleteMany({ examId: { $in: examIds } });
-            deletedCount = result.deletedCount;
+            ({ deletedCount } = await deleteQuestionsAndUnlink({ examId: { $in: examIds } }));
         } else {
             return res.status(400).json({
                 success: false,
@@ -253,6 +255,7 @@ export const questionController = {
             });
         }
 
+        invalidateModuleListCache();
         res.status(200).json({
             success: true,
             message: `${deletedCount} question(s) supprimée(s) avec succès`,
@@ -780,14 +783,73 @@ export const questionController = {
                 });
             }
 
-            // Create all questions
-            const createdQuestions = await QuestionModel.insertMany(questionsToCreate);
+            const seenQuestionNumbers = new Set();
+            const duplicateQuestionNumber = questionsToCreate.find((question) => {
+                if (!Number.isInteger(question.questionNumber)) return false;
+                if (seenQuestionNumbers.has(question.questionNumber)) return true;
+                seenQuestionNumbers.add(question.questionNumber);
+                return false;
+            })?.questionNumber;
+            if (duplicateQuestionNumber !== undefined) {
+                return res.status(422).json({
+                    success: false,
+                    message: `Le numéro de question ${duplicateQuestionNumber} est présent plusieurs fois dans le fichier.`,
+                });
+            }
+
+            // A question number is stable within one yearly exam/QCM. Reusing
+            // an import file updates that question instead of appending a
+            // duplicate and inflating the module total.
+            const targetFilter = examId
+                ? { examId }
+                : qcmBanqueId
+                    ? { qcmBanqueId }
+                    : null;
+            const numberedQuestions = questionsToCreate.filter((question) => Number.isInteger(question.questionNumber));
+            const existingQuestions = targetFilter && numberedQuestions.length
+                ? await QuestionModel.find({
+                    ...targetFilter,
+                    questionNumber: { $in: numberedQuestions.map((question) => question.questionNumber) },
+                }).select("_id questionNumber").lean()
+                : [];
+            const existingByNumber = new Map(existingQuestions.map((question) => [question.questionNumber, question._id]));
+            const replacements = [];
+            const newQuestions = [];
+
+            questionsToCreate.forEach((question) => {
+                const existingId = Number.isInteger(question.questionNumber)
+                    ? existingByNumber.get(question.questionNumber)
+                    : null;
+                if (!existingId) {
+                    newQuestions.push(question);
+                    return;
+                }
+
+                // Excel does not carry manually attached images, so preserve
+                // those images during a correction import.
+                const questionUpdate = { ...question };
+                delete questionUpdate.images;
+                replacements.push({
+                    updateOne: {
+                        filter: { _id: existingId },
+                        update: { $set: questionUpdate },
+                    },
+                });
+            });
+
+            if (replacements.length > 0) await QuestionModel.bulkWrite(replacements, { ordered: true });
+            const createdQuestions = newQuestions.length > 0
+                ? await QuestionModel.insertMany(newQuestions)
+                : [];
+            invalidateModuleListCache();
 
             res.status(201).json({
                 success: true,
                 message: `${createdQuestions.length} question(s) importée(s) avec succès`,
                 data: {
-                    count: createdQuestions.length,
+                    count: createdQuestions.length + replacements.length,
+                    createdCount: createdQuestions.length,
+                    updatedCount: replacements.length,
                     questions: createdQuestions
                 }
             });
