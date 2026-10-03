@@ -1,3 +1,5 @@
+import { questionLogicalKey, uniqueQuestionsByLogicalKey } from "../utils/questionIdentity.js";
+
 const clampPercentage = (value) => Math.min(100, Math.max(0, Math.round(value || 0)));
 
 export const filterModulesBySemester = (modules = [], semester = "") => {
@@ -29,19 +31,46 @@ const asId = (value, seen = new Set()) => {
 
 const asPlainAnswer = (value) => value?.toObject?.() || value || {};
 
-const normalizeAnswers = (answeredQuestions) => {
+// The controller orders questions newest first. Keep that document as the
+// canonical ID, but retain aliases for course links and older saved answers.
+const canonicalQuestionIds = (questions) => {
+  const byKey = new Map();
+  const aliases = new Map();
+  for (const question of questions) {
+    const id = asId(question._id);
+    if (!id) continue;
+    const key = questionLogicalKey(question);
+    if (!byKey.has(key)) byKey.set(key, id);
+    aliases.set(id, byKey.get(key));
+  }
+  return aliases;
+};
+
+const normalizeAnswers = (answeredQuestions, aliases) => {
   const entries = answeredQuestions instanceof Map
     ? Array.from(answeredQuestions.entries())
     : Object.entries(answeredQuestions || {});
 
-  return new Map(entries.map(([questionId, rawAnswer]) => {
+  const answers = new Map();
+  for (const [questionId, rawAnswer] of entries) {
     const answer = asPlainAnswer(rawAnswer);
-    return [String(questionId), {
-      isVerified: answer.isVerified !== false,
+    if (answer.isVerified !== true) continue;
+    const id = aliases.get(asId(questionId)) || asId(questionId);
+    const normalized = {
+      isVerified: true,
       isCorrect: Boolean(answer.isCorrect),
       answeredAt: answer.answeredAt ? new Date(answer.answeredAt) : null,
-    }];
-  }));
+    };
+    const existing = answers.get(id);
+    const timestamp = (value) => value?.answeredAt?.getTime() || 0;
+    // Merge duplicate answer records once; the latest verified result wins.
+    // On a timestamp tie, prefer the canonical document's answer.
+    if (!existing || timestamp(normalized) > timestamp(existing)
+      || (timestamp(normalized) === timestamp(existing) && asId(questionId) === id)) {
+      answers.set(id, normalized);
+    }
+  }
+  return answers;
 };
 
 const percentageOfTotal = (count, total) => total > 0
@@ -53,7 +82,7 @@ const successRate = (correct, answered) => answered > 0
   : 0;
 
 const buildStats = (questionIds, answers) => {
-  const uniqueQuestionIds = [...new Set((questionIds || []).map(asId).filter(Boolean))];
+  const uniqueQuestionIds = [...new Set((questionIds || []).map((id) => asId(id)).filter(Boolean))];
   const activity = uniqueQuestionIds
     .map((questionId) => answers.get(questionId))
     .filter((answer) => answer?.isVerified);
@@ -165,16 +194,25 @@ export const buildCompleteActivitySources = ({
   questions = [],
 }) => {
   const activeQuestions = uniqueQuestionsByLogicalKey(questions);
+  const aliases = canonicalQuestionIds(questions);
   const existingQuestionIds = new Set(activeQuestions.map((question) => asId(question._id)).filter(Boolean));
+  const questionsByCourse = new Map();
+  activeQuestions.forEach((question) => {
+    const courseId = asId(question.examCourseId);
+    if (!courseId || question.examId || question.qcmBanqueId) return;
+    if (!questionsByCourse.has(courseId)) questionsByCourse.set(courseId, []);
+    questionsByCourse.get(courseId).push(asId(question._id));
+  });
   const activeCourses = courses.map((course) => ({
     ...course,
     // A course can retain an obsolete ID after an old exam is removed. Count
     // only question documents that still exist in an active source.
-    linkedQuestions: (course.linkedQuestions || [])
+    linkedQuestions: [...(course.linkedQuestions || []), ...(questionsByCourse.get(asId(course._id)) || [])]
+      .map((questionId) => aliases.get(asId(questionId)) || asId(questionId))
       .filter((questionId) => existingQuestionIds.has(asId(questionId))),
   }));
   const linkedQuestionIds = new Set(
-    activeCourses.flatMap((course) => course.linkedQuestions || []).map(asId).filter(Boolean),
+    activeCourses.flatMap((course) => course.linkedQuestions || []).map((id) => asId(id)).filter(Boolean),
   );
   const questionsByAnnualExam = new Map();
   const questionsByQcmBank = new Map();
@@ -219,8 +257,9 @@ export const buildCompleteActivitySources = ({
   return [...activeCourses, ...supplementalSources];
 };
 
-export const buildProgressStatistics = ({ modules = [], courses = [], answeredQuestions = {} }) => {
-  const answers = normalizeAnswers(answeredQuestions);
+export const buildProgressStatistics = ({ modules = [], courses = [], questions = [], answeredQuestions = {} }) => {
+  const aliases = canonicalQuestionIds(questions);
+  const answers = normalizeAnswers(answeredQuestions, aliases);
   const moduleNameToId = new Map(modules.map((module) => [module.name, asId(module._id)]));
   const moduleIds = new Set(modules.map((module) => asId(module._id)));
   const coursesByModule = new Map();
@@ -229,9 +268,14 @@ export const buildProgressStatistics = ({ modules = [], courses = [], answeredQu
     const moduleId = getCourseModuleId(course, moduleNameToId, moduleIds);
     if (!moduleId) return;
     if (!coursesByModule.has(moduleId)) coursesByModule.set(moduleId, []);
-    coursesByModule.get(moduleId).push(course);
+    coursesByModule.get(moduleId).push({
+      ...course,
+      linkedQuestions: (course.linkedQuestions || [])
+        .map((id) => aliases.get(asId(id)) || asId(id)),
+    });
   });
 
+  const summaryQuestionIds = [];
   const moduleStats = modules.map((module) => {
     const moduleId = asId(module._id);
     const allStoredSources = coursesByModule.get(moduleId) || [];
@@ -268,6 +312,7 @@ export const buildProgressStatistics = ({ modules = [], courses = [], answeredQu
       .sort((left, right) => byName(left, right));
 
     const moduleQuestionIds = allStoredSources.flatMap((source) => source.linkedQuestions || []);
+    for (const id of moduleQuestionIds) summaryQuestionIds.push(id);
     const stats = buildStats(moduleQuestionIds, answers);
 
     return {
@@ -283,29 +328,19 @@ export const buildProgressStatistics = ({ modules = [], courses = [], answeredQu
     };
   });
 
-  const summary = moduleStats.reduce((result, module) => ({
-    moduleCount: result.moduleCount + 1,
-    courseCount: result.courseCount + module.courseCount,
-    totalQuestions: result.totalQuestions + module.totalQuestions,
-    answeredQuestions: result.answeredQuestions + module.answeredQuestions,
-    correctAnswers: result.correctAnswers + module.correctAnswers,
-    incorrectAnswers: result.incorrectAnswers + module.incorrectAnswers,
-  }), {
-    moduleCount: 0,
-    courseCount: 0,
-    totalQuestions: 0,
-    answeredQuestions: 0,
-    correctAnswers: 0,
-    incorrectAnswers: 0,
-  });
+  const summary = buildStats(summaryQuestionIds, answers);
 
   return {
     summary: {
-      ...summary,
-      completionPercentage: percentageOfTotal(summary.answeredQuestions, summary.totalQuestions),
-      successRate: successRate(summary.correctAnswers, summary.answeredQuestions),
+      moduleCount: moduleStats.length,
+      courseCount: moduleStats.reduce((count, module) => count + module.courseCount, 0),
+      totalQuestions: summary.totalQuestions,
+      answeredQuestions: summary.answeredQuestions,
+      correctAnswers: summary.correctAnswers,
+      incorrectAnswers: summary.incorrectAnswers,
+      completionPercentage: summary.completionPercentage,
+      successRate: summary.successRate,
     },
     modules: moduleStats,
   };
 };
-import { uniqueQuestionsByLogicalKey } from "../utils/questionIdentity.js";

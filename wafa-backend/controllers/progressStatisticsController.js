@@ -124,6 +124,7 @@ export const getProgressStatistics = asyncHandler(async (req, res) => {
   const progress = buildProgressStatistics({
     modules,
     courses: activitySources,
+    questions,
     answeredQuestions: userStats?.answeredQuestions || {},
   });
 

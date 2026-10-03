@@ -11,6 +11,7 @@ import { normalizeUserPlan } from "../utils/planAccess.js";
 import { normalizeAnnulledQuestion } from "../utils/questionAnnulment.js";
 import { deleteQuestionsAndUnlink } from "../services/questionDeletionService.js";
 import { invalidateModuleListCache } from "./moduleController.js";
+import { questionLogicalKey } from "../utils/questionIdentity.js";
 
 export const questionController = {
     create: asyncHandler(async (req, res) => {
@@ -786,8 +787,9 @@ export const questionController = {
             const seenQuestionNumbers = new Set();
             const duplicateQuestionNumber = questionsToCreate.find((question) => {
                 if (!Number.isInteger(question.questionNumber)) return false;
-                if (seenQuestionNumbers.has(question.questionNumber)) return true;
-                seenQuestionNumbers.add(question.questionNumber);
+                const key = questionLogicalKey(question);
+                if (seenQuestionNumbers.has(key)) return true;
+                seenQuestionNumbers.add(key);
                 return false;
             })?.questionNumber;
             if (duplicateQuestionNumber !== undefined) {
@@ -797,7 +799,7 @@ export const questionController = {
                 });
             }
 
-            // A question number is stable within one yearly exam/QCM. Reusing
+            // A question number is stable within one source and session. Reusing
             // an import file updates that question instead of appending a
             // duplicate and inflating the module total.
             const targetFilter = examId
@@ -810,15 +812,19 @@ export const questionController = {
                 ? await QuestionModel.find({
                     ...targetFilter,
                     questionNumber: { $in: numberedQuestions.map((question) => question.questionNumber) },
-                }).select("_id questionNumber").lean()
+                }).select("_id examId qcmBanqueId sessionLabel questionNumber").sort({ createdAt: -1, _id: -1 }).lean()
                 : [];
-            const existingByNumber = new Map(existingQuestions.map((question) => [question.questionNumber, question._id]));
+            const existingByNumber = new Map();
+            existingQuestions.forEach((question) => {
+                const key = questionLogicalKey(question);
+                if (!existingByNumber.has(key)) existingByNumber.set(key, question._id);
+            });
             const replacements = [];
             const newQuestions = [];
 
             questionsToCreate.forEach((question) => {
                 const existingId = Number.isInteger(question.questionNumber)
-                    ? existingByNumber.get(question.questionNumber)
+                    ? existingByNumber.get(questionLogicalKey(question))
                     : null;
                 if (!existingId) {
                     newQuestions.push(question);

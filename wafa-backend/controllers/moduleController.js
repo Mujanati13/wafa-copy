@@ -8,6 +8,7 @@ import examCourseModel from "../models/examCourseModel.js";
 import qcmBanqueModel from "../models/qcmBanqueModel.js";
 import { buildModulePayload, ModulePayloadError } from "../utils/modulePayload.js";
 import { questionLogicalKey, uniqueQuestionsByLogicalKey } from "../utils/questionIdentity.js";
+import { buildProgressStatistics } from "../services/progressStatisticsService.js";
 import {
     CategoryLabelsError,
     DEFAULT_CATEGORY_LABELS,
@@ -345,27 +346,17 @@ export const moduleController = {
         
         const totalQuestions = questions.length;
 
-        let questionsAnswered = 0;
-        let percentage = 0;
+        // Use the same verified-answer and duplicate-alias rules as statistics.
+        const { summary } = buildProgressStatistics({
+            modules: [{ _id: id, name: module.name }],
+            courses: [{ _id: `module-${id}`, moduleId: id, linkedQuestions: questions.map(question => question._id) }],
+            questions: sourceQuestions,
+            answeredQuestions: userStats?.answeredQuestions || {},
+        });
+        const questionsAnswered = summary.answeredQuestions;
+        const percentage = summary.completionPercentage;
 
-        if (userStats && userStats.answeredQuestions) {
-            const answeredQuestionIds = new Set(
-                userStats.answeredQuestions instanceof Map
-                    ? userStats.answeredQuestions.keys()
-                    : Object.keys(userStats.answeredQuestions)
-            );
-
-            questionsAnswered = questions.reduce(
-                (count, question) => count + (answeredQuestionIds.has(question._id.toString()) ? 1 : 0),
-                0
-            );
-
-            // Calculate percentage
-            if (totalQuestions > 0) {
-                percentage = Math.round((questionsAnswered / totalQuestions) * 100);
-            }
-        }
-
+        res.set("Cache-Control", "private, no-store");
         res.status(200).json({
             success: true,
             data: {

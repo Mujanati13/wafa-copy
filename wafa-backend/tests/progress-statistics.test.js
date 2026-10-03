@@ -7,6 +7,88 @@ import {
   filterModulesBySemester,
 } from "../services/progressStatisticsService.js";
 
+for (const format of ["Map", "object"]) {
+  test(`preserves older duplicate links and latest verified answers (${format})`, () => {
+    const questions = [
+      { _id: "new", examId: "exam", questionNumber: 12 },
+      { _id: "old", examId: "exam", questionNumber: 12 },
+    ];
+    const courses = buildCompleteActivitySources({
+      questions,
+      courses: [{ _id: "course", name: "A", moduleId: "m", linkedQuestions: ["old"] }],
+      annualExams: [{ _id: "exam", moduleId: "m" }],
+    });
+    const answers = new Map([
+      ["old", { isVerified: true, isCorrect: true, answeredAt: "2026-09-02" }],
+    ]);
+    const stats = () => buildProgressStatistics({
+      modules: [{ _id: "m", name: "Module" }], courses, questions,
+      answeredQuestions: format === "Map" ? answers : Object.fromEntries(answers),
+    });
+    const check = (correct) => {
+      for (const item of [stats().summary, stats().modules[0], stats().modules[0].courses[0]]) {
+        assert.equal(item.totalQuestions, 1);
+        assert.equal(item.answeredQuestions, 1);
+        assert.equal(item.correctAnswers, correct);
+        assert.equal(item.incorrectAnswers, 1 - correct);
+        assert.equal(item.completionPercentage, 100);
+      }
+    };
+    check(1);
+    answers.set("new", { isVerified: true, isCorrect: false, answeredAt: "2026-09-01" });
+    check(1);
+    answers.set("new", { isVerified: true, isCorrect: false, answeredAt: "2026-09-03" });
+    check(0);
+    // A draft on another duplicate does not replace verified progress.
+    answers.set("old", { isVerified: false, isCorrect: true, answeredAt: "2026-09-04" });
+    check(0);
+  });
+}
+
+test("global summary counts shared questions once across modules", () => {
+  const result = buildProgressStatistics({
+    modules: [{ _id: "a", name: "A" }, { _id: "b", name: "B" }],
+    courses: [
+      { _id: "ca", name: "A", moduleId: "a", linkedQuestions: ["shared", "q2"] },
+      { _id: "cb", name: "B", moduleId: "b", linkedQuestions: ["shared", "q3"] },
+    ],
+    answeredQuestions: { shared: { isVerified: true, isCorrect: true } },
+  });
+  assert.equal(result.summary.totalQuestions, 3);
+  assert.equal(result.summary.answeredQuestions, 1);
+  assert.equal(result.summary.completionPercentage, 33);
+});
+
+test("equal question numbers in different exams or sessions remain distinct", () => {
+  const questions = [
+    { _id: "q1", examId: "exam-a", questionNumber: 1, sessionLabel: "normal" },
+    { _id: "q2", examId: "exam-b", questionNumber: 1, sessionLabel: "normal" },
+    { _id: "q3", examId: "exam-a", questionNumber: 1, sessionLabel: "retake" },
+    { _id: "legacy-a", examId: "exam-a" },
+    { _id: "legacy-b", examId: "exam-a" },
+  ];
+  const courses = buildCompleteActivitySources({
+    questions,
+    courses: [{ _id: "c", name: "C", moduleId: "m", linkedQuestions: questions.map(q => q._id) }],
+  });
+  const result = buildProgressStatistics({
+    modules: [{ _id: "m", name: "M" }], courses, questions,
+    answeredQuestions: { q1: { isVerified: true, isCorrect: true } },
+  });
+  assert.equal(result.summary.totalQuestions, 5);
+  assert.equal(result.summary.answeredQuestions, 1);
+  assert.equal(result.summary.completionPercentage, 20);
+});
+
+test("missing verification flags and malformed answers do not count as completed", () => {
+  const result = buildProgressStatistics({
+    modules: [{ _id: "m", name: "M" }],
+    courses: [{ _id: "c", name: "C", moduleId: "m", linkedQuestions: ["q1", "q2", "q3"] }],
+    answeredQuestions: { q1: null, q2: {}, q3: { isCorrect: true } },
+  });
+  assert.equal(result.summary.answeredQuestions, 0);
+});
+
 test("strictly keeps only modules from the selected semester", () => {
   const modules = filterModulesBySemester([
     { _id: "m1", semester: "S1" },
