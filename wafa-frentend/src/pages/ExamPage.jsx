@@ -92,6 +92,7 @@ import CommunityModal from "@/components/ExamsPage/CommunityModal";
 import ResumesModal from "@/components/ExamsPage/ResumesModal";
 import PlaylistModal from "@/components/ExamsPage/PlaylistModal";
 import ImageViewerModal from "@/components/shared/ImageViewerModal";
+import ExamQuestionContext from "@/components/ExamsPage/ExamQuestionContext";
 import { compareSessionNames, sortGroupedQuestions } from "@/utils/examSessionSort";
 
 // Confetti function (simple implementation without external library)
@@ -2124,11 +2125,12 @@ const ExamPage = () => {
                 onTouchEnd={onTouchEnd}
                 className="touch-pan-y"
               >
-                <Card className="exam-question-card border-border bg-card shadow-lg overflow-hidden">
+                <Card className="exam-question-card gap-0 border-border bg-card py-0 shadow-lg overflow-hidden">
+                  <ExamQuestionContext exam={examData} question={currentQuestionData} />
                   {/* Question Header - Compact unified row */}
                   <div className="bg-muted/40 dark:bg-muted/20 border-b border-border px-2 sm:px-4 md:px-6 py-2 sm:py-2.5">
                     <div className="flex items-center justify-between gap-1.5 sm:gap-2">
-                        {/* Left: Verify button and exam reference */}
+                      {/* Left: Verify button */}
                       <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 flex-1">
                         {/* Verification Status / Verify Button - Desktop Only */}
                         <div className="hidden lg:flex flex-col items-start gap-1">
@@ -2159,40 +2161,6 @@ const ExamPage = () => {
                               )}
                             </Button>
                           ) : null}
-                        </div>
-                        {/* Breadcrumb */}
-                        <div className="flex min-w-0 items-center gap-1.5">
-                          <BookOpen className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0 text-muted-foreground" />
-                          <span className="break-words font-medium max-w-full leading-relaxed">
-                            {(() => {
-                              const moduleName = examData?.moduleName || 'Module';
-                              const examYear = examData?.year || '';
-                              const examName = examData?.name || examData?.title || '';
-                              const sessionName = currentQuestionData?.sessionLabel || '';
-                              // Build breadcrumb with full hierarchy
-                              const parts = [];
-                              
-                              // Always start with module name
-                              parts.push(moduleName);
-                              
-                              // Add year if available
-                              if (examYear) {
-                                parts.push(examYear);
-                              }
-                              
-                              // Add exam name if different from year and not default
-                              if (examName && examName !== examYear && examName !== moduleName) {
-                                parts.push(examName);
-                              }
-                              
-                              // Add session/course name if available and not default
-                              if (sessionName && sessionName !== 'Session principale' && sessionName !== examName) {
-                                parts.push(sessionName);
-                              }
-                              
-                              return parts.join(' > ');
-                            })()}
-                          </span>
                         </div>
                         {examType === 'exam' && (
                           <span className={cn(
