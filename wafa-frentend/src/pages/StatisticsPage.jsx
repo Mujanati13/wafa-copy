@@ -83,35 +83,53 @@ function AnswerBar({ correctPercentage = 0, incorrectPercentage = 0, completionP
   );
 }
 
-function ProgressMetrics({ item, compact = false }) {
+function ProgressMetrics({ item, compact = false, separateModes = false }) {
   const metrics = [
-    {
-      label: "Progression",
-      count: `${formatNumber(item.answeredQuestions)}/${formatNumber(item.totalQuestions)}`,
-      percentage: item.completionPercentage,
-      className: "text-primary",
-    },
+    ...(separateModes ? [
+      {
+        label: "Total traité",
+        count: formatNumber(item.answeredQuestions),
+        className: "text-primary",
+      },
+      {
+        label: "Exam par année",
+        count: `${formatNumber(item.answeredByYear)}/${formatNumber(item.totalQuestions)}`,
+        className: "text-primary",
+      },
+      {
+        label: "Exam par cours",
+        count: `${formatNumber(item.answeredByCourse)}/${formatNumber(item.totalQuestions)}`,
+        className: "text-primary",
+      },
+    ] : [
+      {
+        label: "Progression",
+        count: `${formatNumber(item.answeredQuestions)}/${formatNumber(item.totalQuestions)}`,
+        percentage: item.completionPercentage || 0,
+        className: "text-primary",
+      },
+    ]),
     {
       label: "Correctes",
       count: formatNumber(item.correctAnswers),
-      percentage: item.correctPercentage,
+      percentage: item.correctPercentage || 0,
       className: "text-emerald-600 dark:text-emerald-400",
     },
     {
       label: "Incorrectes",
       count: formatNumber(item.incorrectAnswers),
-      percentage: item.incorrectPercentage,
+      percentage: item.incorrectPercentage || 0,
       className: "text-red-600 dark:text-red-400",
     },
   ];
 
   return (
-    <div className={compact ? "grid grid-cols-3 gap-2" : "grid grid-cols-3 gap-3"}>
-      {metrics.map((metric) => (
-        <div key={metric.label} className="min-w-0">
-          <p className="truncate text-[11px] text-muted-foreground sm:text-xs">{metric.label}</p>
+    <div className={separateModes ? "grid grid-cols-2 gap-x-3 gap-y-4 sm:grid-cols-3 xl:grid-cols-5" : compact ? "grid grid-cols-3 gap-2" : "grid grid-cols-3 gap-3"}>
+      {metrics.map((metric, index) => (
+        <div key={metric.label} className={`min-w-0 ${separateModes && index === 0 ? "col-span-2 sm:col-span-1" : ""}`}>
+          <p className="text-[11px] text-muted-foreground sm:text-xs">{metric.label}</p>
           <p className={`mt-1 font-semibold tabular-nums ${compact ? "text-xs sm:text-sm" : "text-sm sm:text-base"} ${metric.className}`}>
-            {metric.count} <span className="font-normal opacity-80">({metric.percentage || 0}%)</span>
+            {metric.count}{metric.percentage !== undefined && <span className="font-normal opacity-80"> ({metric.percentage || 0}%)</span>}
           </p>
         </div>
       ))}
@@ -171,7 +189,7 @@ function ModuleProgressCard({ module, expanded, onToggle }) {
               </div>
               <ChevronDown className={`mt-1 h-5 w-5 shrink-0 text-muted-foreground transition-transform ${expanded ? "rotate-180" : ""}`} />
             </div>
-            <div className="mt-5"><ProgressMetrics item={module} /></div>
+            <div className="mt-5"><ProgressMetrics item={module} separateModes /></div>
             <div className="mt-4"><AnswerBar {...module} /></div>
           </div>
         </div>
@@ -401,7 +419,7 @@ export default function StatisticsPage() {
             </section>
 
             <section aria-labelledby="modules-heading" className="space-y-5">
-              <div><h2 id="modules-heading" className="text-2xl font-bold">Progression par module</h2><p className="mt-2 text-sm text-muted-foreground">Modules de {selectedSemester}. Ouvrez un module pour afficher les mêmes statistiques pour chacun de ses cours.</p></div>
+              <div><h2 id="modules-heading" className="text-2xl font-bold">Progression par module</h2><p className="mt-2 text-sm text-muted-foreground">Modules de {selectedSemester}. Le total compte chaque question une seule fois, tous modes confondus. Les fractions distinguent le mode de la dernière réponse vérifiée. Ouvrez un module pour afficher le détail par cours.</p></div>
               {modules.length ? <div className="grid items-start gap-4 lg:grid-cols-2">{modules.map((module) => <ModuleProgressCard key={module.moduleId} module={module} expanded={expandedModules.has(module.moduleId)} onToggle={() => toggleModule(module.moduleId)} />)}</div> : <EmptyInline message={`Aucun module disponible pour ${selectedSemester}.`} />}
             </section>
           </TabsContent>

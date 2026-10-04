@@ -46,7 +46,7 @@ const canonicalQuestionIds = (questions) => {
   return aliases;
 };
 
-const normalizeAnswers = (answeredQuestions, aliases) => {
+const normalizeAnswers = (answeredQuestions, aliases, modesByExamId) => {
   const entries = answeredQuestions instanceof Map
     ? Array.from(answeredQuestions.entries())
     : Object.entries(answeredQuestions || {});
@@ -60,6 +60,7 @@ const normalizeAnswers = (answeredQuestions, aliases) => {
       isVerified: true,
       isCorrect: Boolean(answer.isCorrect),
       answeredAt: answer.answeredAt ? new Date(answer.answeredAt) : null,
+      mode: modesByExamId.get(asId(answer.examId)) || null,
     };
     const existing = answers.get(id);
     const timestamp = (value) => value?.answeredAt?.getTime() || 0;
@@ -97,6 +98,8 @@ const buildStats = (questionIds, answers) => {
     questionIds: uniqueQuestionIds,
     totalQuestions: uniqueQuestionIds.length,
     answeredQuestions: activity.length,
+    answeredByYear: activity.filter((answer) => answer.mode === "year").length,
+    answeredByCourse: activity.filter((answer) => answer.mode === "course").length,
     correctAnswers,
     incorrectAnswers,
     completionPercentage: percentageOfTotal(activity.length, uniqueQuestionIds.length),
@@ -257,9 +260,20 @@ export const buildCompleteActivitySources = ({
   return [...activeCourses, ...supplementalSources];
 };
 
-export const buildProgressStatistics = ({ modules = [], courses = [], questions = [], answeredQuestions = {} }) => {
+export const buildProgressStatistics = ({ modules = [], courses = [], annualExams = [], questions = [], answeredQuestions = {} }) => {
   const aliases = canonicalQuestionIds(questions);
-  const answers = normalizeAnswers(answeredQuestions, aliases);
+  // Use the saved answering context, not the question's original source: an
+  // annual-exam question can also be answered through a linked course.
+  const modesByExamId = new Map();
+  courses.filter((course) => !isNonCourseItem(course)).forEach((course) => {
+    const id = asId(course._id);
+    if (id) modesByExamId.set(id, "course");
+  });
+  annualExams.forEach((exam) => {
+    const id = asId(exam._id);
+    if (id) modesByExamId.set(id, "year");
+  });
+  const answers = normalizeAnswers(answeredQuestions, aliases, modesByExamId);
   const moduleNameToId = new Map(modules.map((module) => [module.name, asId(module._id)]));
   const moduleIds = new Set(modules.map((module) => asId(module._id)));
   const coursesByModule = new Map();
@@ -336,6 +350,8 @@ export const buildProgressStatistics = ({ modules = [], courses = [], questions 
       courseCount: moduleStats.reduce((count, module) => count + module.courseCount, 0),
       totalQuestions: summary.totalQuestions,
       answeredQuestions: summary.answeredQuestions,
+      answeredByYear: summary.answeredByYear,
+      answeredByCourse: summary.answeredByCourse,
       correctAnswers: summary.correctAnswers,
       incorrectAnswers: summary.incorrectAnswers,
       completionPercentage: summary.completionPercentage,

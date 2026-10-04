@@ -8,6 +8,100 @@ import {
 } from "../services/progressStatisticsService.js";
 
 for (const format of ["Map", "object"]) {
+  test(`separates 2 yearly and 1 course answers over 690 shared questions (${format})`, () => {
+    const modules = [{ _id: "m", name: "Anatomie I", semester: "S1" }];
+    const annualExams = [{ _id: "annual", moduleId: "m" }];
+    const questions = Array.from({ length: 690 }, (_, index) => ({ _id: `q${index}`, examId: "annual" }));
+    const courses = buildCompleteActivitySources({
+      annualExams, questions,
+      courses: [{ _id: "course", name: "Anatomie", moduleId: "m", linkedQuestions: questions.map(q => q._id) }],
+    });
+    const answers = new Map([
+      ["q0", { examId: "annual", isVerified: true, isCorrect: false }],
+      ["q1", { examId: "annual", isVerified: true, isCorrect: false }],
+      ["q2", { examId: "course", isVerified: true, isCorrect: false }],
+      ["q3", { examId: "course", isVerified: false, isCorrect: true }],
+      ["outside", { examId: "annual", isVerified: true, isCorrect: true }],
+    ]);
+    const progress = () => buildProgressStatistics({
+      modules, courses, annualExams, questions,
+      answeredQuestions: format === "Map" ? answers : Object.fromEntries(answers),
+    });
+    const check = (year, course) => {
+      const result = progress();
+      for (const item of [result.summary, result.modules[0], result.modules[0].courses[0]]) {
+        assert.equal(item.totalQuestions, 690);
+        assert.equal(item.answeredQuestions, 3);
+        assert.equal(item.answeredByYear, year);
+        assert.equal(item.answeredByCourse, course);
+        assert.equal(item.correctAnswers, 0);
+        assert.equal(item.incorrectAnswers, 3);
+      }
+    };
+    check(2, 1);
+    // The latest saved context moves the question to the other mode without
+    // adding an attempt to the global unique-question count.
+    answers.set("q0", { examId: "course", isVerified: true, isCorrect: false });
+    check(1, 2);
+  });
+}
+
+test("keeps QCM and legacy answers in the total without inventing a yearly or course origin", () => {
+  const questions = [
+    { _id: "qcm-question", qcmBanqueId: "bank" },
+    { _id: "legacy", examId: "annual" },
+    { _id: "unknown", examId: "annual" },
+  ];
+  const annualExams = [{ _id: "annual", moduleId: "m" }];
+  const courses = buildCompleteActivitySources({
+    questions, annualExams,
+    qcmBanks: [{ _id: "bank", moduleId: "m" }],
+    courses: [{ _id: "course", moduleId: "m", name: "A", linkedQuestions: ["legacy", "unknown"] }],
+  });
+  const result = buildProgressStatistics({
+    modules: [{ _id: "m", name: "A" }], courses, annualExams, questions,
+    answeredQuestions: {
+      "qcm-question": { examId: "bank", isVerified: true, isCorrect: true },
+      legacy: { isVerified: true, isCorrect: false },
+      unknown: { examId: "deleted-exam", isVerified: true, isCorrect: true },
+    },
+  });
+  for (const item of [result.modules[0], result.summary]) {
+    assert.equal(item.answeredQuestions, 3);
+    assert.equal(item.answeredByYear, 0);
+    assert.equal(item.answeredByCourse, 0);
+    assert.equal(item.correctAnswers, 2);
+    assert.equal(item.incorrectAnswers, 1);
+  }
+});
+
+test("uses the latest verified duplicate's answering mode with MongoDB exam IDs", () => {
+  const annualId = new mongoose.Types.ObjectId();
+  const courseId = new mongoose.Types.ObjectId();
+  const questions = [
+    { _id: "new", examId: annualId, questionNumber: 1 },
+    { _id: "old", examId: annualId, questionNumber: 1 },
+  ];
+  const annualExams = [{ _id: annualId, moduleId: "m" }];
+  const courses = buildCompleteActivitySources({
+    annualExams, questions,
+    courses: [{ _id: courseId, moduleId: "m", name: "Cours", linkedQuestions: ["old"] }],
+  });
+  const result = buildProgressStatistics({
+    modules: [{ _id: "m", name: "A" }], courses, annualExams, questions,
+    answeredQuestions: {
+      new: { examId: annualId, isVerified: true, isCorrect: false, answeredAt: "2026-09-01" },
+      old: { examId: courseId.toHexString(), isVerified: true, isCorrect: true, answeredAt: "2026-09-02" },
+    },
+  });
+  assert.equal(result.modules[0].totalQuestions, 1);
+  assert.equal(result.modules[0].answeredQuestions, 1);
+  assert.equal(result.modules[0].answeredByYear, 0);
+  assert.equal(result.modules[0].answeredByCourse, 1);
+  assert.equal(result.modules[0].correctAnswers, 1);
+});
+
+for (const format of ["Map", "object"]) {
   test(`preserves older duplicate links and latest verified answers (${format})`, () => {
     const questions = [
       { _id: "new", examId: "exam", questionNumber: 12 },
@@ -103,19 +197,21 @@ for (const answerFormat of ["Map", "plain object"]) {
   test(`690 shared questions remain 690 after 10 course retries (${answerFormat})`, () => {
     const questionIds = Array.from({ length: 690 }, (_, index) => `question-${index}`);
     const modules = [{ _id: "anatomy", name: "Anatomie I", semester: "S1" }];
+    const annualExams = [{ _id: "exam", name: "2026 normal", moduleId: "anatomy" }];
     const courses = buildCompleteActivitySources({
       courses: [
         { _id: "course-a", name: "A", moduleId: "anatomy", linkedQuestions: questionIds.slice(0, 350) },
         // Some questions also belong to more than one course.
         { _id: "course-b", name: "B", moduleId: "anatomy", linkedQuestions: questionIds.slice(340, 680) },
       ],
-      annualExams: [{ _id: "exam", name: "2026 normal", moduleId: "anatomy" }],
+      annualExams,
       questions: questionIds.map((_id) => ({ _id, examId: "exam" })),
     });
     const answers = new Map();
     const progress = () => buildProgressStatistics({
       modules,
       courses,
+      annualExams,
       answeredQuestions: answerFormat === "Map" ? answers : Object.fromEntries(answers),
     });
     const assertCounts = (answered, correct, incorrect) => {
@@ -135,12 +231,16 @@ for (const answerFormat of ["Map", "plain object"]) {
     questionIds.forEach((id) => answers.set(id, {
       examId: "exam", isVerified: true, isCorrect: false,
     }));
-    assertCounts(690, 0, 690);
+    const initial = assertCounts(690, 0, 690);
+    assert.equal(initial.modules[0].answeredByYear, 690);
+    assert.equal(initial.modules[0].answeredByCourse, 0);
 
     // Persistence is keyed by question ID, even when the exam context changes.
     questionIds.slice(0, 10).forEach((id, index) => {
       answers.set(id, { examId: "course-a", isVerified: true, isCorrect: true });
-      assertCounts(690, index + 1, 689 - index);
+      const retried = assertCounts(690, index + 1, 689 - index);
+      assert.equal(retried.modules[0].answeredByYear, 689 - index);
+      assert.equal(retried.modules[0].answeredByCourse, index + 1);
     });
     const result = progress();
     assert.equal(result.modules[0].courses[0].answeredQuestions, 350);
