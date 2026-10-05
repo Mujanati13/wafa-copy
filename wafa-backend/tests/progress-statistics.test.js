@@ -149,6 +149,8 @@ test("global summary counts shared questions once across modules", () => {
     answeredQuestions: { shared: { isVerified: true, isCorrect: true } },
   });
   assert.equal(result.summary.totalQuestions, 3);
+  assert.equal(result.summary.totalQuestionsByCourse, 4);
+  assert.deepEqual(result.modules.map((module) => module.totalQuestionsByCourse), [2, 2]);
   assert.equal(result.summary.answeredQuestions, 1);
   assert.equal(result.summary.completionPercentage, 33);
 });
@@ -278,7 +280,7 @@ test("calculates module/course progress and deterministic highlights", () => {
   assert.deepEqual(result.modules[0].highlights.untouched.map((course) => course.courseName), ["Cours vide"]);
 });
 
-test("does not count unverified answers and de-duplicates linked questions at module level", () => {
+test("sums overlapping course totals while keeping module questions and answers unique", () => {
   const result = buildProgressStatistics({
     modules: [{ _id: "module-1", name: "Digestif" }],
     courses: [
@@ -292,6 +294,8 @@ test("does not count unverified answers and de-duplicates linked questions at mo
   });
 
   assert.equal(result.modules[0].totalQuestions, 3);
+  assert.equal(result.modules[0].totalQuestionsByCourse, 4);
+  assert.equal(result.summary.totalQuestionsByCourse, 4);
   assert.equal(result.modules[0].answeredQuestions, 1);
   assert.equal(result.modules[0].incorrectAnswers, 1);
   assert.equal(result.modules[0].completionPercentage, 33);
@@ -351,6 +355,8 @@ test("includes unmapped annual-exam and QCM-bank activity without double countin
 
   assert.equal(result.summary.courseCount, 1);
   assert.equal(result.summary.totalQuestions, 3);
+  assert.equal(result.summary.totalQuestionsByCourse, 1);
+  assert.equal(result.modules[0].totalQuestionsByCourse, 1);
   assert.equal(result.summary.answeredQuestions, 3);
   assert.equal(result.summary.correctAnswers, 2);
   assert.equal(result.summary.incorrectAnswers, 1);
@@ -380,6 +386,7 @@ test("ignores a stale course link left by a deleted exam", () => {
 
   assert.equal(result.modules[0].totalQuestions, 1);
   assert.equal(result.modules[0].courses[0].totalQuestions, 1);
+  assert.equal(result.modules[0].totalQuestionsByCourse, 1);
 });
 
 test("counts a re-imported question number only once before data repair runs", () => {
@@ -404,6 +411,47 @@ test("counts a re-imported question number only once before data repair runs", (
 
   assert.equal(result.modules[0].totalQuestions, 1);
   assert.equal(result.modules[0].courses[0].totalQuestions, 1);
+  assert.equal(result.modules[0].totalQuestionsByCourse, 1);
+});
+
+test("counts a canonical shared question once in each course, excluding stale links and supplemental sources", () => {
+  const questions = [
+    { _id: "new", examId: "annual", questionNumber: 1 },
+    { _id: "old", examId: "annual", questionNumber: 1 },
+    { _id: "year-only", examId: "annual", questionNumber: 2 },
+    { _id: "direct", examCourseId: "a", questionNumber: 1 },
+    { _id: "bank-only", qcmBanqueId: "bank", questionNumber: 1 },
+  ];
+  const annualExams = [{ _id: "annual", moduleId: "m" }];
+  const sources = buildCompleteActivitySources({
+    questions, annualExams, qcmBanks: [{ _id: "bank", moduleId: "m" }],
+    courses: [
+      { _id: "a", moduleId: "m", name: "A", linkedQuestions: ["old", "new", "old", "deleted"] },
+      { _id: "b", moduleId: "m", name: "B", linkedQuestions: ["new", "old"] },
+    ],
+  });
+  const result = buildProgressStatistics({
+    modules: [{ _id: "m", name: "Module" }], questions, annualExams, courses: sources,
+    answeredQuestions: { old: { examId: "b", isVerified: true, isCorrect: true } },
+  });
+  for (const item of [result.summary, result.modules[0]]) {
+    assert.equal(item.totalQuestions, 4);
+    assert.equal(item.totalQuestionsByCourse, 3);
+    assert.equal(item.answeredQuestions, 1);
+    assert.equal(item.answeredByCourse, 1);
+    assert.equal(item.correctAnswers, 1);
+    assert.equal(item.incorrectAnswers, 0);
+  }
+  assert.deepEqual(result.modules[0].courses.map(course => course.totalQuestions), [2, 1]);
+});
+
+test("returns a zero course denominator for modules with no course questions", () => {
+  const result = buildProgressStatistics({
+    modules: [{ _id: "empty", name: "Empty", courseNames: ["Unmapped course"] }],
+  });
+  assert.equal(result.modules[0].totalQuestionsByCourse, 0);
+  assert.equal(result.summary.totalQuestionsByCourse, 0);
+  assert.equal(buildProgressStatistics({}).summary.totalQuestionsByCourse, 0);
 });
 
 test("strictly excludes yearly exams from courses and highlights (untouched, recent, lowest, highest)", () => {

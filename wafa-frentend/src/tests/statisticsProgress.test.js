@@ -64,7 +64,7 @@ for (const attempted of [0, 3]) {
   test(`module displays an isolated total and adjacent mode fractions (${attempted} answers)`, async () => {
     const module = {
       moduleId: 'anatomy', moduleName: 'Anatomie I', semester: 'S1', courseCount: 1,
-      totalQuestions: 690, answeredQuestions: attempted,
+      totalQuestions: 690, totalQuestionsByCourse: 20, answeredQuestions: attempted,
       answeredByYear: attempted ? 2 : 0, answeredByCourse: attempted ? 1 : 0,
       correctAnswers: 0, incorrectAnswers: attempted,
       correctPercentage: 0, incorrectPercentage: 0, completionPercentage: 0,
@@ -79,7 +79,7 @@ for (const attempted of [0, 3]) {
       const card = root.root.findByType('article');
       assert.equal(metricValue(card, 'Total traité'), String(attempted));
       assert.equal(metricValue(card, 'Exam par année'), `${attempted ? 2 : 0}/690`);
-      assert.equal(metricValue(card, 'Exam par cours'), `${attempted ? 1 : 0}/690`);
+      assert.equal(metricValue(card, 'Exam par cours'), `${attempted ? 1 : 0}/20`);
       assert.equal(metricValue(card, 'Correctes'), '0 (0%)');
       assert.equal(metricValue(card, 'Incorrectes'), `${attempted} (0%)`);
       assert.equal(card.findAllByType('p').some(node => textContent(node) === 'Progression'), false);
@@ -91,5 +91,36 @@ for (const attempted of [0, 3]) {
     } finally {
       await act(async () => root.unmount());
     }
+  });
+}
+
+for (const [description, courses, totalQuestionsByCourse, expected] of [
+  ['shared questions across courses', [
+    { courseId: 'a', courseName: 'A', totalQuestions: 350 },
+    { courseId: 'b', courseName: 'B', totalQuestions: 360 },
+  ], 710, '1/710'],
+  ['no mapped course questions', [], 0, '0/0'],
+  ['older API response with course totals', [
+    { courseId: 'a', courseName: 'A', totalQuestions: 350 },
+    { courseId: 'b', courseName: 'B', totalQuestions: 360 },
+    { courseId: 'exam-year-2026', courseName: '2026 normal', totalQuestions: 690 },
+  ], undefined, '1/710'],
+]) {
+  test(`module uses the course denominator for ${description}`, async () => {
+    const { root } = await mountStatistics({
+      moduleId: 'anatomy', moduleName: 'Anatomie I', semester: 'S1', courseCount: courses.length,
+      totalQuestions: 690, totalQuestionsByCourse, answeredQuestions: 3,
+      answeredByYear: 2, answeredByCourse: courses.length ? 1 : 0,
+      correctAnswers: 1, incorrectAnswers: 2, correctPercentage: 0, incorrectPercentage: 0,
+      courses,
+    });
+    try {
+      const card = root.root.findByType('article');
+      assert.equal(metricValue(card, 'Exam par année'), '2/690');
+      assert.equal(metricValue(card, 'Exam par cours'), expected);
+      assert.equal(metricValue(card, 'Total traité'), '3');
+      assert.equal(metricValue(card, 'Correctes'), '1 (0%)');
+      assert.equal(metricValue(card, 'Incorrectes'), '2 (0%)');
+    } finally { await act(async () => root.unmount()); }
   });
 }

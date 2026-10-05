@@ -336,6 +336,9 @@ export const buildProgressStatistics = ({ modules = [], courses = [], annualExam
       color: module.color || "#3b82f6",
       courseCount: courseStats.length,
       ...stats,
+      // A shared question contributes once to every course it belongs to.
+      // Keep the module's totalQuestions and answer counts unique.
+      totalQuestionsByCourse: courseStats.reduce((total, course) => total + course.totalQuestions, 0),
       questionIds: undefined,
       courses: courseStats,
       highlights: buildHighlights(courseStats),
@@ -349,6 +352,7 @@ export const buildProgressStatistics = ({ modules = [], courses = [], annualExam
       moduleCount: moduleStats.length,
       courseCount: moduleStats.reduce((count, module) => count + module.courseCount, 0),
       totalQuestions: summary.totalQuestions,
+      totalQuestionsByCourse: moduleStats.reduce((total, module) => total + module.totalQuestionsByCourse, 0),
       answeredQuestions: summary.answeredQuestions,
       answeredByYear: summary.answeredByYear,
       answeredByCourse: summary.answeredByCourse,

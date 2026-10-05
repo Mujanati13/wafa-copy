@@ -84,6 +84,11 @@ function AnswerBar({ correctPercentage = 0, incorrectPercentage = 0, completionP
 }
 
 function ProgressMetrics({ item, compact = false, separateModes = false }) {
+  // Older API responses already provide per-course totals; sum those rather
+  // than reusing the unique module total during a rolling deployment.
+  const totalQuestionsByCourse = item.totalQuestionsByCourse ?? (item.courses || [])
+    .filter((course) => !isYearlyExam(course))
+    .reduce((total, course) => total + (Number(course.totalQuestions) || 0), 0);
   const metrics = [
     ...(separateModes ? [
       {
@@ -98,7 +103,7 @@ function ProgressMetrics({ item, compact = false, separateModes = false }) {
       },
       {
         label: "Exam par cours",
-        count: `${formatNumber(item.answeredByCourse)}/${formatNumber(item.totalQuestions)}`,
+        count: `${formatNumber(item.answeredByCourse)}/${formatNumber(totalQuestionsByCourse)}`,
         className: "text-primary",
       },
     ] : [
