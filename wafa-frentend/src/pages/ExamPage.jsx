@@ -1979,7 +1979,7 @@ const ExamPage = () => {
                           </button>
                           {!isCollapsed && (
                             <div className="pl-2 flex flex-wrap gap-2">
-                              {sessionQuestions.map((q, idx) => {
+                              {questions.filter(question => question.sessionLabel === sessionName).map((q) => {
                                 const globalIndex = questions.findIndex(question => question._id === q._id);
                                 if (globalIndex === -1) return null;
                                 const questionData = questions[globalIndex];
@@ -3110,7 +3110,7 @@ const ExamPage = () => {
 
                         {!isCollapsed && (
                           <div className="pl-6 space-y-0.5 lg:space-y-0 lg:grid lg:grid-cols-3 lg:gap-1">
-                            {sessionQuestions.map((q, idx) => {
+                            {questions.filter(question => question.sessionLabel === sessionName).map((q) => {
                               const globalIndex = questions.findIndex(question => question._id === q._id);
                               if (globalIndex === -1) return null; // Skip if question not found
                               const questionData = questions[globalIndex]; // Get the question with displayNumber
