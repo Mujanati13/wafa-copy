@@ -131,16 +131,17 @@ const UsersWithTabs = () => {
   const [endDate, setEndDate] = useState(undefined);
   const [paymentStartDate, setPaymentStartDate] = useState(undefined);
   const [paymentEndDate, setPaymentEndDate] = useState(undefined);
+  const [paymentPeriod, setPaymentPeriod] = useState("all");
   const usersRequestId = useRef(0);
 
   const requestFilters = useMemo(() => ({
     search: searchTerm.trim() || undefined,
     academicYear: studentYear !== "all" ? studentYear : undefined,
-    startDate: serializeDateFilter(startDate),
-    endDate: serializeDateFilter(endDate, true),
-    paymentStartDate: serializeDateFilter(paymentStartDate),
-    paymentEndDate: serializeDateFilter(paymentEndDate, true),
-  }), [searchTerm, studentYear, startDate, endDate, paymentStartDate, paymentEndDate]);
+    startDate: activeTab === "free" ? serializeDateFilter(startDate) : undefined,
+    endDate: activeTab === "free" ? serializeDateFilter(endDate, true) : undefined,
+    paymentStartDate: activeTab === "paying" ? serializeDateFilter(paymentStartDate) : undefined,
+    paymentEndDate: activeTab === "paying" ? serializeDateFilter(paymentEndDate, true) : undefined,
+  }), [activeTab, searchTerm, studentYear, startDate, endDate, paymentStartDate, paymentEndDate]);
 
   // Fetch users based on active tab
   const fetchUsers = async () => {
@@ -344,14 +345,16 @@ const UsersWithTabs = () => {
     setEndDate(undefined);
     setPaymentStartDate(undefined);
     setPaymentEndDate(undefined);
+    setPaymentPeriod("all");
     setCurrentPage(1);
   };
 
   const activeFilterCount =
     (searchTerm ? 1 : 0) +
     (studentYear !== "all" ? 1 : 0) +
-    (startDate || endDate ? 1 : 0) +
-    (paymentStartDate || paymentEndDate ? 1 : 0);
+    (activeTab === "paying"
+      ? (paymentStartDate || paymentEndDate ? 1 : 0)
+      : (startDate || endDate ? 1 : 0));
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
@@ -764,11 +767,18 @@ const UsersWithTabs = () => {
                 setCurrentPage(1);
               }}
               searchPlaceholder="Rechercher par nom, username ou email..."
-              startDate={startDate}
-              endDate={endDate}
+              dateFilterLabel={activeTab === "paying" ? "Date de paiement" : "Date d'inscription"}
+              startDate={activeTab === "paying" ? paymentStartDate : startDate}
+              endDate={activeTab === "paying" ? paymentEndDate : endDate}
               onDateChange={({ startDate: sd, endDate: ed }) => {
-                setStartDate(sd);
-                setEndDate(ed);
+                if (activeTab === "paying") {
+                  setPaymentStartDate(sd);
+                  setPaymentEndDate(ed);
+                  setPaymentPeriod(sd || ed ? "custom" : "all");
+                } else {
+                  setStartDate(sd);
+                  setEndDate(ed);
+                }
                 setCurrentPage(1);
               }}
               showDateFilter={true}
@@ -786,15 +796,25 @@ const UsersWithTabs = () => {
                 ...(activeTab === "paying" ? [{
                   key: "paymentDate",
                   label: "Date de paiement",
-                  value: paymentStartDate ? "custom" : "all",
+                  value: paymentPeriod,
                   onChange: (val) => {
+                    if (val === "custom") return;
+                    setPaymentPeriod(val);
                     if (val === "all") {
                       setPaymentStartDate(undefined);
                       setPaymentEndDate(undefined);
+                    } else {
+                      const days = { last7days: 7, last30days: 30, last90days: 90 }[val];
+                      const end = new Date();
+                      const start = new Date(end);
+                      start.setDate(start.getDate() - (days - 1));
+                      setPaymentStartDate(start);
+                      setPaymentEndDate(end);
                     }
                     setCurrentPage(1);
                   },
                   options: [
+                    ...(paymentPeriod === "custom" ? [{ value: "custom", label: "Période personnalisée" }] : []),
                     { value: "last7days", label: "7 derniers jours" },
                     { value: "last30days", label: "30 derniers jours" },
                     { value: "last90days", label: "90 derniers jours" },

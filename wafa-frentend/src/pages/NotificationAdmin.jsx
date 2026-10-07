@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import {
@@ -52,6 +52,10 @@ const NotificationAdmin = () => {
   const [sending, setSending] = useState(false);
   const [users, setUsers] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [subscriptionStatus, setSubscriptionStatus] = useState('all');
+  const [usersPage, setUsersPage] = useState(1);
+  const [usersPagination, setUsersPagination] = useState({});
+  const usersRequestId = useRef(0);
   const [selectedUsers, setSelectedUsers] = useState([]);
   const [showUserSelector, setShowUserSelector] = useState(false);
   const [notificationHistory, setNotificationHistory] = useState([]);
@@ -73,28 +77,37 @@ const NotificationAdmin = () => {
     { value: 'alert', label: 'Alerte', icon: AlertCircle },
   ];
 
-  // Fetch users for individual notifications
-  useEffect(() => {
-    if (activeTab === 'individual') {
-      fetchUsers();
-    }
-  }, [activeTab]);
-
-  const fetchUsers = async () => {
+  // Search the database before pagination, rather than only the first loaded users.
+  const fetchUsers = useCallback(async () => {
+    const requestId = ++usersRequestId.current;
+    setLoading(true);
     try {
-      setLoading(true);
-      const response = await userService.getAllUsers(1, 100);
-      // Backend returns { success, data: { users, pagination } }
+      const filters = { search: searchQuery.trim() || undefined };
+      const getUsers = subscriptionStatus === 'paid'
+        ? userService.getPayingUsers
+        : subscriptionStatus === 'free'
+          ? userService.getFreeUsers
+          : userService.getAllUsers;
+      const response = await getUsers(usersPage, 50, filters);
+      if (requestId !== usersRequestId.current) return;
       const usersData = response.data?.users || response.users || [];
       setUsers(Array.isArray(usersData) ? usersData : []);
+      setUsersPagination(response.data?.pagination || {});
     } catch (error) {
+      if (requestId !== usersRequestId.current) return;
       console.error('Error fetching users:', error);
       toast.error('Erreur lors du chargement des utilisateurs');
-      setUsers([]); // Ensure users is always an array
+      setUsers([]);
+      setUsersPagination({});
     } finally {
-      setLoading(false);
+      if (requestId === usersRequestId.current) setLoading(false);
     }
-  };
+  }, [searchQuery, subscriptionStatus, usersPage]);
+
+  useEffect(() => {
+    if (activeTab === 'individual') fetchUsers();
+    return () => { usersRequestId.current++; };
+  }, [activeTab, fetchUsers]);
 
   const fetchNotificationHistory = async () => {
     try {
@@ -202,23 +215,22 @@ const NotificationAdmin = () => {
     setSelectedUsers(prev => prev.filter(u => u._id !== userId));
   };
 
-  const filteredUsers = Array.isArray(users) ? users.filter(user =>
-    user.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    user.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    user.username?.toLowerCase().includes(searchQuery.toLowerCase())
-  ) : [];
+  const filteredUsers = users;
+  const allSelected = filteredUsers.length > 0 && filteredUsers.every(user =>
+    selectedUsers.some(selected => selected._id === user._id)
+  );
 
-  // Select All / Deselect All
+  // Select or deselect the displayed page while preserving other recipients.
   const handleSelectAll = () => {
-    if (selectedUsers.length === filteredUsers.length) {
-      setSelectedUsers([]);
-    } else {
-      setSelectedUsers([...filteredUsers]);
-    }
+    if (loading || filteredUsers.length === 0) return;
+    setSelectedUsers(previous => {
+      const visibleIds = new Set(filteredUsers.map(user => user._id));
+      const allVisibleSelected = filteredUsers.every(user => previous.some(selected => selected._id === user._id));
+      if (allVisibleSelected) return previous.filter(user => !visibleIds.has(user._id));
+      const selectedIds = new Set(previous.map(user => user._id));
+      return [...previous, ...filteredUsers.filter(user => !selectedIds.has(user._id))];
+    });
   };
-
-  // Check if all filtered users are selected
-  const allSelected = filteredUsers.length > 0 && selectedUsers.length === filteredUsers.length;
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('fr-FR', {
@@ -251,8 +263,8 @@ const NotificationAdmin = () => {
           <CardContent className="pt-4 sm:pt-6">
             <div className="flex items-center justify-between gap-3">
               <div className="min-w-0">
-                <p className="text-xs sm:text-sm text-muted-foreground truncate">Utilisateurs Total</p>
-                <p className="text-xl sm:text-2xl font-bold">{users.length || '...'}</p>
+                <p className="text-xs sm:text-sm text-muted-foreground truncate">Utilisateurs trouvés</p>
+                <p className="text-xl sm:text-2xl font-bold">{usersPagination.totalUsers ?? '...'}</p>
               </div>
               <div className="p-2 sm:p-3 bg-blue-100 rounded-lg flex-shrink-0">
                 <Users className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
@@ -419,7 +431,7 @@ const NotificationAdmin = () => {
                     <Users className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
                     <span className="truncate">Utilisateurs</span>
                   </span>
-                  <Button variant="outline" size="sm" onClick={fetchUsers} className="flex-shrink-0 h-8 sm:h-9 px-2">
+                  <Button variant="outline" size="sm" onClick={() => fetchUsers()} disabled={loading} className="flex-shrink-0 h-8 sm:h-9 px-2">
                     <RefreshCw className={`w-3 h-3 sm:w-4 sm:h-4 ${loading ? 'animate-spin' : ''}`} />
                   </Button>
                 </CardTitle>
@@ -429,11 +441,34 @@ const NotificationAdmin = () => {
                 <div className="relative flex-shrink-0">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                   <Input
-                    placeholder="Rechercher..."
+                    placeholder="Rechercher par nom, username ou email..."
                     value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onChange={(e) => {
+                      setSearchQuery(e.target.value);
+                      setUsersPage(1);
+                    }}
                     className="pl-10 text-xs sm:text-sm h-9 sm:h-10"
                   />
+                </div>
+
+                <div className="space-y-2 flex-shrink-0">
+                  <Label htmlFor="recipient-subscription">Abonnement</Label>
+                  <Select
+                    value={subscriptionStatus}
+                    onValueChange={(value) => {
+                      setSubscriptionStatus(value);
+                      setUsersPage(1);
+                    }}
+                  >
+                    <SelectTrigger id="recipient-subscription" className="h-9 sm:h-10">
+                      <SelectValue placeholder="Tous les utilisateurs" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Tous les utilisateurs</SelectItem>
+                      <SelectItem value="paid">Payé</SelectItem>
+                      <SelectItem value="free">Gratuit / non payé</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 {/* Select All / Clear Selection */}
@@ -443,11 +478,12 @@ const NotificationAdmin = () => {
                       type="checkbox"
                       id="selectAll"
                       checked={allSelected}
+                      disabled={loading || filteredUsers.length === 0}
                       onChange={handleSelectAll}
                       className="w-4 h-4 flex-shrink-0"
                     />
                     <Label htmlFor="selectAll" className="text-xs sm:text-sm cursor-pointer truncate">
-                      {allSelected ? 'Désélectionner' : 'Sélectionner'}
+                      {allSelected ? 'Désélectionner cette page' : 'Sélectionner cette page'}
                     </Label>
                   </div>
                   {selectedUsers.length > 0 && (
@@ -523,6 +559,9 @@ const NotificationAdmin = () => {
                             <div className="flex-1 min-w-0">
                               <p className="font-medium truncate">{user.name || 'Sans nom'}</p>
                               <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                              <Badge variant="outline" className="text-xs mt-1">
+                                {user.plan === 'Free' ? 'Gratuit / non payé' : 'Payé'}
+                              </Badge>
                             </div>
                             {isSelected && (
                               <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500 flex-shrink-0" />
@@ -533,6 +572,13 @@ const NotificationAdmin = () => {
                     </div>
                   )}
                 </ScrollArea>
+                <div className="flex items-center justify-between gap-2 flex-shrink-0 text-xs">
+                  <Button variant="outline" size="sm" disabled={loading || usersPage <= 1}
+                    onClick={() => setUsersPage(page => page - 1)}>Précédent</Button>
+                  <span>Page {usersPage} / {Math.max(1, usersPagination.totalPages || 0)}</span>
+                  <Button variant="outline" size="sm" disabled={loading || !usersPagination.hasNextPage}
+                    onClick={() => setUsersPage(page => page + 1)}>Suivant</Button>
+                </div>
               </CardContent>
             </Card>
 

@@ -15,7 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { fr } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 
@@ -42,6 +42,7 @@ const TableFilters = ({
   endDate,
   onDateChange,
   showDateFilter = true,
+  dateFilterLabel = "Filtrer par date",
   additionalFilters = [],
   onClearFilters,
   activeFilterCount = 0,
@@ -72,7 +73,7 @@ const TableFilters = ({
     if (endDate) {
       return `Jusqu'à ${format(endDate, "dd/MM/yy", { locale: fr })}`;
     }
-    return "Filtrer par date";
+    return dateFilterLabel;
   };
 
   return (
@@ -100,7 +101,13 @@ const TableFilters = ({
 
         {/* Date Filter */}
         {showDateFilter && (
-          <Popover open={datePopoverOpen} onOpenChange={setDatePopoverOpen}>
+          <Popover open={datePopoverOpen} onOpenChange={(open) => {
+            if (open) {
+              setTempStartDate(startDate);
+              setTempEndDate(endDate);
+            }
+            setDatePopoverOpen(open);
+          }}>
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
@@ -110,7 +117,7 @@ const TableFilters = ({
                 )}
               >
                 <Calendar className="h-4 w-4" />
-                <span className="hidden sm:inline">{formatDateRange()}</span>
+                <span className="hidden sm:inline">{(startDate || endDate) ? `${dateFilterLabel} : ${formatDateRange()}` : dateFilterLabel}</span>
                 <span className="sm:hidden">Date</span>
               </Button>
             </PopoverTrigger>
@@ -122,7 +129,7 @@ const TableFilters = ({
                     <Input
                       type="date"
                       value={tempStartDate ? format(tempStartDate, "yyyy-MM-dd") : ""}
-                      onChange={(e) => setTempStartDate(e.target.value ? new Date(e.target.value) : undefined)}
+                      onChange={(e) => setTempStartDate(e.target.value ? parseISO(e.target.value) : undefined)}
                       className="rounded-md border"
                     />
                   </div>
@@ -131,7 +138,7 @@ const TableFilters = ({
                     <Input
                       type="date"
                       value={tempEndDate ? format(tempEndDate, "yyyy-MM-dd") : ""}
-                      onChange={(e) => setTempEndDate(e.target.value ? new Date(e.target.value) : undefined)}
+                      onChange={(e) => setTempEndDate(e.target.value ? parseISO(e.target.value) : undefined)}
                       className="rounded-md border"
                     />
                   </div>
