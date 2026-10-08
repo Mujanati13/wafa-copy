@@ -121,6 +121,7 @@ export const examCourseController = {
             .populate("moduleId", "name color")
             .populate({
                 path: "linkedQuestions",
+                populate: { path: "examId", select: "isOfficialCorrection" },
                 options: { sort: { questionNumber: 1, createdAt: 1 } }
             })
             .lean();

@@ -8,9 +8,11 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test:dashboard": "node --experimental-vm-modules --test src/tests/dashboardHydration.test.js src/tests/dashboardFirstRender.test.js",
+    "test:dashboard": "node --experimental-vm-modules --test src/tests/dashboardHydration.test.js src/tests/dashboardFirstRender.test.js src/tests/sidebarModules.test.js",
     "test:statistics": "node --experimental-vm-modules --test src/tests/statisticsProgress.test.js",
-    "test:exam-context": "node --experimental-vm-modules --test src/tests/examQuestionContext.test.js"
+    "test:exam-context": "node --experimental-vm-modules --test src/tests/examQuestionContext.test.js",
+    "test:add-questions": "node --experimental-vm-modules --test src/tests/addQuestionsLoading.test.js",
+    "test:auth-sessions": "node --experimental-vm-modules --test src/tests/authDeviceSession.test.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.1",

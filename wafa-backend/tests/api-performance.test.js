@@ -193,7 +193,7 @@ test("single-session claim persists identifying metadata", { concurrency: false 
   }
 });
 
-test("logout clears every lease field for the authenticated account", { concurrency: false }, async () => {
+test("logout clears every lease field only for the authenticated session", { concurrency: false }, async () => {
   const originalUpdateOne = User.updateOne;
   let captured;
 
@@ -204,10 +204,10 @@ test("logout clears every lease field for the authenticated account", { concurre
     };
 
     const userId = new mongoose.Types.ObjectId();
-    await releaseSingleSession(userId, "stale-session-id");
+    await releaseSingleSession(userId, "authenticated-session-id");
     const [filter, update] = captured;
 
-    assert.deepEqual(filter, { _id: userId });
+    assert.deepEqual(filter, { _id: userId, activeSessionId: "authenticated-session-id" });
     assert.equal(update.$unset.activeSessionId, 1);
     assert.equal(update.$unset.activeSessionClientId, 1);
   } finally {

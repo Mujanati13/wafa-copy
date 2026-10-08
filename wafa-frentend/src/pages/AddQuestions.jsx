@@ -30,7 +30,6 @@ const AddQuestions = () => {
 
   useEffect(() => {
     fetchData();
-    fetchAllQuestions();
   }, []);
 
   const fetchData = async () => {
@@ -114,6 +113,7 @@ const AddQuestions = () => {
   const [showPreview, setShowPreview] = useState(false);
   const [examQuestions, setExamQuestions] = useState([]);
   const [loadingQuestions, setLoadingQuestions] = useState(false);
+  const [questionsReload, setQuestionsReload] = useState(0);
   const [viewingQuestion, setViewingQuestion] = useState(null);
   const [showViewDialog, setShowViewDialog] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState(null);
@@ -167,8 +167,19 @@ const AddQuestions = () => {
     return years.sort((a, b) => Number(b) - Number(a));
   }, [exams]);
 
+  const hasContextSelected = (() => {
+    if (!selectedModule || !examType) return false;
+    if (examType === "years") return !!selectedExamNameYears;
+    if (examType === "courses") return !!selectedCourse;
+    if (examType === "tp") return !!selectedTPName;
+    if (examType === "qcm") return !!selectedQCMName;
+    return false;
+  })();
+
   // Filter questions based on search and exam filter
   const filteredQuestions = useMemo(() => {
+    // Browse filters are hidden while an exam context is selected.
+    if (hasContextSelected) return examQuestions;
     let result = examQuestions;
     
     // Filter by specific exam
@@ -190,7 +201,7 @@ const AddQuestions = () => {
     }
     
     return result;
-  }, [examQuestions, filterExam, searchQuery]);
+  }, [examQuestions, hasContextSelected, filterExam, searchQuery]);
 
   const doesCourseSessionMatchYear = (sessionName, yearName) => {
     if (!yearName) return true;
@@ -302,15 +313,6 @@ const AddQuestions = () => {
   const hasAtLeastOneCorrect = options.some((o) => o.isCorrect && o.text.trim());
   const hasBasicQuestion = questionText.trim().length > 0 && hasValidOptions;
 
-  const hasContextSelected = (() => {
-    if (!selectedModule || !examType) return false;
-    if (examType === "years") return !!selectedExamNameYears;
-    if (examType === "courses") return !!selectedCourse;
-    if (examType === "tp") return !!selectedTPName;
-    if (examType === "qcm") return !!selectedQCMName;
-    return false;
-  })();
-
   const canSubmit = hasContextSelected && hasBasicQuestion && (isAnnulled || hasAtLeastOneCorrect);
 
   const handleAnnulledChange = (checked) => {
@@ -321,7 +323,7 @@ const AddQuestions = () => {
   };
 
   // Fetch all questions on mount or with filters
-  const fetchAllQuestions = async () => {
+  const fetchAllQuestions = async (isCurrent) => {
     try {
       setLoadingQuestions(true);
       let url = '/questions/all';
@@ -347,37 +349,35 @@ const AddQuestions = () => {
       }
 
       const response = await api.get(url);
-      setExamQuestions(response.data?.data || []);
+      if (isCurrent()) setExamQuestions(response.data?.data || []);
     } catch (err) {
       console.error("Error fetching all questions:", err);
-      setExamQuestions([]);
+      if (isCurrent()) setExamQuestions([]);
     } finally {
-      setLoadingQuestions(false);
+      if (isCurrent()) setLoadingQuestions(false);
     }
   };
 
-  // Refetch when filters change
+  // A single owner loads the current context and ignores obsolete responses.
   useEffect(() => {
-    if (!hasContextSelected) {
-      fetchAllQuestions();
-    }
-  }, [filterModule, filterSemester, filterExamType, modules.length]);
-
-  // Clear selections when questions change
-  useEffect(() => {
+    let active = true;
+    const isCurrent = () => active;
+    setExamQuestions([]);
     setSelectedQuestions([]);
-  }, [examQuestions.length]);
+    setCurrentPage(1);
 
-  // Load questions when exam context changes
-  useEffect(() => {
     if (hasContextSelected) {
-      fetchExamQuestions();
+      fetchExamQuestions(isCurrent);
     } else {
-      setExamQuestions([]);
+      fetchAllQuestions(isCurrent);
     }
-  }, [hasContextSelected, selectedExamNameYears, selectedQCMName, selectedTPName, selectedCourse, selectedYearName]);
 
-  const fetchExamQuestions = async () => {
+    return () => { active = false; };
+  }, [hasContextSelected, examType, selectedModule, selectedExamNameYears,
+    selectedQCMName, selectedTPName, selectedCourse, selectedYearName,
+    filterModule, filterSemester, filterExamType, modules, questionsReload]);
+
+  const fetchExamQuestions = async (isCurrent) => {
     try {
       setLoadingQuestions(true);
       if (examType === "courses" && selectedCourse) {
@@ -406,15 +406,14 @@ const AddQuestions = () => {
             allQuestions.findIndex((candidate) => (candidate._id || candidate.id) === (question._id || question.id)) === index
         );
 
-        setExamQuestions(mergedQuestions);
+        if (isCurrent()) setExamQuestions(mergedQuestions);
         return;
       }
 
       let examId = null;
 
       if (examType === "years" && selectedExamNameYears) {
-        const exam = exams.find(e => e._id === selectedExamNameYears);
-        examId = exam?._id;
+        examId = selectedExamNameYears;
       } else if (examType === "qcm" && selectedQCMName) {
         examId = selectedQCMName;
       } else if (examType === "tp" && selectedTPName) {
@@ -422,17 +421,17 @@ const AddQuestions = () => {
       }
 
       if (!examId) {
-        setExamQuestions([]);
+        if (isCurrent()) setExamQuestions([]);
         return;
       }
 
       const response = await api.get(`/questions/by-exam/${examId}`);
-      setExamQuestions(response.data?.data || []);
+      if (isCurrent()) setExamQuestions(response.data?.data || []);
     } catch (err) {
       console.error("Error fetching questions:", err);
-      setExamQuestions([]);
+      if (isCurrent()) setExamQuestions([]);
     } finally {
-      setLoadingQuestions(false);
+      if (isCurrent()) setLoadingQuestions(false);
     }
   };
 
@@ -503,11 +502,7 @@ const AddQuestions = () => {
       setImageFile(null);
 
       // Refresh questions list
-      if (hasContextSelected) {
-        fetchExamQuestions();
-      } else {
-        fetchAllQuestions();
-      }
+      setQuestionsReload((version) => version + 1);
     } catch (err) {
       console.error("Error submitting question:", err);
       toast.error(err.response?.data?.message || "Erreur lors de la soumission de la question");
@@ -578,11 +573,7 @@ const AddQuestions = () => {
       setExamQuestions(prev => prev.filter(q => !questionsToDelete.includes(q._id || q.id)));
       setSelectedQuestions([]);
       toast.success(`${questionsToDelete.length} question(s) supprimée(s) avec succès`);
-      if (hasContextSelected) {
-        fetchExamQuestions(); // Refresh the list
-      } else {
-        fetchAllQuestions();
-      }
+      setQuestionsReload((version) => version + 1);
     } catch (err) {
       console.error("Error deleting questions:", err);
       toast.error("Erreur lors de la suppression des questions");
@@ -1734,11 +1725,7 @@ const AddQuestions = () => {
                     
                     toast.success("Question mise à jour avec succès");
                     setShowEditDialog(false);
-                    if (hasContextSelected) {
-                      fetchExamQuestions();
-                    } else {
-                      fetchAllQuestions();
-                    }
+                    setQuestionsReload((version) => version + 1);
                   } catch (err) {
                     console.error("Error updating question:", err);
                     toast.error("Erreur lors de la mise à jour");

@@ -132,7 +132,7 @@ export const establishSingleSession = async (req, user) => {
   const isSwitchingAccount = previousUserId && String(previousUserId) !== String(user._id);
 
   if (isSwitchingAccount) {
-    await clearSingleSessionLease(previousUserId);
+    await clearSingleSessionLease(previousUserId, req.session.singleSessionId);
     delete req.session.singleSessionId;
   }
 
@@ -152,11 +152,21 @@ export const establishSingleSession = async (req, user) => {
     });
   }
 
-  req.session.singleSessionId = sessionId;
-  req.session.singleSessionUserId = String(user._id);
-  await new Promise((resolve, reject) => {
-    req.login(user, (error) => (error ? reject(error) : resolve()));
-  });
+  try {
+    await new Promise((resolve, reject) => {
+      req.login(user, (error) => (error ? reject(error) : resolve()));
+    });
+    // Passport regenerates req.session during login. Persist our lease only
+    // after that regeneration, before responding or redirecting.
+    req.session.singleSessionId = sessionId;
+    req.session.singleSessionUserId = String(user._id);
+    await new Promise((resolve, reject) => {
+      req.session.save((error) => (error ? reject(error) : resolve()));
+    });
+  } catch (error) {
+    await clearSingleSessionLease(user._id, sessionId);
+    throw error;
+  }
 
   return sessionId;
 };
@@ -199,11 +209,11 @@ export const refreshSingleSession = async (userId, sessionId) => {
   );
 };
 
-const clearSingleSessionLease = async (userId) => {
-  if (!userId) return;
+const clearSingleSessionLease = async (userId, sessionId) => {
+  if (!userId || !sessionId) return;
 
   return User.updateOne(
-    { _id: userId },
+    { _id: userId, activeSessionId: sessionId },
     {
       $unset: {
         activeSessionId: 1,
@@ -218,4 +228,4 @@ const clearSingleSessionLease = async (userId) => {
   );
 };
 
-export const releaseSingleSession = async (userId) => clearSingleSessionLease(userId);
+export const releaseSingleSession = async (userId, sessionId) => clearSingleSessionLease(userId, sessionId);

@@ -174,10 +174,10 @@ const PlaylistModal = ({ isOpen, onClose, questionId }) => {
                           </div>
                         )}
                         <div className="text-left">
-                          <p className="font-semibold text-foreground text-sm">
+                          <p className="font-semibold text-gray-900 text-sm">
                             {playlist.title}
                           </p>
-                          <p className="text-xs text-muted-foreground">
+                          <p className="text-xs text-gray-600">
                             {playlist.questionIds?.length || 0} question{(playlist.questionIds?.length || 0) !== 1 ? 's' : ''}
                           </p>
                         </div>

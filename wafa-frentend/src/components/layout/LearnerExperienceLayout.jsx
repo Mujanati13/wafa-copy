@@ -23,7 +23,7 @@ import NotificationDropdown from "@/components/layout/NotificationDropdown";
 import logo from "@/assets/yourqcm-logo.jpeg";
 import { cn } from "@/lib/utils";
 import { signOut } from "@/services/authService";
-import { moduleService } from "@/services/moduleService";
+import { getLearnerModules } from "@/services/learnerModuleService";
 import { userService } from "@/services/userService";
 import { toast } from "sonner";
 import { displaySubscriptionPlanName, editableUserPlan, isPremiumPlan, isPremiumProPlan } from "@/utils/subscriptionDisplay";
@@ -239,7 +239,7 @@ export default function LearnerExperienceLayout() {
               <div key={group.label} className="mb-5">
                 <p className={cn("mb-2 px-2 text-[10px] font-bold tracking-[.14em] text-slate-500 uppercase dark:text-slate-400", collapsed && "lg:sr-only")}>{group.label}</p>
                 {group.modules ? (
-                  <ModuleNavigation collapsed={collapsed} setCollapsed={setCollapsed} user={user} />
+                  <ModuleNavigation collapsed={collapsed} setCollapsed={setCollapsed} />
                 ) : (
                   <div className="space-y-1">
                     {group.items.map((item) => <NavigationItem key={item.to} item={item} active={isActive(item.to)} collapsed={collapsed} locked={!planAllows(user, item)} />)}
@@ -300,10 +300,10 @@ function NavigationItem({ item, active, collapsed, locked }) {
   );
 }
 
-function ModuleNavigation({ collapsed, setCollapsed, user }) {
+function ModuleNavigation({ collapsed, setCollapsed }) {
   const location = useLocation();
   const navigate = useNavigate();
-  const { selectedSemester, userSemesters, loading: profileLoading } = useSemester();
+  const { user, selectedSemester, userSemesters, loading: profileLoading, error: profileError, refreshProfile } = useSemester();
   const isFree = !isPremiumPlan(user?.plan);
   const freeModuleId = String(user?.freeModule?._id || user?.freeModule || "");
   const moduleRouteActive = location.pathname.startsWith("/dashboard/subjects/");
@@ -312,17 +312,28 @@ function ModuleNavigation({ collapsed, setCollapsed, user }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
+  const [loadedAccessKey, setLoadedAccessKey] = useState(null);
+  const accessKey = JSON.stringify([user?._id, user?.plan, user?.semesters || [], freeModuleId]);
+  const modulesLoading = profileLoading || loading ||
+    (!profileError && (!user?._id || loadedAccessKey !== accessKey));
+  const modulesError = profileError || error;
 
   useEffect(() => {
     if (moduleRouteActive) setOpen(true);
   }, [location.pathname, moduleRouteActive]);
 
   useEffect(() => {
+    if (profileLoading) return;
+    if (profileError || !user?._id) {
+      setLoading(false);
+      return;
+    }
+
     let active = true;
     setLoading(true);
     setError(false);
 
-    moduleService.getAllmodules(reloadKey > 0)
+    getLearnerModules(user)
       .then((response) => {
         if (!active) return;
         setModules(response.data?.data || []);
@@ -331,11 +342,13 @@ function ModuleNavigation({ collapsed, setCollapsed, user }) {
         if (active) setError(true);
       })
       .finally(() => {
-        if (active) setLoading(false);
+        if (!active) return;
+        setLoadedAccessKey(accessKey);
+        setLoading(false);
       });
 
     return () => { active = false; };
-  }, [reloadKey]);
+  }, [accessKey, profileLoading, profileError, reloadKey]);
 
   const visibleModules = useMemo(() => {
     if (isFree) {
@@ -382,19 +395,19 @@ function ModuleNavigation({ collapsed, setCollapsed, user }) {
       >
         <BookOpen className="h-5 w-5 shrink-0" aria-hidden="true" />
         <span className={cn("min-w-0 flex-1 truncate text-left", collapsed && "lg:hidden")}>Mes modules</span>
-        {!collapsed && !loading && !profileLoading && (
+        {!collapsed && !modulesLoading && !modulesError && (
           <span className="rounded-full bg-indigo-100 px-1.5 text-[10px] font-semibold text-indigo-700 dark:bg-indigo-300/15 dark:text-indigo-200" aria-label={`${visibleModules.length} modules`}>{visibleModules.length}</span>
         )}
         <ChevronDown className={cn("h-4 w-4 shrink-0 transition-transform", open && "rotate-180", collapsed && "lg:hidden")} aria-hidden="true" />
       </button>
 
       <div id="learner-sidebar-modules" hidden={!open || collapsed} className="ml-5 mt-1 space-y-1 border-l border-indigo-200 pl-2 dark:border-indigo-300/20">
-        {loading || profileLoading ? (
+        {modulesLoading ? (
           <div className="flex items-center gap-2 px-3 py-3 text-xs text-sidebar-foreground/60"><Loader2 className="h-4 w-4 animate-spin" />Chargement des modules…</div>
-        ) : error ? (
+        ) : modulesError ? (
           <div className="px-3 py-3 text-xs text-sidebar-foreground/65">
             <p>Modules indisponibles.</p>
-            <button type="button" onClick={() => setReloadKey((value) => value + 1)} className="mt-1 font-semibold text-indigo-600 underline underline-offset-2 dark:text-indigo-300">Réessayer</button>
+            <button type="button" onClick={() => { if (profileError) refreshProfile(); else setReloadKey((value) => value + 1); }} className="mt-1 font-semibold text-indigo-600 underline underline-offset-2 dark:text-indigo-300">Réessayer</button>
           </div>
         ) : visibleModules.length ? visibleModules.map((module) => {
           const isModuleLocked = isFree && (!freeModuleId || String(module._id || module.id) !== freeModuleId);

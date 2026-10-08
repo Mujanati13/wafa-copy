@@ -30,6 +30,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { cn, api } from "@/lib/utils";
+import InTextImageViewer from "@/components/ExamsPage/InTextImageViewer";
 import { isPremiumProPlan } from "@/utils/subscriptionDisplay";
 
 const NotesPage = () => {
@@ -593,6 +594,15 @@ const NotesPage = () => {
                     {questionPreview.question?.text || "Question non disponible"}
                   </p>
                 </div>
+
+                {questionPreview.question?.images?.length > 0 && (
+                  <InTextImageViewer
+                    key={questionPreview.question._id}
+                    images={questionPreview.question.images}
+                    buttonText="Voir les images de la question"
+                    className="rounded-xl border-border text-foreground hover:bg-muted"
+                  />
+                )}
 
                 <div className="space-y-2">
                   <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Options :</p>

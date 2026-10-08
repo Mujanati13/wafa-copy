@@ -141,7 +141,7 @@ const NewUserForm = ({ setShowNewUserForm, onUserCreated }) => {
         if (response.data?.user?.firebaseCreated) {
           toast.success("Utilisateur créé avec succès! L'utilisateur peut maintenant se connecter.");
         } else {
-          toast.warning("Utilisateur créé dans la base de données, mais Firebase n'a pas été configuré. L'utilisateur devra peut-être réinitialiser son mot de passe.");
+          toast.warning("Utilisateur créé avec succès. La connexion par email et mot de passe est disponible; la connexion Google est temporairement indisponible.");
         }
         
         setShowNewUserForm(false);

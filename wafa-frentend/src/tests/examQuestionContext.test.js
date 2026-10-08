@@ -109,3 +109,33 @@ for (const [type, data, expected] of [
     }
   });
 }
+
+for (const [type, official, expected] of [
+  ['exam', true, 'Correction officielle'],
+  ['exam', false, 'Correction non officielle'],
+  ['course', true, 'Correction officielle'],
+  ['course', false, 'Correction non officielle'],
+]) {
+  test('correction source stays visible at mobile and desktop sizes (' + type + ': ' + official + ')', async () => {
+    const linkedQuestion = { ...question, examId: { _id: 'original-exam', isOfficialCorrection: official } };
+    const root = await mountExam(type, { _id: 'exam', name: 'Anatomie', isOfficialCorrection: official,
+      questions: { '2026 normal': [linkedQuestion] } });
+    try {
+      const badge = root.root.findByProps({ 'aria-label': 'Source de la correction' });
+      assert.equal(textContent(badge), expected);
+      // Every ancestor must remain visible without requiring a breakpoint.
+      for (let node = badge; node; node = node.parent) {
+        const classes = String(node.props.className || '').split(/\s+/);
+        assert.ok(!classes.some(value => /^(?:[\w-]+:)?hidden$/.test(value)), 'Hidden correction ancestor');
+        assert.ok(!classes.includes('invisible'));
+      }
+    } finally { await act(async () => root.unmount()); }
+  });
+}
+
+test('course questions without a known source are not labeled as official', async () => {
+  const root = await mountExam('course', { _id: 'course', name: 'Anatomie', questions: { '2026': [question] } });
+  try {
+    assert.equal(root.root.findAllByProps({ 'aria-label': 'Source de la correction' }).length, 0);
+  } finally { await act(async () => root.unmount()); }
+});

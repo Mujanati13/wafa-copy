@@ -915,11 +915,13 @@ const ExamPage = () => {
   }, [hasUnsavedChanges, showResults, examData, selectedAnswers, verifiedQuestions, questions, userProfile, examType, examId]);
 
   const currentQuestionData = questions[currentQuestion];
-  const hasCorrectionSource = examType === 'exam';
-  const correctionSourceLabel = examData?.isOfficialCorrection === false
+  const correctionSource = examType === 'course' ? currentQuestionData?.examId : examData;
+  const hasCorrectionSource = examType === 'exam' ||
+    (examType === 'course' && typeof correctionSource?.isOfficialCorrection === 'boolean');
+  const correctionSourceLabel = correctionSource?.isOfficialCorrection === false
     ? 'Correction non officielle'
     : 'Correction officielle';
-  const correctionSourceClassName = examData?.isOfficialCorrection === false
+  const correctionSourceClassName = correctionSource?.isOfficialCorrection === false
     ? 'border-amber-300 bg-amber-50 text-amber-800 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200'
     : 'border-emerald-300 bg-emerald-50 text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200';
 
@@ -2131,7 +2133,7 @@ const ExamPage = () => {
                   <div className="bg-muted/40 dark:bg-muted/20 border-b border-border px-2 sm:px-4 md:px-6 py-2 sm:py-2.5">
                     <div className="flex items-center justify-between gap-1.5 sm:gap-2">
                       {/* Left: Verify button */}
-                      <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 min-w-0 flex-1">
                         {/* Verification Status / Verify Button - Desktop Only */}
                         <div className="hidden lg:flex flex-col items-start gap-1">
                           {currentQuestionData.isAnnulled ? (
@@ -2162,14 +2164,12 @@ const ExamPage = () => {
                             </Button>
                           ) : null}
                         </div>
-                        {examType === 'exam' && (
-                          <span className={cn(
-                            "hidden shrink-0 rounded-full border px-2 py-1 text-[10px] font-semibold sm:text-xs",
-                            examData?.isOfficialCorrection === false
-                              ? "border-amber-300 bg-amber-50 text-amber-800 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200"
-                              : "border-emerald-300 bg-emerald-50 text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200"
+                        {hasCorrectionSource && (
+                          <span aria-label="Source de la correction" className={cn(
+                            "inline-flex max-w-full rounded-full border px-2 py-1 text-[10px] font-semibold sm:text-xs",
+                            correctionSourceClassName,
                           )}>
-                            {examData?.isOfficialCorrection === false ? "Correction par des étudiants" : "Correction officielle"}
+                            {correctionSourceLabel}
                           </span>
                         )}
                       </div>
@@ -2358,14 +2358,6 @@ const ExamPage = () => {
 
                     {/* Question Text */}
                     <div className="space-y-2">
-                      {hasCorrectionSource && (
-                        <span className={cn(
-                          "inline-flex rounded-full border px-2 py-1 text-[10px] font-semibold sm:text-xs",
-                          correctionSourceClassName,
-                        )}>
-                          {correctionSourceLabel}
-                        </span>
-                      )}
                       <div className="text-sm font-semibold text-muted-foreground">
                         Q{sessionQuestionInfo.position}/{sessionQuestionInfo.total}
                       </div>

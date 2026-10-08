@@ -65,7 +65,7 @@ export const noteController = {
       .populate("moduleId", "name semester")
       .populate({
         path: "questionId",
-        select: "text questionNumber options",
+        select: "text questionNumber options images",
         populate: {
           path: "examId",
           select: "name year title type"
@@ -88,7 +88,7 @@ export const noteController = {
       .populate("moduleId", "name semester")
       .populate({
         path: "questionId",
-        select: "text questionNumber options",
+        select: "text questionNumber options images",
         populate: {
           path: "examId",
           select: "name year title type"
@@ -193,7 +193,7 @@ export const noteController = {
     const notes = await Note.find({ userId, moduleId })
       .populate({
         path: "questionId",
-        select: "text questionNumber options",
+        select: "text questionNumber options images",
         populate: {
           path: "examId",
           select: "name year title type"

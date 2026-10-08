@@ -134,7 +134,7 @@ const getAcademicRanking = async (user, totalPoints) => {
 };
 
 export const UserController = {
-    // Admin create user - creates user with Firebase and MongoDB
+    // Admin users always receive a local password; Firebase is synchronized when available.
     createAdminUser: async (req, res) => {
         try {
             const { 
@@ -175,6 +175,15 @@ export const UserController = {
                 });
             }
 
+            // Apply Firebase's basic credential constraints even when it is offline.
+            if (typeof password !== 'string' || password.length < 6 || password.length > 128 ||
+                typeof email !== 'string' || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'A valid email and a password between 6 and 128 characters are required'
+                });
+            }
+
             // Check if user already exists in MongoDB
             const existingUser = await User.findOne({ email });
             if (existingUser) {
@@ -192,6 +201,7 @@ export const UserController = {
             let firebaseUid = null;
             let firebaseCreated = false;
             let firebaseErrorDetail = null;
+            let allowLocalAuthentication = false;
             try {
                 // Check if Firebase Admin SDK is properly initialized
                 const firebaseInitialized = admin && admin.apps && admin.apps.length > 0;
@@ -210,6 +220,7 @@ export const UserController = {
                 } else {
                     console.log('⚠️  Firebase not initialized - user will only be created in MongoDB');
                     firebaseErrorDetail = classifyFirebaseAdminError(new Error('Firebase Admin SDK is not initialized'));
+                    allowLocalAuthentication = true;
                 }
             } catch (firebaseError) {
                 console.error('🔥 Firebase user creation error:');
@@ -217,6 +228,7 @@ export const UserController = {
                 console.error('   Message:', firebaseError.message);
                 
                 firebaseErrorDetail = classifyFirebaseAdminError(firebaseError);
+                allowLocalAuthentication = ['credentials', 'clock'].includes(firebaseErrorDetail.type);
                 
                 // If Firebase user exists, try to get their UID and update password
                 if (firebaseError.code === 'auth/email-already-exists') {
@@ -235,12 +247,14 @@ export const UserController = {
                     } catch (e) {
                         console.error('Could not update existing Firebase user:', e.message);
                         firebaseErrorDetail = classifyFirebaseAdminError(e);
+                        allowLocalAuthentication = ['credentials', 'clock'].includes(firebaseErrorDetail.type);
                     }
                 }
             }
 
-            // If Firebase was not created successfully, return error
-            if (!firebaseCreated) {
+            // Infrastructure failures must not prevent a valid local account.
+            // Other Firebase failures (including invalid input) still reject creation.
+            if (!firebaseCreated && !allowLocalAuthentication) {
                 const firebaseFailure = firebaseErrorDetail || {
                     type: 'configuration',
                     detail: 'Firebase Admin authentication is unavailable.',
@@ -272,7 +286,7 @@ export const UserController = {
                 semesters: normalizedSemesters,
                 emailVerified: true, // Admin-created users are pre-verified
                 isAactive: true,
-                firebaseUid,
+                ...(firebaseCreated ? { firebaseUid } : {}),
             };
 
             // Add payment-related fields if user is paid
@@ -294,7 +308,8 @@ export const UserController = {
 
             res.status(201).json({
                 success: true,
-                message: 'User created successfully' + (firebaseCreated ? ' (Firebase + MongoDB)' : ' (MongoDB only - login may not work)'),
+                message: 'User created successfully. Email/password login is available.',
+                ...(firebaseCreated ? {} : { firebaseWarning: firebaseErrorDetail }),
                 data: {
                     user: {
                         _id: newUser._id,
@@ -311,6 +326,7 @@ export const UserController = {
                         isAactive: newUser.isAactive,
                         emailVerified: newUser.emailVerified,
                         firebaseCreated: firebaseCreated,
+                        loginMethod: 'email_password',
                     }
                 }
             });
