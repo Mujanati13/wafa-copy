@@ -137,13 +137,8 @@ const NewUserForm = ({ setShowNewUserForm, onUserCreated }) => {
         setSelectedSemesters([]);
         setIsPaid(false);
         
-        // Show appropriate success message
-        if (response.data?.user?.firebaseCreated) {
-          toast.success("Utilisateur créé avec succès! L'utilisateur peut maintenant se connecter.");
-        } else {
-          toast.warning("Utilisateur créé avec succès. La connexion par email et mot de passe est disponible; la connexion Google est temporairement indisponible.");
-        }
-        
+        toast.success("Utilisateur créé avec succès! L’utilisateur peut maintenant se connecter avec son email et son mot de passe.");
+
         setShowNewUserForm(false);
         
         // Call callback to refresh user list
