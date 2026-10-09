@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { BookOpen, ChevronDown, Crown, Medal, Star, TrendingUp } from "lucide-react";
+import { BookOpen, ChevronDown, Crown, Medal, Star, TrendingUp, TriangleAlert } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import ModuleCard from "@/components/Dashboard/ModuleCard";
@@ -255,6 +255,10 @@ export default function LearnerDashboard() {
 
       <section className="rounded-2xl border border-cyan-300/30 bg-cyan-50/70 p-5 dark:bg-cyan-950/20 sm:flex sm:items-center sm:justify-between sm:p-6"><div className="flex gap-4"><div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-cyan-600 text-white"><Crown className="h-5 w-5" /></div><div><h2 className="font-bold">Votre plan : {plan}</h2><p className="mt-1 text-sm leading-6 text-muted-foreground">Accédez à davantage de modules, statistiques et outils de révision selon votre formule.</p></div></div><Button asChild className="mt-4 sm:mt-0"><Link to="/dashboard/subscription">Voir mon abonnement</Link></Button></section>
     </>}
+    <aside aria-label="Sécurité du compte" className="flex items-start gap-3 rounded-2xl border border-amber-300 bg-amber-50 p-4 text-amber-900 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-200 sm:p-5">
+      <TriangleAlert className="mt-0.5 h-5 w-5 shrink-0" aria-hidden="true" />
+      <p className="text-sm leading-6">Pour des raisons de sécurité, vous devez vous déconnecter de votre appareil actuel avant de vous connecter sur un nouvel appareil (téléphone, tablette ou PC). Fermer l’application ou le navigateur ne suffit pas : utilisez le bouton « Déconnexion ».</p>
+    </aside>
   </div>;
 }
 

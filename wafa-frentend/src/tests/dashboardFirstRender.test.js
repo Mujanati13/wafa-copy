@@ -33,7 +33,7 @@ async function mountDashboard({ user, moduleRequest, profileError = null }) {
     react: synthetic({ ...React, default: React }),
     'react/jsx-runtime': synthetic(jsxRuntime),
     'react-router-dom': synthetic({ Link: primitive, useNavigate: () => () => {} }),
-    'lucide-react': synthetic(Object.fromEntries(['BookOpen', 'ChevronDown', 'Crown', 'Medal', 'Star', 'TrendingUp'].map(name => [name, () => null]))),
+    'lucide-react': synthetic(Object.fromEntries(['BookOpen', 'ChevronDown', 'Crown', 'Medal', 'Star', 'TrendingUp', 'TriangleAlert'].map(name => [name, () => null]))),
     sonner: synthetic({ toast: { info() {} } }),
     '@/components/ui/button': synthetic({ Button: ({ children, ...props }) => React.createElement('button', props, children) }),
     '@/components/ui/skeleton': synthetic({ Skeleton: () => React.createElement('span', { 'data-loading': true }) }),

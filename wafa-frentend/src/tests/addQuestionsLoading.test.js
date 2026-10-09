@@ -12,6 +12,10 @@ globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 async function mountPage() {
   const source = await readFile(new URL('../pages/AddQuestions.jsx', import.meta.url), 'utf8');
   const requests = [];
+  const tableRenders = [];
+  const elementText = node => node == null || typeof node === 'boolean' ? ''
+    : typeof node === 'string' || typeof node === 'number' ? String(node)
+      : Array.isArray(node) ? node.map(elementText).join('') : elementText(node.props?.children);
   const question = (id, examId) => ({ _id: id, text: id, examId, options: [{ text: 'Option', isCorrect: true }] });
   const context = vm.createContext({ console: { error() {} }, URLSearchParams });
   const synthetic = exports => new vm.SyntheticModule(Object.keys(exports), function () {
@@ -44,7 +48,9 @@ async function mountPage() {
   for (const match of source.matchAll(/import\s*{([^}]+)}\s*from\s*"(@\/components\/ui\/[^" ]+)"/g)) {
     deps[match[2]] = synthetic(Object.fromEntries(match[1].split(',').map(name => {
       const key = name.trim();
-      return [key, key === 'Select' ? control : key === 'Button' ? button : primitive];
+      return [key, key === 'Select' ? control : key === 'Button' ? button : key === 'TableBody'
+        ? props => { tableRenders.push(elementText(props.children)); return primitive(props); }
+        : primitive];
     })));
   }
   const compiled = await transform(source, { loader: 'jsx', jsx: 'automatic', format: 'esm' });
@@ -62,7 +68,7 @@ async function mountPage() {
     await select(2, 'years');
     await select(3, id);
   };
-  return { renderer, requests, question, select, settle, text, chooseExam };
+  return { renderer, requests, tableRenders, question, select, settle, text, chooseExam };
 }
 
 test('first exam selection ignores late all-question responses and errors', async () => {
@@ -115,5 +121,69 @@ test('hidden browse exam and search filters do not hide the selected exam', asyn
     await page.settle(page.requests.find(r => r.url === '/questions/by-exam/A'), [page.question('visible-A', 'A')]);
     assert.ok(page.text().includes('visible-A'));
     assert.ok(!page.text().includes('Aucune question trouvée'));
+  } finally { await act(async () => page.renderer.unmount()); }
+});
+
+test('selecting an exam never renders a previously loaded global list, even before effects run', async () => {
+  const page = await mountPage();
+  try {
+    await page.select(0, 'S1');
+    await page.select(1, 'm1');
+    await page.select(2, 'years');
+    await page.settle(page.requests.at(-1), [page.question('global-question', 'B')]);
+    assert.ok(page.text().includes('global-question'));
+    const firstRender = page.tableRenders.length;
+    await page.select(3, 'A');
+    assert.ok(page.tableRenders.slice(firstRender).every(text =>
+      !text.includes('global-question') && !text.includes('Aucune question trouvée')));
+    await page.settle(page.requests.at(-1), [page.question('first-selection-A', 'A')]);
+    assert.ok(page.text().includes('first-selection-A'));
+  } finally { await act(async () => page.renderer.unmount()); }
+});
+
+test('the table exam dropdown fetches its selected exam on the first attempt', async () => {
+  const page = await mountPage();
+  try {
+    await page.select(4, 'm1');
+    await page.settle(page.requests.at(-1), [page.question('global-question', 'B')]);
+    const firstRender = page.tableRenders.length;
+    await page.select(6, 'A');
+    assert.equal(page.requests.at(-1).url, '/questions/by-exam/A');
+    assert.ok(page.tableRenders.slice(firstRender).every(text => !text.includes('Aucune question trouvée')));
+    await page.settle(page.requests.at(-1), [page.question('table-exam-A', 'A')]);
+    assert.ok(page.text().includes('table-exam-A'));
+    assert.ok(!page.text().includes('global-question'));
+  } finally { await act(async () => page.renderer.unmount()); }
+});
+
+test('table exam switches ignore stale responses and returning to all exams refetches the catalog', async () => {
+  const page = await mountPage();
+  try {
+    await page.select(4, 'm1');
+    await page.select(6, 'A');
+    const first = page.requests.at(-1);
+    await page.select(6, 'B');
+    await page.settle(page.requests.at(-1), [page.question('table-exam-B', 'B')]);
+    await page.settle(first, []);
+    assert.ok(page.text().includes('table-exam-B'));
+    await page.select(6, 'all');
+    assert.equal(page.requests.at(-1).url, '/questions/all?moduleId=m1');
+    await page.settle(page.requests.at(-1), [page.question('all-module-questions', 'A')]);
+    assert.ok(page.text().includes('all-module-questions'));
+  } finally { await act(async () => page.renderer.unmount()); }
+});
+
+test('a failed exam request shows retry instead of claiming that the exam has zero questions', async () => {
+  const page = await mountPage();
+  try {
+    await page.chooseExam('A');
+    await act(async () => page.requests.at(-1).reject(new Error('offline')));
+    assert.ok(page.text().includes('Impossible de charger les questions'));
+    assert.ok(!page.text().includes('Aucune question trouvée'));
+    const retry = page.renderer.root.findAllByType('button').find(node => node.children.includes('Réessayer'));
+    await act(async () => retry.props.onClick());
+    assert.equal(page.requests.at(-1).url, '/questions/by-exam/A');
+    await page.settle(page.requests.at(-1), [page.question('retried-A', 'A')]);
+    assert.ok(page.text().includes('retried-A'));
   } finally { await act(async () => page.renderer.unmount()); }
 });

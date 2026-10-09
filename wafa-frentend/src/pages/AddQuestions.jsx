@@ -111,8 +111,9 @@ const AddQuestions = () => {
   const [isAnnulled, setIsAnnulled] = useState(false);
   const [imageFile, setImageFile] = useState(null);
   const [showPreview, setShowPreview] = useState(false);
-  const [examQuestions, setExamQuestions] = useState([]);
+  const [questionData, setQuestionData] = useState({ scope: null, rows: [] });
   const [loadingQuestions, setLoadingQuestions] = useState(false);
+  const [questionError, setQuestionError] = useState(false);
   const [questionsReload, setQuestionsReload] = useState(0);
   const [viewingQuestion, setViewingQuestion] = useState(null);
   const [showViewDialog, setShowViewDialog] = useState(false);
@@ -175,6 +176,24 @@ const AddQuestions = () => {
     if (examType === "qcm") return !!selectedQCMName;
     return false;
   })();
+
+  const selectedContextExamId = examType === "years" ? selectedExamNameYears
+    : examType === "courses" ? selectedCourse
+      : examType === "qcm" ? selectedQCMName : selectedTPName;
+  const questionScope = JSON.stringify(hasContextSelected
+    ? ["context", examType, selectedModule, selectedContextExamId, selectedYearName]
+    : ["browse", filterExam, filterModule, filterSemester, filterExamType,
+      filterSemester !== "all" && filterModule === "all"
+        ? modules.filter(module => module.semester === filterSemester).map(module => module._id)
+        : []]);
+  // Hide data from the previous selection during render, before effects run.
+  const examQuestions = questionData.scope === questionScope ? questionData.rows : [];
+  const questionsPending = loadingQuestions || questionData.scope !== questionScope;
+  const setExamQuestions = (value) => setQuestionData(previous => ({
+    scope: questionScope,
+    rows: typeof value === "function"
+      ? value(previous.scope === questionScope ? previous.rows : []) : value,
+  }));
 
   // Filter questions based on search and exam filter
   const filteredQuestions = useMemo(() => {
@@ -326,7 +345,8 @@ const AddQuestions = () => {
   const fetchAllQuestions = async (isCurrent) => {
     try {
       setLoadingQuestions(true);
-      let url = '/questions/all';
+      let url = filterExam !== 'all'
+        ? `/questions/by-exam/${filterExam}` : '/questions/all';
       const params = new URLSearchParams();
 
       // If semester is selected but no module, get all modules for that semester and filter
@@ -344,15 +364,25 @@ const AddQuestions = () => {
       
       if (filterExamType && filterExamType !== 'all') params.append('examType', filterExamType);
 
-      if (params.toString()) {
+      if (filterExam === 'all' && params.toString()) {
         url += `?${params.toString()}`;
+      }
+
+      // An empty semester must not fall back to an unfiltered database request.
+      if (filterExam === 'all' && filterSemester !== 'all' && filterModule === 'all' &&
+          !modules.some(module => module.semester === filterSemester)) {
+        if (isCurrent()) setExamQuestions([]);
+        return;
       }
 
       const response = await api.get(url);
       if (isCurrent()) setExamQuestions(response.data?.data || []);
     } catch (err) {
       console.error("Error fetching all questions:", err);
-      if (isCurrent()) setExamQuestions([]);
+      if (isCurrent()) {
+        setExamQuestions([]);
+        setQuestionError(true);
+      }
     } finally {
       if (isCurrent()) setLoadingQuestions(false);
     }
@@ -363,6 +393,7 @@ const AddQuestions = () => {
     let active = true;
     const isCurrent = () => active;
     setExamQuestions([]);
+    setQuestionError(false);
     setSelectedQuestions([]);
     setCurrentPage(1);
 
@@ -373,9 +404,7 @@ const AddQuestions = () => {
     }
 
     return () => { active = false; };
-  }, [hasContextSelected, examType, selectedModule, selectedExamNameYears,
-    selectedQCMName, selectedTPName, selectedCourse, selectedYearName,
-    filterModule, filterSemester, filterExamType, modules, questionsReload]);
+  }, [questionScope, questionsReload]);
 
   const fetchExamQuestions = async (isCurrent) => {
     try {
@@ -429,7 +458,10 @@ const AddQuestions = () => {
       if (isCurrent()) setExamQuestions(response.data?.data || []);
     } catch (err) {
       console.error("Error fetching questions:", err);
-      if (isCurrent()) setExamQuestions([]);
+      if (isCurrent()) {
+        setExamQuestions([]);
+        setQuestionError(true);
+      }
     } finally {
       if (isCurrent()) setLoadingQuestions(false);
     }
@@ -1001,7 +1033,7 @@ const AddQuestions = () => {
               <div>
                 <CardTitle className="flex items-center gap-2">
                   {hasContextSelected ? "Questions de l'Examen" : "Toutes les Questions"}
-                  <Badge variant="secondary">{filteredQuestions.length} Affichée(s)</Badge>
+                  <Badge variant="secondary">{questionsPending ? "Chargement…" : questionError ? "Chargement impossible" : `${filteredQuestions.length} Affichée(s)`}</Badge>
                   {filteredQuestions.length !== examQuestions.length && (
                     <Badge variant="outline" className="text-xs">{examQuestions.length} Total</Badge>
                   )}
@@ -1185,11 +1217,18 @@ const AddQuestions = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {loadingQuestions ? (
+                  {questionsPending ? (
                     <TableRow>
                       <TableCell colSpan={9} className="text-center py-12">
                         <Loader2 className="h-8 w-8 animate-spin text-blue-500 mx-auto" />
                         <p className="text-muted-foreground mt-2">Chargement des questions...</p>
+                      </TableCell>
+                    </TableRow>
+                  ) : questionError ? (
+                    <TableRow>
+                      <TableCell colSpan={9} className="text-center py-12">
+                        <p role="alert">Impossible de charger les questions.</p>
+                        <Button variant="outline" className="mt-3" onClick={() => setQuestionsReload(version => version + 1)}>Réessayer</Button>
                       </TableCell>
                     </TableRow>
                   ) : filteredQuestions.length === 0 ? (
