@@ -50,7 +50,7 @@ export const getSessionMetadata = (req = {}) => {
   const city = firstHeader(req, ["cf-ipcity", "x-vercel-ip-city", "x-geo-city"]);
   const region = firstHeader(req, ["cf-region", "x-vercel-ip-country-region", "x-geo-region"]);
   const country = firstHeader(req, ["cf-ipcountry", "x-vercel-ip-country", "x-geo-country"]);
-  const rawClientId = firstHeader(req, ["x-auth-client-id"]);
+  const rawClientId = req.authClientId || firstHeader(req, ["x-auth-client-id"]);
 
   return {
     ip: ip || null,

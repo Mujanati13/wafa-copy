@@ -67,7 +67,7 @@ async function mountExam(type, data) {
     })));
   }
   for (const name of ['ExplicationModel', 'NoteModal', 'ReportModal', 'CommunityModal', 'ResumesModal', 'PlaylistModal']) {
-    deps[`@/components/ExamsPage/${name}`] = synthetic({ default: () => null });
+    deps[`@/components/ExamsPage/${name}`] = synthetic({ default: props => name === 'NoteModal' ? React.createElement('note-modal', props) : null });
   }
   deps['@/components/shared/ImageViewerModal'] = synthetic({ default: () => null });
   const componentSource = await readFile(new URL('../components/ExamsPage/ExamQuestionContext.jsx', import.meta.url), 'utf8');
@@ -139,3 +139,18 @@ test('course questions without a known source are not labeled as official', asyn
     assert.equal(root.root.findAllByProps({ 'aria-label': 'Source de la correction' }).length, 0);
   } finally { await act(async () => root.unmount()); }
 });
+
+for (const type of ['course', 'exam']) {
+  test('the exam page passes the selected course to the note modal only in course mode: ' + type, async () => {
+    const root = await mountExam(type, { _id: 'exam', name: 'Anatomie du Coeur', moduleId: { _id: 'module', name: 'Anatomie I' }, questions: { '2026': [question] } });
+    try {
+      const button = root.root.findAllByType('button').find(node => node.props.title === 'Note');
+      assert.ok(button);
+      await act(async () => button.props.onClick());
+      const modal = root.root.findByType('note-modal');
+      assert.equal(modal.props.examCourseId, type === 'course' ? 'exam' : null);
+      assert.equal(modal.props.questionId, 'q1');
+      assert.equal(modal.props.moduleId, 'module');
+    } finally { await act(async () => root.unmount()); }
+  });
+}

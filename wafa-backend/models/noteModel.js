@@ -22,6 +22,11 @@ const noteSchema = new mongoose.Schema(
       ref: "Question",
       default: null,
     },
+    examCourseId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "ExamCourse",
+      default: null,
+    },
     moduleId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Module",

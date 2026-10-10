@@ -3334,6 +3334,7 @@ const ExamPage = () => {
           onClose={() => setShowNoteModal(false)}
           questionId={currentQuestionData._id}
           moduleId={examData?.moduleId || null}
+          examCourseId={examType === 'course' ? examId : null}
           examData={{
             moduleName: examData?.moduleName,
             examName: examData?.examName || examData?.name,

@@ -4,6 +4,7 @@ import "../strategies/google-strategy.js";
 import passport from "passport";
 import { AuthController } from "../controllers/auth.js";
 import { isAuthenticated } from "../middleware/authMiddleware.js";
+import { identifyAuthDevice } from "../middleware/authDeviceMiddleware.js";
 import {
   ActiveSessionError,
   createSingleSessionToken,
@@ -11,6 +12,7 @@ import {
 } from "../services/singleSessionService.js";
 
 const router = express.Router();
+router.use(identifyAuthDevice);
 
 router.post("/login", (req, res, next) => {
   passport.authenticate("local", async (err, user, info) => {

@@ -32,6 +32,7 @@ import { useNavigate } from "react-router-dom";
 import { cn, api } from "@/lib/utils";
 import InTextImageViewer from "@/components/ExamsPage/InTextImageViewer";
 import { isPremiumProPlan } from "@/utils/subscriptionDisplay";
+import { getNoteContext } from "@/utils/noteContext";
 
 const NotesPage = () => {
   const { t } = useTranslation(['dashboard', 'common']);
@@ -200,8 +201,9 @@ const NotesPage = () => {
   const getUniqueModules = () => {
     const moduleNames = new Set();
     notes.forEach((note) => {
-      if (note.moduleId?.name) {
-        moduleNames.add(note.moduleId.name);
+      const module = getNoteContext(note).module;
+      if (module) {
+        moduleNames.add(module.name);
       }
     });
     return Array.from(moduleNames);
@@ -210,16 +212,13 @@ const NotesPage = () => {
   const getExamNames = () => {
     const examNames = new Set();
     notes.forEach((note) => {
-      const exam = note.questionId?.examId;
-      if (exam) {
-        const name = exam.name || exam.title || (exam.year ? `Examen ${exam.year}` : null);
-        if (name) examNames.add(name);
-      }
+      getNoteContext(note).sourceNames.forEach(name => examNames.add(name));
     });
     return Array.from(examNames);
   };
 
   const filteredNotes = notes.filter((note) => {
+    const context = getNoteContext(note);
     const searchLower = searchQuery.toLowerCase();
     if (searchQuery && 
         !note.content?.toLowerCase().includes(searchLower) &&
@@ -228,14 +227,11 @@ const NotesPage = () => {
     }
 
     if (selectedModule !== "all") {
-      if (!note.moduleId?.name || note.moduleId.name !== selectedModule) return false;
+      if (context.module?.name !== selectedModule) return false;
     }
 
     if (selectedExamName !== "all") {
-      const examName = note.questionId?.examId?.name || 
-                      note.questionId?.examId?.title || 
-                      (note.questionId?.examId?.year ? `Examen ${note.questionId.examId.year}` : null);
-      if (!examName || examName !== selectedExamName) return false;
+      if (!context.sourceNames.includes(selectedExamName)) return false;
     }
 
     if (filterType === "date" && dateFilter) {
@@ -357,10 +353,10 @@ const NotesPage = () => {
               {/* Exam Filter */}
               <Select value={selectedExamName} onValueChange={setSelectedExamName}>
                 <SelectTrigger className="w-full sm:w-[200px] h-10 bg-background border-border text-foreground rounded-xl">
-                  <SelectValue placeholder="Tous les examens" />
+                  <SelectValue placeholder="Tous les examens / cours" />
                 </SelectTrigger>
                 <SelectContent className="bg-popover border-border text-popover-foreground rounded-xl">
-                  <SelectItem value="all">Tous les examens</SelectItem>
+                  <SelectItem value="all">Tous les examens / cours</SelectItem>
                   {getExamNames().map((name) => (
                     <SelectItem key={name} value={name}>{name}</SelectItem>
                   ))}
@@ -540,6 +536,11 @@ const NotesPage = () => {
             </DialogHeader>
             {editingNote && (
               <form onSubmit={saveEditedNote} className="space-y-4 pt-2">
+                {getNoteContext(editingNote).origin && (
+                  <p className="break-words text-sm text-muted-foreground">
+                    {getNoteContext(editingNote).origin}
+                  </p>
+                )}
                 <div className="space-y-2">
                   <Label htmlFor="edit-title" className="text-xs font-semibold uppercase tracking-wider text-foreground">
                     Titre
@@ -589,6 +590,11 @@ const NotesPage = () => {
             </DialogHeader>
             {questionPreview && (
               <div className="space-y-4 pt-2">
+                {getNoteContext(questionPreview.note).origin && (
+                  <p aria-label="Origine de la note" className="break-words text-sm font-medium text-foreground">
+                    {getNoteContext(questionPreview.note).origin}
+                  </p>
+                )}
                 <div className="p-4 bg-muted/40 rounded-2xl border border-border">
                   <p className="font-medium text-foreground text-sm sm:text-base leading-relaxed">
                     {questionPreview.question?.text || "Question non disponible"}
@@ -652,8 +658,7 @@ const NotesPage = () => {
 
 // Clean, Responsive NoteCard Component
 const NoteCard = ({ note, index, onDelete, onViewQuestion, onEdit, onTogglePin }) => {
-  const moduleInfo = note.moduleId?.name ? { name: note.moduleId.name, semester: note.moduleId.semester } : null;
-  const examInfo = note.questionId?.examId ? (note.questionId.examId.name || note.questionId.examId.title || (note.questionId.examId.year ? `Examen ${note.questionId.examId.year}` : null)) : null;
+  const { module: moduleInfo, courseName, examName: examInfo } = getNoteContext(note);
   const questionNumber = note.questionId?.questionNumber || null;
 
   return (
@@ -700,7 +705,7 @@ const NoteCard = ({ note, index, onDelete, onViewQuestion, onEdit, onTogglePin }
           </div>
 
           {/* Context Badges */}
-          {(moduleInfo || examInfo || questionNumber) && (
+          {(moduleInfo || courseName || examInfo || questionNumber) && (
             <div className="px-5 pt-3 pb-1 flex flex-wrap items-center gap-1.5">
               {moduleInfo && (
                 <Badge variant="outline" className="text-[11px] bg-primary/10 text-primary border-primary/20 font-medium py-0.5 px-2">
@@ -712,6 +717,12 @@ const NoteCard = ({ note, index, onDelete, onViewQuestion, onEdit, onTogglePin }
                 <Badge variant="outline" className="text-[11px] bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20 font-medium py-0.5 px-2">
                   <Tag className="h-3 w-3 mr-1" />
                   <span className="truncate max-w-[120px]">{examInfo}</span>
+                </Badge>
+              )}
+              {courseName && (
+                <Badge variant="outline" className="max-w-full whitespace-normal text-[11px] bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 border-indigo-500/20 font-medium py-0.5 px-2">
+                  <BookOpen className="h-3 w-3 mr-1 shrink-0" />
+                  <span className="min-w-0 break-words">{courseName}</span>
                 </Badge>
               )}
               {questionNumber && (

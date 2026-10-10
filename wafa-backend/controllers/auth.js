@@ -1,6 +1,7 @@
 import User from "../models/userModel.js";
 import bcrypt from "bcrypt";
 import crypto from "crypto";
+import { getSessionCookieOptions } from "../config/session.js";
 import {
   sendVerificationEmail,
   sendPasswordResetEmail,
@@ -504,7 +505,7 @@ export const AuthController = {
         if (destroyError) {
           return res.status(500).json({ message: "Logout failed" });
         }
-        res.clearCookie("connect.sid");
+        res.clearCookie("connect.sid", getSessionCookieOptions());
         return res.status(200).json({ message: "Logout successful" });
       });
     });

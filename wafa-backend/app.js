@@ -11,6 +11,7 @@ import "./strategies/google-strategy.js";
 import path from "path";
 import { fileURLToPath } from "url";
 import fs from "fs";
+import { configureTrustProxy, getSessionCookieOptions } from "./config/session.js";
 
 dotenv.config();
 
@@ -27,6 +28,7 @@ const autoIndex = process.env.MONGO_AUTO_INDEX
   : !isProduction;
 
 app.disable("x-powered-by");
+configureTrustProxy(app);
 
 // Body parsing middleware - these must come first
 app.use(express.json({ limit: '100mb' }));
@@ -144,13 +146,8 @@ app.use(
       touchAfter: 24 * 3600,
     }),
     cookie: {
+      ...getSessionCookieOptions(),
       maxAge: 1000 * 60 * 60 * 24 * 30, // 30 days in milliseconds
-      httpOnly: true,
-      secure: process.env.COOKIE_SECURE === 'true',
-      sameSite: process.env.COOKIE_SECURE === 'true' ? 'none' : 'lax',
-      ...(process.env.COOKIE_DOMAIN ? { domain: process.env.COOKIE_DOMAIN } : {}),
-      // Enhanced for Firefox/Brave compatibility
-      path: '/',
     },
   })
 );

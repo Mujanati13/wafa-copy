@@ -5,33 +5,43 @@ import { NotebookPen } from "lucide-react";
 import { api } from "@/lib/utils";
 import { toast } from "sonner";
 
-const NoteModal = ({ isOpen, onClose, questionId, moduleId, examData }) => {
+const NoteModal = ({ isOpen, onClose, questionId, moduleId, examCourseId, examData }) => {
   const [content, setContent] = useState("");
   const [loading, setLoading] = useState(false);
   const [existingNoteId, setExistingNoteId] = useState(null);
   const [lastSaved, setLastSaved] = useState(null);
+  const [fetching, setFetching] = useState(false);
+  const [fetchError, setFetchError] = useState(false);
+  const [loadVersion, setLoadVersion] = useState(0);
 
   useEffect(() => {
-    if (isOpen) {
-      fetchNote();
-    }
-  }, [isOpen, questionId]);
-
-  const fetchNote = async () => {
-    try {
-      const { data } = await api.get("/notes", {
-        params: { questionId },
-      });
-      // Backend returns {success, data: [...]} not {notes: [...]}
-      if (data.data && data.data.length > 0) {
-        const note = data.data[0];
-        setContent(note.content);
-        setExistingNoteId(note._id);
+    if (!isOpen) return;
+    let active = true;
+    setContent("");
+    setExistingNoteId(null);
+    setLastSaved(null);
+    setFetching(true);
+    setFetchError(false);
+    const fetchNote = async () => {
+      try {
+        const { data } = await api.get("/notes", {
+          params: { questionId, examCourseId: examCourseId || "null" },
+        });
+        if (active && data.data?.length > 0) {
+          const note = data.data[0];
+          setContent(note.content);
+          setExistingNoteId(note._id);
+        }
+      } catch (error) {
+        console.error("Error fetching note:", error);
+        if (active) setFetchError(true);
+      } finally {
+        if (active) setFetching(false);
       }
-    } catch (error) {
-      console.error("Error fetching note:", error);
-    }
-  };
+    };
+    fetchNote();
+    return () => { active = false; };
+  }, [isOpen, questionId, examCourseId, loadVersion]);
 
   const saveNote = async () => {
     if (!content.trim()) {
@@ -49,6 +59,7 @@ const NoteModal = ({ isOpen, onClose, questionId, moduleId, examData }) => {
           questionId,
           content,
           moduleId: moduleId || null,
+          examCourseId: examCourseId || null,
           title: `Note Q${questionId?.slice(-6) || 'Question'}`,
         });
         setExistingNoteId(data.data?._id || data.note?._id);
@@ -139,8 +150,17 @@ const NoteModal = ({ isOpen, onClose, questionId, moduleId, examData }) => {
               </button>
             </div>
 
+            {fetchError && (
+              <div role="alert" className="mb-3 text-sm text-destructive">
+                Impossible de charger la note.
+                <button type="button" className="ml-2 underline" onClick={() => setLoadVersion(value => value + 1)}>
+                  Réessayer
+                </button>
+              </div>
+            )}
             <textarea
               value={content}
+              disabled={fetching || fetchError || loading}
               onChange={(e) => setContent(e.target.value)}
               className="w-full h-64 px-4 py-3 border-2 border-border rounded-lg bg-background text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
               placeholder="Écrivez votre note ici..."
@@ -149,7 +169,7 @@ const NoteModal = ({ isOpen, onClose, questionId, moduleId, examData }) => {
             <div className="flex gap-3 mt-4">
               <button
                 onClick={saveNote}
-                disabled={loading || !content.trim()}
+                disabled={fetching || fetchError || loading || !content.trim()}
                 className="flex-1 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
               >
                 <FaSave />
@@ -159,7 +179,7 @@ const NoteModal = ({ isOpen, onClose, questionId, moduleId, examData }) => {
               {existingNoteId && (
                 <button
                   onClick={deleteNote}
-                  disabled={loading}
+                  disabled={fetching || loading}
                   className="px-6 py-3 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 disabled:opacity-50 transition-colors flex items-center gap-2"
                 >
                   <FaTrash />

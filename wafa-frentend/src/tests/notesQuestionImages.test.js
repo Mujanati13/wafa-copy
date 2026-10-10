@@ -6,6 +6,7 @@ import React from 'react';
 import * as jsxRuntime from 'react/jsx-runtime';
 import { act, create } from 'react-test-renderer';
 import { transform } from 'esbuild';
+import { getNoteContext } from '../utils/noteContext.js';
 
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -21,7 +22,8 @@ for (const images of [['/uploads/questions/heart.png', 'https://example.com/diag
     const button = ({ children, ...props }) => React.createElement('button', props, children);
     const navigate = () => {};
     const question = { _id: 'q1', text: 'Sur le schéma...', images, options: [{ text: 'Réponse', isCorrect: true }] };
-    const note = { _id: 'n1', title: 'Anatomie', content: 'Ma note', createdAt: '2026-01-01', questionId: question };
+    const note = { _id: 'n1', title: 'Anatomie', content: 'Ma note', createdAt: '2026-01-01', questionId: question,
+      examCourseId: { _id: 'course', name: 'Anatomie du Coeur', moduleId: { name: 'Anatomie I' } } };
     const deps = {
       react: synthetic(context, { ...React, default: React }),
       'react/jsx-runtime': synthetic(context, jsxRuntime),
@@ -31,6 +33,7 @@ for (const images of [['/uploads/questions/heart.png', 'https://example.com/diag
       lodash: synthetic(context, { debounce: fn => fn }),
       sonner: synthetic(context, { toast: { error() {}, info() {} } }),
       '@/utils/subscriptionDisplay': synthetic(context, { isPremiumProPlan: () => true }),
+      '@/utils/noteContext': synthetic(context, { getNoteContext }),
       '@/lib/utils': synthetic(context, { cn: (...args) => args.filter(Boolean).join(' '), api: {
         get: async url => ({ data: { data: url === '/notes' ? [note] : [] } }),
       } }),
@@ -59,6 +62,9 @@ for (const images of [['/uploads/questions/heart.png', 'https://example.com/diag
       const viewButton = renderer.root.findAllByType('button').find(node =>
         node.findAllByType('span').some(span => span.children.includes('Voir Question')));
       await act(async () => viewButton.props.onClick({ stopPropagation() {} }));
+      const origin = renderer.root.findByProps({ 'aria-label': 'Origine de la note' });
+      assert.equal(origin.children.join(''), 'Anatomie I > Anatomie du Coeur');
+      assert.ok(renderer.root.findAllByType('span').some(node => node.children.includes('Anatomie du Coeur')));
       const viewers = renderer.root.findAllByType('image-viewer');
       assert.equal(viewers.length, images.length ? 1 : 0);
       if (images.length) {
@@ -83,6 +89,7 @@ test('note endpoints include images when populating linked questions', async () 
   const controller = new vm.SourceTextModule(source, { context });
   await controller.link(specifier => {
     if (specifier.includes('noteModel')) return synthetic(context, { default: { find: () => query, findOne: () => query } });
+    if (specifier.includes('examCourseModel') || specifier.includes('questionModule')) return synthetic(context, { default: {} });
     if (specifier.includes('asyncHandler')) return synthetic(context, { default: fn => fn });
     return synthetic(context, { NotificationController: {} });
   });
