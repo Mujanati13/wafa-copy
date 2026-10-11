@@ -6,6 +6,7 @@ import React from 'react';
 import * as jsxRuntime from 'react/jsx-runtime';
 import { act, create } from 'react-test-renderer';
 import { transform } from 'esbuild';
+import { buildQuestionsCsv } from '../utils/questionExport.js';
 
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -13,11 +14,21 @@ async function mountPage() {
   const source = await readFile(new URL('../pages/AddQuestions.jsx', import.meta.url), 'utf8');
   const requests = [];
   const tableRenders = [];
+  const downloads = [];
+  const releasedUrls = [];
+  const attachedLinks = [];
   const elementText = node => node == null || typeof node === 'boolean' ? ''
     : typeof node === 'string' || typeof node === 'number' ? String(node)
       : Array.isArray(node) ? node.map(elementText).join('') : elementText(node.props?.children);
   const question = (id, examId) => ({ _id: id, text: id, examId, options: [{ text: 'Option', isCorrect: true }] });
-  const context = vm.createContext({ console: { error() {} }, URLSearchParams });
+  const context = vm.createContext({ console: { error() {} }, URLSearchParams, Blob,
+    setTimeout: callback => callback(),
+    URL: { createObjectURL: blob => { downloads.push({ blob }); return 'blob:question-export'; },
+      revokeObjectURL: url => releasedUrls.push(url) },
+    document: { createElement: () => ({ style: {}, setAttribute(key, value) { this[key] = value; },
+      click() { Object.assign(downloads.at(-1), { filename: this.download, href: this.href }); } }),
+      body: { appendChild: link => attachedLinks.push(link), removeChild: link => attachedLinks.splice(attachedLinks.indexOf(link), 1) } },
+  });
   const synthetic = exports => new vm.SyntheticModule(Object.keys(exports), function () {
     for (const [key, value] of Object.entries(exports)) this.setExport(key, value);
   }, { context });
@@ -32,6 +43,7 @@ async function mountPage() {
     sonner: synthetic({ toast: { error() {}, success() {} } }),
     '@/lib/cryptoCompat': synthetic({ cryptoCompat: { randomUUID: () => String(++uuid) } }),
     '@/lib/mediaUrl': synthetic({ resolveQuestionImageUrl: value => value }),
+    '@/utils/questionExport': synthetic({ buildQuestionsCsv }),
     '@/components/shared': synthetic({ PageHeader: primitive }),
     '@/lib/utils': synthetic({ api: { get: url => {
       const metadata = {
@@ -68,7 +80,7 @@ async function mountPage() {
     await select(2, 'years');
     await select(3, id);
   };
-  return { renderer, requests, tableRenders, question, select, settle, text, chooseExam };
+  return { renderer, requests, tableRenders, question, select, settle, text, chooseExam, downloads, releasedUrls, attachedLinks };
 }
 
 test('first exam selection ignores late all-question responses and errors', async () => {
@@ -185,5 +197,96 @@ test('a failed exam request shows retry instead of claiming that the exam has ze
     assert.equal(page.requests.at(-1).url, '/questions/by-exam/A');
     await page.settle(page.requests.at(-1), [page.question('retried-A', 'A')]);
     assert.ok(page.text().includes('retried-A'));
+  } finally { await act(async () => page.renderer.unmount()); }
+});
+
+test('export button downloads the selected exam with Excel encoding and separators', async () => {
+  const page = await mountPage();
+  try {
+    await page.chooseExam('A');
+    await page.settle(page.requests.at(-1), [
+      { ...page.question('accented', 'A'), text: 'Hémoptysie : évoquer une récidive ?' },
+      page.question('second-question', 'A'),
+    ]);
+    const button = page.renderer.root.findAllByType('button').find(node => node.children.some(child => typeof child === 'string' && child.startsWith('Exporter')));
+    assert.ok(button);
+    await act(async () => button.props.onClick());
+    assert.equal(page.downloads.length, 1);
+    const download = page.downloads[0];
+    assert.match(download.filename, /^questions_export_\d+\.csv$/);
+    assert.equal(download.blob.type, 'text/csv;charset=utf-8;');
+    const bytes = Buffer.from(await download.blob.arrayBuffer());
+    assert.deepEqual([...bytes.subarray(0, 3)], [0xef, 0xbb, 0xbf]);
+    const content = bytes.toString('utf8');
+    assert.ok(content.startsWith('\ufeffsep=,\r\n'));
+    assert.ok(content.includes('Hémoptysie : évoquer une récidive ?'));
+    assert.ok(content.includes('second-question'));
+    assert.equal(page.attachedLinks.length, 0);
+    assert.deepEqual(page.releasedUrls, ['blob:question-export']);
+    const checkbox = page.renderer.root.findAll(node => node.type === 'div' && typeof node.props.onCheckedChange === 'function').at(-1);
+    await act(async () => checkbox.props.onCheckedChange(true));
+    await act(async () => button.props.onClick());
+    const selectedContent = Buffer.from(await page.downloads.at(-1).blob.arrayBuffer()).toString('utf8');
+    assert.ok(selectedContent.includes('second-question'));
+    assert.ok(!selectedContent.includes('Hémoptysie'));
+  } finally { await act(async () => page.renderer.unmount()); }
+});
+
+test('edit modal shows the yearly exam and every course, without replacing unsaved edits', async () => {
+  const page = await mountPage();
+  try {
+    await page.chooseExam('A');
+    await page.settle(page.requests.at(-1), [{ ...page.question('q1', { _id: 'A', name: '2026 normal' }),
+      examCourseId: { name: 'Examen cardiovasculaire' } }]);
+    await act(async () => page.renderer.root.findAllByType('button').find(node => node.props.title === 'Modifier').props.onClick());
+    const refs = page.requests.at(-1);
+    assert.equal(refs.url, '/questions/references/q1');
+    const field = id => page.renderer.root.findByProps({ id });
+    assert.equal(field('edit-question-reference-exam').props.value, '2026 normal');
+    assert.equal(field('edit-question-reference-courses').props.value, 'Chargement…');
+    const text = page.renderer.root.find(node => node.props.rows === 4 && node.props.value === 'q1');
+    await act(async () => text.props.onChange({ target: { value: 'My unsaved edit' } }));
+    await page.settle(refs, { yearlyExam: { name: '2026 normal' }, courses: [
+      { name: 'le coeur' }, { name: 'les poumons' }, { name: ' le coeur ' },
+    ] });
+    assert.equal(field('edit-question-reference-exam').props.value, '2026 normal');
+    assert.equal(field('edit-question-reference-courses').props.value, 'le coeur, les poumons');
+    assert.equal(field('edit-question-reference-courses').props.readOnly, true);
+    assert.equal(field('edit-question-reference-exam').props.readOnly, true);
+    assert.ok(page.renderer.root.find(node => node.props.rows === 4 && node.props.value === 'My unsaved edit'));
+  } finally { await act(async () => page.renderer.unmount()); }
+});
+
+test('changing the edited question ignores late reference responses from the previous question', async () => {
+  const page = await mountPage();
+  try {
+    await page.chooseExam('A');
+    await page.settle(page.requests.at(-1), [page.question('q1', 'A'), page.question('q2', 'A')]);
+    const edit = async index => act(async () => page.renderer.root.findAllByType('button').filter(node => node.props.title === 'Modifier')[index].props.onClick());
+    await edit(0);
+    const old = page.requests.at(-1);
+    await act(async () => page.renderer.root.find(node => node.type === 'div' && node.props.open === true && node.props.onOpenChange).props.onOpenChange(false));
+    await edit(1);
+    await page.settle(page.requests.at(-1), { yearlyExam: null, courses: [{ name: 'New topic' }] });
+    await page.settle(old, { yearlyExam: { name: 'Wrong exam' }, courses: [{ name: 'Wrong topic' }] });
+    assert.equal(page.renderer.root.findByProps({ id: 'edit-question-reference-exam' }).props.value, 'Aucun examen annuel associé');
+    assert.equal(page.renderer.root.findByProps({ id: 'edit-question-reference-courses' }).props.value, 'New topic');
+  } finally { await act(async () => page.renderer.unmount()); }
+});
+
+test('reference fetch errors offer retry and distinguish failure from no associated course', async () => {
+  const page = await mountPage();
+  try {
+    await page.chooseExam('A');
+    await page.settle(page.requests.at(-1), [page.question('q1', 'A')]);
+    await act(async () => page.renderer.root.findAllByType('button').find(node => node.props.title === 'Modifier').props.onClick());
+    await act(async () => page.requests.at(-1).reject(new Error('offline')));
+    assert.equal(page.renderer.root.findByProps({ id: 'edit-question-reference-courses' }).props.value, 'Indisponible');
+    const retry = page.renderer.root.findAllByType('button').find(node => node.children.includes('Réessayer les références'));
+    await act(async () => retry.props.onClick());
+    assert.equal(page.requests.at(-1).url, '/questions/references/q1');
+    await page.settle(page.requests.at(-1), { yearlyExam: { name: '2026 normal' }, courses: [] });
+    assert.equal(page.renderer.root.findByProps({ id: 'edit-question-reference-courses' }).props.value, 'Aucun cours associé');
+    assert.ok(!page.text().includes('Impossible de charger les références de la question'));
   } finally { await act(async () => page.renderer.unmount()); }
 });

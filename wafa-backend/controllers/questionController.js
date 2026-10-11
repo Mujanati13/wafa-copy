@@ -12,8 +12,21 @@ import { normalizeAnnulledQuestion } from "../utils/questionAnnulment.js";
 import { deleteQuestionsAndUnlink } from "../services/questionDeletionService.js";
 import { invalidateModuleListCache } from "./moduleController.js";
 import { questionLogicalKey } from "../utils/questionIdentity.js";
+import { getQuestionReferences } from "../services/questionReferenceService.js";
 
 export const questionController = {
+    getReferences: asyncHandler(async (req, res) => {
+        const { id } = req.params;
+        if (!/^[a-fA-F0-9]{24}$/.test(id)) {
+            return res.status(400).json({ success: false, message: "Invalid question ID" });
+        }
+        const references = await getQuestionReferences(id);
+        if (!references) {
+            return res.status(404).json({ success: false, message: "Question not found" });
+        }
+        res.status(200).json({ success: true, data: references });
+    }),
+
     create: asyncHandler(async (req, res) => {
         const { examId, text, options, note, images, sessionLabel, isAnnulled } = req.body;
         const normalizedQuestion = normalizeAnnulledQuestion(options, isAnnulled);

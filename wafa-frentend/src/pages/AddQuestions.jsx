@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import { api } from "@/lib/utils";
 import { cryptoCompat } from "@/lib/cryptoCompat";
 import { resolveQuestionImageUrl } from "@/lib/mediaUrl";
+import { buildQuestionsCsv } from "@/utils/questionExport";
 
 const AddQuestions = () => {
   const { t } = useTranslation(['admin', 'common']);
@@ -119,6 +120,34 @@ const AddQuestions = () => {
   const [showViewDialog, setShowViewDialog] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState(null);
   const [showEditDialog, setShowEditDialog] = useState(false);
+  const [questionReferences, setQuestionReferences] = useState({ id: null, data: null, status: "idle" });
+  const [referencesReload, setReferencesReload] = useState(0);
+  const editingQuestionId = editingQuestion?._id || editingQuestion?.id;
+
+  useEffect(() => {
+    if (!showEditDialog || !editingQuestionId) return;
+    let active = true;
+    setQuestionReferences({ id: editingQuestionId, data: null, status: "loading" });
+    api.get(`/questions/references/${editingQuestionId}`)
+      .then(({ data }) => {
+        if (active) setQuestionReferences({ id: editingQuestionId, data: data.data, status: "loaded" });
+      })
+      .catch(error => {
+        console.error("Error fetching question references:", error);
+        if (active) setQuestionReferences({ id: editingQuestionId, data: null, status: "error" });
+      });
+    return () => { active = false; };
+  }, [showEditDialog, editingQuestionId, referencesReload]);
+
+  const referenceData = questionReferences.id === editingQuestionId ? questionReferences.data : null;
+  const referencesPending = questionReferences.id !== editingQuestionId || questionReferences.status === "loading";
+  const referencesFailed = questionReferences.id === editingQuestionId && questionReferences.status === "error";
+  const referenceExamName = referenceData
+    ? referenceData.yearlyExam?.name || referenceData.qcmBanque?.name || "Aucun examen annuel associé"
+    : editingQuestion?.examId?.name || editingQuestion?.qcmBanqueId?.name || (referencesPending ? "Chargement…" : "Indisponible");
+  const referenceCourseNames = referenceData
+    ? [...new Set((referenceData.courses || []).map(course => course.name?.trim()).filter(Boolean))].join(", ") || "Aucun cours associé"
+    : referencesPending ? "Chargement…" : "Indisponible";
   const [sessionLabel, setSessionLabel] = useState("Session principale");
 
   // Filters for questions table
@@ -552,23 +581,7 @@ const AddQuestions = () => {
       return;
     }
 
-    // Create CSV content
-    const headers = ["ID", "Question", "Option A", "Option B", "Option C", "Option D", "Option E", "Correct Answer"];
-    const rows = questionsToExport.map(q => {
-      const correctOption = q.options?.find(opt => opt.isCorrect);
-      return [
-        q._id || q.id,
-        `"${q.text?.replace(/"/g, '""') || ''}"`,
-        `"${q.options?.[0]?.text?.replace(/"/g, '""') || ''}"`,
-        `"${q.options?.[1]?.text?.replace(/"/g, '""') || ''}"`,
-        `"${q.options?.[2]?.text?.replace(/"/g, '""') || ''}"`,
-        `"${q.options?.[3]?.text?.replace(/"/g, '""') || ''}"`,
-        `"${q.options?.[4]?.text?.replace(/"/g, '""') || ''}"`,
-        `"${correctOption?.text?.replace(/"/g, '""') || ''}"`,
-      ].join(",");
-    });
-
-    const csvContent = [headers.join(","), ...rows].join("\n");
+    const csvContent = buildQuestionsCsv(questionsToExport);
 
     // Create and download file
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
@@ -580,6 +593,8 @@ const AddQuestions = () => {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    // Allow the browser to start the download before releasing its data.
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
 
     toast.success(`${questionsToExport.length} questions exportées avec succès`);
     setSelectedQuestions([]);
@@ -1563,7 +1578,7 @@ const AddQuestions = () => {
               </DialogHeader>
               <div className="space-y-4 py-4">
                 {/* Reference Information (Read-only) */}
-                <div className="grid grid-cols-2 gap-3 pb-3 border-b">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pb-3 border-b">
                   <div className="space-y-2">
                     <Label>N° Question dans l'examen</Label>
                     <Input
@@ -1577,13 +1592,32 @@ const AddQuestions = () => {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label>Examen de référence</Label>
+                    <Label htmlFor="edit-question-reference-exam">Examen de référence</Label>
                     <Input
-                      value={getQuestionSourceDetails(editingQuestion).name || 'Non defini'}
-                      disabled
-                      className="bg-background"
+                      id="edit-question-reference-exam"
+                      value={referenceExamName}
+                      readOnly
+                      className="bg-muted/40 text-foreground"
                     />
                   </div>
+                  <div className="space-y-2 sm:col-span-2">
+                    <Label htmlFor="edit-question-reference-courses">Cours de référence</Label>
+                    <Textarea
+                      id="edit-question-reference-courses"
+                      value={referenceCourseNames}
+                      readOnly
+                      rows={2}
+                      className="bg-muted/40 text-foreground resize-none"
+                    />
+                  </div>
+                  {referencesFailed && (
+                    <div role="alert" className="sm:col-span-2 text-sm text-destructive">
+                      Impossible de charger les références de la question.
+                      <Button variant="outline" size="sm" className="ml-2" onClick={() => setReferencesReload(version => version + 1)}>
+                        Réessayer les références
+                      </Button>
+                    </div>
+                  )}
                 </div>
 
                 {/* Question Text */}

@@ -21,6 +21,7 @@
     "test:admin-users": "node --experimental-vm-modules --test tests/admin-user-creation.test.js tests/firebase-error.test.js tests/admin-semester-access.test.js",
     "test:sessions": "node --experimental-vm-modules --test tests/single-session.test.js",
     "test:notes": "node --experimental-vm-modules --test tests/note-course-context.test.js",
+    "test:question-references": "node --experimental-vm-modules --test tests/question-references.test.js",
     "session:clear": "node scripts/clear-user-session.js"
   },
   "author": "",

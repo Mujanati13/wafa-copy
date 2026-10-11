@@ -11,6 +11,7 @@ router.post("/create", isAuthenticated, isAdmin, validate(QuestionSchema.createQ
 router.patch("/update/:id", isAuthenticated, isAdmin, validate(QuestionSchema.updateQuestionSchema), questionController.update);
 router.delete("/delete/:id", isAuthenticated, isAdmin, questionController.delete);
 router.get("/all", isAuthenticated, isAdmin, questionController.getAll);
+router.get("/references/:id", isAuthenticated, isAdmin, questionController.getReferences);
 router.get("/by-exam/:examId", isAuthenticated, hasExamAccess, questionController.getByExamId);
 router.get("/exam/:examId", isAuthenticated, hasExamAccess, questionController.getByExamId); // Alias for frontend compatibility
 router.get("/module/:moduleId", isAuthenticated, questionController.getByModuleId); // Get all questions from module

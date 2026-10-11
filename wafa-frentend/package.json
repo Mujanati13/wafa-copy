@@ -13,6 +13,7 @@
     "test:exam-context": "node --experimental-vm-modules --test src/tests/examQuestionContext.test.js",
     "test:notes": "node --experimental-vm-modules --test src/tests/notesQuestionImages.test.js src/tests/notesCourseReference.test.js",
     "test:add-questions": "node --experimental-vm-modules --test src/tests/addQuestionsLoading.test.js",
+    "test:question-export": "node --experimental-vm-modules --test src/tests/questionExport.test.js src/tests/addQuestionsLoading.test.js",
     "test:auth-sessions": "node --experimental-vm-modules --test src/tests/authDeviceSession.test.js"
   },
   "dependencies": {
