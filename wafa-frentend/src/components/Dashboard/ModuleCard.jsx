@@ -337,28 +337,30 @@ const ModuleCard = ({ course, handleCourseClick, index, isLocked = false, isFree
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.9, opacity: 0 }}
-                className="relative w-full max-w-6xl max-h-[95vh] bg-background rounded-xl shadow-2xl overflow-hidden z-[10000]"
+                className="relative flex max-h-[calc(100dvh-2rem)] w-full max-w-6xl flex-col overflow-hidden rounded-xl bg-background shadow-2xl z-[10000]"
                 onClick={(e) => e.stopPropagation()}
               >
                 {/* Header */}
-                <div className="flex items-center justify-between p-4 border-b bg-gradient-to-r from-pink-50 to-rose-50">
-                  <h3 className="font-semibold text-pink-900 flex items-center gap-2">
-                    <ImageIcon className="w-5 h-5" />
+                <div className="flex shrink-0 items-center justify-between gap-2 p-4 border-b bg-gradient-to-r from-pink-50 to-rose-50">
+                  <h3 className="min-w-0 font-semibold text-pink-900 flex items-center gap-2">
+                    <ImageIcon className="w-5 h-5 shrink-0" />
                     {course.name} - Image d'aide
                   </h3>
                   <button
+                    type="button"
+                    aria-label="Fermer l'image d'aide"
                     onClick={() => setShowImageModal(false)}
-                    className="p-2 hover:bg-pink-100 rounded-full transition-colors"
+                    className="shrink-0 p-2 hover:bg-pink-100 rounded-full transition-colors"
                   >
                     <X className="w-5 h-5 text-pink-700" />
                   </button>
                 </div>
                 {/* Scrollable Image Container */}
-                <div className="overflow-auto p-6 flex items-center justify-center bg-card" style={{ maxHeight: 'calc(95vh - 80px)' }}>
+                <div className="min-h-0 flex-1 overflow-auto overscroll-contain bg-card p-4 sm:p-6">
                   <img
                     src={fullHelpImageUrl}
                     alt={`${course.name} - image d'aide`}
-                    className="max-w-full h-auto object-contain rounded-lg shadow-lg"
+                    className="mx-auto block h-auto max-w-full rounded-lg shadow-lg"
                     onError={() => {
                       setHelpImageError(true);
                       setShowImageModal(false);

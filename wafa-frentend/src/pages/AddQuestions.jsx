@@ -17,7 +17,7 @@ import { toast } from "sonner";
 import { api } from "@/lib/utils";
 import { cryptoCompat } from "@/lib/cryptoCompat";
 import { resolveQuestionImageUrl } from "@/lib/mediaUrl";
-import { buildQuestionsCsv } from "@/utils/questionExport";
+import { buildQuestionsXlsx, QUESTIONS_XLSX_MIME } from "@/utils/questionExport";
 
 const AddQuestions = () => {
   const { t } = useTranslation(['admin', 'common']);
@@ -28,6 +28,7 @@ const AddQuestions = () => {
   const [categories, setCategories] = useState([]);
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -571,7 +572,8 @@ const AddQuestions = () => {
   };
 
   // Handle Export to Excel
-  const handleExportToExcel = () => {
+  const handleExportToExcel = async () => {
+    if (exporting) return;
     const questionsToExport = selectedQuestions.length > 0
       ? examQuestions.filter(q => selectedQuestions.includes(q._id || q.id))
       : examQuestions;
@@ -581,23 +583,31 @@ const AddQuestions = () => {
       return;
     }
 
-    const csvContent = buildQuestionsCsv(questionsToExport);
-
-    // Create and download file
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const link = document.createElement("a");
-    const url = URL.createObjectURL(blob);
-    link.setAttribute("href", url);
-    link.setAttribute("download", `questions_export_${Date.now()}.csv`);
-    link.style.visibility = "hidden";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    // Allow the browser to start the download before releasing its data.
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
-
-    toast.success(`${questionsToExport.length} questions exportées avec succès`);
-    setSelectedQuestions([]);
+    setExporting(true);
+    try {
+      const content = await buildQuestionsXlsx(questionsToExport);
+      const blob = new Blob([content], { type: QUESTIONS_XLSX_MIME });
+      const link = document.createElement("a");
+      const url = URL.createObjectURL(blob);
+      link.setAttribute("href", url);
+      link.setAttribute("download", `questions_export_${Date.now()}.xlsx`);
+      link.style.visibility = "hidden";
+      document.body.appendChild(link);
+      try {
+        link.click();
+      } finally {
+        document.body.removeChild(link);
+        // Allow the browser to start the download before releasing its data.
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      }
+      toast.success(`${questionsToExport.length} questions exportées avec succès`);
+      setSelectedQuestions([]);
+    } catch (error) {
+      console.error("Error exporting questions:", error);
+      toast.error("Impossible d'exporter les questions. Veuillez réessayer.");
+    } finally {
+      setExporting(false);
+    }
   };
 
   // Handle Delete All Questions
@@ -889,11 +899,11 @@ const AddQuestions = () => {
                   variant="outline"
                   size="sm"
                   onClick={handleExportToExcel}
-                  disabled={examQuestions.length === 0}
+                  disabled={exporting || examQuestions.length === 0}
                   className="gap-2 text-green-600 border-green-200 hover:bg-green-50"
                 >
-                  <FileSpreadsheet className="h-4 w-4" />
-                  Exporter {selectedQuestions.length > 0 ? `(${selectedQuestions.length})` : 'Tout'}
+                  {exporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileSpreadsheet className="h-4 w-4" />}
+                  {exporting ? "Export en cours…" : `Exporter Excel ${selectedQuestions.length > 0 ? `(${selectedQuestions.length})` : 'Tout'}`}
                 </Button>
                 <Button
                   variant="outline"
@@ -1190,11 +1200,11 @@ const AddQuestions = () => {
                     variant="outline"
                     size="sm"
                     onClick={handleExportToExcel}
-                    disabled={examQuestions.length === 0}
+                    disabled={exporting || examQuestions.length === 0}
                     className="gap-2 text-green-600 border-green-200 hover:bg-green-50"
                   >
-                    <FileSpreadsheet className="h-4 w-4" />
-                    Exporter {selectedQuestions.length > 0 ? `(${selectedQuestions.length})` : 'Tout'}
+                    {exporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileSpreadsheet className="h-4 w-4" />}
+                    {exporting ? "Export en cours…" : `Exporter Excel ${selectedQuestions.length > 0 ? `(${selectedQuestions.length})` : 'Tout'}`}
                   </Button>
                   <Button
                     variant="outline"

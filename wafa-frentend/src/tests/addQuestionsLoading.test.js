@@ -6,17 +6,19 @@ import React from 'react';
 import * as jsxRuntime from 'react/jsx-runtime';
 import { act, create } from 'react-test-renderer';
 import { transform } from 'esbuild';
-import { buildQuestionsCsv } from '../utils/questionExport.js';
+import { buildQuestionsXlsx, QUESTIONS_XLSX_MIME } from '../utils/questionExport.js';
+import ExcelJS from 'exceljs';
 
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 
-async function mountPage() {
+async function mountPage({ exportBuilder = buildQuestionsXlsx } = {}) {
   const source = await readFile(new URL('../pages/AddQuestions.jsx', import.meta.url), 'utf8');
   const requests = [];
   const tableRenders = [];
   const downloads = [];
   const releasedUrls = [];
   const attachedLinks = [];
+  const notifications = [];
   const elementText = node => node == null || typeof node === 'boolean' ? ''
     : typeof node === 'string' || typeof node === 'number' ? String(node)
       : Array.isArray(node) ? node.map(elementText).join('') : elementText(node.props?.children);
@@ -40,10 +42,10 @@ async function mountPage() {
     react: synthetic({ ...React, default: React }),
     'react/jsx-runtime': synthetic(jsxRuntime),
     'react-i18next': synthetic({ useTranslation: () => ({ t: (key, fallback) => fallback || key }) }),
-    sonner: synthetic({ toast: { error() {}, success() {} } }),
+    sonner: synthetic({ toast: { error: message => notifications.push(['error', message]), success: message => notifications.push(['success', message]) } }),
     '@/lib/cryptoCompat': synthetic({ cryptoCompat: { randomUUID: () => String(++uuid) } }),
     '@/lib/mediaUrl': synthetic({ resolveQuestionImageUrl: value => value }),
-    '@/utils/questionExport': synthetic({ buildQuestionsCsv }),
+    '@/utils/questionExport': synthetic({ buildQuestionsXlsx: exportBuilder, QUESTIONS_XLSX_MIME }),
     '@/components/shared': synthetic({ PageHeader: primitive }),
     '@/lib/utils': synthetic({ api: { get: url => {
       const metadata = {
@@ -80,7 +82,7 @@ async function mountPage() {
     await select(2, 'years');
     await select(3, id);
   };
-  return { renderer, requests, tableRenders, question, select, settle, text, chooseExam, downloads, releasedUrls, attachedLinks };
+  return { renderer, requests, tableRenders, question, select, settle, text, chooseExam, downloads, releasedUrls, attachedLinks, notifications };
 }
 
 test('first exam selection ignores late all-question responses and errors', async () => {
@@ -200,7 +202,7 @@ test('a failed exam request shows retry instead of claiming that the exam has ze
   } finally { await act(async () => page.renderer.unmount()); }
 });
 
-test('export button downloads the selected exam with Excel encoding and separators', async () => {
+test('export button downloads a formatted Excel workbook for the exam or selected questions', async () => {
   const page = await mountPage();
   try {
     await page.chooseExam('A');
@@ -210,25 +212,79 @@ test('export button downloads the selected exam with Excel encoding and separato
     ]);
     const button = page.renderer.root.findAllByType('button').find(node => node.children.some(child => typeof child === 'string' && child.startsWith('Exporter')));
     assert.ok(button);
-    await act(async () => button.props.onClick());
+    await act(async () => { await button.props.onClick(); });
     assert.equal(page.downloads.length, 1);
     const download = page.downloads[0];
-    assert.match(download.filename, /^questions_export_\d+\.csv$/);
-    assert.equal(download.blob.type, 'text/csv;charset=utf-8;');
+    assert.match(download.filename, /^questions_export_\d+\.xlsx$/);
+    assert.equal(download.blob.type, QUESTIONS_XLSX_MIME);
     const bytes = Buffer.from(await download.blob.arrayBuffer());
-    assert.deepEqual([...bytes.subarray(0, 3)], [0xef, 0xbb, 0xbf]);
-    const content = bytes.toString('utf8');
-    assert.ok(content.startsWith('\ufeffsep=,\r\n'));
-    assert.ok(content.includes('Hémoptysie : évoquer une récidive ?'));
-    assert.ok(content.includes('second-question'));
+    assert.equal(bytes.subarray(0, 2).toString(), 'PK', 'must be an actual XLSX ZIP file');
+    const workbook = new ExcelJS.Workbook();
+    await workbook.xlsx.load(bytes);
+    const sheet = workbook.getWorksheet('Questions');
+    assert.equal(sheet.getCell('B2').value, 'Hémoptysie : évoquer une récidive ?');
+    assert.equal(sheet.getCell('B3').value, 'second-question');
+    assert.equal(sheet.getCell('B2').alignment.wrapText, true);
+    assert.ok(sheet.getColumn(2).width >= 60);
     assert.equal(page.attachedLinks.length, 0);
     assert.deepEqual(page.releasedUrls, ['blob:question-export']);
     const checkbox = page.renderer.root.findAll(node => node.type === 'div' && typeof node.props.onCheckedChange === 'function').at(-1);
     await act(async () => checkbox.props.onCheckedChange(true));
-    await act(async () => button.props.onClick());
-    const selectedContent = Buffer.from(await page.downloads.at(-1).blob.arrayBuffer()).toString('utf8');
-    assert.ok(selectedContent.includes('second-question'));
-    assert.ok(!selectedContent.includes('Hémoptysie'));
+    await act(async () => { await button.props.onClick(); });
+    const selectedWorkbook = new ExcelJS.Workbook();
+    await selectedWorkbook.xlsx.load(await page.downloads.at(-1).blob.arrayBuffer());
+    const selectedSheet = selectedWorkbook.getWorksheet('Questions');
+    assert.equal(selectedSheet.rowCount, 2);
+    assert.equal(selectedSheet.getCell('B2').value, 'second-question');
+  } finally { await act(async () => page.renderer.unmount()); }
+});
+
+test('export disables the button while preparing the workbook in both page locations', async () => {
+  for (const contextSelected of [true, false]) {
+    let finishExport;
+    let calls = 0;
+    const page = await mountPage({ exportBuilder: () => { calls++; return new Promise(resolve => { finishExport = resolve; }); } });
+    try {
+      if (contextSelected) await page.chooseExam('A');
+      await page.settle(page.requests.at(-1), [page.question('q1', 'A')]);
+      const buttons = () => page.renderer.root.findAllByType('button').filter(node =>
+        node.children.some(child => typeof child === 'string' && (child.startsWith('Exporter Excel') || child === 'Export en cours…')));
+      let exporting;
+      await act(async () => { exporting = buttons()[0].props.onClick(); });
+      assert.equal(buttons().length, 1);
+      assert.ok(buttons().every(button => button.props.disabled));
+      await act(async () => { await buttons()[0].props.onClick(); });
+      assert.equal(calls, 1);
+      await act(async () => { finishExport(new Uint8Array([80, 75])); await exporting; });
+      assert.ok(buttons().every(button => !button.props.disabled));
+      assert.equal(page.downloads.length, 1);
+    } finally { await act(async () => page.renderer.unmount()); }
+  }
+});
+
+test('failed exports preserve the selection and allow retry without a broken download', async () => {
+  let attempts = 0;
+  const page = await mountPage({ exportBuilder: questions => {
+    if (++attempts === 1) return Promise.reject(new Error('write failed'));
+    return buildQuestionsXlsx(questions);
+  } });
+  try {
+    await page.chooseExam('A');
+    await page.settle(page.requests.at(-1), [page.question('q1', 'A'), page.question('q2', 'A')]);
+    const checkbox = page.renderer.root.findAll(node => node.type === 'div' && typeof node.props.onCheckedChange === 'function').at(-1);
+    await act(async () => checkbox.props.onCheckedChange(true));
+    const button = () => page.renderer.root.findAllByType('button').find(node => node.children.some(child => typeof child === 'string' && child.startsWith('Exporter Excel')));
+    await act(async () => { await button().props.onClick(); });
+    assert.equal(page.downloads.length, 0);
+    assert.equal(page.notifications.at(-1)[0], 'error');
+    assert.ok(button().children.includes('Exporter Excel (1)'));
+    assert.equal(button().props.disabled, false);
+    await act(async () => { await button().props.onClick(); });
+    const workbook = new ExcelJS.Workbook();
+    await workbook.xlsx.load(await page.downloads[0].blob.arrayBuffer());
+    assert.equal(workbook.getWorksheet('Questions').getCell('B2').value, 'q2');
+    assert.equal(workbook.getWorksheet('Questions').rowCount, 2);
+    assert.equal(page.notifications.at(-1)[0], 'success');
   } finally { await act(async () => page.renderer.unmount()); }
 });
 
