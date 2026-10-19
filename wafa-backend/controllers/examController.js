@@ -7,7 +7,7 @@ import { NotificationController } from "./notificationController.js";
 import { getAnsweredCountByExam } from "../utils/answerProgress.js";
 import { deleteQuestionsAndUnlink } from "../services/questionDeletionService.js";
 import { invalidateModuleListCache } from "./moduleController.js";
-import { uniqueQuestionsByLogicalKey } from "../utils/questionIdentity.js";
+import { questionCountStages, uniqueQuestionsByLogicalKey } from "../utils/questionIdentity.js";
 
 export const examController = {
     create: asyncHandler(async (req, res) => {
@@ -144,7 +144,7 @@ export const examController = {
         // Use aggregation to count questions per exam efficiently
         const questionCounts = await QuestionModel.aggregate([
             { $match: { examId: { $in: examIds } } },
-            { $group: { _id: '$examId', count: { $sum: 1 } } }
+            ...questionCountStages('examId')
         ]);
         
         // Create a map for quick lookup
@@ -228,7 +228,7 @@ export const examController = {
         const questionCounts = examIds.length
             ? await QuestionModel.aggregate([
                 { $match: { examId: { $in: examIds } } },
-                { $group: { _id: '$examId', count: { $sum: 1 } } }
+                ...questionCountStages('examId')
             ])
             : [];
 

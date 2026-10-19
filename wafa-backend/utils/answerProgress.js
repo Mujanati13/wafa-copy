@@ -1,5 +1,16 @@
 import UserStats from "../models/userStatsModel.js";
+import Question from "../models/questionModule.js";
+import Course from "../models/examCourseModel.js";
+import Playlist from "../models/playlistModel.js";
+import AnnualExam from "../models/examParYearModel.js";
+import Bank from "../models/qcmBanqueModel.js";
+import { buildCompleteActivitySources, buildProgressStatistics } from "../services/progressStatisticsService.js";
+import { questionLogicalKey } from "./questionIdentity.js";
+import { loadQuestionAliases, questionIdentityFields, selectQuestionAnswers } from "../services/questionProgressService.js";
 
+// Legacy origin breakdown: examId says where the latest answer was saved.
+// Completion displays use getMembershipCounts instead, since questions can
+// belong to several courses as well as their source exam.
 export const buildAnsweredCountByExam = (answeredQuestions) => {
     const entries = answeredQuestions instanceof Map
         ? Array.from(answeredQuestions.values())
@@ -21,5 +32,68 @@ export const getAnsweredCountByExam = async (userId) => {
         .select("answeredQuestions")
         .lean();
 
-    return buildAnsweredCountByExam(userStats?.answeredQuestions);
+    return getMembershipCounts(userStats?.answeredQuestions);
+};
+
+export const getMembershipCounts = async (answers) => (await loadSavedProgress(answers)).countsByExam;
+
+export const loadSavedProgress = async (answers) => {
+    const entries = answers instanceof Map ? [...answers] : Object.entries(answers || {});
+    const ids = entries.filter(([, answer]) => answer?.isVerified === true).map(([id]) => id);
+    if (!ids.length) return { countsByExam: {}, answered: 0, correct: 0, incorrect: 0, byModule: {} };
+
+    const savedQuestions = await Question.find({ _id: { $in: ids } }).select(questionIdentityFields).lean();
+    const questions = await loadQuestionAliases(savedQuestions);
+    const results = selectQuestionAnswers(questions, questions, answers);
+    const questionIds = questions.map(q => q._id);
+    const idOf = value => String(value?._id || value || "");
+    const sourceIds = field => [...new Set(questions.map(q => idOf(q[field])).filter(Boolean))];
+    const annualIds = sourceIds('examId');
+    const bankIds = sourceIds('qcmBanqueId');
+    const [courses, playlists, annualExams, banks] = await Promise.all([
+        Course.find({ $or: [{ linkedQuestions: { $in: questionIds } }, { _id: { $in: sourceIds('examCourseId') } }] })
+            .select("linkedQuestions moduleId name category status").lean(),
+        Playlist.find({ questionIds: { $in: questionIds } }).select("questionIds").lean(),
+        annualIds.length ? AnnualExam.find({ _id: { $in: annualIds } }).select("moduleId").lean() : [],
+        bankIds.length ? Bank.find({ _id: { $in: bankIds } }).select("moduleId").lean() : [],
+    ]);
+    const keysById = new Map(questions.map(q => [String(q._id), questionLogicalKey(q)]));
+    const completed = new Set(questions.filter(q => results[String(q._id)]?.isVerified === true).map(questionLogicalKey));
+    const byContext = new Map();
+    const add = (context, key) => {
+        if (!context || !completed.has(key)) return;
+        const id = String(context);
+        if (!byContext.has(id)) byContext.set(id, new Set());
+        byContext.get(id).add(key);
+    };
+    for (const q of questions) {
+        for (const context of [q.examId, q.qcmBanqueId, q.examCourseId]) add(context, questionLogicalKey(q));
+    }
+    for (const course of courses) {
+        for (const id of course.linkedQuestions || []) add(course._id, keysById.get(String(id)));
+    }
+    for (const playlist of playlists) {
+        for (const id of playlist.questionIds || []) add(playlist._id, keysById.get(String(id)));
+    }
+    const uniqueAnswers = new Map();
+    for (const q of questions) {
+        const answer = results[String(q._id)];
+        if (answer?.isVerified === true) uniqueAnswers.set(questionLogicalKey(q), answer);
+    }
+    const verified = [...uniqueAnswers.values()];
+    const correct = verified.filter(answer => answer.isCorrect === true).length;
+    // Stored moduleId is historical answering metadata and can be missing in
+    // playlists or legacy answers. Reuse the course statistics calculation so
+    // both views follow actual catalog membership, including shared questions.
+    const activeCourses = courses.filter(course => course.status !== 'archived');
+    const modules = [...new Set([...annualExams, ...banks, ...activeCourses]
+        .map(source => idOf(source.moduleId)).filter(Boolean))].map(_id => ({ _id }));
+    const moduleProgress = buildProgressStatistics({ modules, annualExams, questions, answeredQuestions: answers,
+        courses: buildCompleteActivitySources({ courses: activeCourses, annualExams, qcmBanks: banks, questions }),
+    });
+    const byModule = Object.fromEntries(moduleProgress.modules.map(module => [module.moduleId, {
+        answered: module.answeredQuestions, correct: module.correctAnswers, incorrect: module.incorrectAnswers,
+    }]));
+    return { countsByExam: Object.fromEntries([...byContext].map(([id, keys]) => [id, keys.size])),
+        answered: verified.length, correct, incorrect: verified.length - correct, byModule };
 };

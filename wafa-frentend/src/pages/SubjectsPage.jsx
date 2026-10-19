@@ -426,10 +426,8 @@ export default function SubjectsPage() {
         const maps = (items, type) => items.map((item) => ({
           id: item._id || item.id, name: item.name || item.title || "Examen sans titre", questions: item.totalQuestions || item.questionCount || 0,
           progress: item.progress || item.completionRate || 0,
-          answeredQuestions: Math.max(
-            Number(item.answeredQuestions ?? item.questionsAttempted) || 0,
-            getSessionExamCompletedCount(item._id || item.id),
-          ),
+          answeredQuestions: Number(item.answeredQuestions ?? item.questionsAttempted
+            ?? getSessionExamCompletedCount(item._id || item.id)) || 0,
           year: item.year, category: item.category || "Général", imageUrl: item.imageUrl,
           helpText: item.infoText || item.helpText || item.description || "",
           type,

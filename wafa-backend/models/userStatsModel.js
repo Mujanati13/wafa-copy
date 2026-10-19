@@ -71,6 +71,7 @@ const userStatsSchema = new mongoose.Schema(
       of: {
         selectedAnswers: [Number],
         isVerified: Boolean,
+        hasBeenVerified: Boolean,
         isCorrect: Boolean,
         answeredAt: Date,
         examId: mongoose.Schema.Types.ObjectId,

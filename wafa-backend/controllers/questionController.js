@@ -6,7 +6,8 @@ import UserModel from "../models/userModel.js";
 import PointModel from "../models/pointModel.js";
 import xlsx from "xlsx";
 import { normalizeQuestionImages } from "../utils/questionImagePath.js";
-import { buildAnsweredCountByExam } from "../utils/answerProgress.js";
+import { loadSavedProgress } from "../utils/answerProgress.js";
+import { getContextAnswers, loadQuestionAliases, selectQuestionAnswers } from "../services/questionProgressService.js";
 import { normalizeUserPlan } from "../utils/planAccess.js";
 import { normalizeAnnulledQuestion } from "../utils/questionAnnulment.js";
 import { deleteQuestionsAndUnlink } from "../services/questionDeletionService.js";
@@ -985,6 +986,11 @@ export const questionController = {
         }
 
         // Get correct answer indices
+        if (selectedAnswers.some(index => !Number.isInteger(index) || index < 0 || index >= question.options.length)
+            || new Set(selectedAnswers).size !== selectedAnswers.length
+            || (!isRetry && (!selectedAnswers.length || question.isAnnulled))) {
+            return res.status(400).json({ success: false, message: "Réponse invalide" });
+        }
         const correctIndices = question.options
             .map((opt, idx) => opt.isCorrect ? idx : null)
             .filter(idx => idx !== null);
@@ -998,7 +1004,10 @@ export const questionController = {
         const userStats = await UserStatsModel.findOne({ userId });
         
         const existingAnswer = userStats?.answeredQuestions?.get(questionId.toString());
-        const hasAlreadyAnsweredCorrectly = existingAnswer?.isVerified && existingAnswer?.isCorrect;
+        const aliases = await loadQuestionAliases([question]);
+        const aliasIds = aliases.filter(q => questionLogicalKey(q) === questionLogicalKey(question)).map(q => q._id);
+        const hasAlreadyAnsweredCorrectly = Boolean((existingAnswer?.isVerified && existingAnswer?.isCorrect)
+            || await PointModel.exists({ userId, questionId: { $in: aliasIds }, amount: { $gt: 0 }, 'metadata.isCorrect': true }));
 
         // Calculate points
         let pointsAwarded = 0;
@@ -1062,9 +1071,9 @@ export const questionController = {
         });
     }),
 
-    // Save user's answer for persistence (without verifying again)
+    // Persist the server-calculated result and derive progress from unique questions.
     saveAnswer: asyncHandler(async (req, res) => {
-        const { questionId, selectedAnswers, isVerified, isCorrect, examId, moduleId } = req.body;
+        const { questionId, selectedAnswers, isVerified = false, examId, moduleId, reset = false } = req.body;
         const userId = req.user._id;
 
         console.log('=== SAVE ANSWER ===');
@@ -1075,28 +1084,37 @@ export const questionController = {
         console.log('Exam ID:', examId);
         console.log('Module ID:', moduleId);
 
-        if (!questionId) {
+        if (!questionId || !Array.isArray(selectedAnswers) || typeof isVerified !== 'boolean'
+            || typeof reset !== 'boolean' || (reset && (isVerified || selectedAnswers.length))) {
             return res.status(400).json({
                 success: false,
                 message: "questionId est requis"
             });
         }
 
-        // Store or update user's answer in a separate collection or user stats
-        // For now, we'll use the UserStatsModel or create answer records
+        const question = await QuestionModel.findById(questionId).lean();
+        if (!question) return res.status(404).json({ success: false, message: "Question non trouvée" });
+        if (selectedAnswers.some(index => !Number.isInteger(index) || index < 0 || index >= question.options.length)
+            || new Set(selectedAnswers).size !== selectedAnswers.length
+            || (isVerified && (!selectedAnswers.length || question.isAnnulled))) {
+            return res.status(400).json({ success: false, message: "Réponse invalide" });
+        }
+        const correctIndices = question.options.flatMap((option, index) => option.isCorrect ? [index] : []);
+        const isCorrect = isVerified && selectedAnswers.length === correctIndices.length
+            && selectedAnswers.every(index => correctIndices.includes(index));
+
         const UserStatsModel = (await import("../models/userStatsModel.js")).default;
         
         // Find or create user stats
         let userStats = await UserStatsModel.findOne({ userId });
         if (!userStats) {
             console.log('Creating new user stats');
-            userStats = await UserStatsModel.create({
-                userId,
-                questionsAnswered: 0,
-                correctAnswers: 0,
-                answeredQuestions: {},
-                moduleProgress: []
-            });
+            try {
+                userStats = await UserStatsModel.create({ userId, answeredQuestions: {}, moduleProgress: [] });
+            } catch (error) {
+                if (error.code !== 11000) throw error;
+                userStats = await UserStatsModel.findOne({ userId });
+            }
         }
 
         // Store the answer
@@ -1105,76 +1123,92 @@ export const questionController = {
         }
         
         // Check if this question was already answered
-        const existingAnswer = userStats.answeredQuestions.get(questionId.toString());
-        const isNewAnswer = !existingAnswer || !existingAnswer.isVerified;
+        const aliases = (await loadQuestionAliases([question]))
+            .filter(q => questionLogicalKey(q) === questionLogicalKey(question));
+        const existingAnswer = selectQuestionAnswers([question], aliases, userStats.answeredQuestions, examId)[questionId.toString()];
+        const wasVerified = existingAnswer?.isVerified === true;
+        const hasBeenVerified = aliases.some(q => {
+            const answer = userStats.answeredQuestions.get(String(q._id));
+            return answer?.isVerified === true || answer?.hasBeenVerified === true;
+        });
+        const isNewAnswer = !hasBeenVerified;
+        const progressModuleId = moduleId || existingAnswer?.moduleId;
+
+        // A delayed draft must never downgrade a saved verification. Write
+        // drafts atomically so they cannot race with the verify/save request.
+        if (!isVerified && !reset) {
+            if (!wasVerified) {
+                await UserStatsModel.updateOne({ userId, [`answeredQuestions.${questionId}.isVerified`]: { $ne: true } }, {
+                    $set: Object.fromEntries(Object.entries({
+                        selectedAnswers, isVerified: false, isCorrect: false, answeredAt: new Date(), examId, moduleId,
+                    }).map(([field, value]) => [`answeredQuestions.${questionId}.${field}`, value])),
+                });
+            }
+            return res.status(200).json({ success: true, data: { questionId, selectedAnswers, isVerified: false, isCorrect: false } });
+        }
         
         // Get module name if moduleId is provided (needed for storage)
         let moduleName = null;
-        if (moduleId) {
+        if (progressModuleId) {
             const Module = (await import("../models/moduleModel.js")).default;
-            const module = await Module.findById(moduleId).select("name");
+            const module = await Module.findById(progressModuleId).select("name");
             moduleName = module?.name || "Unknown";
         }
         
+        // Collapse old imported aliases when this question is saved again.
+        // Distinct sessions keep distinct logical keys even when Q numbers match.
+        for (const alias of aliases) userStats.answeredQuestions.delete(String(alias._id));
         userStats.answeredQuestions.set(questionId.toString(), {
             selectedAnswers,
-            isVerified: isVerified || false,
-            isCorrect: isCorrect || false,
+            isVerified: !reset && isVerified,
+            hasBeenVerified: hasBeenVerified || isVerified,
+            isCorrect: !reset && isCorrect,
             answeredAt: new Date(),
             examId,
-            moduleId,
+            moduleId: progressModuleId,
             moduleName
         });
+
+        const savedProgress = await loadSavedProgress(userStats.answeredQuestions);
+        userStats.questionsAnswered = userStats.totalQuestionsAttempted = savedProgress.answered;
+        userStats.correctAnswers = userStats.totalCorrectAnswers = savedProgress.correct;
+        userStats.totalIncorrectAnswers = savedProgress.incorrect;
+        userStats.averageScore = userStats.totalQuestionsAttempted > 0
+            ? userStats.totalCorrectAnswers / userStats.totalQuestionsAttempted * 100 : 0;
+
+        const progressByModule = new Map();
+        for (const progress of userStats.moduleProgress) {
+            const id = progress.moduleId?.toString();
+            if (!id) continue;
+            const existing = progressByModule.get(id);
+            if (!existing) progressByModule.set(id, progress);
+            else {
+                existing.timeSpent = (existing.timeSpent || 0) + (progress.timeSpent || 0);
+                if (new Date(progress.lastAttempted || 0) > new Date(existing.lastAttempted || 0)) existing.lastAttempted = progress.lastAttempted;
+            }
+        }
+        for (const id of Object.keys(savedProgress.byModule)) {
+            if (progressByModule.has(id)) continue;
+            const Module = (await import("../models/moduleModel.js")).default;
+            const module = await Module.findById(id).select("name");
+            progressByModule.set(id, { moduleId: id, moduleName: module?.name || 'Unknown', lastAttempted: new Date() });
+        }
+        for (const [id, progress] of progressByModule) {
+            const counts = savedProgress.byModule[id];
+            progress.questionsAttempted = counts?.answered || 0;
+            progress.correctAnswers = counts?.correct || 0;
+            progress.incorrectAnswers = counts?.incorrect || 0;
+            progress.wrongAnswers = progress.incorrectAnswers;
+            progress.averageScore = progress.questionsAttempted > 0 ? progress.correctAnswers / progress.questionsAttempted * 100 : 0;
+            if (id === progressModuleId?.toString()) progress.lastAttempted = new Date();
+        }
+        userStats.moduleProgress = [...progressByModule.values()];
 
         console.log('Stored answer in Map for question:', questionId.toString());
         console.log('Total questions in Map:', userStats.answeredQuestions.size);
 
         // Update stats only for NEW verified answers (not re-attempts)
-        if (isVerified && isNewAnswer) {
-            userStats.questionsAnswered = (userStats.questionsAnswered || 0) + 1;
-            userStats.totalQuestionsAttempted = (userStats.totalQuestionsAttempted || 0) + 1;
-            
-            if (isCorrect) {
-                userStats.correctAnswers = (userStats.correctAnswers || 0) + 1;
-                userStats.totalCorrectAnswers = (userStats.totalCorrectAnswers || 0) + 1;
-                // Points are already handled by verify-answer endpoint (+2 for correct, -1 for retry)
-            } else {
-                userStats.totalIncorrectAnswers = (userStats.totalIncorrectAnswers || 0) + 1;
-            }
-
-            // Update module-specific progress
-            if (moduleId) {
-                const moduleIndex = userStats.moduleProgress.findIndex(
-                    (m) => m.moduleId?.toString() === moduleId.toString()
-                );
-
-                if (moduleIndex === -1) {
-                    // Add new module progress
-                    userStats.moduleProgress.push({
-                        moduleId,
-                        moduleName,
-                        questionsAttempted: 1,
-                        correctAnswers: isCorrect ? 1 : 0,
-                        incorrectAnswers: isCorrect ? 0 : 1,
-                        lastAttempted: new Date()
-                    });
-                } else {
-                    // Update existing module progress
-                    userStats.moduleProgress[moduleIndex].questionsAttempted += 1;
-                    if (isCorrect) {
-                        userStats.moduleProgress[moduleIndex].correctAnswers += 1;
-                    } else {
-                        userStats.moduleProgress[moduleIndex].incorrectAnswers += 1;
-                    }
-                    userStats.moduleProgress[moduleIndex].lastAttempted = new Date();
-                }
-            }
-
-            // Update average score
-            if (userStats.totalQuestionsAttempted > 0) {
-                userStats.averageScore = (userStats.totalCorrectAnswers / userStats.totalQuestionsAttempted) * 100;
-            }
-            
+        if (isVerified && isNewAnswer && !reset) {
             // Update weekly activity (for performance charts)
             const today = new Date();
             today.setHours(0, 0, 0, 0); // Reset to start of day
@@ -1214,10 +1248,19 @@ export const questionController = {
             userStats.lastActivityDate = new Date();
         }
 
-        await userStats.save();
+        // Check the document version so simultaneous verifications cannot lose
+        // one another's counter updates. Retry from the latest saved snapshot.
+        userStats.increment();
+        try {
+            await userStats.save();
+        } catch (error) {
+            if (error.name !== 'VersionError' || (req.progressSaveRetries || 0) >= 3) throw error;
+            req.progressSaveRetries = (req.progressSaveRetries || 0) + 1;
+            return questionController.saveAnswer(req, res);
+        }
         console.log('✓ User stats saved successfully');
 
-        const answeredCountByExam = buildAnsweredCountByExam(userStats.answeredQuestions);
+        const answeredCountByExam = savedProgress.countsByExam;
         const completedQuestions = examId
             ? answeredCountByExam[examId.toString()] || 0
             : 0;
@@ -1239,6 +1282,7 @@ export const questionController = {
     getUserAnswers: asyncHandler(async (req, res) => {
         const { examId } = req.params;
         const userId = req.user._id;
+        res.set('Cache-Control', 'private, no-store');
 
         console.log('=== GET USER ANSWERS ===');
         console.log('Exam ID from params:', examId);
@@ -1257,16 +1301,8 @@ export const questionController = {
 
         console.log('Total answered questions:', userStats.answeredQuestions.size);
 
-        // Filter answers for this exam - handle both string and ObjectId comparison
-        const examAnswers = {};
-        for (const [qId, answer] of userStats.answeredQuestions.entries()) {
-            // Convert both to strings for comparison
-            const answerExamId = answer.examId ? answer.examId.toString() : null;
-            if (answerExamId === examId || answerExamId === examId.toString()) {
-                examAnswers[qId] = answer;
-                console.log(`Found answer for question ${qId}:`, answer.selectedAnswers);
-            }
-        }
+        // Resolve results through question membership, including imported aliases.
+        const examAnswers = await getContextAnswers(examId, userId, userStats.answeredQuestions);
 
         console.log('Filtered answers for this exam:', Object.keys(examAnswers).length);
         console.log('Exam answers:', examAnswers);

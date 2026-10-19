@@ -39,3 +39,15 @@ export const uniqueQuestionsByLogicalKey = (questions = []) => {
     return true;
   });
 };
+
+// List denominators must use the same source/session/number identity as
+// detail pages, rather than counting duplicate imported Mongo documents.
+export const questionCountStages = field => [
+  { $group: { _id: {
+    context: `$${field}`,
+    source: { $ifNull: ["$examId", { $ifNull: ["$qcmBanqueId", "$examCourseId"] }] },
+    session: { $trim: { input: { $ifNull: ["$sessionLabel", ""] } } },
+    number: { $ifNull: ["$questionNumber", "$_id"] },
+  } } },
+  { $group: { _id: "$_id.context", count: { $sum: 1 } } },
+];

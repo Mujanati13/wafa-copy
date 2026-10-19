@@ -42,6 +42,7 @@ import {
 import { sortGroupedQuestions } from "../utils/examSessionSort.js";
 import { getCourseCategoryUsageFilter } from "../utils/courseCategoryRelations.js";
 import { uniqueQuestionsByLogicalKey } from "../utils/questionIdentity.js";
+import { getCourseQuestionCounts } from "../services/questionProgressService.js";
 
 const COURSE_IMPORT_HEADER_LABELS = {
     semester: "Semestre",
@@ -97,14 +98,15 @@ export const examCourseController = {
         // Use lean() and only select necessary fields for better performance
         const courses = await ExamCourse.find(filter)
             .populate("moduleId", "name semester")
-            .select('name moduleId category lessonNumber subCategory description difficulty color imageUrl status totalQuestions')
+            .select('name moduleId category lessonNumber subCategory description difficulty color imageUrl status totalQuestions linkedQuestions')
             .lean()
             .sort({ createdAt: -1 });
 
-        // Add question count from totalQuestions field (updated by pre-save hook)
+        const questionCounts = await getCourseQuestionCounts(courses);
         const coursesWithCount = courses.map(course => ({
             ...course,
-            questionCount: course.totalQuestions || 0
+            totalQuestions: questionCounts[String(course._id)] || 0,
+            questionCount: questionCounts[String(course._id)] || 0
         }));
 
         res.status(200).json({
@@ -133,7 +135,9 @@ export const examCourseController = {
             });
         }
 
-        const questions = uniqueQuestionsByLogicalKey(course.linkedQuestions || []);
+        const nativeQuestions = await Question.find({ examCourseId: id })
+            .populate("examId", "isOfficialCorrection").lean();
+        const questions = uniqueQuestionsByLogicalKey([...(course.linkedQuestions || []), ...nativeQuestions]);
         const questionSources = course.questionSources || [];
         
         // Create a map of questionId to source info (yearName)
@@ -206,7 +210,7 @@ export const examCourseController = {
 
         const courses = await ExamCourse.find({ moduleId: { $in: equivalentModuleIds } })
             .populate("moduleId", "name")
-            .select('name moduleId category lessonNumber subCategory description difficulty color imageUrl status totalQuestions helpText')
+            .select('name moduleId category lessonNumber subCategory description difficulty color imageUrl status totalQuestions helpText linkedQuestions')
             .lean()
             .sort({ createdAt: -1 });
 
@@ -234,12 +238,14 @@ export const examCourseController = {
         }
 
         const answeredCountByExam = await getAnsweredCountByExam(req.user?._id);
+        const questionCounts = await getCourseQuestionCounts(resolvedCourses);
 
         // Add total and user-specific completed question counts for each course.
         const coursesWithCount = resolvedCourses.map(course => ({
             ...course,
             moduleId: course.moduleId || { _id: module._id, name: module.name },
-            questionCount: course.totalQuestions ?? course.linkedQuestions?.length ?? 0,
+            totalQuestions: questionCounts[String(course._id)] || 0,
+            questionCount: questionCounts[String(course._id)] || 0,
             answeredQuestions: answeredCountByExam[course._id.toString()] || 0,
         }));
 

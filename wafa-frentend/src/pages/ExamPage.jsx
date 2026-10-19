@@ -2,6 +2,7 @@ import { exitExam } from '@/utils/authNavigation';
 import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useTranslation } from 'react-i18next';
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
+import { flattenExamQuestions, isVerified, isCorrect as isVerifiedAnswerCorrect, questionProgress, progressSnapshot, restoreSnapshot } from '@/utils/questionProgress';
 import { publishExamCompletedCount } from "@/utils/examProgress";
 import { dashboardService } from "@/services/dashboardService";
 import { motion, AnimatePresence } from "framer-motion";
@@ -129,7 +130,7 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
-const ExamPage = () => {
+const ExamSession = () => {
   const { t } = useTranslation(['dashboard', 'common']);
   const { examId } = useParams();
   const [searchParams] = useSearchParams();
@@ -212,6 +213,7 @@ const ExamPage = () => {
   const [validationError, setValidationError] = useState(null);
   const [communityStats, setCommunityStats] = useState({}); // Store community voting stats per question
   const [isVerifying, setIsVerifying] = useState(false); // Prevent double-click on verify
+  const verificationInFlight = useRef(false);
 
   // UI preferences
   const [fontSize, setFontSize] = useState(() => {
@@ -239,6 +241,7 @@ const ExamPage = () => {
 
   // User profile state for header
   const [userProfile, setUserProfile] = useState(null);
+  const [userProfileLoaded, setUserProfileLoaded] = useState(false);
   const [userPlan, setUserPlan] = useState("Free");
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [showFontPopup, setShowFontPopup] = useState(false);
@@ -276,12 +279,16 @@ const ExamPage = () => {
       } catch (error) {
         console.error('Error fetching user profile:', error);
         // Try to get from localStorage
-        const cached = localStorage.getItem('user');
-        if (cached) {
-          const user = JSON.parse(cached);
-          setUserProfile(user);
-          setUserPlan(user.plan || "Free");
-        }
+        try {
+          const cached = localStorage.getItem('user');
+          if (cached) {
+            const user = JSON.parse(cached);
+            setUserProfile(user);
+            setUserPlan(user.plan || "Free");
+          }
+        } catch (cacheError) { console.error('Invalid cached user profile:', cacheError); }
+      } finally {
+        setUserProfileLoaded(true);
       }
     };
     fetchUserProfile();
@@ -505,181 +512,56 @@ const ExamPage = () => {
     }
   }, [userProfile]);
 
-  // Restore progress - runs after both examData and userProfile are loaded
-  // Also handles case when userProfile fails to load
+  const questions = useMemo(() => flattenExamQuestions(examData?.questions), [examData]);
+
+  // Use the exact displayed order to map server identities to local state.
   useEffect(() => {
-    // If already restored, don't run again
-    if (progressRestored) return;
-    
-    // Need examData to proceed
-    if (!examData) return;
-    
-    // If no user profile after 3 seconds of having examData, proceed without restoration
-    const timeoutId = setTimeout(() => {
-      if (!progressRestored && examData && !userProfile?._id) {
-        console.log('No user profile available, skipping progress restoration');
-        setProgressRestored(true);
-        setLoading(false);
-      }
-    }, 3000);
-    
-    // If we have both examData and userProfile, restore progress
-    if (userProfile?._id) {
-      clearTimeout(timeoutId);
-      
-      const restoreProgress = async () => {
-        const currentUserId = userProfile._id;
-        console.log('=== RESTORING PROGRESS FOR USER:', currentUserId, '===');
-
-      // Build flat question list with indices for mapping
-      const allQuestions = [];
-      Object.entries(examData.questions || {})
-        .sort(([nameA], [nameB]) => compareSessionNames(nameA, nameB))
-        .forEach(([, sessionQuestions]) => {
-          sessionQuestions.forEach(q => allQuestions.push(q));
-        });
-
-      // RESTORE FROM BACKEND FIRST (source of truth)
-      let restoredFromBackend = false;
+    if (progressRestored || !examData || !userProfileLoaded) return;
+    let cancelled = false;
+    const restore = async () => {
+      // The header profile may fail while the authenticated answer API still
+      // works. Restore server results either way; cache only a known user.
+      const storageKey = userProfile?._id ? `exam_progress_${userProfile._id}_${examType}_${examId}` : null;
+      let saved = null;
       try {
-        const serverAnswers = await api.get(`/questions/user-answers/${examId}`);
-        console.log('Backend answers response:', serverAnswers.data);
-
-        if (serverAnswers.data?.data && Object.keys(serverAnswers.data.data).length > 0) {
-          const answersData = serverAnswers.data.data;
-          const restoredAnswers = {};
-          const restoredVerified = {};
-
-          // Map question IDs to indices and restore ALL answers (verified and unverified)
-          Object.entries(answersData).forEach(([qId, answerData]) => {
-            const qIndex = allQuestions.findIndex(q => q._id === qId);
-            if (qIndex !== -1 && answerData.selectedAnswers?.length > 0) {
-              restoredAnswers[qIndex] = answerData.selectedAnswers;
-              if (answerData.isVerified) {
-                restoredVerified[qIndex] = {
-                  verified: true,
-                  isCorrect: answerData.isCorrect
-                };
-              }
-            }
-          });
-
-          // Update state with backend data
-          if (Object.keys(restoredAnswers).length > 0) {
-            setSelectedAnswers(restoredAnswers);
-            restoredFromBackend = true;
-            console.log(`✓ Restored ${Object.keys(restoredAnswers).length} answers from backend`);
-          }
-          if (Object.keys(restoredVerified).length > 0) {
-            setVerifiedQuestions(restoredVerified);
-            console.log(`✓ Restored ${Object.keys(restoredVerified).length} verified questions from backend`);
-          }
-        } else {
-          console.log('No backend answers found');
+        const parsed = storageKey ? JSON.parse(localStorage.getItem(storageKey) || 'null') : null;
+        if (parsed && parsed.userId === userProfile?._id) saved = parsed;
+      } catch { if (storageKey) localStorage.removeItem(storageKey); }
+      const cached = restoreSnapshot(questions, saved || {});
+      let answers = {};
+      let verified = {};
+      try {
+        const response = await api.get(`/questions/user-answers/${examId}`);
+        if (cancelled) return;
+        questions.forEach((question, index) => {
+          const answer = response.data?.data?.[question._id];
+          if (answer?.selectedAnswers?.length) answers[index] = answer.selectedAnswers;
+          if (answer?.isVerified === true) verified[index] = { verified: true, isCorrect: answer.isCorrect };
+        });
+        // A successful empty response is authoritative too. Only unsaved
+        // drafts may supplement it; cached verification cannot resurrect a reset.
+        for (const [index, answer] of Object.entries(cached.answers)) {
+          if (!isVerified(cached.verified[index]) && !isVerified(verified[index])) answers[index] = answer;
         }
-      } catch (serverErr) {
-        console.error('Could not fetch server answers:', serverErr);
+      } catch {
+        if (cancelled) return;
+        answers = cached.answers;
+        verified = cached.verified;
       }
-
-      // RESTORE FROM LOCALSTORAGE (for UI state like currentQ, timeSpent, flags)
-      // Only use localStorage for answers if backend had none
-      const storageKey = `exam_progress_${currentUserId}_${examType}_${examId}`;
-      const savedProgress = localStorage.getItem(storageKey);
-      console.log('LocalStorage key:', storageKey);
-      console.log('LocalStorage data:', savedProgress);
-
-      if (savedProgress) {
-        try {
-          const { answers, currentQ, timeSpent, flags, verified, userId: storedUserId } = JSON.parse(savedProgress);
-
-          // Validate that stored data belongs to current user
-          if (storedUserId === currentUserId) {
-            // Always restore UI state
-            if (currentQ !== undefined && currentQ !== null) {
-              setCurrentQuestion(currentQ);
-              setVisitedQuestions(prev => new Set([...prev, currentQ]));
-            }
-            if (timeSpent !== undefined && timeSpent !== null) {
-              setTimeElapsed(timeSpent);
-            }
-            if (flags && Array.isArray(flags)) {
-              setFlaggedQuestions(new Set(flags));
-            }
-            console.log(`✓ Restored UI state: question ${currentQ}, time ${timeSpent}s, ${flags?.length || 0} flags`);
-
-            // Only use localStorage answers if backend didn't have any
-            if (!restoredFromBackend && answers && Object.keys(answers).length > 0) {
-              setSelectedAnswers(answers);
-              console.log(`✓ Restored ${Object.keys(answers).length} answers from localStorage (fallback)`);
-            }
-
-            // Merge verified state (backend takes precedence)
-            if (verified && Object.keys(verified).length > 0 && !restoredFromBackend) {
-              setVerifiedQuestions(verified);
-              console.log(`✓ Restored ${Object.keys(verified).length} verified from localStorage`);
-            }
-          } else {
-            // Data belongs to different user, clear it
-            console.log('⚠ Clearing stale localStorage data from different user');
-            localStorage.removeItem(storageKey);
-          }
-        } catch (err) {
-          console.error('Error parsing saved progress:', err);
-          localStorage.removeItem(storageKey);
-        }
-      } else {
-        console.log('No localStorage data found');
-      }
-
+      setSelectedAnswers(answers);
+      setLastSavedAnswers({});
+      setVerifiedQuestions(verified);
+      setCurrentQuestion(cached.currentQ);
+      setVisitedQuestions(new Set([...cached.visits, cached.currentQ]));
+      setFlaggedQuestions(cached.flags);
+      setTimeElapsed(Math.max(0, Number(saved?.timeSpent) || 0));
+      publishExamCompletedCount(examId, questionProgress(questions, answers, verified).verifiedCount);
       setProgressRestored(true);
-      setLoading(false); // Now safe to show the exam
-      console.log('=== PROGRESS RESTORATION COMPLETE ===');
+      setLoading(false);
     };
-
-    restoreProgress();
-    }
-    
-    return () => clearTimeout(timeoutId);
-  }, [examData, userProfile, examId, examType, progressRestored]);
-
-  // Get all questions in exam/session order, sorted by questionNumber within each group
-  // MOVED HERE: Must be defined before effects that use it
-  const questions = useMemo(() => {
-    if (!examData?.questions) return [];
-    const allQuestions = [];
-
-    Object.entries(examData.questions)
-      .sort(([nameA], [nameB]) => compareSessionNames(nameA, nameB))
-      .forEach(([sessionName, sessionQuestions]) => {
-      // Keep each exam/session contiguous. A global questionNumber sort would
-      // interleave Q1, Q2, etc. from different exams.
-      const sortedSessionQuestions = sessionQuestions
-        .map((question, originalIndex) => ({ question, originalIndex }))
-        .sort((a, b) => {
-          const hasNumA = a.question.questionNumber != null;
-          const hasNumB = b.question.questionNumber != null;
-
-          if (hasNumA && hasNumB) {
-            return (a.question.questionNumber - b.question.questionNumber)
-              || (a.originalIndex - b.originalIndex);
-          }
-          if (hasNumA) return -1;
-          if (hasNumB) return 1;
-          return a.originalIndex - b.originalIndex;
-        })
-        .map(({ question }) => question);
-
-      sortedSessionQuestions.forEach(q => {
-        allQuestions.push({ ...q, sessionLabel: sessionName });
-      });
-    });
-
-    // Assign displayNumber to each question (1-indexed position)
-    return allQuestions.map((q, idx) => ({
-      ...q,
-      displayNumber: q.questionNumber || (idx + 1)
-    }));
-  }, [examData]);
+    restore();
+    return () => { cancelled = true; };
+  }, [examData, questions, userProfileLoaded, userProfile?._id, examId, examType, progressRestored]);
 
   // Keep the questions length ref updated for navigation functions
   useEffect(() => {
@@ -693,123 +575,48 @@ const ExamPage = () => {
     console.log('Current question state changed to:', currentQuestion);
   }, [currentQuestion]);
 
-  // Mark as unsaved when answers change
+  // UI state is saved independently of network drafts, including visits,
+  // highlights and navigation even when no answer changed.
   useEffect(() => {
-    if (examData && !showResults) {
-      setHasUnsavedChanges(true);
-    }
-  }, [selectedAnswers, flaggedQuestions, verifiedQuestions]);
+    if (!progressRestored || !userProfile?._id || showResults) return;
+    try {
+      const snapshot = progressSnapshot(questions, {
+        userId: userProfile._id, answers: selectedAnswers, verified: verifiedQuestions,
+        flags: flaggedQuestions, visits: visitedQuestions, currentQ: currentQuestion, timeSpent: timeElapsed,
+      });
+      localStorage.setItem(`exam_progress_${userProfile._id}_${examType}_${examId}`, JSON.stringify(snapshot));
+    } catch (error) { console.error('Failed to cache exam progress:', error); }
+  }, [progressRestored, userProfile?._id, showResults, questions, selectedAnswers, verifiedQuestions,
+    flaggedQuestions, visitedQuestions, currentQuestion, timeElapsed, examType, examId]);
 
-  // Auto-save progress (including verified state) - debounced
+  // Timer ticks and navigation must not continually restart the draft debounce.
   useEffect(() => {
-    // Guard: ensure all required data is ready
-    if (!examData || showResults || !userProfile?._id || !questions || questions.length === 0) {
-      console.log('Auto-save skipped:', { examData: !!examData, showResults, userProfile: !!userProfile, questions: questions?.length });
-      return;
-    }
-
-    const saveProgress = async () => {
-      console.log('=== AUTO-SAVE TRIGGERED ===');
-      
-      // Find only answers that changed since last save
-      const changedAnswers = {};
-      Object.keys(selectedAnswers).forEach(qIndex => {
-        const current = JSON.stringify(selectedAnswers[qIndex]);
-        const previous = JSON.stringify(lastSavedAnswers[qIndex]);
-        if (current !== previous) {
-          changedAnswers[qIndex] = selectedAnswers[qIndex];
-        }
-      });
-
-      // Also check for removed answers
-      Object.keys(lastSavedAnswers).forEach(qIndex => {
-        if (!selectedAnswers[qIndex] && lastSavedAnswers[qIndex]) {
-          changedAnswers[qIndex] = []; // Mark as removed
-        }
-      });
-
-      console.log('Changed answers:', Object.keys(changedAnswers).length);
-      console.log('Has unsaved changes:', hasUnsavedChanges);
-
-      // If no changes, skip save
-      if (Object.keys(changedAnswers).length === 0) {
-        console.log('No changes to save');
-        return;
-      }
-
-      setIsSaved(false);
-      try {
-        const currentUserId = userProfile._id;
-        const progress = {
-          userId: currentUserId,
-          answers: selectedAnswers,
-          currentQ: currentQuestion,
-          timeSpent: timeElapsed,
-          flags: Array.from(flaggedQuestions),
-          verified: verifiedQuestions
-        };
-
-        // Save to localStorage first (fast, immediate)
-        const storageKey = `exam_progress_${currentUserId}_${examType}_${examId}`;
-        localStorage.setItem(storageKey, JSON.stringify(progress));
-        console.log('✓ Saved to localStorage:', storageKey);
-
-        // Save only CHANGED unverified answers to backend
-        const answersToSave = Object.keys(changedAnswers)
-          .filter(qIndex => {
-            const hasAnswer = changedAnswers[qIndex]?.length > 0;
-            const isVerified = verifiedQuestions[qIndex]?.verified || verifiedQuestions[qIndex] === true;
-            return hasAnswer && !isVerified;
-          })
-          .map(qIndex => ({
-            questionId: questions[qIndex]?._id,
-            selectedAnswers: changedAnswers[qIndex],
-            isVerified: false,
-            isCorrect: false,
-            examId: examData._id || examId,
-            moduleId: examData.module?._id || examData.moduleId
-          }))
-          .filter(item => item.questionId);
-
-        console.log('Answers to save to backend:', answersToSave.length);
-
-        // Batch save changed answers to backend
-        if (answersToSave.length > 0) {
-          const results = await Promise.allSettled(
-            answersToSave.map(answerData =>
-              api.post('/questions/save-answer', answerData)
-            )
-          );
-
-          const succeeded = results.filter(r => r.status === 'fulfilled').length;
-          const failed = results.filter(r => r.status === 'rejected').length;
-          console.log(`✓ Saved ${succeeded} answers to backend, ${failed} failed`);
-
-          if (failed > 0) {
-            results.forEach((r, i) => {
-              if (r.status === 'rejected') {
-                console.error('Failed to save answer:', answersToSave[i], r.reason);
-              }
-            });
-          }
-        }
-
-        // Update lastSavedAnswers to current state
-        setLastSavedAnswers(JSON.parse(JSON.stringify(selectedAnswers)));
-        
-        setIsSaved(true);
-        setLastSaveTime(new Date());
-        setHasUnsavedChanges(false);
-        console.log('=== AUTO-SAVE COMPLETE ===');
-      } catch (error) {
-        console.error('Failed to save progress:', error);
-        setIsSaved(false);
-      }
-    };
-
-    const saveTimer = setTimeout(saveProgress, 1000); // Increased to 1s for stability
-    return () => clearTimeout(saveTimer);
-  }, [selectedAnswers, currentQuestion, flaggedQuestions, verifiedQuestions, examId, examData, showResults, examType, timeElapsed, userProfile, questions, hasUnsavedChanges, lastSavedAnswers]);
+    if (!progressRestored || !examData || showResults || !userProfile?._id || isVerifying) return;
+    const changed = questions.flatMap((question, index) => {
+      if (isVerified(verifiedQuestions[index])) return [];
+      const answer = selectedAnswers[index] || [];
+      if (JSON.stringify(answer) === JSON.stringify(lastSavedAnswers[index] || [])) return [];
+      return [{ index, questionId: question._id, selectedAnswers: answer }];
+    });
+    if (!changed.length) return;
+    let cancelled = false;
+    setHasUnsavedChanges(true);
+    setIsSaved(false);
+    const timer = setTimeout(async () => {
+      const results = await Promise.allSettled(changed.map(({ questionId, selectedAnswers }) => api.post('/questions/save-answer', {
+        questionId, selectedAnswers, isVerified: false, examId, moduleId: examData.moduleId,
+      })));
+      if (cancelled) return;
+      const succeeded = changed.filter((_, index) => results[index].status === 'fulfilled');
+      setLastSavedAnswers(previous => ({ ...previous, ...Object.fromEntries(succeeded.map(item => [item.index, item.selectedAnswers])) }));
+      const saved = succeeded.length === changed.length;
+      setIsSaved(saved);
+      setHasUnsavedChanges(!saved);
+      if (saved) setLastSaveTime(new Date());
+    }, 1000);
+    return () => { cancelled = true; clearTimeout(timer); };
+  }, [progressRestored, examData, showResults, userProfile?._id, isVerifying, questions,
+    selectedAnswers, verifiedQuestions, lastSavedAnswers, examId]);
 
   // Persist the cumulative timer server-side. The API only adds the delta for
   // this study session, so repeated requests and cleanup requests are safe.
@@ -817,7 +624,6 @@ const ExamPage = () => {
     if (!examData || showResults || !userProfile?._id) return;
 
     const currentUserId = userProfile._id;
-    const storageKey = `exam_progress_${currentUserId}_${examType}_${examId}`;
     const sessionStorageKey = `exam_study_session_${currentUserId}_${examType}_${examId}`;
     let studySessionId;
 
@@ -834,21 +640,6 @@ const ExamPage = () => {
 
     const persistElapsedTime = () => {
       const elapsedSeconds = Math.max(0, Math.floor(timeElapsedRef.current));
-
-      try {
-        const savedProgress = localStorage.getItem(storageKey);
-        if (savedProgress) {
-          const progress = JSON.parse(savedProgress);
-          // Validate user before updating
-          if (progress.userId === currentUserId) {
-            progress.timeSpent = timeElapsed;
-            progress.currentQ = currentQuestionRef.current; // Also update current question
-            localStorage.setItem(storageKey, JSON.stringify(progress));
-          }
-        }
-      } catch (error) {
-        console.error('Failed to save time:', error);
-      }
 
       if (elapsedSeconds > 0) {
         api.post('/users/study-time', { sessionId: studySessionId, elapsedSeconds })
@@ -869,40 +660,6 @@ const ExamPage = () => {
     if (!examData || showResults) return;
 
     const handleBeforeUnload = (e) => {
-      // Save all verified answers to backend before leaving
-      if (Object.keys(verifiedQuestions).length > 0) {
-        const verifiedAnswers = Object.keys(verifiedQuestions)
-          .filter(qIndex => {
-            const v = verifiedQuestions[qIndex];
-            return v?.verified || v === true;
-          })
-          .map(qIndex => ({
-            questionId: questions[qIndex]?._id,
-            selectedAnswers: selectedAnswers[qIndex] || [],
-            isVerified: true,
-            isCorrect: verifiedQuestions[qIndex]?.isCorrect || false,
-            examId: examData._id || examId,
-            moduleId: examData.module?._id || examData.moduleId
-          }))
-          .filter(item => item.questionId);
-
-        // Use sendBeacon for reliable data transmission even if tab closes
-        if (verifiedAnswers.length > 0) {
-          try {
-            // Save to localStorage as fallback
-            const currentUserId = userProfile?._id;
-            if (currentUserId) {
-              const storageKey = `exam_progress_${currentUserId}_${examType}_${examId}`;
-              const progress = JSON.parse(localStorage.getItem(storageKey) || '{}');
-              progress.verified = verifiedQuestions;
-              localStorage.setItem(storageKey, JSON.stringify(progress));
-            }
-          } catch (error) {
-            console.error('Failed to save verified answers:', error);
-          }
-        }
-      }
-
       // Only warn if there are unsaved unverified answers
       if (hasUnsavedChanges && Object.keys(selectedAnswers).length > 0) {
         e.preventDefault();
@@ -953,7 +710,7 @@ const ExamPage = () => {
   // Handle answer selection - always allow multi-select
   const handleAnswerSelect = useCallback((questionIndex, optionIndex) => {
     const question = questions[questionIndex];
-    if (!question || showResults) return;
+    if (!question || showResults || isVerifying) return;
 
     // Don't allow answering annulled questions
     if (question.isAnnulled) return;
@@ -984,7 +741,7 @@ const ExamPage = () => {
     });
 
     playSound('select');
-  }, [questions, showResults, verifiedQuestions, playSound]);
+  }, [questions, showResults, isVerifying, verifiedQuestions, playSound]);
 
   // Toggle flag
   const toggleFlag = useCallback((index) => {
@@ -1010,7 +767,7 @@ const ExamPage = () => {
     }
 
     // Prevent double-click
-    if (isVerifying) {
+    if (verificationInFlight.current) {
       console.log('Already verifying, ignoring click');
       return;
     }
@@ -1031,7 +788,7 @@ const ExamPage = () => {
     }
 
     // Check if already verified
-    if (verifiedQuestions[currentQuestion]?.verified) {
+    if (isVerified(verifiedQuestions[currentQuestion])) {
       console.log('Question already verified');
       return;
     }
@@ -1042,6 +799,7 @@ const ExamPage = () => {
       return;
     }
 
+    verificationInFlight.current = true;
     setIsVerifying(true);
 
     try {
@@ -1053,20 +811,8 @@ const ExamPage = () => {
       const isCorrectAnswer = userAnswers.length === correctIndices.length &&
         userAnswers.every(ans => correctIndices.includes(ans));
 
-      // Immediately mark as verified with isCorrect status for visual feedback
+      // Feedback is committed only after the server has saved the result.
       playSound(isCorrectAnswer ? 'correct' : 'incorrect');
-
-      setVerifiedQuestions(prev => {
-        const updated = {
-          ...prev,
-          [currentQuestion]: {
-            verified: true,
-            isCorrect: isCorrectAnswer
-          }
-        };
-        console.log('Updated verifiedQuestions:', updated);
-        return updated;
-      });
 
       console.log('Local verification complete:', isCorrectAnswer ? 'CORRECT' : 'INCORRECT');
 
@@ -1112,10 +858,13 @@ const ExamPage = () => {
         moduleId: examData?.moduleId
       });
 
-      publishExamCompletedCount(
-        examId,
-        saveResponse.data?.data?.completedQuestions,
-      );
+      const savedCorrect = saveResponse.data?.data?.isCorrect ?? isCorrect;
+      setVerifiedQuestions(previous => ({ ...previous, [currentQuestion]: { verified: true, isCorrect: savedCorrect } }));
+      setLastSavedAnswers(previous => ({ ...previous, [currentQuestion]: userAnswers }));
+      setIsSaved(true);
+      setHasUnsavedChanges(false);
+      setLastSaveTime(new Date());
+      publishExamCompletedCount(examId, saveResponse.data?.data?.completedQuestions);
       dashboardService.clearCache();
 
       console.log('=== VERIFICATION COMPLETE ===');
@@ -1123,13 +872,15 @@ const ExamPage = () => {
     } catch (error) {
       console.error('Error verifying answer:', error);
       toast.error('Erreur lors de la vérification');
-      // Keep local verified state even if API fails
+      setIsSaved(false);
+      setHasUnsavedChanges(true);
     } finally {
+      verificationInFlight.current = false;
       setIsVerifying(false);
     }
-  }, [currentQuestion, selectedAnswers, questions, examId, examData, playSound, isVerifying, verifiedQuestions]);
+  }, [currentQuestion, selectedAnswers, questions, examId, examData, playSound, verifiedQuestions]);
 
-  // Reset current question verification (Ressayer) - costs 1 point
+  // Reset the saved result before starting another attempt.
   const handleResetQuestion = useCallback(async (e) => {
     // Prevent default behavior and form submission
     if (e) {
@@ -1138,8 +889,10 @@ const ExamPage = () => {
     }
 
     const questionData = questions[currentQuestion];
+    if (!questionData || verificationInFlight.current) return;
+    verificationInFlight.current = true;
+    setIsVerifying(true);
 
-    // Call backend to deduct point for retry
     try {
       const response = await api.post('/questions/verify-answer', {
         questionId: questionData._id,
@@ -1150,6 +903,12 @@ const ExamPage = () => {
       });
 
       const { totalPoints } = response.data.data;
+      const resetResponse = await api.post('/questions/save-answer', {
+        questionId: questionData._id, selectedAnswers: [], isVerified: false, reset: true,
+        examId, moduleId: examData?.moduleId,
+      });
+      publishExamCompletedCount(examId, resetResponse.data?.data?.completedQuestions);
+      dashboardService.clearCache();
 
       // Update user profile points
       if (userProfile) {
@@ -1159,10 +918,13 @@ const ExamPage = () => {
         }));
       }
 
-      // Don't show -1 point message to user (hidden penalty)
-
     } catch (error) {
       console.error('Error recording retry:', error);
+      toast.error('Erreur lors de la sauvegarde');
+      return;
+    } finally {
+      verificationInFlight.current = false;
+      setIsVerifying(false);
     }
 
     // Reset local state
@@ -1176,6 +938,7 @@ const ExamPage = () => {
       delete newVerified[currentQuestion];
       return newVerified;
     });
+    setLastSavedAnswers(prev => ({ ...prev, [currentQuestion]: [] }));
   }, [currentQuestion, questions, examId, examData, userProfile]);
 
   // Check if current question is verified (now verifiedQuestions stores object with verified and isCorrect)
@@ -1322,15 +1085,42 @@ const ExamPage = () => {
     toast.success(t('dashboard:exam_completed') || 'Exam completed!', {
       icon: <Trophy className="h-4 w-4 text-yellow-500" />
     });
-  }, [examId, examType, playSound, t, calculateScore]);
+  }, [examId, examType, playSound, t, calculateScore, userProfile?._id]);
 
   // Retry exam
-  const handleRetry = useCallback(() => {
+  const handleRetry = useCallback(async () => {
+    if (verificationInFlight.current) return;
+    verificationInFlight.current = true;
+    setIsVerifying(true);
+    try {
+      // Apply each reset in order so updates to the same user's progress
+      // cannot race. A failed reset keeps its saved result visible.
+      for (let index = 0; index < questions.length; index++) {
+        if (!selectedAnswers[index] && !isVerified(verifiedQuestions[index])) continue;
+        const response = await api.post('/questions/save-answer', {
+          questionId: questions[index]._id, selectedAnswers: [], isVerified: false, reset: true,
+          examId, moduleId: examData?.moduleId,
+        });
+        setSelectedAnswers(previous => { const next = { ...previous }; delete next[index]; return next; });
+        setVerifiedQuestions(previous => { const next = { ...previous }; delete next[index]; return next; });
+        publishExamCompletedCount(examId, response.data?.data?.completedQuestions);
+      }
+    } catch {
+      toast.error('Erreur lors de la sauvegarde');
+      return;
+    } finally {
+      verificationInFlight.current = false;
+      setIsVerifying(false);
+      dashboardService.clearCache();
+    }
     setSelectedAnswers({});
+    setVerifiedQuestions({});
+    setLastSavedAnswers({});
     setCurrentQuestion(0);
     setTimeElapsed(0);
     setShowResults(false);
     setFlaggedQuestions(new Set());
+    setVisitedQuestions(new Set([0]));
 
     // Clear user-specific localStorage
     const currentUserId = userProfile?._id;
@@ -1340,59 +1130,17 @@ const ExamPage = () => {
     }
 
     toast.info(t('dashboard:new_attempt_started') || 'New attempt started');
-  }, [examId, examType, t, userProfile]);
+  }, [examId, examType, t, userProfile, questions, selectedAnswers, verifiedQuestions, examData]);
 
   const score = useMemo(() => calculateScore(), [calculateScore]);
 
-  // Convert selectedAnswers to a string for dependency tracking (ensures re-render on changes)
-  const selectedAnswersString = useMemo(() => {
-    return JSON.stringify(selectedAnswers);
-  }, [selectedAnswers]);
-
-  // Count only questions with actual answers (not empty arrays)
-  const answeredCount = useMemo(() => {
-    // Parse the stringified answers to ensure fresh calculation
-    const answers = JSON.parse(selectedAnswersString);
-    return Object.entries(answers).filter(([_, ans]) => ans && ans.length > 0).length;
-  }, [selectedAnswersString]);
-
-  const progress = useMemo(() => {
-    const total = Math.max(questions.length, 1);
-    return (answeredCount / total) * 100;
-  }, [answeredCount, questions.length]);
-
-  // Get question status with enhanced colors
-  const getQuestionStatus = useCallback((index) => {
-    const hasAnswer = selectedAnswers[index]?.length > 0;
-    const verifiedData = verifiedQuestions[index];
-    const isVerified = verifiedData?.verified || verifiedData === true;
-    const isFlagged = flaggedQuestions.has(index);
-    const isVisited = visitedQuestions.has(index);
-
-    // Surligné (purple) - flagged questions (highest priority for display)
-    if (isFlagged) {
-      return { status: 'flagged', isFlagged: true, isVisited };
-    }
-
-    // Vérifié et correct (green)
-    if (isVerified && verifiedData?.isCorrect) {
-      return { status: 'correct', isFlagged, isVisited };
-    }
-
-    // Vérifié mais incorrect (red)
-    if (isVerified && !verifiedData?.isCorrect) {
-      return { status: 'incorrect', isFlagged, isVisited };
-    }
-
-    // Visité (orange) - visited but not verified
-    if (isVisited || hasAnswer) {
-      return { status: 'visited', isFlagged, isVisited: true };
-    }
-
-    // Non visité (gray)
-    return { status: 'unanswered', isFlagged, isVisited: false };
-    // Use selectedAnswersString for dependency tracking to ensure updates when answers change
-  }, [selectedAnswers, selectedAnswersString, flaggedQuestions, questions, showResults, verifiedQuestions, visitedQuestions]);
+  const progressStats = useMemo(() => questionProgress(questions, selectedAnswers, verifiedQuestions, flaggedQuestions, visitedQuestions),
+    [questions, selectedAnswers, verifiedQuestions, flaggedQuestions, visitedQuestions]);
+  const { answeredCount, verifiedCount, correctCount, incorrectCount } = progressStats;
+  const currentQuestionIsCorrect = currentQuestionData
+    ? isVerifiedAnswerCorrect(currentQuestionData, selectedAnswers[currentQuestion], verifiedQuestions[currentQuestion]) : false;
+  const progress = questions.length ? answeredCount / questions.length * 100 : 0;
+  const getQuestionStatus = useCallback(index => progressStats.statuses[index], [progressStats]);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -1645,30 +1393,6 @@ const ExamPage = () => {
 
   const isMultipleChoice = currentQuestionData.options.filter(opt => opt.isCorrect).length > 1;
   const flaggedCount = flaggedQuestions.size;
-
-  // Calculate verified stats for mobile header
-  const verifiedCount = Object.keys(verifiedQuestions).filter(key => {
-    const v = verifiedQuestions[key];
-    return v?.verified || v === true;
-  }).length;
-  const correctCount = questions.filter((_, i) => {
-    const verifiedData = verifiedQuestions[i];
-    const isVerified = verifiedData?.verified || verifiedData === true;
-    if (!isVerified) return false;
-
-    // Use stored isCorrect if available
-    if (verifiedData?.isCorrect !== undefined) {
-      return verifiedData.isCorrect;
-    }
-
-    // Fallback to calculation
-    const selected = selectedAnswers[i] || [];
-    const correctIndices = questions[i].options
-      .map((opt, idx) => opt.isCorrect ? idx : null)
-      .filter(idx => idx !== null);
-    return selected.length === correctIndices.length &&
-      selected.every(s => correctIndices.includes(s));
-  }).length;
 
   return (
     <div className="exam-workspace min-h-screen bg-background pb-20 lg:pb-0">
@@ -1949,7 +1673,7 @@ const ExamPage = () => {
                   <div className="p-3 space-y-2">
                     {Object.entries(examData.questions || {})
                     .sort(([nameA], [nameB]) => compareSessionNames(nameA, nameB))
-                    .map(([sessionName, sessionQuestions]) => {
+                    .map(([sessionName]) => {
                       const isCollapsed = collapsedSessions.has(sessionName);
                       return (
                         <div key={sessionName} className="space-y-1">
@@ -1975,8 +1699,8 @@ const ExamPage = () => {
                               <Calendar className="h-4 w-4 text-muted-foreground" />
                               <span className="font-medium text-sm text-foreground">{sessionName}</span>
                             </div>
-                            <Badge variant="outline" className="text-xs bg-muted text-muted-foreground">
-                              {sessionQuestions.length}
+                            <Badge aria-label={`Progression ${sessionName}`} variant="outline" className="text-xs bg-muted text-muted-foreground">
+                              {progressStats.sections[sessionName]?.verified || 0} / {progressStats.sections[sessionName]?.total || 0}
                             </Badge>
                           </button>
                           {!isCollapsed && (
@@ -1990,6 +1714,8 @@ const ExamPage = () => {
                                 return (
                                   <button
                                     key={q._id}
+                                    data-question-id={q._id}
+                                    data-question-status={status}
                                     onClick={() => goToQuestion(globalIndex)}
                                     className={cn(
                                       "relative w-8 h-8 rounded-md text-xs font-semibold transition-all border-2 flex items-center justify-center",
@@ -2001,9 +1727,9 @@ const ExamPage = () => {
                                       status === 'unanswered' && "bg-muted/60 border-border text-muted-foreground hover:bg-muted",
                                       "hover:shadow-md active:scale-95"
                                     )}
-                                    title={`Q${questionData?.displayNumber || idx + 1}`}
+                                    title={`Q${questionData?.displayNumber || globalIndex + 1}`}
                                   >
-                                    {questionData?.displayNumber || idx + 1}
+                                    {questionData?.displayNumber || globalIndex + 1}
                                     {isFlagged && !showResults && (
                                       <Flag className="absolute -top-1 -right-1 h-2.5 w-2.5 fill-purple-500 text-purple-500" />
                                     )}
@@ -2026,50 +1752,13 @@ const ExamPage = () => {
                       <div>
                         <div className="flex items-center justify-between text-sm mb-1">
                           <span className="font-medium text-foreground">Vérifiées</span>
-                          <span className="text-muted-foreground">
-                            {Object.keys(verifiedQuestions).length} / {questions.length}
+                          <span aria-label="Questions vérifiées" className="text-muted-foreground">
+                            {verifiedCount} / {questions.length}
                           </span>
                         </div>
                         <div className="flex h-2 rounded-full overflow-hidden bg-muted">
-                          {(() => {
-                            const correctCount = questions.filter((_, i) => {
-                              const verifiedData = verifiedQuestions[i];
-                              const isVerified = verifiedData?.verified || verifiedData === true;
-                              if (!isVerified) return false;
-                              // Use stored isCorrect if available
-                              if (verifiedData?.isCorrect !== undefined) {
-                                return verifiedData.isCorrect;
-                              }
-                              const selected = selectedAnswers[i] || [];
-                              const correctIndices = questions[i].options
-                                .map((opt, idx) => opt.isCorrect ? idx : null)
-                                .filter(idx => idx !== null);
-                              return selected.length === correctIndices.length &&
-                                selected.every(s => correctIndices.includes(s));
-                            }).length;
-
-                            const verifiedCount = Object.keys(verifiedQuestions).filter(key => {
-                              const v = verifiedQuestions[key];
-                              return v?.verified || v === true;
-                            }).length;
-                            const incorrectCount = verifiedCount - correctCount;
-
-                            const correctPct = (correctCount / questions.length) * 100;
-                            const incorrectPct = (incorrectCount / questions.length) * 100;
-
-                            return (
-                              <>
-                                <div
-                                  className="bg-emerald-500 transition-all"
-                                  style={{ width: `${correctPct}%` }}
-                                />
-                                <div
-                                  className="bg-red-500 transition-all"
-                                  style={{ width: `${incorrectPct}%` }}
-                                />
-                              </>
-                            );
-                          })()}
+                          <div className="bg-emerald-500 transition-all" style={{ width: `${correctCount / questions.length * 100}%` }} />
+                          <div className="bg-red-500 transition-all" style={{ width: `${incorrectCount / questions.length * 100}%` }} />
                         </div>
                       </div>
                     </div>
@@ -2527,7 +2216,7 @@ const ExamPage = () => {
                         <div className="space-y-3">
                           {/* Action Buttons Grid - Mobile Only */}
                           <div className="lg:hidden grid grid-cols-2 gap-2">
-                            {!verifiedQuestions[currentQuestion]?.isCorrect && (
+                            {!currentQuestionIsCorrect && (
                               <Button
                                 variant="outline"
                                 onClick={(e) => handleResetQuestion(e)}
@@ -2566,7 +2255,7 @@ const ExamPage = () => {
 
                           {/* Status Display - Mobile Only */}
                           <div className="lg:hidden">
-                            {verifiedQuestions[currentQuestion]?.isCorrect ? (
+                            {currentQuestionIsCorrect ? (
                               <div className="bg-emerald-500/15 border-l-4 border-emerald-500 p-3 rounded-r-lg">
                                 <div className="flex items-center gap-2">
                                   <CheckCircle className="h-5 w-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
@@ -2595,7 +2284,7 @@ const ExamPage = () => {
                       {isQuestionVerified && (
                         <div className="hidden lg:flex flex-col gap-3 pt-4 border-t border-border">
                           {/* Status Display - Desktop */}
-                          {verifiedQuestions[currentQuestion]?.isCorrect ? (
+                          {currentQuestionIsCorrect ? (
                             <div className="flex items-center justify-center gap-2 px-4 py-2 bg-emerald-500/15 border border-emerald-500/30 rounded-lg text-emerald-800 dark:text-emerald-200">
                               <CheckCircle className="h-5 w-5 text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
                               <span className="font-semibold">Réponse correcte !</span>
@@ -2609,7 +2298,7 @@ const ExamPage = () => {
 
                           {/* Action Buttons */}
                           <div className="flex items-center justify-center gap-2">
-                            {!verifiedQuestions[currentQuestion]?.isCorrect && (
+                            {!currentQuestionIsCorrect && (
                               <Button
                                 variant="outline"
                                 onClick={(e) => handleResetQuestion(e)}
@@ -2945,6 +2634,8 @@ const ExamPage = () => {
                     return (
                       <button
                         key={index}
+                        data-question-id={q._id}
+                        data-question-status={status}
                         onClick={() => {
                           goToQuestion(index);
                           setShowMobileQuestionNav(false);
@@ -3070,7 +2761,7 @@ const ExamPage = () => {
                 <div className="p-3 space-y-2">
                   {Object.entries(examData.questions || {})
                     .sort(([nameA], [nameB]) => compareSessionNames(nameA, nameB))
-                    .map(([sessionName, sessionQuestions]) => {
+                    .map(([sessionName]) => {
                     const isCollapsed = collapsedSessions.has(sessionName);
 
                     return (
@@ -3097,7 +2788,7 @@ const ExamPage = () => {
                             <Calendar className="h-4 w-4 text-gray-500 shrink-0" />
                             <span className="text-sm font-medium text-foreground break-words line-clamp-2">{sessionName}</span>
                           </div>
-                          <Badge variant="outline" className="bg-muted text-muted-foreground">{sessionQuestions.length}</Badge>
+                          <Badge aria-label={`Progression ${sessionName}`} variant="outline" className="bg-muted text-muted-foreground">{progressStats.sections[sessionName]?.verified || 0} / {progressStats.sections[sessionName]?.total || 0}</Badge>
                         </button>
 
                         {!isCollapsed && (
@@ -3113,6 +2804,7 @@ const ExamPage = () => {
                                 <button
                                   key={q._id}
                                   data-question-id={q._id}
+                                  data-question-status={status}
                                   className={cn(
                                     "w-full flex items-center gap-2.5 px-2.5 py-2 rounded-md text-sm font-medium transition-all",
                                     "lg:flex-col lg:items-center lg:justify-center lg:gap-1 lg:px-2 lg:py-1.5 lg:text-xs",
@@ -3132,9 +2824,9 @@ const ExamPage = () => {
                                     status === 'visited' && "bg-amber-500/20 border-amber-500/40 text-amber-700 dark:text-amber-300",
                                     status === 'unanswered' && "bg-muted border-border text-muted-foreground"
                                   )}>
-                                    {shouldShowNumberInBox(questionData) ? (questionData?.displayNumber || idx + 1) : ''}
+                                    {shouldShowNumberInBox(questionData) ? (questionData?.displayNumber || globalIndex + 1) : ''}
                                   </div>
-                                  <span className="flex-1 text-left text-muted-foreground lg:flex-none lg:text-center lg:text-[10px] lg:leading-tight">Q{questionData?.displayNumber || idx + 1}</span>
+                                  <span className="flex-1 text-left text-muted-foreground lg:flex-none lg:text-center lg:text-[10px] lg:leading-tight">Q{questionData?.displayNumber || globalIndex + 1}</span>
                                   {isFlagged && (
                                     <Flag className="h-3 w-3 fill-purple-500 text-purple-500 shrink-0" />
                                   )}
@@ -3160,7 +2852,7 @@ const ExamPage = () => {
                       </span>
                     </div>
                     <div className="flex items-center justify-between text-xs text-gray-500">
-                      <span>{verifiedCount} / {questions.length} vérifiées</span>
+                      <span aria-label="Questions vérifiées">{verifiedCount} / {questions.length} vérifiées</span>
                     </div>
                     <div className="h-2 bg-muted rounded-full overflow-hidden">
                       <div
@@ -3642,6 +3334,12 @@ const ExamPage = () => {
 
     </div>
   );
+};
+
+const ExamPage = () => {
+  const { examId } = useParams();
+  const [searchParams] = useSearchParams();
+  return <ExamSession key={`${examId}:${searchParams.get('type') || 'exam'}`} />;
 };
 
 export default ExamPage;
