@@ -4,7 +4,7 @@ import ExamCourse from "./models/examCourseModel.js";
 import ExamParYear from "./models/examParYearModel.js";
 import Question from "./models/questionModule.js";
 import UserStats from "./models/userStatsModel.js";
-import { answerQuestionId, answerKey } from "./utils/answerIdentity.js";
+import { remapQuestionAnswers } from "./utils/answerIdentity.js";
 
 const args = process.argv.slice(2);
 const applyChanges = args.includes("--apply");
@@ -113,18 +113,11 @@ try {
       const answers = stats.answeredQuestions instanceof Map
         ? new Map(stats.answeredQuestions.entries())
         : new Map(Object.entries(stats.answeredQuestions || {}));
-      let changed = false;
-      replacements.forEach((keeperId, duplicateId) => {
-        for (const [key, answer] of [...answers]) {
-          if (answerQuestionId(key) !== String(duplicateId)) continue;
-          const keeperKey = key.includes(':') ? answerKey(key.split(':')[0], keeperId) : String(keeperId);
-          if (!answers.has(keeperKey)) answers.set(keeperKey, answer);
-          answers.delete(key);
-          changed = true;
-        }
-      });
+      const remapped = remapQuestionAnswers(answers, replacements);
+      const changed = remapped.size !== answers.size
+        || [...remapped].some(([key, answer]) => answers.get(key) !== answer);
       if (!changed) continue;
-      stats.answeredQuestions = new Map(answers);
+      stats.answeredQuestions = remapped;
       await stats.save();
       updatedStats += 1;
     }

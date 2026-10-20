@@ -194,7 +194,7 @@ test('resetting a result does not award the same correct-answer point again', as
 test('invalid selections cannot create progress or spoof a correct result', async t => {
     const { invoke, state } = setup(t);
     for (const selectedAnswers of [[0, 0], [-1], [7], ['0'], []]) {
-        assert.equal((await invoke('saveAnswer', { questionId: 'normal', selectedAnswers, isVerified: true })).code, 400);
+        assert.equal((await invoke('saveAnswer', { questionId: 'normal', examId: 'course', selectedAnswers, isVerified: true })).code, 400);
     }
     assert.equal(state().answeredQuestions.size, 0);
 });
