@@ -8,7 +8,7 @@ import examCourseModel from "../models/examCourseModel.js";
 import qcmBanqueModel from "../models/qcmBanqueModel.js";
 import { buildModulePayload, ModulePayloadError } from "../utils/modulePayload.js";
 import { questionLogicalKey, uniqueQuestionsByLogicalKey } from "../utils/questionIdentity.js";
-import { buildProgressStatistics } from "../services/progressStatisticsService.js";
+import { buildCompleteActivitySources, buildProgressStatistics } from "../services/progressStatisticsService.js";
 import {
     CategoryLabelsError,
     DEFAULT_CATEGORY_LABELS,
@@ -317,7 +317,7 @@ export const moduleController = {
         const [module, examParYears, examCourses, qcmBanques, userStats] = await Promise.all([
             moduleSchema.findById(id).select("name").lean(),
             examParYearModel.find({ moduleId: id }).select("_id").lean(),
-            examCourseModel.find({ moduleId: id, status: { $ne: "archived" } }).select("_id").lean(),
+            examCourseModel.find({ moduleId: id, status: { $ne: "archived" } }).select("_id linkedQuestions name").lean(),
             qcmBanqueModel.find({ moduleId: id }).select("_id").lean(),
             UserStats.findOne({ userId }).select("answeredQuestions").lean()
         ]);
@@ -349,7 +349,12 @@ export const moduleController = {
         // Use the same verified-answer and duplicate-alias rules as statistics.
         const { summary } = buildProgressStatistics({
             modules: [{ _id: id, name: module.name }],
-            courses: [{ _id: `module-${id}`, moduleId: id, linkedQuestions: questions.map(question => question._id) }],
+            courses: buildCompleteActivitySources({
+                courses: examCourses.map(course => ({ ...course, moduleId: id })),
+                annualExams: examParYears.map(exam => ({ ...exam, moduleId: id })),
+                qcmBanks: qcmBanques.map(bank => ({ ...bank, moduleId: id })),
+                questions: sourceQuestions,
+            }),
             questions: sourceQuestions,
             answeredQuestions: userStats?.answeredQuestions || {},
         });
@@ -362,7 +367,8 @@ export const moduleController = {
             data: {
                 moduleId: id,
                 moduleName: module.name,
-                totalQuestions,
+                totalQuestions: summary.totalQuestionOccurrences,
+                totalUniqueQuestions: totalQuestions,
                 questionsAnswered,
                 percentage
             }

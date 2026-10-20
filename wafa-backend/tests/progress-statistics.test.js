@@ -77,7 +77,7 @@ test("keeps QCM and legacy answers in the total without inventing a yearly or co
   }
 });
 
-test("uses the latest verified duplicate's answering mode with MongoDB exam IDs", () => {
+test("counts duplicate aliases independently in each MongoDB exam context", () => {
   const annualId = new mongoose.Types.ObjectId();
   const courseId = new mongoose.Types.ObjectId();
   const questions = [
@@ -97,7 +97,7 @@ test("uses the latest verified duplicate's answering mode with MongoDB exam IDs"
     },
   });
   assert.equal(result.modules[0].totalQuestions, 1);
-  assert.equal(result.modules[0].answeredQuestions, 1);
+  assert.equal(result.modules[0].answeredQuestions, 2);
   assert.equal(result.modules[0].answeredByYear, 1);
   assert.equal(result.modules[0].answeredByCourse, 1);
   assert.equal(result.modules[0].correctAnswers, 1);
@@ -127,7 +127,7 @@ for (const format of ["Map", "object"]) {
         assert.equal(item.answeredQuestions, 1);
         assert.equal(item.correctAnswers, correct);
         assert.equal(item.incorrectAnswers, 1 - correct);
-        assert.equal(item.completionPercentage, 100);
+        assert.equal(item.completionPercentage, item.courseId ? 100 : 50);
       }
     };
     check(1);
@@ -141,20 +141,21 @@ for (const format of ["Map", "object"]) {
   });
 }
 
-test("global summary counts shared questions once across modules", () => {
+test("a shared question answered in one course only contributes to that course's module", () => {
   const result = buildProgressStatistics({
     modules: [{ _id: "a", name: "A" }, { _id: "b", name: "B" }],
     courses: [
       { _id: "ca", name: "A", moduleId: "a", linkedQuestions: ["shared", "q2"] },
       { _id: "cb", name: "B", moduleId: "b", linkedQuestions: ["shared", "q3"] },
     ],
-    answeredQuestions: { shared: { isVerified: true, isCorrect: true } },
+    answeredQuestions: { shared: { examId: "ca", isVerified: true, isCorrect: true } },
   });
   assert.equal(result.summary.totalQuestions, 3);
   assert.equal(result.summary.totalQuestionsByCourse, 4);
   assert.deepEqual(result.modules.map((module) => module.totalQuestionsByCourse), [2, 2]);
   assert.equal(result.summary.answeredQuestions, 1);
-  assert.equal(result.summary.completionPercentage, 33);
+  assert.equal(result.summary.completionPercentage, 25);
+  assert.deepEqual(result.modules.map(module => module.answeredQuestions), [1, 0]);
 });
 
 test("equal question numbers in different exams or sessions remain distinct", () => {
@@ -171,7 +172,7 @@ test("equal question numbers in different exams or sessions remain distinct", ()
   });
   const result = buildProgressStatistics({
     modules: [{ _id: "m", name: "M" }], courses, questions,
-    answeredQuestions: { q1: { isVerified: true, isCorrect: true } },
+    answeredQuestions: { q1: { examId: "c", isVerified: true, isCorrect: true } },
   });
   assert.equal(result.summary.totalQuestions, 5);
   assert.equal(result.summary.answeredQuestions, 1);
@@ -198,7 +199,7 @@ test("strictly keeps only modules from the selected semester", () => {
 });
 
 for (const answerFormat of ["Map", "plain object"]) {
-  test(`690 shared questions remain 690 after 10 course retries (${answerFormat})`, () => {
+  test(`690 yearly completions plus 10 course completions count as 700 (${answerFormat})`, () => {
     const questionIds = Array.from({ length: 690 }, (_, index) => `question-${index}`);
     const modules = [{ _id: "anatomy", name: "Anatomie I", semester: "S1" }];
     const annualExams = [{ _id: "exam", name: "2026 normal", moduleId: "anatomy" }];
@@ -226,7 +227,7 @@ for (const answerFormat of ["Map", "plain object"]) {
         assert.equal(stats.correctAnswers, correct);
         assert.equal(stats.incorrectAnswers, incorrect);
         assert.equal(stats.correctAnswers + stats.incorrectAnswers, stats.answeredQuestions);
-        assert.equal(stats.completionPercentage, Math.round(answered / 690 * 100));
+        assert.equal(stats.completionPercentage, Math.round(answered / 1380 * 100));
       }
       return result;
     };
@@ -242,7 +243,7 @@ for (const answerFormat of ["Map", "plain object"]) {
     // Each context keeps its own result; overall coverage still counts a question once.
     questionIds.slice(0, 10).forEach((id, index) => {
       answers.set(`course-a:${id}`, { examId: "course-a", isVerified: true, isCorrect: true, answeredAt: "2026-10-20" });
-      const retried = assertCounts(690, index + 1, 689 - index);
+      const retried = assertCounts(691 + index, index + 1, 690);
       assert.equal(retried.modules[0].answeredByYear, 690);
       assert.equal(retried.modules[0].answeredByCourse, index + 1);
     });
@@ -253,7 +254,7 @@ for (const answerFormat of ["Map", "plain object"]) {
 
     // Answers outside the module must not increase its numerator.
     answers.set("unrelated-question", { isVerified: true, isCorrect: true });
-    assertCounts(690, 10, 680);
+    assertCounts(700, 10, 690);
   });
 }
 
@@ -291,7 +292,7 @@ test("sums overlapping course totals while keeping module questions and answers 
     ],
     answeredQuestions: {
       q1: { isVerified: false, isCorrect: true },
-      q2: { isVerified: true, isCorrect: false },
+      q2: { examId: "course-1", isVerified: true, isCorrect: false },
     },
   });
 
@@ -300,7 +301,7 @@ test("sums overlapping course totals while keeping module questions and answers 
   assert.equal(result.summary.totalQuestionsByCourse, 4);
   assert.equal(result.modules[0].answeredQuestions, 1);
   assert.equal(result.modules[0].incorrectAnswers, 1);
-  assert.equal(result.modules[0].completionPercentage, 33);
+  assert.equal(result.modules[0].completionPercentage, 25);
 });
 
 test("handles MongoDB ObjectIds without recursive stack overflow", () => {
@@ -350,8 +351,8 @@ test("includes unmapped annual-exam and QCM-bank activity without double countin
     courses: sources,
     answeredQuestions: {
       q1: { examId: "course-1", isVerified: true, isCorrect: true, answeredAt: "2026-09-01T10:00:00.000Z" },
-      q2: { isVerified: true, isCorrect: false, answeredAt: "2026-09-02T10:00:00.000Z" },
-      q3: { isVerified: true, isCorrect: true, answeredAt: "2026-09-03T10:00:00.000Z" },
+      q2: { examId: "exam-1", isVerified: true, isCorrect: false, answeredAt: "2026-09-02T10:00:00.000Z" },
+      q3: { examId: "bank-1", isVerified: true, isCorrect: true, answeredAt: "2026-09-03T10:00:00.000Z" },
     },
   });
 
@@ -362,7 +363,7 @@ test("includes unmapped annual-exam and QCM-bank activity without double countin
   assert.equal(result.summary.answeredQuestions, 3);
   assert.equal(result.summary.correctAnswers, 2);
   assert.equal(result.summary.incorrectAnswers, 1);
-  assert.equal(result.summary.completionPercentage, 100);
+  assert.equal(result.summary.completionPercentage, 75);
   assert.equal(result.modules[0].highlights.recent.courseName, "Cours thématique");
   assert.equal(result.modules[0].courses.length, 1);
   assert.equal(result.modules[0].courses[0].courseName, "Cours thématique");

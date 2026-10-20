@@ -67,7 +67,10 @@ const normalizeAnswers = (answeredQuestions, aliases, modesByExamId, questions, 
       answeredAt: answer.answeredAt ? new Date(answer.answeredAt) : null,
       mode: modesByExamId.get(context) || null,
     };
-    const existing = answers.get(id);
+    const storageId = contextId === undefined ? `${context}:${id}` : id;
+    normalized.questionId = id;
+    normalized.context = context;
+    const existing = answers.get(storageId);
     const modes = new Set([...(existing?.modes || []), normalized.mode]);
     normalized.modes = modes;
     if (existing) existing.modes = modes;
@@ -76,7 +79,7 @@ const normalizeAnswers = (answeredQuestions, aliases, modesByExamId, questions, 
     // On a timestamp tie, prefer the canonical document's answer.
     if (!existing || timestamp(normalized) > timestamp(existing)
       || (timestamp(normalized) === timestamp(existing) && asId(questionId) === id)) {
-      answers.set(id, normalized);
+      answers.set(storageId, normalized);
     }
   }
   return answers;
@@ -90,11 +93,16 @@ const successRate = (correct, answered) => answered > 0
   ? clampPercentage((correct / answered) * 100)
   : 0;
 
-const buildStats = (questionIds, answers) => {
+const buildStats = (questionIds, answers, occurrences, knownContexts = new Set()) => {
   const uniqueQuestionIds = [...new Set((questionIds || []).map((id) => asId(id)).filter(Boolean))];
-  const activity = uniqueQuestionIds
-    .map((questionId) => answers.get(questionId))
-    .filter((answer) => answer?.isVerified);
+  const allowed = new Set(uniqueQuestionIds);
+  const occurrenceSet = new Set(occurrences || []);
+  const activity = [...answers.values()].filter(answer => allowed.has(answer.questionId)
+    && (!occurrences || !knownContexts.has(answer.context)
+      || occurrenceSet.has(`${answer.context}:${answer.questionId}`)));
+  const totalQuestionOccurrences = occurrences
+    ? new Set([...occurrences, ...activity.map(answer => `${answer.context}:${answer.questionId}`)]).size
+    : uniqueQuestionIds.length;
   const correctAnswers = activity.filter((answer) => answer.isCorrect).length;
   const incorrectAnswers = activity.length - correctAnswers;
   const lastActivity = activity.reduce((latest, answer) => {
@@ -105,14 +113,15 @@ const buildStats = (questionIds, answers) => {
   return {
     questionIds: uniqueQuestionIds,
     totalQuestions: uniqueQuestionIds.length,
+    totalQuestionOccurrences,
     answeredQuestions: activity.length,
     answeredByYear: activity.filter((answer) => answer.modes.has("year")).length,
     answeredByCourse: activity.filter((answer) => answer.modes.has("course")).length,
     correctAnswers,
     incorrectAnswers,
-    completionPercentage: percentageOfTotal(activity.length, uniqueQuestionIds.length),
-    correctPercentage: percentageOfTotal(correctAnswers, uniqueQuestionIds.length),
-    incorrectPercentage: percentageOfTotal(incorrectAnswers, uniqueQuestionIds.length),
+    completionPercentage: percentageOfTotal(activity.length, totalQuestionOccurrences),
+    correctPercentage: percentageOfTotal(correctAnswers, totalQuestionOccurrences),
+    incorrectPercentage: percentageOfTotal(incorrectAnswers, totalQuestionOccurrences),
     successRate: successRate(correctAnswers, activity.length),
     lastActivity: lastActivity?.toISOString() || null,
   };
@@ -222,15 +231,12 @@ export const buildCompleteActivitySources = ({
       .map((questionId) => aliases.get(asId(questionId)) || asId(questionId))
       .filter((questionId) => existingQuestionIds.has(asId(questionId))),
   }));
-  const linkedQuestionIds = new Set(
-    activeCourses.flatMap((course) => course.linkedQuestions || []).map((id) => asId(id)).filter(Boolean),
-  );
   const questionsByAnnualExam = new Map();
   const questionsByQcmBank = new Map();
 
   activeQuestions.forEach((question) => {
     const questionId = asId(question._id);
-    if (!questionId || linkedQuestionIds.has(questionId)) return;
+    if (!questionId) return;
 
     const annualExamId = asId(question.examId);
     const qcmBankId = asId(question.qcmBanqueId);
@@ -247,6 +253,7 @@ export const buildCompleteActivitySources = ({
   const supplementalSources = [
     ...annualExams.map((exam) => ({
       _id: `exam-year-${asId(exam._id)}`,
+      contextId: asId(exam._id),
       name: exam.name || "Examen par année",
       moduleId: exam.moduleId,
       category: "Exam par année",
@@ -256,6 +263,7 @@ export const buildCompleteActivitySources = ({
     })),
     ...qcmBanks.map((qcm) => ({
       _id: `qcm-bank-${asId(qcm._id)}`,
+      contextId: asId(qcm._id),
       name: qcm.name || "Banque de QCM",
       moduleId: qcm.moduleId,
       category: "Banque de QCM",
@@ -297,7 +305,9 @@ export const buildProgressStatistics = ({ modules = [], courses = [], annualExam
     });
   });
 
+  const knownContexts = new Set(courses.map(source => asId(source.contextId || source._id)));
   const summaryQuestionIds = [];
+  const summaryOccurrences = [];
   const moduleStats = modules.map((module) => {
     const moduleId = asId(module._id);
     const allStoredSources = coursesByModule.get(moduleId) || [];
@@ -336,7 +346,10 @@ export const buildProgressStatistics = ({ modules = [], courses = [], annualExam
 
     const moduleQuestionIds = allStoredSources.flatMap((source) => source.linkedQuestions || []);
     for (const id of moduleQuestionIds) summaryQuestionIds.push(id);
-    const stats = buildStats(moduleQuestionIds, answers);
+    const occurrences = allStoredSources.flatMap(source => (source.linkedQuestions || [])
+      .map(id => `${asId(source.contextId || source._id)}:${id}`));
+    summaryOccurrences.push(...occurrences);
+    const stats = buildStats(moduleQuestionIds, answers, occurrences, knownContexts);
 
     return {
       moduleId,
@@ -345,8 +358,9 @@ export const buildProgressStatistics = ({ modules = [], courses = [], annualExam
       color: module.color || "#3b82f6",
       courseCount: courseStats.length,
       ...stats,
+      totalQuestionsByYear: new Set(occurrences.filter(key => modesByExamId.get(key.split(":")[0]) === "year")).size,
       // A shared question contributes once to every course it belongs to.
-      // Keep the module's totalQuestions and answer counts unique.
+      // Inventory stays unique; processed totals count each answering context.
       totalQuestionsByCourse: courseStats.reduce((total, course) => total + course.totalQuestions, 0),
       questionIds: undefined,
       courses: courseStats,
@@ -354,13 +368,15 @@ export const buildProgressStatistics = ({ modules = [], courses = [], annualExam
     };
   });
 
-  const summary = buildStats(summaryQuestionIds, answers);
+  const summary = buildStats(summaryQuestionIds, answers, summaryOccurrences, knownContexts);
 
   return {
     summary: {
       moduleCount: moduleStats.length,
       courseCount: moduleStats.reduce((count, module) => count + module.courseCount, 0),
       totalQuestions: summary.totalQuestions,
+      totalQuestionOccurrences: summary.totalQuestionOccurrences,
+      totalQuestionsByYear: new Set(summaryOccurrences.filter(key => modesByExamId.get(key.split(":")[0]) === "year")).size,
       totalQuestionsByCourse: moduleStats.reduce((total, module) => total + module.totalQuestionsByCourse, 0),
       answeredQuestions: summary.answeredQuestions,
       answeredByYear: summary.answeredByYear,

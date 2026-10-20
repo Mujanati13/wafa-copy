@@ -12,7 +12,7 @@ import Bank from '../models/qcmBanqueModel.js';
 import Point from '../models/pointModel.js';
 import { getMembershipCounts, loadSavedProgress } from '../utils/answerProgress.js';
 import { selectQuestionAnswers, countVerifiedQuestions, getCourseQuestionCounts } from '../services/questionProgressService.js';
-import { buildProgressStatistics } from '../services/progressStatisticsService.js';
+import { buildCompleteActivitySources, buildProgressStatistics } from '../services/progressStatisticsService.js';
 
 const q = (_id, sessionLabel, examId = 'annual') => ({ _id, examId, sessionLabel, questionNumber: 1,
     options: [{ isCorrect: true }, { isCorrect: false }] });
@@ -321,7 +321,10 @@ for (const question of questions.slice(0, 3)) {
                 annualExams: [{ _id: 'annual' }], answeredQuestions: state().answeredQuestions });
             assert.equal(stats.modules[0].courses[0].answeredQuestions, 1);
             assert.equal(stats.modules[0].courses[0].correctAnswers, first === 'course' ? 1 : 0);
-            assert.equal(stats.summary.answeredQuestions, 1);
+            assert.equal(stats.summary.answeredQuestions, 2);
+            assert.equal(state().questionsAnswered, 2);
+            assert.equal(state().totalCorrectAnswers, 1);
+            assert.equal(state().totalIncorrectAnswers, 1);
             assert.equal(stats.summary.answeredByYear, 1);
             assert.equal(stats.summary.answeredByCourse, 1);
             await invoke('saveAnswer', { ...body, examId: second, selectedAnswers: [], isVerified: false, reset: true });
@@ -359,4 +362,30 @@ test('simultaneous saves of the same question in different contexts retain both 
     assert.equal((await invoke('getUserAnswers', {}, 'annual')).body.data.normal.isCorrect, true);
     assert.equal((await invoke('getUserAnswers', {}, 'course')).body.data.normal.isCorrect, false);
     assert.deepEqual(await getMembershipCounts(state().answeredQuestions), { annual: 1, course: 1 });
+});
+
+test('the same correct question in year and two courses contributes three independent completions', async t => {
+    const catalog = [q('normal', 'normale'), q('duplicate', 'normale')];
+    const linkedCourses = ['course', 'second-course'].map(_id => ({ _id, moduleId: 'module', linkedQuestions: ['normal', 'duplicate'] }));
+    const annualExams = [{ _id: 'annual', moduleId: 'module' }];
+    const { invoke, state } = setup(t, { catalog, linkedCourses, annualExams });
+    for (const [index, examId] of ['annual', 'course', 'second-course'].entries()) {
+        const body = { questionId: 'normal', examId, selectedAnswers: [0], isVerified: true };
+        await invoke('saveAnswer', body);
+        await invoke('saveAnswer', { ...body, questionId: 'duplicate' });
+        assert.equal(state().questionsAnswered, index + 1);
+        assert.equal(state().totalCorrectAnswers, index + 1);
+        assert.equal(state().moduleProgress[0].questionsAttempted, index + 1);
+        const stats = buildProgressStatistics({ modules: [{ _id: 'module' }], annualExams, questions: catalog,
+            courses: buildCompleteActivitySources({ courses: linkedCourses, annualExams, questions: catalog }),
+            answeredQuestions: state().answeredQuestions });
+        assert.equal(stats.summary.answeredQuestions, index + 1);
+        assert.equal(stats.summary.correctAnswers, index + 1);
+        assert.equal(stats.summary.totalQuestionOccurrences, 3);
+        assert.equal(stats.summary.completionPercentage, Math.round((index + 1) / 3 * 100));
+    }
+    await invoke('saveAnswer', { questionId: 'normal', examId: 'course', selectedAnswers: [], isVerified: false, reset: true });
+    assert.equal(state().questionsAnswered, 2);
+    assert.equal(state().totalCorrectAnswers, 2);
+    assert.deepEqual(await getMembershipCounts(state().answeredQuestions), { annual: 1, 'second-course': 1 });
 });

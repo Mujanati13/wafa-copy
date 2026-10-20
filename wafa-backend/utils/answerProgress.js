@@ -43,7 +43,6 @@ export const loadSavedProgress = async (answers) => {
 
     const savedQuestions = await Question.find({ _id: { $in: ids } }).select(questionIdentityFields).lean();
     const questions = await loadQuestionAliases(savedQuestions);
-    const results = selectQuestionAnswers(questions, questions, answers);
     const questionIds = questions.map(q => q._id);
     const idOf = value => String(value?._id || value || "");
     const sourceIds = field => [...new Set(questions.map(q => idOf(q[field])).filter(Boolean))];
@@ -80,9 +79,14 @@ export const loadSavedProgress = async (answers) => {
         for (const id of playlist.questionIds || []) add(playlist._id, keysById.get(String(id)));
     }
     const uniqueAnswers = new Map();
-    for (const q of questions) {
-        const answer = results[String(q._id)];
-        if (answer?.isVerified === true) uniqueAnswers.set(questionLogicalKey(q), answer);
+    const contexts = new Set(entries.map(([key, answer]) =>
+        answerContextId(key, answer, questionById.get(answerQuestionId(key)))));
+    for (const context of contexts) {
+        const results = selectQuestionAnswers(questions, questions, answers, context);
+        for (const q of questions) {
+            const answer = results[String(q._id)];
+            if (answer?.isVerified === true) uniqueAnswers.set(`${context}:${questionLogicalKey(q)}`, answer);
+        }
     }
     const verified = [...uniqueAnswers.values()];
     const correct = verified.filter(answer => answer.isCorrect === true).length;

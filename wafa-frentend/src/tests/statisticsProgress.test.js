@@ -16,7 +16,7 @@ const metricValue = (root, label) => {
   return textContent(labelNode.parent.findAllByType('p')[1]);
 };
 
-async function mountStatistics(module) {
+async function mountStatistics(module, summary = {}) {
   const context = vm.createContext({
     console, Intl, Date, Set, String, AbortController,
     window: { addEventListener() {}, removeEventListener() {} },
@@ -35,7 +35,7 @@ async function mountStatistics(module) {
     ].map(name => [name, () => null]))),
     '@/lib/utils': synthetic({ api: { get: async (url, options) => {
       requests.push({ url, semester: options.params.semester });
-      return { data: { data: { summary: {}, modules: [module] } } };
+      return { data: { data: { summary, modules: [module] } } };
     } } }),
     '@/context/SemesterContext': synthetic({ useSemester: () => ({
       selectedSemester: 'S1', setSelectedSemester() {}, userSemesters: ['S1'], loading: false,
@@ -59,6 +59,22 @@ async function mountStatistics(module) {
   await act(async () => { root = create(React.createElement(page.namespace.default)); });
   return { root, requests };
 }
+
+test('two correct occurrences of one question display two completions and a 2/2 global denominator', async () => {
+  const stats = { totalQuestions: 1, totalQuestionOccurrences: 2, totalQuestionsByYear: 1,
+    totalQuestionsByCourse: 1, answeredQuestions: 2, answeredByYear: 1, answeredByCourse: 1,
+    correctAnswers: 2, incorrectAnswers: 0, correctPercentage: 100, incorrectPercentage: 0,
+    completionPercentage: 100, successRate: 100 };
+  const { root } = await mountStatistics({ ...stats, moduleId: 'm', moduleName: 'Module', semester: 'S1', courses: [] }, stats);
+  try {
+    const card = root.root.findByType('article');
+    assert.equal(metricValue(card, 'Total traité'), '2');
+    assert.equal(metricValue(card, 'Correctes'), '2 (100%)');
+    assert.equal(metricValue(card, 'Exam par année'), '1/1');
+    assert.equal(metricValue(card, 'Exam par cours'), '1/1');
+    assert.ok(root.root.findAllByType('p').some(node => textContent(node) === '2/2 questions'));
+  } finally { await act(async () => root.unmount()); }
+});
 
 for (const attempted of [0, 3]) {
   test(`module displays an isolated total and adjacent mode fractions (${attempted} answers)`, async () => {

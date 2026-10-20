@@ -98,7 +98,7 @@ function ProgressMetrics({ item, compact = false, separateModes = false }) {
       },
       {
         label: "Exam par année",
-        count: `${formatNumber(item.answeredByYear)}/${formatNumber(item.totalQuestions)}`,
+        count: `${formatNumber(item.answeredByYear)}/${formatNumber(item.totalQuestionsByYear ?? item.totalQuestions)}`,
         className: "text-primary",
       },
       {
@@ -417,7 +417,7 @@ export default function StatisticsPage() {
               <h2 id="summary-heading" className="sr-only">Résumé de {selectedSemester}</h2>
               <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                 <SummaryCard icon={<BookOpen className="h-5 w-5" />} label="Modules et cours" value={summary.moduleCount} detail={`${summary.courseCount} cours · ${selectedSemester}`} tone="violet" />
-                <SummaryCard icon={<Target className="h-5 w-5" />} label="Progression globale" value={`${summary.completionPercentage}%`} detail={`${formatNumber(summary.answeredQuestions)}/${formatNumber(summary.totalQuestions)} questions`} tone="blue" />
+                <SummaryCard icon={<Target className="h-5 w-5" />} label="Progression globale" value={`${summary.completionPercentage}%`} detail={`${formatNumber(summary.answeredQuestions)}/${formatNumber(summary.totalQuestionOccurrences ?? summary.totalQuestions)} questions`} tone="blue" />
                 <SummaryCard icon={<CheckCircle2 className="h-5 w-5" />} label="Réponses correctes" value={formatNumber(summary.correctAnswers)} detail={`${summary.successRate}% de réussite`} tone="green" />
                 <SummaryCard icon={<XCircle className="h-5 w-5" />} label="Réponses incorrectes" value={formatNumber(summary.incorrectAnswers)} detail="Questions à revoir" tone="red" />
               </div>

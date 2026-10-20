@@ -55,6 +55,8 @@ for (const overlap of [0, 10]) {
     if (overlap) assert.equal(courseStats.find(course => course.courseId === String(secondCourseId)).answeredQuestions, 0);
     for (const item of [res.body.data.summary, res.body.data.modules[0]]) {
       assert.equal(item.totalQuestions, 690);
+      assert.equal(item.totalQuestionOccurrences, 1380 + overlap);
+      assert.equal(item.totalQuestionsByYear, 690);
       assert.equal(item.totalQuestionsByCourse, 690 + overlap);
       assert.equal(item.answeredQuestions, 3);
       assert.equal(item.answeredByYear, 2);

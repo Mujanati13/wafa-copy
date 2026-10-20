@@ -45,7 +45,7 @@ test("module API and statistics agree on direct course questions, duplicate answ
     };
     t.mock.method(Module, "findById", () => query({ name: "Méthodologie" }));
     t.mock.method(Exam, "find", () => query([{ _id: "exam" }]));
-    t.mock.method(Course, "find", () => query([{ _id: "c" }]));
+    t.mock.method(Course, "find", () => query([{ _id: "c", linkedQuestions: ["old"] }]));
     t.mock.method(Bank, "find", () => query([]));
     t.mock.method(UserStats, "findOne", () => query({ answeredQuestions }));
     t.mock.method(Question, "find", () => query(questions));
@@ -59,7 +59,7 @@ test("module API and statistics agree on direct course questions, duplicate answ
     const { summary } = buildProgressStatistics({ modules: [{ _id: "m", name: "Méthodologie" }], courses: sources, questions, answeredQuestions });
     assert.equal(summary.totalQuestions, 2);
     assert.equal(summary.answeredQuestions, 1);
-    assert.equal(res.body.data.totalQuestions, summary.totalQuestions);
+    assert.equal(res.body.data.totalQuestions, summary.totalQuestionOccurrences);
     assert.equal(res.body.data.questionsAnswered, summary.answeredQuestions);
     assert.equal(res.body.data.percentage, summary.completionPercentage);
     assert.equal(res.headers["Cache-Control"], "private, no-store");
