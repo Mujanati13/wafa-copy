@@ -84,7 +84,7 @@ test('the same-number questions in normale, rattrapage and exceptional sessions 
         ratt: { examId: 'course', isVerified: true, isCorrect: false },
         special: { examId: 'course', isVerified: false, isCorrect: false } };
     const selected = selectQuestionAnswers(questions.slice(0, 3), questions, answers, 'course');
-    assert.equal(countVerifiedQuestions(questions.slice(0, 3), selected), 2);
+    assert.equal(countVerifiedQuestions(questions.slice(0, 3), selected), 1);
     const stats = buildProgressStatistics({ modules: [{ _id: 'module' }], courses, questions,
         annualExams: [{ _id: 'annual', moduleId: 'module' }], answeredQuestions: answers });
     assert.equal(stats.summary.answeredQuestions, 2);
@@ -94,7 +94,7 @@ test('the same-number questions in normale, rattrapage and exceptional sessions 
     assert.equal(stats.summary.answeredByCourse, 1);
 });
 
-test('saved answers restore by real membership across yearly exams and courses, excluding unrelated questions and drafts', async t => {
+test('saved answers restore only within their answering context and question membership', async t => {
     const { invoke, state } = setup(t, { answers: {
         normal: { selectedAnswers: [0], examId: 'annual', isVerified: true, isCorrect: true },
         ratt: { selectedAnswers: [1], examId: 'course', isVerified: true, isCorrect: false },
@@ -104,22 +104,22 @@ test('saved answers restore by real membership across yearly exams and courses, 
     const course = await invoke('getUserAnswers');
     assert.equal(course.code, 200);
     assert.equal(course.headers['Cache-Control'], 'private, no-store');
-    assert.deepEqual(Object.keys(course.body.data).sort(), ['normal', 'ratt']);
+    assert.deepEqual(Object.keys(course.body.data).sort(), ['ratt']);
     const annual = await invoke('getUserAnswers', {}, 'annual');
-    assert.deepEqual(Object.keys(annual.body.data).sort(), ['normal', 'ratt', 'special']);
-    assert.deepEqual(await getMembershipCounts(state().answeredQuestions), { annual: 2, other: 1, course: 2 });
+    assert.deepEqual(Object.keys(annual.body.data).sort(), ['normal', 'special']);
+    assert.deepEqual(await getMembershipCounts(state().answeredQuestions), { annual: 1, course: 1 });
 });
 
 test('latest verified imported aliases restore to the visible ID and count once, matching statistics', async t => {
     const catalog = [q('new', 'normale'), q('old', 'normale'), q('ratt', 'rattrapage')];
     const linkedCourses = [{ _id: 'course', moduleId: 'module', linkedQuestions: ['old', 'ratt'] }];
-    const answers = { new: { selectedAnswers: [0], isVerified: true, isCorrect: true, answeredAt: '2026-10-01' },
-        old: { selectedAnswers: [1], isVerified: true, isCorrect: false, answeredAt: '2026-10-02' } };
+    const answers = { new: { examId: 'course', selectedAnswers: [0], isVerified: true, isCorrect: true, answeredAt: '2026-10-01' },
+        old: { examId: 'course', selectedAnswers: [1], isVerified: true, isCorrect: false, answeredAt: '2026-10-02' } };
     const { invoke } = setup(t, { catalog, linkedCourses, answers });
     const res = await invoke('getUserAnswers');
     assert.equal(res.body.data.old.isCorrect, false);
     assert.equal(countVerifiedQuestions(catalog, selectQuestionAnswers(catalog, catalog, answers)), 1);
-    assert.deepEqual(await getMembershipCounts(answers), { annual: 1, course: 1 });
+    assert.deepEqual(await getMembershipCounts(answers), { course: 1 });
     const stats = buildProgressStatistics({ modules: [{ _id: 'module' }], courses: linkedCourses, questions: catalog, answeredQuestions: answers });
     assert.equal(stats.summary.answeredQuestions, 1);
     assert.equal(stats.summary.incorrectAnswers, 1);
@@ -148,8 +148,8 @@ test('late drafts never downgrade verification; an explicit persisted reset allo
     const body = { questionId: 'normal', selectedAnswers: [0], isVerified: true, examId: 'course', moduleId: 'module' };
     await invoke('saveAnswer', body);
     await invoke('saveAnswer', { ...body, selectedAnswers: [1], isVerified: false });
-    assert.equal(state().answeredQuestions.get('normal').isVerified, true);
-    assert.deepEqual(state().answeredQuestions.get('normal').selectedAnswers, [0]);
+    assert.equal(state().answeredQuestions.get('course:normal').isVerified, true);
+    assert.deepEqual(state().answeredQuestions.get('course:normal').selectedAnswers, [0]);
     const reset = await invoke('saveAnswer', { ...body, selectedAnswers: [], isVerified: false, reset: true });
     assert.equal(reset.body.data.completedQuestions, 0);
     assert.equal(state().questionsAnswered, 0);
@@ -207,7 +207,7 @@ test('course denominators exclude stale links and duplicate imports while includ
     assert.deepEqual(await getCourseQuestionCounts(linkedCourses), { course: 3 });
 });
 
-test('QCM, playlists and native course membership share results without inventing extra questions', async t => {
+test('QCM, playlists and native courses retain independent results', async t => {
     const bank = { ...q('bank-question', 'rattrapage'), examId: undefined, qcmBanqueId: 'bank' };
     const native = { ...q('native', 'session exceptionnelle'), examId: undefined, examCourseId: 'course' };
     const { invoke, state } = setup(t, { catalog: [questions[0], bank, native], playlists: [
@@ -217,10 +217,10 @@ test('QCM, playlists and native course membership share results without inventin
         'bank-question': { selectedAnswers: [1], isVerified: true, isCorrect: false, examId: 'bank' },
         native: { selectedAnswers: [0], isVerified: true, isCorrect: true, examId: 'course' },
     } });
-    assert.deepEqual(Object.keys((await invoke('getUserAnswers', {}, 'playlist')).body.data).sort(), ['bank-question', 'normal']);
+    assert.deepEqual(Object.keys((await invoke('getUserAnswers', {}, 'playlist')).body.data).sort(), ['normal']);
     assert.deepEqual(Object.keys((await invoke('getUserAnswers', {}, 'bank')).body.data), ['bank-question']);
-    assert.deepEqual(Object.keys((await invoke('getUserAnswers', {}, 'course')).body.data).sort(), ['native', 'normal']);
-    assert.deepEqual(await getMembershipCounts(state().answeredQuestions), { annual: 1, bank: 1, course: 2, playlist: 2 });
+    assert.deepEqual(Object.keys((await invoke('getUserAnswers', {}, 'course')).body.data).sort(), ['native']);
+    assert.deepEqual(await getMembershipCounts(state().answeredQuestions), { bank: 1, course: 1, playlist: 1 });
 });
 
 test('saving an imported alias reconciles old inflated counters from the unique saved results', async t => {
@@ -277,7 +277,7 @@ test('saving progress reconciles missing module metadata and duplicate module ro
 
 test('real Mongoose saves preserve retry history and enforce the document version guard', async t => {
     const oldId = new mongoose.Types.ObjectId().toHexString();
-    const newId = new mongoose.Types.ObjectId().toHexString();
+    const newId = `${new mongoose.Types.ObjectId().toHexString()}:${new mongoose.Types.ObjectId().toHexString()}`;
     const doc = UserStats.hydrate({ _id: new mongoose.Types.ObjectId(), userId: new mongoose.Types.ObjectId(), __v: 3,
         answeredQuestions: { [oldId]: { selectedAnswers: [0], isVerified: true, isCorrect: true } } });
     let matched = 1;
@@ -299,4 +299,64 @@ test('real Mongoose saves preserve retry history and enforce the document versio
     doc.answeredQuestions.get(newId).isVerified = true;
     doc.increment();
     await assert.rejects(doc.save(), { name: 'VersionError' });
+});
+
+for (const question of questions.slice(0, 3)) {
+    for (const first of ['annual', 'course']) {
+        test(`${question.sessionLabel}: ${first} and the other mode save, reload and reset independently`, async t => {
+            const { invoke, state } = setup(t);
+            const second = first === 'annual' ? 'course' : 'annual';
+            const body = { questionId: question._id, selectedAnswers: [0], isVerified: true };
+            await invoke('saveAnswer', { ...body, examId: first });
+            assert.deepEqual((await invoke('getUserAnswers', {}, second)).body.data, {});
+            assert.deepEqual(await getMembershipCounts(state().answeredQuestions), { [first]: 1 });
+            // Different results for the same question must both survive reloads.
+            await invoke('saveAnswer', { ...body, examId: second, selectedAnswers: [1] });
+            await invoke('saveAnswer', { ...body, examId: second, selectedAnswers: [1] });
+            assert.equal(state().answeredQuestions.size, 2);
+            assert.equal((await invoke('getUserAnswers', {}, first)).body.data[question._id].isCorrect, true);
+            assert.equal((await invoke('getUserAnswers', {}, second)).body.data[question._id].isCorrect, false);
+            assert.deepEqual(await getMembershipCounts(state().answeredQuestions), { annual: 1, course: 1 });
+            const stats = buildProgressStatistics({ modules: [{ _id: 'module' }], courses, questions,
+                annualExams: [{ _id: 'annual' }], answeredQuestions: state().answeredQuestions });
+            assert.equal(stats.modules[0].courses[0].answeredQuestions, 1);
+            assert.equal(stats.modules[0].courses[0].correctAnswers, first === 'course' ? 1 : 0);
+            assert.equal(stats.summary.answeredQuestions, 1);
+            assert.equal(stats.summary.answeredByYear, 1);
+            assert.equal(stats.summary.answeredByCourse, 1);
+            await invoke('saveAnswer', { ...body, examId: second, selectedAnswers: [], isVerified: false, reset: true });
+            assert.deepEqual(await getMembershipCounts(state().answeredQuestions), { [first]: 1 });
+            assert.equal((await invoke('getUserAnswers', {}, first)).body.data[question._id].isVerified, true);
+            assert.equal((await invoke('getUserAnswers', {}, second)).body.data[question._id].isVerified, false);
+        });
+    }
+}
+
+test('legacy yearly results and imported aliases are preserved when the course saves or resets', async t => {
+    const { invoke, state } = setup(t, { catalog: [q('normal', 'normale'), q('old', 'normale')],
+        answers: { old: { examId: 'annual', selectedAnswers: [0], isVerified: true, isCorrect: true } } });
+    const body = { questionId: 'normal', examId: 'course', selectedAnswers: [1], isVerified: true };
+    await invoke('saveAnswer', body);
+    assert.equal(state().answeredQuestions.get('old').isCorrect, true);
+    await invoke('saveAnswer', { ...body, selectedAnswers: [], isVerified: false, reset: true });
+    assert.equal((await invoke('getUserAnswers', {}, 'annual')).body.data.normal.isCorrect, true);
+    assert.deepEqual(await getMembershipCounts(state().answeredQuestions), { annual: 1 });
+});
+
+test('simultaneous saves of the same question in different contexts retain both results', async t => {
+    let release;
+    let waiting = 0;
+    const barrier = new Promise(resolve => { release = resolve; });
+    const { invoke, state } = setup(t, { beforeSave: async doc => {
+        if (doc.version !== 0) return;
+        if (++waiting === 2) release();
+        await barrier;
+    } });
+    await Promise.all(['annual', 'course'].map((examId, index) => invoke('saveAnswer', {
+        questionId: 'normal', selectedAnswers: [index], isVerified: true, examId,
+    })));
+    assert.equal(state().answeredQuestions.size, 2);
+    assert.equal((await invoke('getUserAnswers', {}, 'annual')).body.data.normal.isCorrect, true);
+    assert.equal((await invoke('getUserAnswers', {}, 'course')).body.data.normal.isCorrect, false);
+    assert.deepEqual(await getMembershipCounts(state().answeredQuestions), { annual: 1, course: 1 });
 });

@@ -50,6 +50,9 @@ for (const overlap of [0, 10]) {
     await getProgressStatistics({ query: { semester: "s1" }, user: { _id: userId, semesters: ["S1"] } }, res);
     assert.equal(res.code, 200);
     assert.equal(res.headers["Cache-Control"], "private, no-store");
+    const courseStats = res.body.data.modules[0].courses;
+    assert.equal(courseStats.find(course => course.courseId === String(courseId)).answeredQuestions, 1);
+    if (overlap) assert.equal(courseStats.find(course => course.courseId === String(secondCourseId)).answeredQuestions, 0);
     for (const item of [res.body.data.summary, res.body.data.modules[0]]) {
       assert.equal(item.totalQuestions, 690);
       assert.equal(item.totalQuestionsByCourse, 690 + overlap);

@@ -6,11 +6,10 @@ import AnnualExam from "../models/examParYearModel.js";
 import Bank from "../models/qcmBanqueModel.js";
 import { buildCompleteActivitySources, buildProgressStatistics } from "../services/progressStatisticsService.js";
 import { questionLogicalKey } from "./questionIdentity.js";
+import { answerQuestionId, answerContextId } from "./answerIdentity.js";
 import { loadQuestionAliases, questionIdentityFields, selectQuestionAnswers } from "../services/questionProgressService.js";
 
-// Legacy origin breakdown: examId says where the latest answer was saved.
-// Completion displays use getMembershipCounts instead, since questions can
-// belong to several courses as well as their source exam.
+// Completion belongs to the saved context, even when catalogs share questions.
 export const buildAnsweredCountByExam = (answeredQuestions) => {
     const entries = answeredQuestions instanceof Map
         ? Array.from(answeredQuestions.values())
@@ -39,7 +38,7 @@ export const getMembershipCounts = async (answers) => (await loadSavedProgress(a
 
 export const loadSavedProgress = async (answers) => {
     const entries = answers instanceof Map ? [...answers] : Object.entries(answers || {});
-    const ids = entries.filter(([, answer]) => answer?.isVerified === true).map(([id]) => id);
+    const ids = entries.filter(([, answer]) => answer?.isVerified === true).map(([id]) => answerQuestionId(id));
     if (!ids.length) return { countsByExam: {}, answered: 0, correct: 0, incorrect: 0, byModule: {} };
 
     const savedQuestions = await Question.find({ _id: { $in: ids } }).select(questionIdentityFields).lean();
@@ -58,10 +57,15 @@ export const loadSavedProgress = async (answers) => {
         bankIds.length ? Bank.find({ _id: { $in: bankIds } }).select("moduleId").lean() : [],
     ]);
     const keysById = new Map(questions.map(q => [String(q._id), questionLogicalKey(q)]));
-    const completed = new Set(questions.filter(q => results[String(q._id)]?.isVerified === true).map(questionLogicalKey));
+    const questionById = new Map(questions.map(q => [String(q._id), q]));
+    const completed = new Set(entries.flatMap(([key, answer]) => {
+        const question = questionById.get(answerQuestionId(key));
+        return question && answer?.isVerified === true
+            ? [`${answerContextId(key, answer, question)}:${questionLogicalKey(question)}`] : [];
+    }));
     const byContext = new Map();
     const add = (context, key) => {
-        if (!context || !completed.has(key)) return;
+        if (!context || !completed.has(`${context}:${key}`)) return;
         const id = String(context);
         if (!byContext.has(id)) byContext.set(id, new Set());
         byContext.get(id).add(key);

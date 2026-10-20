@@ -147,6 +147,37 @@ test('drafts save and clear independently of navigation and timer updates', asyn
   } finally { await act(async () => root.unmount()); }
 });
 
+test('old shared-progress caches cannot restore cross-mode completions while offline', async () => {
+  const localStorage = storage();
+  const snapshot = progressSnapshot(flattenExamQuestions(data.questions), { userId: 'user', answers: { 0: [0] },
+    verified: { 0: { verified: true, isCorrect: true } }, flags: new Set(), visits: new Set([0]), currentQ: 0 });
+  delete snapshot.progressScope;
+  localStorage.setItem('exam_progress_user_course_exam', JSON.stringify(snapshot));
+  const root = await mountExam('course', data, { localStorage, restoreFailure: true });
+  try { assert.deepEqual(verifiedLabels(root), ['0 / 4']); }
+  finally { await act(async () => root.unmount()); }
+});
+
+test('year and course pages keep separate statuses through navigation and refresh for shared questions', async () => {
+  const localStorage = storage();
+  const yearAnswers = { 'normal-1': { selectedAnswers: [0], isVerified: true, isCorrect: true } };
+  const courseAnswers = { 'normal-1': { selectedAnswers: [1], isVerified: true, isCorrect: false } };
+  for (const refresh of [false, true]) {
+    for (const [mode, serverAnswers, expectedStatus] of [
+      ['exam', yearAnswers, 'correct'], ['course', courseAnswers, 'incorrect'],
+    ]) {
+      const root = await mountExam(mode, data, { localStorage, serverAnswers, restoreFailure: refresh });
+      try {
+        assert.deepEqual(verifiedLabels(root), ['1 / 4']);
+        assert.equal(status(root, 'normal-1'), expectedStatus);
+        await root.harness.key('ArrowRight');
+        await root.harness.key('ArrowLeft');
+        assert.equal(status(root, 'normal-1'), expectedStatus);
+      } finally { await act(async () => root.unmount()); }
+    }
+  }
+});
+
 test('changing exam ID or mode resets the page scope and loads the new questions', async () => {
   const root = await mountExam('course', data, { serverAnswers: structuredClone(completed) });
   try {

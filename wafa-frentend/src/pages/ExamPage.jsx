@@ -528,6 +528,12 @@ const ExamSession = () => {
         if (parsed && parsed.userId === userProfile?._id) saved = parsed;
       } catch { if (storageKey) localStorage.removeItem(storageKey); }
       const cached = restoreSnapshot(questions, saved || {});
+      // Older caches may contain results borrowed from another exam mode.
+      // Keep navigation preferences, but reload answers from their saved context.
+      if (saved?.progressScope !== 'context') {
+        cached.answers = {};
+        cached.verified = {};
+      }
       let answers = {};
       let verified = {};
       try {

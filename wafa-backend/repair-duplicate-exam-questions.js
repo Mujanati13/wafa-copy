@@ -4,6 +4,7 @@ import ExamCourse from "./models/examCourseModel.js";
 import ExamParYear from "./models/examParYearModel.js";
 import Question from "./models/questionModule.js";
 import UserStats from "./models/userStatsModel.js";
+import { answerQuestionId, answerKey } from "./utils/answerIdentity.js";
 
 const args = process.argv.slice(2);
 const applyChanges = args.includes("--apply");
@@ -114,10 +115,13 @@ try {
         : new Map(Object.entries(stats.answeredQuestions || {}));
       let changed = false;
       replacements.forEach((keeperId, duplicateId) => {
-        if (!answers.has(duplicateId)) return;
-        if (!answers.has(String(keeperId))) answers.set(String(keeperId), answers.get(duplicateId));
-        answers.delete(duplicateId);
-        changed = true;
+        for (const [key, answer] of [...answers]) {
+          if (answerQuestionId(key) !== String(duplicateId)) continue;
+          const keeperKey = key.includes(':') ? answerKey(key.split(':')[0], keeperId) : String(keeperId);
+          if (!answers.has(keeperKey)) answers.set(keeperKey, answer);
+          answers.delete(key);
+          changed = true;
+        }
       });
       if (!changed) continue;
       stats.answeredQuestions = new Map(answers);

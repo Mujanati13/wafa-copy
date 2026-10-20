@@ -2,13 +2,14 @@ import Question from "../models/questionModule.js";
 import Course from "../models/examCourseModel.js";
 import Playlist from "../models/playlistModel.js";
 import { questionLogicalKey } from "../utils/questionIdentity.js";
+import { answerQuestionId, answerContextId } from "../utils/answerIdentity.js";
 
 const idOf = value => String(value?._id || value || "");
 export const questionIdentityFields = "_id examId qcmBanqueId examCourseId sessionLabel questionNumber";
 const entriesOf = answers => answers instanceof Map ? [...answers] : Object.entries(answers || {});
 
-// Results belong to a question. examId records where it was answered, not
-// which other courses are allowed to display that result.
+// An answer belongs only to the context in which it was saved. Legacy entries
+// use their saved examId, or their original source when that metadata is absent.
 export const selectQuestionAnswers = (visibleQuestions, allQuestions, answers, examId) => {
     const byId = new Map(allQuestions.map(q => [idOf(q), q]));
     const canonical = new Map();
@@ -17,11 +18,12 @@ export const selectQuestionAnswers = (visibleQuestions, allQuestions, answers, e
         if (!canonical.has(key)) canonical.set(key, idOf(q));
     }
     const latest = new Map();
-    for (const [questionId, raw] of entriesOf(answers)) {
+    for (const [storageKey, raw] of entriesOf(answers)) {
+        const questionId = answerQuestionId(storageKey);
         const question = byId.get(String(questionId));
         const answer = raw?.toObject?.() || raw;
         if (!question || !answer) continue;
-        if (answer.isVerified !== true && idOf(answer.examId) !== idOf(examId)) continue;
+        if (examId !== undefined && answerContextId(storageKey, answer, question) !== idOf(examId)) continue;
         const key = questionLogicalKey(question);
         const previous = latest.get(key)?.answer;
         const time = value => new Date(value?.answeredAt || 0).getTime() || 0;

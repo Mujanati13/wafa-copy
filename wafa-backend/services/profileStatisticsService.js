@@ -1,3 +1,5 @@
+import { answerQuestionId } from "../utils/answerIdentity.js";
+
 const nonNegativeNumber = (value) => {
   const number = Number(value);
   return Number.isFinite(number) ? Math.max(0, number) : 0;
@@ -50,7 +52,7 @@ export const buildProfileActivityStatistics = ({
     const examId = asId(answer?.examId);
     if (!examId) continue;
     if (!answersByExam.has(examId)) answersByExam.set(examId, new Map());
-    answersByExam.get(examId).set(asId(questionId), answer);
+    answersByExam.get(examId).set(answerQuestionId(questionId), answer);
   }
   let examsStarted = 0;
   let examsCompleted = 0;

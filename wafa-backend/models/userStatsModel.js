@@ -65,7 +65,8 @@ const userStatsSchema = new mongoose.Schema(
       type: Date,
       default: Date.now,
     },
-    // Answered questions persistence for exam page
+    // Keys are `${examId}:${questionId}`. Legacy question-only keys remain
+    // readable in their saved examId and migrate on the next verification.
     answeredQuestions: {
       type: Map,
       of: {

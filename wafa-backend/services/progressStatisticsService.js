@@ -1,4 +1,5 @@
 import { questionLogicalKey, uniqueQuestionsByLogicalKey } from "../utils/questionIdentity.js";
+import { answerQuestionId, answerContextId } from "../utils/answerIdentity.js";
 
 const clampPercentage = (value) => Math.min(100, Math.max(0, Math.round(value || 0)));
 
@@ -46,23 +47,30 @@ const canonicalQuestionIds = (questions) => {
   return aliases;
 };
 
-const normalizeAnswers = (answeredQuestions, aliases, modesByExamId) => {
+const normalizeAnswers = (answeredQuestions, aliases, modesByExamId, questions, contextId) => {
   const entries = answeredQuestions instanceof Map
     ? Array.from(answeredQuestions.entries())
     : Object.entries(answeredQuestions || {});
 
   const answers = new Map();
-  for (const [questionId, rawAnswer] of entries) {
+  const byId = new Map(questions.map(q => [asId(q._id), q]));
+  for (const [key, rawAnswer] of entries) {
+    const questionId = answerQuestionId(key);
     const answer = asPlainAnswer(rawAnswer);
     if (answer.isVerified !== true) continue;
+    const context = answerContextId(key, answer, byId.get(questionId));
+    if (contextId !== undefined && context !== contextId) continue;
     const id = aliases.get(asId(questionId)) || asId(questionId);
     const normalized = {
       isVerified: true,
       isCorrect: Boolean(answer.isCorrect),
       answeredAt: answer.answeredAt ? new Date(answer.answeredAt) : null,
-      mode: modesByExamId.get(asId(answer.examId)) || null,
+      mode: modesByExamId.get(context) || null,
     };
     const existing = answers.get(id);
+    const modes = new Set([...(existing?.modes || []), normalized.mode]);
+    normalized.modes = modes;
+    if (existing) existing.modes = modes;
     const timestamp = (value) => value?.answeredAt?.getTime() || 0;
     // Merge duplicate answer records once; the latest verified result wins.
     // On a timestamp tie, prefer the canonical document's answer.
@@ -98,8 +106,8 @@ const buildStats = (questionIds, answers) => {
     questionIds: uniqueQuestionIds,
     totalQuestions: uniqueQuestionIds.length,
     answeredQuestions: activity.length,
-    answeredByYear: activity.filter((answer) => answer.mode === "year").length,
-    answeredByCourse: activity.filter((answer) => answer.mode === "course").length,
+    answeredByYear: activity.filter((answer) => answer.modes.has("year")).length,
+    answeredByCourse: activity.filter((answer) => answer.modes.has("course")).length,
     correctAnswers,
     incorrectAnswers,
     completionPercentage: percentageOfTotal(activity.length, uniqueQuestionIds.length),
@@ -273,7 +281,7 @@ export const buildProgressStatistics = ({ modules = [], courses = [], annualExam
     const id = asId(exam._id);
     if (id) modesByExamId.set(id, "year");
   });
-  const answers = normalizeAnswers(answeredQuestions, aliases, modesByExamId);
+  const answers = normalizeAnswers(answeredQuestions, aliases, modesByExamId, questions);
   const moduleNameToId = new Map(modules.map((module) => [module.name, asId(module._id)]));
   const moduleIds = new Set(modules.map((module) => asId(module._id)));
   const coursesByModule = new Map();
@@ -306,7 +314,8 @@ export const buildProgressStatistics = ({ modules = [], courses = [], annualExam
 
     const courseStats = [...storedCourses, ...legacyCourses]
       .map((course) => {
-        const stats = buildStats(course.linkedQuestions || [], answers);
+        const contextAnswers = normalizeAnswers(answeredQuestions, aliases, modesByExamId, questions, asId(course._id));
+        const stats = buildStats(course.linkedQuestions || [], contextAnswers);
         const activityStatus = stats.answeredQuestions === 0
           ? "untouched"
           : stats.totalQuestions > 0 && stats.answeredQuestions >= stats.totalQuestions

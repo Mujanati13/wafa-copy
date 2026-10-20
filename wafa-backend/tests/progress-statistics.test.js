@@ -29,7 +29,7 @@ for (const format of ["Map", "object"]) {
     });
     const check = (year, course) => {
       const result = progress();
-      for (const item of [result.summary, result.modules[0], result.modules[0].courses[0]]) {
+      for (const item of [result.summary, result.modules[0]]) {
         assert.equal(item.totalQuestions, 690);
         assert.equal(item.answeredQuestions, 3);
         assert.equal(item.answeredByYear, year);
@@ -37,6 +37,8 @@ for (const format of ["Map", "object"]) {
         assert.equal(item.correctAnswers, 0);
         assert.equal(item.incorrectAnswers, 3);
       }
+      assert.equal(result.modules[0].courses[0].answeredQuestions, course);
+      assert.equal(result.modules[0].courses[0].answeredByYear, 0);
     };
     check(2, 1);
     // The latest saved context moves the question to the other mode without
@@ -68,7 +70,7 @@ test("keeps QCM and legacy answers in the total without inventing a yearly or co
   });
   for (const item of [result.modules[0], result.summary]) {
     assert.equal(item.answeredQuestions, 3);
-    assert.equal(item.answeredByYear, 0);
+    assert.equal(item.answeredByYear, 1);
     assert.equal(item.answeredByCourse, 0);
     assert.equal(item.correctAnswers, 2);
     assert.equal(item.incorrectAnswers, 1);
@@ -96,7 +98,7 @@ test("uses the latest verified duplicate's answering mode with MongoDB exam IDs"
   });
   assert.equal(result.modules[0].totalQuestions, 1);
   assert.equal(result.modules[0].answeredQuestions, 1);
-  assert.equal(result.modules[0].answeredByYear, 0);
+  assert.equal(result.modules[0].answeredByYear, 1);
   assert.equal(result.modules[0].answeredByCourse, 1);
   assert.equal(result.modules[0].correctAnswers, 1);
 });
@@ -113,7 +115,7 @@ for (const format of ["Map", "object"]) {
       annualExams: [{ _id: "exam", moduleId: "m" }],
     });
     const answers = new Map([
-      ["old", { isVerified: true, isCorrect: true, answeredAt: "2026-09-02" }],
+      ["old", { examId: "course", isVerified: true, isCorrect: true, answeredAt: "2026-09-02" }],
     ]);
     const stats = () => buildProgressStatistics({
       modules: [{ _id: "m", name: "Module" }], courses, questions,
@@ -129,9 +131,9 @@ for (const format of ["Map", "object"]) {
       }
     };
     check(1);
-    answers.set("new", { isVerified: true, isCorrect: false, answeredAt: "2026-09-01" });
+    answers.set("new", { examId: "course", isVerified: true, isCorrect: false, answeredAt: "2026-09-01" });
     check(1);
-    answers.set("new", { isVerified: true, isCorrect: false, answeredAt: "2026-09-03" });
+    answers.set("new", { examId: "course", isVerified: true, isCorrect: false, answeredAt: "2026-09-03" });
     check(0);
     // A draft on another duplicate does not replace verified progress.
     answers.set("old", { isVerified: false, isCorrect: true, answeredAt: "2026-09-04" });
@@ -237,17 +239,17 @@ for (const answerFormat of ["Map", "plain object"]) {
     assert.equal(initial.modules[0].answeredByYear, 690);
     assert.equal(initial.modules[0].answeredByCourse, 0);
 
-    // Persistence is keyed by question ID, even when the exam context changes.
+    // Each context keeps its own result; overall coverage still counts a question once.
     questionIds.slice(0, 10).forEach((id, index) => {
-      answers.set(id, { examId: "course-a", isVerified: true, isCorrect: true });
+      answers.set(`course-a:${id}`, { examId: "course-a", isVerified: true, isCorrect: true, answeredAt: "2026-10-20" });
       const retried = assertCounts(690, index + 1, 689 - index);
-      assert.equal(retried.modules[0].answeredByYear, 689 - index);
+      assert.equal(retried.modules[0].answeredByYear, 690);
       assert.equal(retried.modules[0].answeredByCourse, index + 1);
     });
     const result = progress();
-    assert.equal(result.modules[0].courses[0].answeredQuestions, 350);
+    assert.equal(result.modules[0].courses[0].answeredQuestions, 10);
     assert.equal(result.modules[0].courses[0].correctAnswers, 10);
-    assert.equal(result.modules[0].courses[1].answeredQuestions, 340);
+    assert.equal(result.modules[0].courses[1].answeredQuestions, 0);
 
     // Answers outside the module must not increase its numerator.
     answers.set("unrelated-question", { isVerified: true, isCorrect: true });
@@ -263,9 +265,9 @@ test("calculates module/course progress and deterministic highlights", () => {
       { _id: "course-2", name: "Valves", moduleId: "module-1", linkedQuestions: ["q3", "q4"] },
     ],
     answeredQuestions: {
-      q1: { isVerified: true, isCorrect: true, answeredAt: "2026-08-20T10:00:00.000Z" },
-      q2: { isVerified: true, isCorrect: false, answeredAt: "2026-08-20T11:00:00.000Z" },
-      q3: { isVerified: true, isCorrect: true, answeredAt: "2026-08-21T10:00:00.000Z" },
+      q1: { examId: "course-1", isVerified: true, isCorrect: true, answeredAt: "2026-08-20T10:00:00.000Z" },
+      q2: { examId: "course-1", isVerified: true, isCorrect: false, answeredAt: "2026-08-20T11:00:00.000Z" },
+      q3: { examId: "course-2", isVerified: true, isCorrect: true, answeredAt: "2026-08-21T10:00:00.000Z" },
     },
   });
 
@@ -347,7 +349,7 @@ test("includes unmapped annual-exam and QCM-bank activity without double countin
     modules: [{ _id: "module-1", name: "Anatomie I", semester: "S1" }],
     courses: sources,
     answeredQuestions: {
-      q1: { isVerified: true, isCorrect: true, answeredAt: "2026-09-01T10:00:00.000Z" },
+      q1: { examId: "course-1", isVerified: true, isCorrect: true, answeredAt: "2026-09-01T10:00:00.000Z" },
       q2: { isVerified: true, isCorrect: false, answeredAt: "2026-09-02T10:00:00.000Z" },
       q3: { isVerified: true, isCorrect: true, answeredAt: "2026-09-03T10:00:00.000Z" },
     },
@@ -483,7 +485,7 @@ test("strictly excludes yearly exams from courses and highlights (untouched, rec
     modules: [{ _id: "module-1", name: "Anatomie I", semester: "S1" }],
     courses: sources,
     answeredQuestions: {
-      q1: { isVerified: true, isCorrect: true, answeredAt: "2026-09-06T10:00:00.000Z" },
+      q1: { examId: "course-1", isVerified: true, isCorrect: true, answeredAt: "2026-09-06T10:00:00.000Z" },
     },
   });
 

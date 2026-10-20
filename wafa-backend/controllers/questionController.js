@@ -13,6 +13,7 @@ import { normalizeAnnulledQuestion } from "../utils/questionAnnulment.js";
 import { deleteQuestionsAndUnlink } from "../services/questionDeletionService.js";
 import { invalidateModuleListCache } from "./moduleController.js";
 import { questionLogicalKey } from "../utils/questionIdentity.js";
+import { answerKey, answerQuestionId, answerContextId } from "../utils/answerIdentity.js";
 import { getQuestionReferences } from "../services/questionReferenceService.js";
 
 export const questionController = {
@@ -1084,7 +1085,8 @@ export const questionController = {
         console.log('Exam ID:', examId);
         console.log('Module ID:', moduleId);
 
-        if (!questionId || !Array.isArray(selectedAnswers) || typeof isVerified !== 'boolean'
+        if (!questionId || typeof examId !== 'string' || !/^[a-zA-Z0-9_-]+$/.test(examId)
+            || !Array.isArray(selectedAnswers) || typeof isVerified !== 'boolean'
             || typeof reset !== 'boolean' || (reset && (isVerified || selectedAnswers.length))) {
             return res.status(400).json({
                 success: false,
@@ -1127,8 +1129,12 @@ export const questionController = {
             .filter(q => questionLogicalKey(q) === questionLogicalKey(question));
         const existingAnswer = selectQuestionAnswers([question], aliases, userStats.answeredQuestions, examId)[questionId.toString()];
         const wasVerified = existingAnswer?.isVerified === true;
-        const hasBeenVerified = aliases.some(q => {
-            const answer = userStats.answeredQuestions.get(String(q._id));
+        const aliasById = new Map(aliases.map(q => [String(q._id), q]));
+        const contextEntries = [...userStats.answeredQuestions].filter(([key, answer]) =>
+            aliasById.has(answerQuestionId(key))
+            && answerContextId(key, answer, aliasById.get(answerQuestionId(key))) === examId);
+        const storageKey = answerKey(examId, questionId);
+        const hasBeenVerified = contextEntries.some(([, answer]) => {
             return answer?.isVerified === true || answer?.hasBeenVerified === true;
         });
         const isNewAnswer = !hasBeenVerified;
@@ -1138,10 +1144,10 @@ export const questionController = {
         // drafts atomically so they cannot race with the verify/save request.
         if (!isVerified && !reset) {
             if (!wasVerified) {
-                await UserStatsModel.updateOne({ userId, [`answeredQuestions.${questionId}.isVerified`]: { $ne: true } }, {
+                await UserStatsModel.updateOne({ userId, [`answeredQuestions.${storageKey}.isVerified`]: { $ne: true } }, {
                     $set: Object.fromEntries(Object.entries({
                         selectedAnswers, isVerified: false, isCorrect: false, answeredAt: new Date(), examId, moduleId,
-                    }).map(([field, value]) => [`answeredQuestions.${questionId}.${field}`, value])),
+                    }).map(([field, value]) => [`answeredQuestions.${storageKey}.${field}`, value])),
                 });
             }
             return res.status(200).json({ success: true, data: { questionId, selectedAnswers, isVerified: false, isCorrect: false } });
@@ -1157,8 +1163,8 @@ export const questionController = {
         
         // Collapse old imported aliases when this question is saved again.
         // Distinct sessions keep distinct logical keys even when Q numbers match.
-        for (const alias of aliases) userStats.answeredQuestions.delete(String(alias._id));
-        userStats.answeredQuestions.set(questionId.toString(), {
+        for (const [key] of contextEntries) userStats.answeredQuestions.delete(key);
+        userStats.answeredQuestions.set(storageKey, {
             selectedAnswers,
             isVerified: !reset && isVerified,
             hasBeenVerified: hasBeenVerified || isVerified,

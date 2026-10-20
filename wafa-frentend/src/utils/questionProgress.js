@@ -48,7 +48,7 @@ export const questionProgress = (questions, answers, verified, flags = new Set()
 // Persist identities, never array positions: sorting/importing a session must
 // not move an answer, highlight, visit, or cursor onto another question.
 export const progressSnapshot = (questions, { answers, verified, flags, visits, currentQ, ...rest }) => ({
-  ...rest, version: 2,
+  ...rest, version: 2, progressScope: 'context',
   answers: Object.fromEntries(questions.flatMap((q, i) => answers[i] ? [[q._id, answers[i]]] : [])),
   verified: Object.fromEntries(questions.flatMap((q, i) => verified[i] ? [[q._id, verified[i]]] : [])),
   flags: [...flags].map(i => questions[i]?._id).filter(Boolean),
