@@ -78,14 +78,38 @@ export const countVerifiedQuestions = (questions, answers) => {
 
 export const getCourseQuestionCounts = async courses => {
     if (!courses.length) return {};
+    const keysByCourse = new Map();
+    const coursesByQuestion = new Map();
+    const linkedIds = new Map();
+    let work = 0;
+
+    // Index memberships once instead of scanning the entire question catalog
+    // for every course. Large catalogs must also let other requests run.
+    for (const course of courses) {
+        const courseId = idOf(course);
+        keysByCourse.set(courseId, new Set());
+        for (const linkedId of course.linkedQuestions || []) {
+            const questionId = idOf(linkedId);
+            linkedIds.set(questionId, linkedId);
+            if (!coursesByQuestion.has(questionId)) coursesByQuestion.set(questionId, new Set());
+            coursesByQuestion.get(questionId).add(courseId);
+            if (++work % 2048 === 0) await new Promise(resolve => setImmediate(resolve));
+        }
+    }
+
     const questions = await Question.find({ $or: [
-        { _id: { $in: courses.flatMap(course => course.linkedQuestions || []) } },
+        { _id: { $in: [...linkedIds.values()] } },
         { examCourseId: { $in: courses.map(course => course._id) } },
     ] }).select(questionIdentityFields).lean();
-    return Object.fromEntries(courses.map(course => {
-        const linked = new Set((course.linkedQuestions || []).map(idOf));
-        const keys = questions.filter(q => linked.has(idOf(q)) || idOf(q.examCourseId) === idOf(course))
-            .map(questionLogicalKey);
-        return [idOf(course), new Set(keys).size];
-    }));
+
+    for (const question of questions) {
+        const key = questionLogicalKey(question);
+        keysByCourse.get(idOf(question.examCourseId))?.add(key);
+        for (const courseId of coursesByQuestion.get(idOf(question)) || []) {
+            keysByCourse.get(courseId).add(key);
+            if (++work % 2048 === 0) await new Promise(resolve => setImmediate(resolve));
+        }
+        if (++work % 2048 === 0) await new Promise(resolve => setImmediate(resolve));
+    }
+    return Object.fromEntries([...keysByCourse].map(([courseId, keys]) => [courseId, keys.size]));
 };
