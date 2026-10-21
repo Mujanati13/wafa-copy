@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion as Motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { Mail, Clock, Send, CheckCircle2, User, AtSign } from 'lucide-react';
 import axios from 'axios';
@@ -67,7 +68,7 @@ const ContactPage = () => {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 py-12 px-4">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <motion.div
+        <Motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-12"
@@ -78,11 +79,11 @@ const ContactPage = () => {
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             {t('landing:contact_description')}
           </p>
-        </motion.div>
+        </Motion.div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Contact Info Cards */}
-          <motion.div
+          <Motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.1 }}
@@ -116,10 +117,10 @@ const ContactPage = () => {
                 </div>
               </CardContent>
             </Card>
-          </motion.div>
+          </Motion.div>
 
           {/* Contact Form */}
-          <motion.div
+          <Motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.2 }}
@@ -134,7 +135,7 @@ const ContactPage = () => {
               </CardHeader>
               <CardContent>
                 {isSubmitted ? (
-                  <motion.div
+                  <Motion.div
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
                     className="text-center py-12"
@@ -146,7 +147,7 @@ const ContactPage = () => {
                     <p className="text-muted-foreground">
                       Merci de nous avoir contactés. Nous reviendrons vers vous très bientôt.
                     </p>
-                  </motion.div>
+                  </Motion.div>
                 ) : (
                   <form onSubmit={handleSubmit} className="space-y-6">
                     {error && (
@@ -240,7 +241,7 @@ const ContactPage = () => {
                 )}
               </CardContent>
             </Card>
-          </motion.div>
+          </Motion.div>
         </div>
       </div>
     </div>
