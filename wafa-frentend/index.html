@@ -9,14 +9,8 @@
     <title>YourQcm</title>
     <script>
       (function() {
-        try {
-          var savedTheme = localStorage.getItem('theme');
-          if (savedTheme === 'light') {
-            document.documentElement.classList.remove('dark');
-          } else {
-            document.documentElement.classList.add('dark');
-          }
-        } catch (e) {}
+        // Dark mode is temporarily disabled, including before React mounts.
+        document.documentElement.classList.remove('dark');
       })();
     </script>
   </head>

@@ -2,6 +2,10 @@ import { createContext, useContext, useState, useEffect } from "react";
 
 const ThemeContext = createContext();
 
+// Temporarily locked to light mode. Keep index.html's startup theme in sync
+// when re-enabling the switch.
+export const themeSwitchingEnabled = false;
+
 export const themes = {
   light: {
     name: "Light",
@@ -27,11 +31,12 @@ export const themes = {
 
 export const ThemeProvider = ({ children }) => {
   const [currentTheme, setCurrentTheme] = useState(() => {
+    if (!themeSwitchingEnabled) return "light";
     try {
       const savedTheme = localStorage.getItem("theme");
       if (savedTheme === "light" || savedTheme === "dark") return savedTheme;
     } catch (e) {}
-    return 'dark';
+    return 'light';
   });
 
   useEffect(() => {
@@ -61,6 +66,7 @@ export const ThemeProvider = ({ children }) => {
   }, [currentTheme]);
 
   const changeTheme = (themeName) => {
+    if (!themeSwitchingEnabled) return;
     setCurrentTheme(themeName);
   };
 
