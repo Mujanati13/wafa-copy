@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { api } from "@/lib/utils";
+import { resolveMediaUrl } from "@/lib/mediaUrl";
 import { toast } from "sonner";
 
 const CreateCategoriesForCourses = () => {
@@ -58,23 +59,13 @@ const CreateCategoriesForCourses = () => {
       setLoading(true);
       const { data } = await api.get("/course-categories");
 
-      // Helper to get full image URL
-      const getImageUrl = (imageUrl) => {
-        if (!imageUrl) return placeholderImage;
-        if (imageUrl.startsWith('/uploads')) {
-          const backendUrl = import.meta.env.VITE_API_URL?.replace('/api/v1', '') || 'http://localhost:5010';
-          return `${backendUrl}${imageUrl}`;
-        }
-        return imageUrl;
-      };
-
       const list = (data?.data || []).map((c) => ({
         id: c._id,
         moduleId: c.moduleId?._id || c.moduleId || "",
         moduleName: c.moduleId?.name || "",
         moduleSemester: c.moduleId?.semester || "",
         categoryName: c.name || "",
-        imageUrl: getImageUrl(c.imageUrl),
+        imageUrl: resolveMediaUrl(c.imageUrl) || placeholderImage,
         rawImageUrl: c.imageUrl || "",
         examCourseCount: c.examCourseCount || 0,
         description: c.description || "",

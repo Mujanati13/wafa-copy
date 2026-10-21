@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { api } from "@/lib/utils";
+import { resolveMediaUrl } from "@/lib/mediaUrl";
 import { isPremiumPlan, isPremiumProPlan } from "@/utils/subscriptionDisplay";
 import ImageViewerModal from "@/components/shared/ImageViewerModal";
 
@@ -561,24 +562,7 @@ const ExplicationModel = ({ question, setShowExplanation, userPlan = "Free" }) =
                       <p className="text-sm font-medium text-foreground">Il doit etre comme ça :</p>
                       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                         {aiExplanation.images.map((src, idx) => {
-                          let fullImgUrl = src;
-                          if (!src.startsWith('http')) {
-                            const baseUrl = import.meta.env.VITE_BASED_URL?.replace('/api/v1', '') || window.location.origin;
-                            // Try multiple path formats
-                            if (src.startsWith('/uploads/')) {
-                              fullImgUrl = `${baseUrl}${src}`;
-                            } else if (src.includes('/uploads/')) {
-                              // Extract uploads path from middle of string
-                              const uploadsIndex = src.indexOf('/uploads/');
-                              fullImgUrl = `${baseUrl}${src.substring(uploadsIndex)}`;
-                            } else {
-                              // Assume it's just filename or relative path
-                              fullImgUrl = `${baseUrl}/uploads${src.startsWith('/') ? src : `/${src}`}`;
-                            }
-                            console.log(`[AI Image ${idx}] Raw: "${src}" -> URL: "${fullImgUrl}" (Base: "${baseUrl}")`);
-                          } else {
-                            console.log(`[AI Image ${idx}] Already HTTP: "${fullImgUrl}"`);
-                          }
+                          const fullImgUrl = resolveMediaUrl(src);
                           return (
                           <button
                             key={`${src}-${idx}`}
@@ -741,24 +725,7 @@ const ExplicationModel = ({ question, setShowExplanation, userPlan = "Free" }) =
                       <p className="text-sm font-medium text-foreground">Il doit etre comme ça :</p>
                       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                         {currentUserExplanation.images.map((imgUrl, idx) => {
-                          let fullImgUrl = imgUrl;
-                          if (!imgUrl.startsWith('http')) {
-                            const baseUrl = import.meta.env.VITE_BASED_URL?.replace('/api/v1', '') || window.location.origin;
-                            // Try multiple path formats
-                            if (imgUrl.startsWith('/uploads/')) {
-                              fullImgUrl = `${baseUrl}${imgUrl}`;
-                            } else if (imgUrl.includes('/uploads/')) {
-                              // Extract uploads path from middle of string
-                              const uploadsIndex = imgUrl.indexOf('/uploads/');
-                              fullImgUrl = `${baseUrl}${imgUrl.substring(uploadsIndex)}`;
-                            } else {
-                              // Assume it's just filename or relative path
-                              fullImgUrl = `${baseUrl}/uploads${imgUrl.startsWith('/') ? imgUrl : `/${imgUrl}`}`;
-                            }
-                            console.log(`[User Image ${idx}] Raw: "${imgUrl}" -> URL: "${fullImgUrl}" (Base: "${baseUrl}")`);
-                          } else {
-                            console.log(`[User Image ${idx}] Already HTTP: "${fullImgUrl}"`);
-                          }
+                          const fullImgUrl = resolveMediaUrl(imgUrl);
                           return (
                           <button
                             key={idx}
@@ -789,12 +756,7 @@ const ExplicationModel = ({ question, setShowExplanation, userPlan = "Free" }) =
                   {/* Display PDF if any */}
                   {currentUserExplanation.pdfUrl && (
                     <a
-                      href={(() => {
-                        const pdfUrl = currentUserExplanation.pdfUrl;
-                        if (pdfUrl.startsWith('http')) return pdfUrl;
-                        const baseUrl = import.meta.env.VITE_BASED_URL?.replace('/api/v1', '') || 'http://localhost:5010';
-                        return pdfUrl.startsWith('/uploads/') ? `${baseUrl}${pdfUrl}` : `${baseUrl}/uploads${pdfUrl.startsWith('/') ? pdfUrl : `/${pdfUrl}`}`;
-                      })()}
+                      href={resolveMediaUrl(currentUserExplanation.pdfUrl)}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-2 px-3 py-1.5 bg-red-50 text-red-700 border border-red-200 rounded-lg hover:bg-red-100 transition-colors text-sm"

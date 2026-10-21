@@ -25,9 +25,8 @@ import {
   PopoverTrigger,
 } from "../ui/popover";
 import { api } from "@/lib/utils";
+import { resolveMediaUrl } from "@/lib/mediaUrl";
 import { moduleService } from "@/services/moduleService";
-
-const API_URL = import.meta.env.VITE_API_URL || "";
 
 // Simple color choices
 const SIMPLE_COLORS = [
@@ -116,14 +115,8 @@ const EditModuleForm = ({ module, setShowEditForm, onModuleUpdated }) => {
       setAvailableInAllSemesters(module.availableInAllSemesters || false);
       
       // Set existing image/pdf previews
-      if (module.imageUrl) {
-        const fullUrl = module.imageUrl.startsWith("http") ? module.imageUrl : `${API_URL?.replace('/api/v1', '')}${module.imageUrl}`;
-        setModuleImagePreview(fullUrl);
-      }
-      if (module.helpImage) {
-        const fullUrl = module.helpImage.startsWith("http") ? module.helpImage : `${API_URL?.replace('/api/v1', '')}${module.helpImage}`;
-        setHelpImagePreview(fullUrl);
-      }
+      setModuleImagePreview(resolveMediaUrl(module.rawImageUrl ?? module.imageUrl, { folder: "modules" }) || null);
+      setHelpImagePreview(resolveMediaUrl(module.helpImage, { folder: "modules" }) || null);
     }
   }, [module, form]);
 
@@ -555,7 +548,7 @@ const EditModuleForm = ({ module, setShowEditForm, onModuleUpdated }) => {
                     {moduleImageFile && (
                       <div className="flex items-center justify-between p-2 bg-blue-50 rounded-lg">
                         <span className="text-sm text-blue-700 truncate">{moduleImageFile.name}</span>
-                        <button type="button" onClick={() => { setModuleImageFile(null); setModuleImagePreview(module?.imageUrl ? `${API_URL?.replace('/api/v1', '')}${module.imageUrl}` : null); }} className="text-red-500 hover:text-red-700">
+                        <button type="button" onClick={() => { setModuleImageFile(null); setModuleImagePreview(resolveMediaUrl(module?.rawImageUrl ?? module?.imageUrl, { folder: "modules" }) || null); }} className="text-red-500 hover:text-red-700">
                           <X className="h-4 w-4" />
                         </button>
                       </div>
@@ -612,7 +605,7 @@ const EditModuleForm = ({ module, setShowEditForm, onModuleUpdated }) => {
                     {helpImageFile && (
                       <div className="flex items-center justify-between p-2 bg-green-50 rounded-lg">
                         <span className="text-sm text-green-700 truncate">{helpImageFile.name}</span>
-                        <button type="button" onClick={() => { setHelpImageFile(null); setHelpImagePreview(module?.helpImage ? `${API_URL?.replace('/api/v1', '')}${module.helpImage}` : null); }} className="text-red-500 hover:text-red-700">
+                        <button type="button" onClick={() => { setHelpImageFile(null); setHelpImagePreview(resolveMediaUrl(module?.helpImage, { folder: "modules" }) || null); }} className="text-red-500 hover:text-red-700">
                           <X className="h-4 w-4" />
                         </button>
                       </div>

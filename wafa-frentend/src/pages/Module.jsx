@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import NewModuleForm from "@/components/admin/NewModuleForm";
 import EditModuleForm from "@/components/admin/EditModuleForm";
 import { api } from "@/lib/utils";
+import { resolveMediaUrl } from "@/lib/mediaUrl";
 import { Checkbox } from "@/components/ui/checkbox";
 
 const Module = () => {
@@ -42,26 +43,11 @@ const Module = () => {
       setError(null);
       const { data } = await api.get("/modules");
 
-      const placeholderImage =
-        "http://www.univ-mosta.dz/medecine/wp-content/uploads/sites/4/2021/12/telechargement-1-1.jpg";
-
-      // Helper to get full image URL
-      const getImageUrl = (imageUrl) => {
-        if (!imageUrl) return placeholderImage;
-        // If it's a relative path (local upload), prepend backend URL
-        if (imageUrl.startsWith('/uploads')) {
-          const backendUrl = import.meta.env.VITE_API_URL?.replace('/api/v1', '') || 'http://localhost:5010';
-          return `${backendUrl}${imageUrl}`;
-        }
-        // Otherwise return as-is (external URL)
-        return imageUrl;
-      };
-
       const list = (data?.data || []).map((m) => ({
         id: m?._id,
         semester: m?.semester || "",
         name: m?.name || "",
-        imageUrl: getImageUrl(m?.imageUrl),
+        imageUrl: resolveMediaUrl(m?.imageUrl, { folder: "modules" }) || "/yourqcm-icon-v2.png",
         rawImageUrl: m?.imageUrl || "",
         totalQuestions: m.totalQuestions,
         infoText: m?.infoText || "",
