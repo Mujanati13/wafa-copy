@@ -14,7 +14,24 @@ import { mountExam } from './helpers/examPageHarness.js';
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 const textContent = node => typeof node === 'string' ? node : node.children.map(textContent).join('');
 
-async function mountLibrary({ plan = 'Premium Pro', entry = '/dashboard/subjects/m1?ref=bookmark', storageUnavailable = false } = {}) {
+test('Exit returns to the saved origin across intermediate history entries', () => {
+  const calls = [];
+  exitExam((...args) => calls.push(args), { historyIndex: 9, origin: {
+    pathname: '/dashboard/subjects/m1', search: '?type=course&q=Thyro', hash: '#courses',
+    key: 'origin', historyIndex: 5, position: { top: 1240, left: 0 }, state: null,
+  } });
+  assert.deepEqual(calls, [[-4]]);
+});
+
+test('Exit from a direct course link has a usable module fallback', () => {
+  const calls = [];
+  exitExam((...args) => calls.push(args), { historyIndex: 0, examType: 'course', moduleId: 'm1' });
+  assert.deepEqual(calls, [['/dashboard/subjects/m1?type=course', { replace: true }]]);
+});
+
+async function mountLibrary({ plan = 'Premium Pro', entry, storageUnavailable = false, pageName = 'SubjectsPage' } = {}) {
+  entry ||= pageName === 'SubjectsPage' ? '/dashboard/subjects/m1?ref=bookmark'
+    : pageName === 'Myplaylist' ? '/dashboard/playlist' : '/dashboard/playlists';
   const snapshots = new Map();
   const scrolls = [];
   const browser = { history: { scrollRestoration: 'auto' }, scrollX: 0, scrollY: 0,
@@ -23,6 +40,8 @@ async function mountLibrary({ plan = 'Premium Pro', entry = '/dashboard/subjects
   let nextModuleLoad;
   let currentLocation;
   let navigate;
+  let historyIndex = 1;
+  const historyEntries = new Map();
   const moduleResponse = id => ({ data: { data: { _id: id, name: 'Endocrinologie', semester: 'S1' } } });
   const context = vm.createContext({ console, URLSearchParams, window: browser,
     localStorage: { getItem: () => JSON.stringify({ _id: 'student', plan, freeModule: 'm1' }) },
@@ -36,11 +55,14 @@ async function mountLibrary({ plan = 'Premium Pro', entry = '/dashboard/subjects
   }, { context });
   const primitive = ({ children, ...props }) => React.createElement('div', props, children);
   const button = ({ children, ...props }) => React.createElement('button', props, children);
-  const source = await readFile(new URL('../pages/SubjectsPage.jsx', import.meta.url), 'utf8');
+  const source = await readFile(new URL(`../pages/${pageName}.jsx`, import.meta.url), 'utf8');
+  const playlists = [{ _id: 'playlist-1', title: 'Thyroïde', description: 'Hormones', questionIds: ['q1'], questions: ['q1'] }];
   const deps = {
     react: synthetic({ ...React, default: React }),
     'react/jsx-runtime': synthetic(jsxRuntime),
     'react-router-dom': synthetic(router),
+    'react-i18next': synthetic({ useTranslation: () => ({ t: (key, fallback) => fallback || key }) }),
+    'framer-motion': synthetic({ motion: { div: primitive, button }, AnimatePresence: primitive }),
     sonner: synthetic({ toast: { info() {} } }),
     '@/services/moduleService': synthetic({ moduleService: { getModuleById: async id => {
       if (nextModuleLoad) { const pending = nextModuleLoad; nextModuleLoad = null; return pending; }
@@ -51,17 +73,23 @@ async function mountLibrary({ plan = 'Premium Pro', entry = '/dashboard/subjects
         { _id: 'course-1', name: 'Thyroïde', category: 'Hormones', totalQuestions: 98 },
         { _id: 'course-2', name: 'Diabète', category: 'Métabolisme', totalQuestions: 20 },
       ] : url.startsWith('/exams/') ? [{ _id: 'year-1', name: '2024 normale', year: 2024, totalQuestions: 10 }]
-        : url.startsWith('/qcm-banque/') ? [{ _id: 'qcm-1', name: 'QCM', totalQuestions: 5 }] : null,
+        : url.startsWith('/qcm-banque/') ? [{ _id: 'qcm-1', name: 'QCM', totalQuestions: 5 }]
+          : url === '/playlists' ? playlists : null,
     } }) } }),
     '@/context/SemesterContext': synthetic({ useSemester: () => ({ selectedSemester: 'S1' }) }),
     '@/utils/subscriptionDisplay': synthetic(subscriptionDisplay),
+    '@/services/playlistService': synthetic({ playlistService: { getAll: async () => ({ data: playlists }) } }),
+    '@/components/shared': synthetic({ PageHeader: primitive }),
     '@/lib/mediaUrl': synthetic({ resolveMediaUrl: value => value }),
     '@/utils/examProgress': synthetic({ EXAM_PROGRESS_UPDATED_EVENT: 'progress-updated', getSessionExamCompletedCount: () => 0 }),
+    '@/utils/examNavigation': new vm.SourceTextModule(await readFile(new URL('../utils/examNavigation.js', import.meta.url), 'utf8'), { context }),
+    '@/hooks/useExamReturnPosition': new vm.SourceTextModule(await readFile(new URL('../hooks/useExamReturnPosition.js', import.meta.url), 'utf8'), { context }),
   };
-  const icons = source.match(/import\s*{([^}]+)}\s*from\s*"lucide-react"/)[1].split(',').map(name => name.trim()).filter(Boolean);
+  const icons = source.match(/import\s*{([^}]+)}\s*from\s*["']lucide-react["']/)[1].split(',').map(name => name.trim()).filter(Boolean);
   deps['lucide-react'] = synthetic(Object.fromEntries(icons.map(name => [name, () => null])));
-  for (const match of source.matchAll(/import\s*{([^}]+)}\s*from\s*"(@\/components\/ui\/[^" ]+)"/g)) {
-    deps[match[2]] = synthetic(Object.fromEntries(match[1].split(',').map(name => [name.trim(), name.trim() === 'Button' ? button : primitive])));
+  for (const match of source.matchAll(/import\s*{([^}]+)}\s*from\s*["'](@\/components\/ui\/[^"' ]+)["']/g)) {
+    deps[match[2]] = synthetic(Object.fromEntries(match[1].split(',').map(name => [name.trim(), name.trim() === 'Button' ? button
+      : name.trim() === 'Input' ? props => React.createElement('input', props) : primitive])));
   }
   const compiled = await transform(source, { loader: 'jsx', jsx: 'automatic', format: 'esm' });
   const page = new vm.SourceTextModule(compiled.code, { context });
@@ -70,17 +98,27 @@ async function mountLibrary({ plan = 'Premium Pro', entry = '/dashboard/subjects
   function ObserveLocation() {
     currentLocation = router.useLocation();
     navigate = router.useNavigate();
+    const navigationType = router.useNavigationType();
+    if (historyEntries.has(currentLocation.key)) historyIndex = historyEntries.get(currentLocation.key);
+    else {
+      if (navigationType === 'PUSH') historyIndex++;
+      historyEntries.set(currentLocation.key, historyIndex);
+    }
+    browser.history.state = { idx: historyIndex };
     return null;
   }
   function ExamExit() {
     const go = router.useNavigate();
-    return React.createElement('button', { onClick: () => exitExam(go) }, 'Quitter');
+    return React.createElement('button', { onClick: () => exitExam(go, {
+      origin: currentLocation.state?.examOrigin, historyIndex: browser.history.state.idx,
+    }) }, 'Quitter');
   }
   let root;
   await act(async () => { root = create(React.createElement(router.MemoryRouter, {
     initialEntries: ['/dashboard/home', { pathname: entry.split('?')[0], search: entry.includes('?') ? '?' + entry.split('?')[1] : '', state: { source: 'module-list' } }], initialIndex: 1,
   }, React.createElement(ObserveLocation), React.createElement(router.Routes, null,
-    React.createElement(router.Route, { path: '/dashboard/subjects/:courseId', element: React.createElement(page.namespace.default) }),
+    React.createElement(router.Route, { path: pageName === 'SubjectsPage' ? '/dashboard/subjects/:courseId'
+      : pageName === 'Myplaylist' ? '/dashboard/playlist' : '/dashboard/playlists', element: React.createElement(page.namespace.default) }),
     React.createElement(router.Route, { path: '/exam/:examId', element: React.createElement(ExamExit) }),
     React.createElement(router.Route, { path: '*', element: React.createElement('p', null, 'Autre page') }),
   ))); });
@@ -92,7 +130,7 @@ async function mountLibrary({ plan = 'Premium Pro', entry = '/dashboard/subjects
       control.props.onClick();
     }),
     search: async value => act(async () => root.root.findByProps({ id: 'library-exam-search', type: 'search' }).props.onChange({ target: { value } })),
-    go: async target => act(async () => navigate(target)),
+    go: async (target, options) => act(async () => navigate(target, options)),
     delayNextLoad() {
       let resolve;
       nextModuleLoad = new Promise(done => { resolve = done; });
@@ -173,24 +211,106 @@ test('a restored URL cannot bypass free-plan section access', async () => {
   } finally { await screen.unmount(); }
 });
 
-for (const type of ['course', 'exam']) {
-  test(`the real ${type} question page sends both Exit controls and Escape to browser Back`, async () => {
+for (const [type, trigger] of ['course', 'exam'].flatMap(type => ['mobile', 'desktop', 'Escape'].map(trigger => [type, trigger]))) {
+  test(`the real ${type} question page exits once via ${trigger}`, async () => {
     const root = await mountExam(type, { _id: 'exam', name: 'Endocrinologie', questions: {
       '24 normale': [{ _id: 'q1', text: 'Question', options: [{ text: 'Réponse', isCorrect: true }] }],
     } });
     try {
       const exits = root.root.findAllByType('button').filter(node => textContent(node) === 'Exit');
       assert.equal(exits.length, 2, 'mobile and desktop Exit controls');
+      if (trigger === 'Escape') await root.harness.key('Escape');
+      else await act(async () => exits[trigger === 'mobile' ? 0 : 1].props.onClick());
+      // A second click/key event while navigation is pending must not skip the origin.
       for (const exit of exits) await act(async () => exit.props.onClick());
       await root.harness.key('Escape');
-      assert.deepEqual(root.harness.navigation, [[-1], [-1], [-1]]);
+      assert.deepEqual(root.harness.navigation, [[-1]]);
     } finally { await act(async () => root.unmount()); }
   });
 }
 
-test('both real question sidebars keep the exceptional 2024 session visible and selectable', async () => {
-  const labels = ['17 normale', '24 rattrapage', '24 1ère session exceptionnelle', '23 normale', '25 normale', '24 normale', '2026 ratt'];
-  const expected = ['2026 ratt', '25 normale', '24 1ère session exceptionnelle', '24 normale', '24 rattrapage', '23 normale', '17 normale'];
+test('an intermediate question entry still exits to the original filtered course list and position', async () => {
+  const screen = await mountLibrary();
+  try {
+    await screen.click('Examens par cours');
+    await screen.search('Thyro');
+    const origin = screen.location;
+    screen.browser.scrollY = 850;
+    await screen.click('Commencer');
+    const stateAfterRefresh = JSON.parse(JSON.stringify(screen.location.state));
+    await screen.go('/exam/another?type=course', { state: stateAfterRefresh });
+    await screen.click('Quitter');
+    assert.equal(screen.location.key, origin.key);
+    assert.equal(screen.location.search, origin.search);
+    assert.equal(screen.browser.scrollY, 850);
+  } finally { await screen.unmount(); }
+});
+
+test('the explicit origin restores filters and scroll when its history index is no longer available', async () => {
+  const screen = await mountLibrary();
+  try {
+    await screen.click('Examens par cours');
+    await screen.search('Thyro');
+    screen.browser.scrollY = 920;
+    await screen.click('Commencer');
+    screen.browser.scrollY = 0;
+    screen.browser.history.state = { idx: 0 };
+    await screen.click('Quitter');
+    assert.equal(screen.location.pathname, '/dashboard/subjects/m1');
+    assert.equal(new URLSearchParams(screen.location.search).get('q'), 'Thyro');
+    assert.equal(screen.browser.scrollY, 920);
+    const restoredCount = screen.scrolls.length;
+    screen.browser.scrollY = 600;
+    await screen.search('Thyr');
+    assert.equal(screen.scrolls.length, restoredCount, 'editing filters must not replay an old return position');
+  } finally { await screen.unmount(); }
+});
+
+for (const pageName of ['Myplaylist', 'PlaylistsPage']) {
+  test(`${pageName} records its exact origin and restores its position after Exit`, async () => {
+    const screen = await mountLibrary({ pageName });
+    try {
+      if (pageName === 'Myplaylist') {
+        const search = screen.root.root.findAllByType('input').find(node => node.props.placeholder?.startsWith('Rechercher'));
+        await act(async () => search.props.onChange({ target: { value: 'Thyro' } }));
+      }
+      const origin = screen.location;
+      screen.browser.scrollY = 640;
+      await screen.click("S'entraîner");
+      assert.equal(screen.location.pathname + screen.location.search, '/exam/playlist-1?type=playlist');
+      assert.equal(screen.location.state.examOrigin.pathname, origin.pathname);
+      screen.browser.scrollY = 0;
+      await screen.click('Quitter');
+      assert.equal(screen.location.key, origin.key);
+      assert.equal(screen.location.search, origin.search);
+      assert.equal(screen.browser.scrollY, 640);
+    } finally { await screen.unmount(); }
+  });
+}
+
+test('the unavailable question screen returns to the saved origin instead of the dashboard', async () => {
+  const origin = { pathname: '/dashboard/subjects/m1', search: '?type=course', key: 'origin', historyIndex: 1 };
+  const root = await mountExam('course', {}, { fetchFailure: true, historyIndex: 3, location: { state: { examOrigin: origin } } });
+  try {
+    await act(async () => root.root.findByProps({ 'aria-label': 'Retour à la page précédente' }).props.onClick());
+    assert.deepEqual(root.harness.navigation, [[-2]]);
+  } finally { await act(async () => root.unmount()); }
+});
+
+test('directly opened questions return to their course module when there is no Back entry', async () => {
+  const root = await mountExam('course', { _id: 'course', moduleId: 'm1', name: 'Endocrinologie', questions: {
+    '24 normale': [{ _id: 'q1', text: 'Question', options: [{ text: 'Réponse', isCorrect: true }] }],
+  } }, { historyIndex: 0 });
+  try {
+    const exit = root.root.findAllByType('button').find(node => textContent(node) === 'Exit');
+    await act(async () => exit.props.onClick());
+    assert.deepEqual(JSON.parse(JSON.stringify(root.harness.navigation)), [['/dashboard/subjects/m1?type=course', { replace: true }]]);
+  } finally { await act(async () => root.unmount()); }
+});
+
+test('both real question sidebars keep premier exceptionnel visible and selectable alongside 2024 sessions', async () => {
+  const labels = ['17 normale', '24 rattrapage', '24 premier exceptionnel', '23 normale', '25 normale', '24 normale', '2026 ratt'];
+  const expected = ['2026 ratt', '25 normale', '24 premier exceptionnel', '24 normale', '24 rattrapage', '23 normale', '17 normale'];
   const root = await mountExam('course', { _id: 'course', name: 'Endocrinologie', questions: Object.fromEntries(
     labels.map((label, index) => [label, [{ _id: `q${index}`, text: `Question de ${label}`, options: [{ text: 'Réponse', isCorrect: true }] }]]),
   ) });
@@ -203,6 +323,6 @@ test('both real question sidebars keep the exceptional 2024 session visible and 
     assert.equal(firstSessionQuestions.length, 2, 'the exceptional session question is present in each sidebar');
     await act(async () => firstSessionQuestions[1].props.onClick());
     const questionCard = root.root.find(node => node.type === 'div' && node.props.className?.includes('exam-question-card'));
-    assert.ok(textContent(questionCard).includes('Question de 24 1ère session exceptionnelle'));
+    assert.ok(textContent(questionCard).includes('Question de 24 premier exceptionnel'));
   } finally { await act(async () => root.unmount()); }
 });

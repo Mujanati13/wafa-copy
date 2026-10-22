@@ -11,6 +11,15 @@ for (const [name, sorter] of Object.entries({
     backend: { compareSessionNames, parseSessionInfo, sortGroupedQuestions },
     frontend: frontendSort,
 })) {
+    test(`${name}: recognizes premier exceptionnel without requiring the word session`, () => {
+        for (const label of ["24 premier exceptionnel", "24 première exceptionnelle", "24 1ère exceptionnelle", "2024 premier exceptionnel"]) {
+            assert.equal(sorter.parseSessionInfo(label).year, 2024, label);
+            assert.equal(sorter.parseSessionInfo(label).sessionRank, 5, label);
+            assert.deepEqual(["23 normale", label, "25 normale", "24 rattrapage", "24 normale"].sort(sorter.compareSessionNames),
+                ["25 normale", label, "24 normale", "24 rattrapage", "23 normale"]);
+        }
+    });
+
     test(`${name}: keeps the exceptional first session alongside the other 2024 sessions`, () => {
         const labels = ["17 normale", "24 rattrapage", "24 1ère session exceptionnelle", "23 normale", "25 normale", "24 normale", "2026 ratt"];
         const expected = ["2026 ratt", "25 normale", "24 1ère session exceptionnelle", "24 normale", "24 rattrapage", "23 normale", "17 normale"];
@@ -20,7 +29,7 @@ for (const [name, sorter] of Object.entries({
         for (const label of ["24 1ère session exceptionnelle", "24 1ere session", "24 1re session", "24 premier session", "24 première session", "2024 première session"]) {
             const parsed = sorter.parseSessionInfo(label);
             assert.equal(parsed.year, 2024, label);
-            assert.equal(parsed.sessionRank, 10, label);
+            assert.equal(parsed.sessionRank, 5, label);
         }
         assert.equal(sorter.parseSessionInfo("24 2ème session").year, 2024);
         assert.equal(sorter.parseSessionInfo("24 2ème session").sessionRank, 20);

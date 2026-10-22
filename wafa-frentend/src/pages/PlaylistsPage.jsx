@@ -12,7 +12,9 @@ import { PageHeader } from "@/components/shared";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { api } from "@/lib/utils";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
+import { openExam } from "@/utils/examNavigation";
+import { useExamReturnPosition } from "@/hooks/useExamReturnPosition";
 import { isPremiumProPlan } from "@/utils/subscriptionDisplay";
 
 const PlaylistsPage = () => {
@@ -29,6 +31,8 @@ const PlaylistsPage = () => {
   const [editPlaylistDescription, setEditPlaylistDescription] = useState("");
   const [saving, setSaving] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+  useExamReturnPosition(!loading);
 
   useEffect(() => {
     try {
@@ -310,7 +314,7 @@ const PlaylistsPage = () => {
                         <Button 
                           size="sm" 
                           className="flex-1 gap-1.5 shadow-sm"
-                          onClick={() => navigate(`/exam/${playlist._id}?type=playlist`)}
+                          onClick={() => openExam(navigate, `/exam/${playlist._id}?type=playlist`, location)}
                         >
                           <Play className="h-3.5 w-3.5 fill-current" />
                           <span>S'entraîner</span>

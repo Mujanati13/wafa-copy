@@ -1,7 +1,7 @@
 import { exitExam } from '@/utils/authNavigation';
 import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useTranslation } from 'react-i18next';
-import { useParams, useNavigate, useSearchParams } from "react-router-dom";
+import { useLocation, useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { flattenExamQuestions, isVerified, isCorrect as isVerifiedAnswerCorrect, questionProgress, progressSnapshot, restoreSnapshot } from '@/utils/questionProgress';
 import { publishExamCompletedCount } from "@/utils/examProgress";
 import { dashboardService } from "@/services/dashboardService";
@@ -135,12 +135,11 @@ const ExamSession = () => {
   const { examId } = useParams();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const location = useLocation();
 
 
   // Get exam type from query params (default: exam-years)
   const examType = searchParams.get('type') || 'exam'; // 'exam', 'course', 'qcm'
-
-  const handleGoBack = useCallback(() => exitExam(navigate), [navigate]);
 
   // Helper function to darken/lighten color
   const adjustColor = (color, amount) => {
@@ -167,6 +166,15 @@ const ExamSession = () => {
   const [error, setError] = useState(null);
   const [flaggedQuestions, setFlaggedQuestions] = useState(new Set());
   const [showSidebar, setShowSidebar] = useState(false);
+  const exitRequested = useRef(false);
+  const handleGoBack = useCallback(() => {
+    if (exitRequested.current) return;
+    exitRequested.current = true;
+    exitExam(navigate, {
+      origin: location.state?.examOrigin, examType,
+      moduleId: examData?.moduleId?._id || examData?.moduleId,
+    });
+  }, [navigate, location.state, examType, examData?.moduleId]);
 
   // Modal states
   const [showExplanation, setShowExplanation] = useState(false);
@@ -1380,14 +1388,15 @@ const ExamSession = () => {
                   {t('dashboard:refresh_page') || 'Actualiser'}
                 </Button>
                 <Button
-                  onClick={() => navigate('/dashboard/home')}
+                  onClick={handleGoBack}
+                  aria-label="Retour à la page précédente"
                   className="flex-1 gap-2 text-white"
                   style={{
                     background: `linear-gradient(to right, ${moduleColor}, ${adjustColor(moduleColor, -30)})`
                   }}
                 >
                   <Home className="h-4 w-4" />
-                  {t('dashboard:back_to_dashboard') || 'Tableau de bord'}
+                  {t('common:back') || 'Retour'}
                 </Button>
               </div>
             </CardContent>

@@ -1,5 +1,7 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useState } from "react";
-import { useLocation, useNavigate, useNavigationType, useParams, useSearchParams } from "react-router-dom";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { openExam } from "@/utils/examNavigation";
+import { useExamReturnPosition } from "@/hooks/useExamReturnPosition";
 import {
   ArrowLeft, BookOpen, CalendarDays, FileQuestion,
   HelpCircle, Library, Lock, Play, Sparkles,
@@ -326,7 +328,6 @@ const getCachedUser = () => {
 export default function SubjectsPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const navigationType = useNavigationType();
   const [searchParams, setSearchParams] = useSearchParams();
   const { courseId } = useParams();
   const { selectedSemester } = useSemester();
@@ -352,22 +353,7 @@ export default function SubjectsPage() {
     }, { replace: true, state: location.state });
   }, [setSearchParams, location.state]);
 
-  const scrollStorageKey = `examLibraryScroll:${user?._id || "anonymous"}:${courseId}:${location.key}`;
-  useLayoutEffect(() => {
-    const previous = window.history.scrollRestoration;
-    window.history.scrollRestoration = "manual";
-    return () => { window.history.scrollRestoration = previous; };
-  }, []);
-
-  useLayoutEffect(() => {
-    if (loading || navigationType !== "POP") return;
-    try {
-      const position = JSON.parse(sessionStorage.getItem(scrollStorageKey));
-      if (Number.isFinite(position?.top) && Number.isFinite(position?.left)) {
-        window.scrollTo({ top: position.top, left: position.left, behavior: "instant" });
-      }
-    } catch { /* Navigation still works when session storage is unavailable. */ }
-  }, [loading, navigationType, scrollStorageKey]);
+  useExamReturnPosition(!loading && !error);
 
   useEffect(() => {
     const syncUser = () => setUser(getCachedUser());
@@ -518,10 +504,7 @@ export default function SubjectsPage() {
       return;
     }
 
-    try {
-      sessionStorage.setItem(scrollStorageKey, JSON.stringify({ top: window.scrollY, left: window.scrollX }));
-    } catch { /* Do not prevent opening an exam if storage is unavailable. */ }
-    navigate(`/exam/${id}?type=${type === "year" ? "exam" : type}`);
+    openExam(navigate, `/exam/${id}?type=${type === "year" ? "exam" : type}`, location);
   };
 
   if (loading) return <LoadingLibrary />;

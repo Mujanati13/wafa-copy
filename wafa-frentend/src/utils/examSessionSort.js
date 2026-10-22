@@ -9,7 +9,7 @@
 export const parseSessionInfo = (sessionName) => {
   const str = String(sessionName || "").trim();
   const lower = str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-  const firstSession = /\b(?:premiere?|1(?:ere|re|er|e)?)\s+session\b/.test(lower);
+  const firstSession = /\b(?:premiere?|1(?:ere|re|er|e)?)\s+(?:session|exceptionnel(?:le)?)\b/.test(lower);
   const secondSession = /\b(?:deuxieme|seconde?|2(?:eme|me|e|nde|de)?)\s+session\b/.test(lower);
 
   // Match 4-digit years (e.g., 2026, 2025, 2024, 1999)
@@ -24,7 +24,7 @@ export const parseSessionInfo = (sessionName) => {
     } else {
       // Legacy session labels abbreviate 2000–2099 as "16 normale".
       // Limit this to year-first session labels, not course/question numbers.
-      const shortYear = lower.match(/^(\d{2})(?=\s*(?:$|[-–:/]?\s*(?:norm|princ|ord|ratt|extra|s[12]\b|premiere?\s+session\b|deuxieme\s+session\b|seconde?\s+session\b|[12](?:ere|re|er|eme|me|e|nde|de)?\s+session\b)))/);
+      const shortYear = lower.match(/^(\d{2})(?=\s*(?:$|[-–:/]?\s*(?:norm|princ|ord|ratt|extra|s[12]\b|premiere?\s+(?:session|exceptionnel(?:le)?)\b|deuxieme\s+session\b|seconde?\s+session\b|[12](?:ere|re|er|eme|me|e|nde|de)?\s+(?:session|exceptionnel(?:le)?)\b)))/);
       if (shortYear) year = 2000 + Number(shortYear[1]);
     }
   }
@@ -32,7 +32,9 @@ export const parseSessionInfo = (sessionName) => {
   // Session priority within the same year:
   // Session normale / principale comes before Session de rattrapage
   let sessionRank = 50; // Default middle rank
-  if (firstSession || lower.includes("norm") || lower.includes("princ") || lower.includes("ord") || lower.includes("s1")) {
+  if (firstSession) {
+    sessionRank = 5;
+  } else if (lower.includes("norm") || lower.includes("princ") || lower.includes("ord") || lower.includes("s1")) {
     sessionRank = 10;
   } else if (secondSession || lower.includes("ratt") || lower.includes("extra") || lower.includes("s2")) {
     sessionRank = 20;

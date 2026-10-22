@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
+import { openExam } from '@/utils/examNavigation';
+import { useExamReturnPosition } from '@/hooks/useExamReturnPosition';
 import { 
   Plus, Search, Play, Pencil, Trash2, ListPlus, HelpCircle, Loader2, 
   BookOpen, Sparkles, FolderHeart, ArrowRight, Layers
@@ -36,7 +38,15 @@ const PLAYLIST_GRADIENTS = [
 const Myplaylist = () => {
   const { t } = useTranslation(['dashboard', 'common']);
   const navigate = useNavigate();
-  const [searchQuery, setSearchQuery] = useState('');
+  const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const searchQuery = searchParams.get('q') || '';
+  const setSearchQuery = (value) => setSearchParams((current) => {
+    const next = new URLSearchParams(current);
+    if (value) next.set('q', value);
+    else next.delete('q');
+    return next;
+  }, { replace: true, state: location.state });
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [newPlaylist, setNewPlaylist] = useState({ title: '', description: '' });
@@ -46,6 +56,7 @@ const Myplaylist = () => {
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [updating, setUpdating] = useState(false);
+  useExamReturnPosition(!loading);
 
   useEffect(() => {
     try {
@@ -131,7 +142,7 @@ const Myplaylist = () => {
       return;
     }
 
-    navigate(`/exam/${playlist._id}?type=playlist`);
+    openExam(navigate, `/exam/${playlist._id}?type=playlist`, location);
   };
 
   const handleEditPlaylist = (playlist, e) => {

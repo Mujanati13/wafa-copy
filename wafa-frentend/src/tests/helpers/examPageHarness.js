@@ -7,7 +7,6 @@ import { act, create } from 'react-test-renderer';
 import { transform } from 'esbuild';
 import * as sessionSort from '../../utils/examSessionSort.js';
 import * as questionProgress from '../../utils/questionProgress.js';
-import { exitExam } from '../../utils/authNavigation.js';
 
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 export const storage = () => {
@@ -46,6 +45,7 @@ export async function mountExam(type, data, options = {}) {
         if (options.restoreFailure) throw new Error('offline');
         return { data: { data: serverAnswers } };
       }
+      if (options.fetchFailure) throw new Error('exam request failed');
       return { data: { data: routeData, success: false } };
     },
     post: async (url, body) => {
@@ -74,6 +74,7 @@ export async function mountExam(type, data, options = {}) {
     setTimeout: (callback, delay) => { timers.set(++nextTimer, { callback, delay }); return nextTimer; },
     clearTimeout: id => timers.delete(id), setInterval: () => 1, clearInterval() {},
     window: {
+      history: { state: { idx: options.historyIndex ?? 1 } },
       addEventListener(type, handler) { if (!events.has(type)) events.set(type, new Set()); events.get(type).add(handler); },
       removeEventListener(type, handler) { events.get(type)?.delete(handler); }, scrollTo() {},
     },
@@ -89,11 +90,13 @@ export async function mountExam(type, data, options = {}) {
     'react/jsx-runtime': synthetic(jsxRuntime),
     'react-i18next': synthetic({ useTranslation: () => ({ t: translate }) }),
     'react-router-dom': synthetic({ useParams: () => ({ examId: routeId }),
-      useNavigate: () => navigate, useSearchParams: () => [new URLSearchParams({ type: routeType })] }),
+      useNavigate: () => navigate, useLocation: () => options.location || { pathname: `/exam/${routeId}`, state: null },
+      useSearchParams: () => [new URLSearchParams({ type: routeType })] }),
     'framer-motion': synthetic({ motion: { div: primitive, button }, AnimatePresence: primitive }),
     sonner: synthetic({ toast: { error() {}, info() {}, warning() {}, success() {} } }),
     '@/lib/utils': synthetic({ cn: (...values) => values.filter(Boolean).join(' '), api }),
-    '@/utils/authNavigation': synthetic({ exitExam }),
+    '@/utils/authNavigation': new vm.SourceTextModule(await readFile(new URL('../../utils/authNavigation.js', import.meta.url), 'utf8'), { context }),
+    './examNavigation.js': new vm.SourceTextModule(await readFile(new URL('../../utils/examNavigation.js', import.meta.url), 'utf8'), { context }),
     '@/utils/examProgress': synthetic({ publishExamCompletedCount: (...args) => published.push(args) }),
     '@/utils/questionProgress': synthetic(questionProgress),
     '@/services/dashboardService': synthetic({ dashboardService: { clearCache() {} } }),
