@@ -11,6 +11,7 @@
     "test:dashboard": "node --experimental-vm-modules --test src/tests/dashboardHydration.test.js src/tests/dashboardFirstRender.test.js src/tests/sidebarModules.test.js",
     "test:statistics": "node --experimental-vm-modules --test src/tests/statisticsProgress.test.js",
     "test:exam-context": "node --experimental-vm-modules --test src/tests/examQuestionContext.test.js",
+    "test:exam-navigation": "node --experimental-vm-modules --test src/tests/examNavigation.test.js",
     "test:exam-progress": "node --experimental-vm-modules --test src/tests/questionProgress.test.js src/tests/examProgress.test.js src/tests/examQuestionContext.test.js src/tests/statisticsProgress.test.js",
     "test:notes": "node --experimental-vm-modules --test src/tests/notesQuestionImages.test.js src/tests/notesCourseReference.test.js",
     "test:add-questions": "node --experimental-vm-modules --test src/tests/addQuestionsLoading.test.js",

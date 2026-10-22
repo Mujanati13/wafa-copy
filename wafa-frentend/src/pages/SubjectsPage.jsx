@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useState } from "react";
+import { useLocation, useNavigate, useNavigationType, useParams, useSearchParams } from "react-router-dom";
 import {
   ArrowLeft, BookOpen, CalendarDays, FileQuestion,
   HelpCircle, Library, Lock, Play, Sparkles,
@@ -325,17 +325,49 @@ const getCachedUser = () => {
 
 export default function SubjectsPage() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const navigationType = useNavigationType();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { courseId } = useParams();
   const { selectedSemester } = useSemester();
   const [user, setUser] = useState(getCachedUser);
   const [module, setModule] = useState(null);
   const [examsByType, setExamsByType] = useState({ year: [], course: [], qcm: [] });
-  const [activeType, setActiveType] = useState("year");
-  const [category, setCategory] = useState("all");
-  const [searchQuery, setSearchQuery] = useState("");
+  // Keep the library view in its history entry so browser Back restores it.
+  const activeType = ["year", "course", "qcm"].includes(searchParams.get("type")) ? searchParams.get("type") : "year";
+  const category = searchParams.get("category") || "all";
+  const searchQuery = searchParams.get("q") || "";
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [helpExam, setHelpExam] = useState(null);
+
+  const updateFilters = useCallback((filters) => {
+    setSearchParams((current) => {
+      const next = new URLSearchParams(current);
+      for (const [key, value] of Object.entries(filters)) {
+        if (value) next.set(key, value);
+        else next.delete(key);
+      }
+      return next;
+    }, { replace: true, state: location.state });
+  }, [setSearchParams, location.state]);
+
+  const scrollStorageKey = `examLibraryScroll:${user?._id || "anonymous"}:${courseId}:${location.key}`;
+  useLayoutEffect(() => {
+    const previous = window.history.scrollRestoration;
+    window.history.scrollRestoration = "manual";
+    return () => { window.history.scrollRestoration = previous; };
+  }, []);
+
+  useLayoutEffect(() => {
+    if (loading || navigationType !== "POP") return;
+    try {
+      const position = JSON.parse(sessionStorage.getItem(scrollStorageKey));
+      if (Number.isFinite(position?.top) && Number.isFinite(position?.left)) {
+        window.scrollTo({ top: position.top, left: position.left, behavior: "instant" });
+      }
+    } catch { /* Navigation still works when session storage is unavailable. */ }
+  }, [loading, navigationType, scrollStorageKey]);
 
   useEffect(() => {
     const syncUser = () => setUser(getCachedUser());
@@ -360,16 +392,16 @@ export default function SubjectsPage() {
 
   // Yearly exams are the free-plan entry point, regardless of old freeExam data.
   useEffect(() => {
-    if (isFreeUser) setActiveType("year");
-  }, [isFreeUser, examsByType]);
+    if (isFreeUser && activeType !== "year") updateFilters({ type: null, category: null });
+  }, [isFreeUser, activeType, updateFilters]);
 
   // If a non-pro user lands on a TP/TD active tab, switch away to year
   useEffect(() => {
     const activeTitle = getSectionTitle(module, activeType);
-    if (!hasPremiumProAccess && isTpTd(activeType, activeTitle)) {
-      setActiveType("year");
+    if (!hasPremiumProAccess && activeType !== "year" && isTpTd(activeType, activeTitle)) {
+      updateFilters({ type: null, category: null });
     }
-  }, [hasPremiumProAccess, activeType, module]);
+  }, [hasPremiumProAccess, activeType, module, updateFilters]);
 
   // If a free user directly navigates to a locked module, redirect to subscription
   useEffect(() => {
@@ -486,6 +518,9 @@ export default function SubjectsPage() {
       return;
     }
 
+    try {
+      sessionStorage.setItem(scrollStorageKey, JSON.stringify({ top: window.scrollY, left: window.scrollX }));
+    } catch { /* Do not prevent opening an exam if storage is unavailable. */ }
     navigate(`/exam/${id}?type=${type === "year" ? "exam" : type}`);
   };
 
@@ -573,8 +608,7 @@ export default function SubjectsPage() {
                 navigate("/dashboard/subscription");
                 return;
               }
-              setActiveType(type);
-              setCategory("all");
+              updateFilters({ type: type === "year" ? null : type, category: null });
             }}
             aria-pressed={isActive}
           >
@@ -629,7 +663,7 @@ export default function SubjectsPage() {
                     navigate("/dashboard/subscription");
                     return;
                   }
-                  setCategory(item);
+                  updateFilters({ category: item === "all" ? null : item });
                 }}
                 aria-pressed={isActive}
               >
@@ -653,7 +687,7 @@ export default function SubjectsPage() {
           id="library-exam-search"
           type="search"
           value={searchQuery}
-          onChange={(event) => setSearchQuery(event.target.value)}
+          onChange={(event) => updateFilters({ q: event.target.value })}
           placeholder={activeType === "year" ? "Rechercher un examen par année…" : "Rechercher un examen ou un cours…"}
           className="h-10 w-full rounded-xl border border-input bg-background pl-10 pr-3 text-sm outline-none transition focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
         />

@@ -7,6 +7,7 @@ import { act, create } from 'react-test-renderer';
 import { transform } from 'esbuild';
 import * as sessionSort from '../../utils/examSessionSort.js';
 import * as questionProgress from '../../utils/questionProgress.js';
+import { exitExam } from '../../utils/authNavigation.js';
 
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 export const storage = () => {
@@ -26,7 +27,8 @@ export async function mountExam(type, data, options = {}) {
   let routeId = 'exam';
   const primitive = ({ children, ...props }) => React.createElement('div', props, children);
   const button = ({ children, ...props }) => React.createElement('button', props, children);
-  const navigate = () => {};
+  const navigation = [];
+  const navigate = (...args) => navigation.push(args);
   const translate = key => key;
   const silentConsole = { log() {}, error() {}, warn() {} };
   const local = options.localStorage || storage();
@@ -91,7 +93,7 @@ export async function mountExam(type, data, options = {}) {
     'framer-motion': synthetic({ motion: { div: primitive, button }, AnimatePresence: primitive }),
     sonner: synthetic({ toast: { error() {}, info() {}, warning() {}, success() {} } }),
     '@/lib/utils': synthetic({ cn: (...values) => values.filter(Boolean).join(' '), api }),
-    '@/utils/authNavigation': synthetic({ exitExam() {} }),
+    '@/utils/authNavigation': synthetic({ exitExam }),
     '@/utils/examProgress': synthetic({ publishExamCompletedCount: (...args) => published.push(args) }),
     '@/utils/questionProgress': synthetic(questionProgress),
     '@/services/dashboardService': synthetic({ dashboardService: { clearCache() {} } }),
@@ -125,7 +127,7 @@ export async function mountExam(type, data, options = {}) {
   let root;
   await act(async () => { root = create(React.createElement(page.namespace.default)); });
   root.harness = {
-    localStorage: local, sessionStorage: sessions, serverAnswers, calls, published, options,
+    localStorage: local, sessionStorage: sessions, serverAnswers, calls, published, options, navigation,
     async navigateTo(nextType, nextData, nextId = 'other-exam') {
       routeType = nextType;
       routeData = nextData;

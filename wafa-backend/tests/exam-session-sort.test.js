@@ -11,6 +11,21 @@ for (const [name, sorter] of Object.entries({
     backend: { compareSessionNames, parseSessionInfo, sortGroupedQuestions },
     frontend: frontendSort,
 })) {
+    test(`${name}: keeps the exceptional first session alongside the other 2024 sessions`, () => {
+        const labels = ["17 normale", "24 rattrapage", "24 1ère session exceptionnelle", "23 normale", "25 normale", "24 normale", "2026 ratt"];
+        const expected = ["2026 ratt", "25 normale", "24 1ère session exceptionnelle", "24 normale", "24 rattrapage", "23 normale", "17 normale"];
+        assert.deepEqual([...labels].sort(sorter.compareSessionNames), expected);
+        const groups = Object.fromEntries(labels.map(label => [label, [{ _id: label }]]));
+        assert.deepEqual(Object.keys(sorter.sortGroupedQuestions(groups)), expected);
+        for (const label of ["24 1ère session exceptionnelle", "24 1ere session", "24 1re session", "24 premier session", "24 première session", "2024 première session"]) {
+            const parsed = sorter.parseSessionInfo(label);
+            assert.equal(parsed.year, 2024, label);
+            assert.equal(parsed.sessionRank, 10, label);
+        }
+        assert.equal(sorter.parseSessionInfo("24 2ème session").year, 2024);
+        assert.equal(sorter.parseSessionInfo("24 2ème session").sessionRank, 20);
+    });
+
     test(`${name}: mixed abbreviated and full years sort chronologically`, () => {
         const labels = ["2024 normale", "16 normale", "17 normale", "18 normale", "24 ratt", "2023 normale", "18 ratt", "Session principale"];
         const expected = ["2024 normale", "24 ratt", "2023 normale", "18 normale", "18 ratt", "17 normale", "16 normale", "Session principale"];
