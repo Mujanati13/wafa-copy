@@ -190,6 +190,29 @@ test('a fresh visit to another module does not inherit the previous library view
   } finally { await screen.unmount(); }
 });
 
+test('Back restores a previously returned module again after visiting a different module', async () => {
+  const screen = await mountLibrary();
+  try {
+    await screen.click('Examens par cours');
+    await screen.search('Thyro');
+    const origin = screen.location;
+    screen.browser.scrollY = 750;
+    await screen.click('Commencer');
+    await screen.click('Quitter');
+    assert.equal(screen.browser.scrollY, 750);
+    await screen.go('/dashboard/subjects/m2');
+    screen.browser.scrollY = 0;
+    screen.scrolls.length = 0;
+    const finishLoading = screen.delayNextLoad();
+    await screen.go(-1);
+    assert.equal(screen.location.key, origin.key);
+    assert.equal(screen.scrolls.length, 0, 'wait until the original module finishes loading');
+    await finishLoading();
+    assert.equal(screen.browser.scrollY, 750, 'the same history entry must restore on each return');
+    assert.equal(screen.location.search, origin.search);
+  } finally { await screen.unmount(); }
+});
+
 test('unavailable session storage does not prevent opening or exiting a course', async () => {
   const screen = await mountLibrary({ storageUnavailable: true });
   try {
@@ -308,9 +331,10 @@ test('directly opened questions return to their course module when there is no B
   } finally { await act(async () => root.unmount()); }
 });
 
-test('both real question sidebars keep premier exceptionnel visible and selectable alongside 2024 sessions', async () => {
-  const labels = ['17 normale', '24 rattrapage', '24 premier exceptionnel', '23 normale', '25 normale', '24 normale', '2026 ratt'];
-  const expected = ['2026 ratt', '25 normale', '24 premier exceptionnel', '24 normale', '24 rattrapage', '23 normale', '17 normale'];
+for (const firstSession of ['24 premier exceptionnel', '24 1ère session exceptionnelle']) {
+test(`both real question sidebars keep ${firstSession} visible and selectable alongside 2024 sessions`, async () => {
+  const labels = ['17 normale', '24 rattrapage', firstSession, '23 normale', '25 normale', '24 normale', '2026 ratt'];
+  const expected = ['2026 ratt', '25 normale', firstSession, '24 normale', '24 rattrapage', '23 normale', '17 normale'];
   const root = await mountExam('course', { _id: 'course', name: 'Endocrinologie', questions: Object.fromEntries(
     labels.map((label, index) => [label, [{ _id: `q${index}`, text: `Question de ${label}`, options: [{ text: 'Réponse', isCorrect: true }] }]]),
   ) });
@@ -323,6 +347,7 @@ test('both real question sidebars keep premier exceptionnel visible and selectab
     assert.equal(firstSessionQuestions.length, 2, 'the exceptional session question is present in each sidebar');
     await act(async () => firstSessionQuestions[1].props.onClick());
     const questionCard = root.root.find(node => node.type === 'div' && node.props.className?.includes('exam-question-card'));
-    assert.ok(textContent(questionCard).includes('Question de 24 premier exceptionnel'));
+    assert.ok(textContent(questionCard).includes(`Question de ${firstSession}`));
   } finally { await act(async () => root.unmount()); }
 });
+}

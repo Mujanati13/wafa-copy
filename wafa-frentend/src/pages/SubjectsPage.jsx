@@ -353,7 +353,7 @@ export default function SubjectsPage() {
     }, { replace: true, state: location.state });
   }, [setSearchParams, location.state]);
 
-  useExamReturnPosition(!loading && !error);
+  useExamReturnPosition(!loading && !error && module?.id === courseId);
 
   useEffect(() => {
     const syncUser = () => setUser(getCachedUser());
