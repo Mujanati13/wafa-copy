@@ -9,8 +9,12 @@
     <title>YourQcm</title>
     <script>
       (function() {
-        // Dark mode is temporarily disabled, including before React mounts.
-        document.documentElement.classList.remove('dark');
+        // Restore the saved theme before React mounts to avoid a light flash.
+        try {
+          document.documentElement.classList.toggle('dark', localStorage.getItem('theme') === 'dark');
+        } catch (e) {
+          document.documentElement.classList.remove('dark');
+        }
       })();
     </script>
   </head>

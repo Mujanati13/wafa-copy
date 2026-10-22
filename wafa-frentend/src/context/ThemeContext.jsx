@@ -2,9 +2,7 @@ import { createContext, useContext, useState, useEffect } from "react";
 
 const ThemeContext = createContext();
 
-// Temporarily locked to light mode. Keep index.html's startup theme in sync
-// when re-enabling the switch.
-export const themeSwitchingEnabled = false;
+export const themeSwitchingEnabled = true;
 
 export const themes = {
   light: {
