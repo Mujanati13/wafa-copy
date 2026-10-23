@@ -1,5 +1,6 @@
 import "./index.css";
-import React from "react";
+import React, { lazy } from "react";
+const RouteBoundary = lazy(() => import("./components/shared/RouteBoundary"));
 import {
   BrowserRouter as Router,
   Routes,
@@ -8,76 +9,77 @@ import {
   Outlet,
 } from "react-router-dom";
 import { Toaster } from "@/components/ui/sonner";
-import RedesignedLandingPage from "./components/RedesignedLandingPage";
-import Login from "./components/auth/Login";
-import Register from "./components/auth/Register";
-import LearnerExperienceLayout from "./components/layout/LearnerExperienceLayout";
-import LearnerDashboard from "./pages/LearnerDashboard";
-import ExamPage from "./pages/ExamPage";
-import ResultsPage from "./pages/ResultsPage";
-import ProfilePage from "./pages/ProfilePage";
-import SettingsPage from "./pages/SettingsPage";
-import ProgressPage from "./pages/ProgressPage";
-import SubjectsPage from "./pages/SubjectsPage";
-import AdminLayout from "./components/layout/AdminLayout";
-import AdminPage from "./pages/AdminPage";
-import AnayticsPage from "./pages/AnayticsPage";
-import UsersWithTabs from "./components/admin/UsersWithTabs";
-import SubscriptionPage from "./pages/SubscriptionPage";
-import ClientSubscriptionPage from "./pages/ClientSubscriptionPage";
-import ReportQuestionsAdmin from "./pages/ReportQuestionsAdmin";
-import Explications from "./pages/Explications";
-import Resumes from "./pages/Resumes";
-import DemandesDePayements from "./pages/DemandesDePayements";
-import Leaderboard from "./pages/Leaderboard";
-import Semesters from "./pages/Semesters";
-import Module from "./pages/Module";
-import CategoriesOfModules from "./pages/CategoriesOfModules";
-import ExamParYears from "./pages/ExamParYears";
-import ExamCourses from "./pages/ExamCourses";
-import ImportExamParYears from "./pages/ImportExamParYears";
-import ImportExamParCourse from "./pages/ImportExamParCourse";
-import ImportQCMBanque from "./pages/ImportQCMBanque";
-import QCMBanque from "./pages/QCMBanque";
-import ImportResumes from "./pages/ImportResumes";
-import AddQuestions from "./pages/AddQuestions";
-import ImportImages from "./pages/ImportImages";
-import ImportExplications from "./pages/ImportExplications";
-import GenerateExplanationsAI from "./pages/GenerateExplanationsAI";
-import CreateCategoriesForCourses from "./pages/CreateCategoriesForCourses";
-import Myplaylist from "./pages/Myplaylist";
-import LeaderboardClient from "./pages/LeaderboardClient";
-import VerifyEmail from "./pages/VerifyEmail";
-import VerifyEmailFirebase from "./pages/VerifyEmailFirebase";
-import ForgotPassword from "./pages/ForgotPassword";
-import ResetPassword from "./pages/ResetPassword";
-import ContactPage from "./pages/ContactPage";
-import PaymentSuccess from "./pages/PaymentSuccess";
-import PaymentCancel from "./pages/PaymentCancel";
-import PlaylistsPage from "./pages/PlaylistsPage";
-import NotesPage from "./pages/NotesPage";
-import SupportPage from "./pages/SupportPage";
-import NotificationAdmin from "./pages/NotificationAdmin";
-import NotificationsPage from "./pages/NotificationsPage";
-import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
-import TermsOfUsePage from "./pages/TermsOfUsePage";
-import SubAdminPage from "./pages/SubAdminPage";
-import AdminPaypalSettings from "./pages/AdminPaypalSettings";
-import LandingPageAdmin from "./pages/LandingPageAdmin";
-import FeedbacksAdmin from "./pages/FeedbacksAdmin";
-import PrivacyPolicyAdmin from "./pages/PrivacyPolicyAdmin";
-import ContactMessagesAdmin from "./pages/ContactMessagesAdmin";
-import StatisticsPage from "./pages/StatisticsPage";
-import SelectFreeSemester from "./pages/SelectFreeSemester";
+const RedesignedLandingPage = lazy(() => import("./components/RedesignedLandingPage"));
+const Login = lazy(() => import("./components/auth/Login"));
+const Register = lazy(() => import("./components/auth/Register"));
+const LearnerExperienceLayout = lazy(() => import("./components/layout/LearnerExperienceLayout"));
+const LearnerDashboard = lazy(() => import("./pages/LearnerDashboard"));
+const ExamPage = lazy(() => import("./pages/ExamPage"));
+const ResultsPage = lazy(() => import("./pages/ResultsPage"));
+const ProfilePage = lazy(() => import("./pages/ProfilePage"));
+const SettingsPage = lazy(() => import("./pages/SettingsPage"));
+const ProgressPage = lazy(() => import("./pages/ProgressPage"));
+const SubjectsPage = lazy(() => import("./pages/SubjectsPage"));
+const AdminLayout = lazy(() => import("./components/layout/AdminLayout"));
+const AdminPage = lazy(() => import("./pages/AdminPage"));
+const AnayticsPage = lazy(() => import("./pages/AnayticsPage"));
+const UsersWithTabs = lazy(() => import("./components/admin/UsersWithTabs"));
+const SubscriptionPage = lazy(() => import("./pages/SubscriptionPage"));
+const ClientSubscriptionPage = lazy(() => import("./pages/ClientSubscriptionPage"));
+const ReportQuestionsAdmin = lazy(() => import("./pages/ReportQuestionsAdmin"));
+const Explications = lazy(() => import("./pages/Explications"));
+const Resumes = lazy(() => import("./pages/Resumes"));
+const DemandesDePayements = lazy(() => import("./pages/DemandesDePayements"));
+const Leaderboard = lazy(() => import("./pages/Leaderboard"));
+const Semesters = lazy(() => import("./pages/Semesters"));
+const Module = lazy(() => import("./pages/Module"));
+const CategoriesOfModules = lazy(() => import("./pages/CategoriesOfModules"));
+const ExamParYears = lazy(() => import("./pages/ExamParYears"));
+const ExamCourses = lazy(() => import("./pages/ExamCourses"));
+const ImportExamParYears = lazy(() => import("./pages/ImportExamParYears"));
+const ImportExamParCourse = lazy(() => import("./pages/ImportExamParCourse"));
+const ImportQCMBanque = lazy(() => import("./pages/ImportQCMBanque"));
+const QCMBanque = lazy(() => import("./pages/QCMBanque"));
+const ImportResumes = lazy(() => import("./pages/ImportResumes"));
+const AddQuestions = lazy(() => import("./pages/AddQuestions"));
+const ImportImages = lazy(() => import("./pages/ImportImages"));
+const ImportExplications = lazy(() => import("./pages/ImportExplications"));
+const GenerateExplanationsAI = lazy(() => import("./pages/GenerateExplanationsAI"));
+const CreateCategoriesForCourses = lazy(() => import("./pages/CreateCategoriesForCourses"));
+const Myplaylist = lazy(() => import("./pages/Myplaylist"));
+const LeaderboardClient = lazy(() => import("./pages/LeaderboardClient"));
+const VerifyEmail = lazy(() => import("./pages/VerifyEmail"));
+const VerifyEmailFirebase = lazy(() => import("./pages/VerifyEmailFirebase"));
+const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
+const ContactPage = lazy(() => import("./pages/ContactPage"));
+const PaymentSuccess = lazy(() => import("./pages/PaymentSuccess"));
+const PaymentCancel = lazy(() => import("./pages/PaymentCancel"));
+const PlaylistsPage = lazy(() => import("./pages/PlaylistsPage"));
+const NotesPage = lazy(() => import("./pages/NotesPage"));
+const SupportPage = lazy(() => import("./pages/SupportPage"));
+const NotificationAdmin = lazy(() => import("./pages/NotificationAdmin"));
+const NotificationsPage = lazy(() => import("./pages/NotificationsPage"));
+const PrivacyPolicyPage = lazy(() => import("./pages/PrivacyPolicyPage"));
+const TermsOfUsePage = lazy(() => import("./pages/TermsOfUsePage"));
+const SubAdminPage = lazy(() => import("./pages/SubAdminPage"));
+const AdminPaypalSettings = lazy(() => import("./pages/AdminPaypalSettings"));
+const LandingPageAdmin = lazy(() => import("./pages/LandingPageAdmin"));
+const FeedbacksAdmin = lazy(() => import("./pages/FeedbacksAdmin"));
+const PrivacyPolicyAdmin = lazy(() => import("./pages/PrivacyPolicyAdmin"));
+const ContactMessagesAdmin = lazy(() => import("./pages/ContactMessagesAdmin"));
+const StatisticsPage = lazy(() => import("./pages/StatisticsPage"));
+const SelectFreeSemester = lazy(() => import("./pages/SelectFreeSemester"));
 import ProtectedAdminRoute from "./components/layout/ProtectedAdminRoute";
 import ProtectedRoute from "./components/layout/ProtectedRoute";
-import AdminLogin from "./components/auth/AdminLogin";
-import NotFound from "./pages/NotFound";
+const AdminLogin = lazy(() => import("./components/auth/AdminLogin"));
+const NotFound = lazy(() => import("./pages/NotFound"));
 
 export default function App() {
   return (
     <Router>
       <Toaster position="top-right" />
+      <RouteBoundary>
       <Routes>
         <Route path="/" element={<RedesignedLandingPage />} />
         <Route path="/login" element={<Login />} />
@@ -164,6 +166,7 @@ export default function App() {
         {/* 404 Not Found - Must be last */}
         <Route path="*" element={<NotFound />} />
       </Routes>
+      </RouteBoundary>
     </Router>
   );
 }

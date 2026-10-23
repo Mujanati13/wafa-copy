@@ -1,5 +1,5 @@
 import { exitExam } from '@/utils/authNavigation';
-import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import React, { useState, useEffect, useCallback, useMemo, useRef, lazy, Suspense } from "react";
 import { useTranslation } from 'react-i18next';
 import { useLocation, useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { flattenExamQuestions, isVerified, isCorrect as isVerifiedAnswerCorrect, questionProgress, progressSnapshot, restoreSnapshot } from '@/utils/questionProgress';
@@ -86,13 +86,13 @@ import { api } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import { resolveQuestionImageUrl } from "@/lib/mediaUrl";
 import { isPremiumPlan, isPremiumProPlan } from "@/utils/subscriptionDisplay";
-import ExplicationModel from "@/components/ExamsPage/ExplicationModel";
-import NoteModal from "@/components/ExamsPage/NoteModal";
-import ReportModal from "@/components/ExamsPage/ReportModal";
-import CommunityModal from "@/components/ExamsPage/CommunityModal";
-import ResumesModal from "@/components/ExamsPage/ResumesModal";
-import PlaylistModal from "@/components/ExamsPage/PlaylistModal";
-import ImageViewerModal from "@/components/shared/ImageViewerModal";
+const ExplicationModel = lazy(() => import("@/components/ExamsPage/ExplicationModel"));
+const NoteModal = lazy(() => import("@/components/ExamsPage/NoteModal"));
+const ReportModal = lazy(() => import("@/components/ExamsPage/ReportModal"));
+const CommunityModal = lazy(() => import("@/components/ExamsPage/CommunityModal"));
+const ResumesModal = lazy(() => import("@/components/ExamsPage/ResumesModal"));
+const PlaylistModal = lazy(() => import("@/components/ExamsPage/PlaylistModal"));
+const ImageViewerModal = lazy(() => import("@/components/shared/ImageViewerModal"));
 import ExamQuestionContext from "@/components/ExamsPage/ExamQuestionContext";
 import { compareSessionNames, sortGroupedQuestions } from "@/utils/examSessionSort";
 
@@ -130,6 +130,20 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
+function ExamClock({ getSeconds, running, className }) {
+  const [seconds, setSeconds] = useState(getSeconds);
+  useEffect(() => {
+    setSeconds(getSeconds());
+    if (!running) return;
+    const timer = setInterval(() => setSeconds(getSeconds()), 1000);
+    return () => clearInterval(timer);
+  }, [getSeconds, running]);
+  const hours = Math.floor(seconds / 3600);
+  const time = [hours ? String(hours).padStart(2, '0') : null, String(Math.floor(seconds / 60) % 60).padStart(2, '0'), String(seconds % 60).padStart(2, '0')].filter(value => value !== null).join(':');
+  const tone = seconds > 3600 ? 'text-red-600 bg-red-50 border-red-200' : seconds > 1800 ? 'text-amber-600 bg-amber-50 border-amber-200' : 'text-emerald-600 bg-emerald-50 border-emerald-200';
+  return <Badge variant="outline" className={cn(className, tone)}><Timer className="h-3 w-3" /><span>{time}</span></Badge>;
+}
+
 const ExamSession = () => {
   const { t } = useTranslation(['dashboard', 'common']);
   const { examId } = useParams();
@@ -159,7 +173,19 @@ const ExamSession = () => {
   // Core state
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState({});
-  const [timeElapsed, setTimeElapsed] = useState(0);
+  const clock = useRef({ base: 0, startedAt: Date.now(), running: false });
+  const getElapsedSeconds = useCallback(() => clock.current.base + (clock.current.running ? Math.max(0, Math.floor((Date.now() - clock.current.startedAt) / 1000)) : 0), []);
+  const setTimeElapsed = useCallback(seconds => { clock.current = { base: seconds, startedAt: Date.now(), running: true }; }, []);
+  const sessionGeneration = useRef(userService._profileGeneration);
+  const writeQueue = useRef(Promise.resolve());
+  const writeAnswer = useCallback((url, body) => {
+    const next = writeQueue.current.catch(() => {}).then(() => {
+      if (sessionGeneration.current !== userService._profileGeneration) throw new Error('Exam session changed');
+      return api.post(url, body);
+    });
+    writeQueue.current = next;
+    return next;
+  }, []);
   const [showResults, setShowResults] = useState(false);
   const [examData, setExamData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -206,6 +232,9 @@ const ExamSession = () => {
 
   // Save status tracking
   const [isSaved, setIsSaved] = useState(true);
+  const [saveError, setSaveError] = useState(false);
+  const [draftRetry, setDraftRetry] = useState(0);
+  const pendingDraftWrites = useRef(0);
   const [lastSaveTime, setLastSaveTime] = useState(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [lastSavedAnswers, setLastSavedAnswers] = useState({});
@@ -225,8 +254,10 @@ const ExamSession = () => {
 
   // UI preferences
   const [fontSize, setFontSize] = useState(() => {
-    const saved = localStorage.getItem('examFontSize');
-    return saved ? parseInt(saved) : 16;
+    try {
+      const saved = Number(localStorage.getItem('examFontSize'));
+      return saved >= 12 && saved <= 28 ? saved : 16;
+    } catch { return 16; }
   });
   const [collapsedSessions, setCollapsedSessions] = useState(new Set());
   const [isExamInfoCollapsed, setIsExamInfoCollapsed] = useState(true);
@@ -245,7 +276,7 @@ const ExamSession = () => {
   const questionCardRef = useRef(null);
   const questionsLengthRef = useRef(0); // Track questions length for navigation
   const currentQuestionRef = useRef(0); // Track current question for debugging
-  const timeElapsedRef = useRef(0);
+
 
   // User profile state for header
   const [userProfile, setUserProfile] = useState(null);
@@ -264,18 +295,9 @@ const ExamSession = () => {
     // Sound implementation would go here
   }, [soundEnabled]);
 
-  // Timer
   useEffect(() => {
-    if (showResults) return;
-    const timer = setInterval(() => {
-      setTimeElapsed((prev) => prev + 1);
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [showResults]);
-
-  useEffect(() => {
-    timeElapsedRef.current = timeElapsed;
-  }, [timeElapsed]);
+    if (showResults) clock.current = { base: getElapsedSeconds(), startedAt: Date.now(), running: false };
+  }, [showResults, getElapsedSeconds]);
 
   // Fetch user profile for header
   useEffect(() => {
@@ -450,6 +472,13 @@ const ExamSession = () => {
   const [examDataFetched, setExamDataFetched] = useState(false);
   const [progressRestored, setProgressRestored] = useState(false);
 
+  const savedAnswersRequest = useRef(null);
+  useEffect(() => {
+    savedAnswersRequest.current = api.get(`/questions/user-answers/${examId}`);
+    // Restoration awaits this result after the question ordering is known.
+    savedAnswersRequest.current.catch(() => {});
+  }, [examId]);
+
   // Fetch exam data - only once when component mounts
   useEffect(() => {
     if (examDataFetched) return; // Don't refetch if already fetched
@@ -458,17 +487,17 @@ const ExamSession = () => {
       try {
         setLoading(true);
         const endpoint = getExamEndpoint();
-        console.log('=== FETCHING EXAM DATA ===');
-        console.log('Exam ID:', examId);
-        console.log('Exam Type:', examType);
-        console.log('Endpoint:', endpoint);
+        if (import.meta.env.DEV) console.log('=== FETCHING EXAM DATA ===');
+        if (import.meta.env.DEV) console.log('Exam ID:', examId);
+        if (import.meta.env.DEV) console.log('Exam Type:', examType);
+        if (import.meta.env.DEV) console.log('Endpoint:', endpoint);
 
         const response = await api.get(endpoint);
-        console.log('API Response:', response);
-        console.log('Response data:', response.data);
+        if (import.meta.env.DEV) console.log('API Response:', response);
+        if (import.meta.env.DEV) console.log('Response data:', response.data);
 
         const transformedData = transformExamData(response.data.data, examType);
-        console.log('Transformed data:', transformedData);
+        if (import.meta.env.DEV) console.log('Transformed data:', transformedData);
         setExamData(transformedData);
         setExamDataFetched(true);
         // Note: Keep loading true until progress is restored
@@ -512,15 +541,24 @@ const ExamSession = () => {
 
     // Remove stale data
     if (keysToRemove.length > 0) {
-      console.log(`🧹 Cleaning up ${keysToRemove.length} stale localStorage items from other users`);
+      if (import.meta.env.DEV) console.log(`🧹 Cleaning up ${keysToRemove.length} stale localStorage items from other users`);
       keysToRemove.forEach(key => {
         localStorage.removeItem(key);
-        console.log(`  ✓ Removed: ${key}`);
+        if (import.meta.env.DEV) console.log(`  ✓ Removed: ${key}`);
       });
     }
   }, [userProfile]);
 
   const questions = useMemo(() => flattenExamQuestions(examData?.questions), [examData]);
+  const questionIndex = useMemo(() => new Map(questions.map((question, index) => [question._id, index])), [questions]);
+  const sessionQuestions = useMemo(() => {
+    const grouped = new Map();
+    for (const question of questions) {
+      if (!grouped.has(question.sessionLabel)) grouped.set(question.sessionLabel, []);
+      grouped.get(question.sessionLabel).push(question);
+    }
+    return grouped;
+  }, [questions]);
 
   // Use the exact displayed order to map server identities to local state.
   useEffect(() => {
@@ -544,12 +582,13 @@ const ExamSession = () => {
       }
       let answers = {};
       let verified = {};
+      let serverSavedAnswers = {};
       try {
-        const response = await api.get(`/questions/user-answers/${examId}`);
+        const response = await savedAnswersRequest.current;
         if (cancelled) return;
         questions.forEach((question, index) => {
           const answer = response.data?.data?.[question._id];
-          if (answer?.selectedAnswers?.length) answers[index] = answer.selectedAnswers;
+          if (answer?.selectedAnswers?.length) { answers[index] = answer.selectedAnswers; serverSavedAnswers[index] = answer.selectedAnswers; }
           if (answer?.isVerified === true) verified[index] = { verified: true, isCorrect: answer.isCorrect };
         });
         // A successful empty response is authoritative too. Only unsaved
@@ -563,45 +602,63 @@ const ExamSession = () => {
         verified = cached.verified;
       }
       setSelectedAnswers(answers);
-      setLastSavedAnswers({});
+      setLastSavedAnswers(serverSavedAnswers);
       setVerifiedQuestions(verified);
       setCurrentQuestion(cached.currentQ);
       setVisitedQuestions(new Set([...cached.visits, cached.currentQ]));
       setFlaggedQuestions(cached.flags);
-      setTimeElapsed(Math.max(0, Number(saved?.timeSpent) || 0));
+      let checkpoint = 0;
+      try { if (saved && storageKey) checkpoint = Number(localStorage.getItem(`${storageKey}:time`)) || 0; } catch { /* Storage may be unavailable. */ }
+      setTimeElapsed(Math.max(0, Number(saved?.timeSpent) || 0, checkpoint));
       publishExamCompletedCount(examId, questionProgress(questions, answers, verified).verifiedCount);
       setProgressRestored(true);
       setLoading(false);
     };
     restore();
     return () => { cancelled = true; };
-  }, [examData, questions, userProfileLoaded, userProfile?._id, examId, examType, progressRestored]);
+  }, [examData, questions, userProfileLoaded, userProfile?._id, examId, examType, progressRestored, setTimeElapsed]);
 
   // Keep the questions length ref updated for navigation functions
   useEffect(() => {
     questionsLengthRef.current = questions.length;
-    console.log('Questions length updated:', questions.length);
+    if (import.meta.env.DEV) console.log('Questions length updated:', questions.length);
   }, [questions.length]);
 
   // Keep track of current question for debugging
   useEffect(() => {
     currentQuestionRef.current = currentQuestion;
-    console.log('Current question state changed to:', currentQuestion);
+    if (import.meta.env.DEV) console.log('Current question state changed to:', currentQuestion);
   }, [currentQuestion]);
 
   // UI state is saved independently of network drafts, including visits,
   // highlights and navigation even when no answer changed.
   useEffect(() => {
     if (!progressRestored || !userProfile?._id || showResults) return;
-    try {
-      const snapshot = progressSnapshot(questions, {
-        userId: userProfile._id, answers: selectedAnswers, verified: verifiedQuestions,
-        flags: flaggedQuestions, visits: visitedQuestions, currentQ: currentQuestion, timeSpent: timeElapsed,
-      });
-      localStorage.setItem(`exam_progress_${userProfile._id}_${examType}_${examId}`, JSON.stringify(snapshot));
-    } catch (error) { console.error('Failed to cache exam progress:', error); }
+    const storageKey = `exam_progress_${userProfile._id}_${examType}_${examId}`;
+    const persist = () => {
+      try {
+        const snapshot = progressSnapshot(questions, {
+          userId: userProfile._id, answers: selectedAnswers, verified: verifiedQuestions,
+          flags: flaggedQuestions, visits: visitedQuestions, currentQ: currentQuestion, timeSpent: getElapsedSeconds(),
+        });
+        localStorage.setItem(storageKey, JSON.stringify(snapshot));
+      } catch (error) { console.error('Failed to cache exam progress:', error); }
+    };
+    persist();
+    window.addEventListener('pagehide', persist);
+    return () => window.removeEventListener('pagehide', persist);
   }, [progressRestored, userProfile?._id, showResults, questions, selectedAnswers, verifiedQuestions,
-    flaggedQuestions, visitedQuestions, currentQuestion, timeElapsed, examType, examId]);
+    flaggedQuestions, visitedQuestions, currentQuestion, getElapsedSeconds, examType, examId]);
+
+  // Timer-only checkpoints are tiny; the answer snapshot is never serialized on a tick.
+  useEffect(() => {
+    if (!progressRestored || !userProfile?._id || showResults) return;
+    const key = `exam_progress_${userProfile._id}_${examType}_${examId}:time`;
+    const persist = () => { try { localStorage.setItem(key, String(getElapsedSeconds())); } catch { /* Continue in memory. */ } };
+    const interval = setInterval(persist, 10000);
+    window.addEventListener('pagehide', persist);
+    return () => { clearInterval(interval); window.removeEventListener('pagehide', persist); persist(); };
+  }, [progressRestored, userProfile?._id, examType, examId, showResults, getElapsedSeconds]);
 
   // Timer ticks and navigation must not continually restart the draft debounce.
   useEffect(() => {
@@ -612,25 +669,40 @@ const ExamSession = () => {
       if (JSON.stringify(answer) === JSON.stringify(lastSavedAnswers[index] || [])) return [];
       return [{ index, questionId: question._id, selectedAnswers: answer }];
     });
-    if (!changed.length) return;
+    if (!changed.length) {
+      if (!pendingDraftWrites.current) {
+        setIsSaved(true);
+        setHasUnsavedChanges(false);
+        setSaveError(false);
+      }
+      return;
+    }
     let cancelled = false;
     setHasUnsavedChanges(true);
     setIsSaved(false);
+    setSaveError(false);
     const timer = setTimeout(async () => {
-      const results = await Promise.allSettled(changed.map(({ questionId, selectedAnswers }) => api.post('/questions/save-answer', {
+      pendingDraftWrites.current++;
+      const results = await Promise.allSettled(changed.map(({ questionId, selectedAnswers }) => writeAnswer('/questions/save-answer', {
         questionId, selectedAnswers, isVerified: false, examId, moduleId: examData.moduleId,
       })));
-      if (cancelled) return;
+      pendingDraftWrites.current--;
       const succeeded = changed.filter((_, index) => results[index].status === 'fulfilled');
-      setLastSavedAnswers(previous => ({ ...previous, ...Object.fromEntries(succeeded.map(item => [item.index, item.selectedAnswers])) }));
+      // Record acknowledged server values even when the learner has since edited
+      // the answer. The next delta must reconcile against what actually saved.
+      if (succeeded.length || cancelled) {
+        setLastSavedAnswers(previous => ({ ...previous, ...Object.fromEntries(succeeded.map(item => [item.index, item.selectedAnswers])) }));
+      }
+      if (cancelled) return;
       const saved = succeeded.length === changed.length;
       setIsSaved(saved);
+      setSaveError(!saved);
       setHasUnsavedChanges(!saved);
       if (saved) setLastSaveTime(new Date());
     }, 1000);
     return () => { cancelled = true; clearTimeout(timer); };
   }, [progressRestored, examData, showResults, userProfile?._id, isVerifying, questions,
-    selectedAnswers, verifiedQuestions, lastSavedAnswers, examId]);
+    selectedAnswers, verifiedQuestions, lastSavedAnswers, examId, writeAnswer, draftRetry]);
 
   // Persist the cumulative timer server-side. The API only adds the delta for
   // this study session, so repeated requests and cleanup requests are safe.
@@ -653,7 +725,8 @@ const ExamSession = () => {
     }
 
     const persistElapsedTime = () => {
-      const elapsedSeconds = Math.max(0, Math.floor(timeElapsedRef.current));
+      if (sessionGeneration.current !== userService._profileGeneration) return;
+      const elapsedSeconds = Math.max(0, Math.floor(getElapsedSeconds()));
 
       if (elapsedSeconds > 0) {
         api.post('/users/study-time', { sessionId: studySessionId, elapsedSeconds })
@@ -667,7 +740,7 @@ const ExamSession = () => {
       clearInterval(timeUpdateTimer);
       persistElapsedTime();
     };
-  }, [examData, showResults, examType, examId, userProfile?._id]);
+  }, [examData, showResults, examType, examId, userProfile?._id, getElapsedSeconds]);
 
   // Warn before leaving - only if there are actual unsaved changes
   useEffect(() => {
@@ -702,23 +775,6 @@ const ExamSession = () => {
     if (!questionData) return true;
     // If questionNumber exists from Excel import, don't show in box
     return !questionData.questionNumber;
-  };
-
-  // Format time with color states
-  const formatTime = (seconds) => {
-    const hours = Math.floor(seconds / 3600);
-    const mins = Math.floor((seconds % 3600) / 60);
-    const secs = seconds % 60;
-    if (hours > 0) {
-      return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-    }
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  };
-
-  const getTimeColor = () => {
-    if (timeElapsed > 3600) return 'text-red-600 bg-red-50 border-red-200';
-    if (timeElapsed > 1800) return 'text-amber-600 bg-amber-50 border-amber-200';
-    return 'text-emerald-600 bg-emerald-50 border-emerald-200';
   };
 
   // Handle answer selection - always allow multi-select
@@ -782,17 +838,17 @@ const ExamSession = () => {
 
     // Prevent double-click
     if (verificationInFlight.current) {
-      console.log('Already verifying, ignoring click');
+      if (import.meta.env.DEV) console.log('Already verifying, ignoring click');
       return;
     }
 
-    console.log('=== VERIFY BUTTON CLICKED ===');
-    console.log('Current Question:', currentQuestion);
-    console.log('Selected Answers:', selectedAnswers[currentQuestion]);
-    console.log('Questions array:', questions.length);
+    if (import.meta.env.DEV) console.log('=== VERIFY BUTTON CLICKED ===');
+    if (import.meta.env.DEV) console.log('Current Question:', currentQuestion);
+    if (import.meta.env.DEV) console.log('Selected Answers:', selectedAnswers[currentQuestion]);
+    if (import.meta.env.DEV) console.log('Questions array:', questions.length);
 
     const questionData = questions[currentQuestion];
-    console.log('Question Data:', questionData);
+    if (import.meta.env.DEV) console.log('Question Data:', questionData);
 
     // Check if user has selected an answer
     if (!selectedAnswers[currentQuestion] || selectedAnswers[currentQuestion].length === 0) {
@@ -803,13 +859,13 @@ const ExamSession = () => {
 
     // Check if already verified
     if (isVerified(verifiedQuestions[currentQuestion])) {
-      console.log('Question already verified');
+      if (import.meta.env.DEV) console.log('Question already verified');
       return;
     }
 
     // Annulled questions should not be verifiable
     if (questionData?.isAnnulled) {
-      console.log('Question is annulled, skipping verification');
+      if (import.meta.env.DEV) console.log('Question is annulled, skipping verification');
       return;
     }
 
@@ -828,7 +884,7 @@ const ExamSession = () => {
       // Feedback is committed only after the server has saved the result.
       playSound(isCorrectAnswer ? 'correct' : 'incorrect');
 
-      console.log('Local verification complete:', isCorrectAnswer ? 'CORRECT' : 'INCORRECT');
+      if (import.meta.env.DEV) console.log('Local verification complete:', isCorrectAnswer ? 'CORRECT' : 'INCORRECT');
 
       // Fetch community voting stats for this question (non-blocking)
       api.get(`questions/community-votes/${questionData._id}`)
@@ -843,7 +899,7 @@ const ExamSession = () => {
         .catch(error => console.error('Failed to fetch community stats:', error));
 
       // Call backend to verify answer and award points (no toast messages)
-      const response = await api.post('/questions/verify-answer', {
+      const response = await writeAnswer('/questions/verify-answer', {
         questionId: questionData._id,
         selectedAnswers: userAnswers,
         examId: examId,
@@ -852,7 +908,7 @@ const ExamSession = () => {
       });
 
       const { isCorrect, pointsAwarded, totalPoints } = response.data.data;
-      console.log('Backend verification:', { isCorrect, pointsAwarded, totalPoints });
+      if (import.meta.env.DEV) console.log('Backend verification:', { isCorrect, pointsAwarded, totalPoints });
 
       // Update user profile points in state silently (no toast)
       if (totalPoints !== undefined) {
@@ -863,7 +919,7 @@ const ExamSession = () => {
       }
 
       // Save answer for persistence
-      const saveResponse = await api.post('/questions/save-answer', {
+      const saveResponse = await writeAnswer('/questions/save-answer', {
         questionId: questionData._id,
         selectedAnswers: userAnswers,
         isVerified: true,
@@ -881,7 +937,7 @@ const ExamSession = () => {
       publishExamCompletedCount(examId, saveResponse.data?.data?.completedQuestions);
       dashboardService.clearCache();
 
-      console.log('=== VERIFICATION COMPLETE ===');
+      if (import.meta.env.DEV) console.log('=== VERIFICATION COMPLETE ===');
 
     } catch (error) {
       console.error('Error verifying answer:', error);
@@ -892,7 +948,7 @@ const ExamSession = () => {
       verificationInFlight.current = false;
       setIsVerifying(false);
     }
-  }, [currentQuestion, selectedAnswers, questions, examId, examData, playSound, verifiedQuestions]);
+  }, [currentQuestion, selectedAnswers, questions, examId, examData, playSound, verifiedQuestions, writeAnswer]);
 
   // Reset the saved result before starting another attempt.
   const handleResetQuestion = useCallback(async (e) => {
@@ -908,7 +964,7 @@ const ExamSession = () => {
     setIsVerifying(true);
 
     try {
-      const response = await api.post('/questions/verify-answer', {
+      const response = await writeAnswer('/questions/verify-answer', {
         questionId: questionData._id,
         selectedAnswers: [],
         examId: examId,
@@ -917,7 +973,7 @@ const ExamSession = () => {
       });
 
       const { totalPoints } = response.data.data;
-      const resetResponse = await api.post('/questions/save-answer', {
+      const resetResponse = await writeAnswer('/questions/save-answer', {
         questionId: questionData._id, selectedAnswers: [], isVerified: false, reset: true,
         examId, moduleId: examData?.moduleId,
       });
@@ -953,13 +1009,13 @@ const ExamSession = () => {
       return newVerified;
     });
     setLastSavedAnswers(prev => ({ ...prev, [currentQuestion]: [] }));
-  }, [currentQuestion, questions, examId, examData, userProfile]);
+  }, [currentQuestion, questions, examId, examData, userProfile, writeAnswer]);
 
   // Check if current question is verified (now verifiedQuestions stores object with verified and isCorrect)
   const isQuestionVerified = useMemo(() => {
     const verifiedData = verifiedQuestions[currentQuestion];
     const isVerified = verifiedData?.verified === true || verifiedData === true;
-    console.log('isQuestionVerified check - question:', currentQuestion, 'verifiedData:', verifiedData, 'result:', isVerified);
+    if (import.meta.env.DEV) console.log('isQuestionVerified check - question:', currentQuestion, 'verifiedData:', verifiedData, 'result:', isVerified);
     return isVerified;
   }, [verifiedQuestions, currentQuestion]);
 
@@ -983,46 +1039,46 @@ const ExamSession = () => {
   const adjustFontSize = useCallback((delta) => {
     const newSize = Math.min(24, Math.max(12, fontSize + delta));
     setFontSize(newSize);
-    localStorage.setItem('examFontSize', newSize.toString());
+    try { localStorage.setItem('examFontSize', newSize.toString()); } catch { /* Keep the in-memory preference. */ }
   }, [fontSize]);
 
   // Navigation - Move through all questions
   const goToNext = useCallback(() => {
     const questionsLength = questionsLengthRef.current;
     const current = currentQuestionRef.current;
-    console.log('goToNext called, questions.length:', questionsLength, 'current:', current);
+    if (import.meta.env.DEV) console.log('goToNext called, questions.length:', questionsLength, 'current:', current);
     
     if (current < questionsLength - 1) {
       const nextQ = current + 1;
-      console.log('goToNext: moving from', current, 'to', nextQ);
+      if (import.meta.env.DEV) console.log('goToNext: moving from', current, 'to', nextQ);
       setQuestionTransition('next');
       setCurrentQuestion(nextQ);
       setVisitedQuestions(prev => new Set([...prev, nextQ]));
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } else {
-      console.log('goToNext: already at last question');
+      if (import.meta.env.DEV) console.log('goToNext: already at last question');
     }
   }, []);
 
   const goToPrevious = useCallback(() => {
     const current = currentQuestionRef.current;
-    console.log('goToPrevious called, current:', current);
+    if (import.meta.env.DEV) console.log('goToPrevious called, current:', current);
     
     if (current > 0) {
       const prevQ = current - 1;
-      console.log('goToPrevious: moving from', current, 'to', prevQ);
+      if (import.meta.env.DEV) console.log('goToPrevious: moving from', current, 'to', prevQ);
       setQuestionTransition('prev');
       setCurrentQuestion(prevQ);
       setVisitedQuestions(prev => new Set([...prev, prevQ]));
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } else {
-      console.log('goToPrevious: already at first question');
+      if (import.meta.env.DEV) console.log('goToPrevious: already at first question');
     }
   }, []);
 
   const goToQuestion = useCallback((index) => {
     if (index >= 0 && index < questions.length) {
-      console.log('goToQuestion: jumping to', index);
+      if (import.meta.env.DEV) console.log('goToQuestion: jumping to', index);
       setCurrentQuestion(prevQuestion => {
         setQuestionTransition(index > prevQuestion ? 'next' : 'prev');
         setVisitedQuestions(prev => new Set([...prev, index]));
@@ -1076,7 +1132,33 @@ const ExamSession = () => {
   }, [questions, selectedAnswers]);
 
   // Submit exam
-  const handleSubmit = useCallback(() => {
+  const handleSubmit = useCallback(async () => {
+    if (verificationInFlight.current) return;
+    verificationInFlight.current = true;
+    setIsVerifying(true);
+    try {
+      for (let index = 0; index < questions.length; index++) {
+        if (isVerified(verifiedQuestions[index])) continue;
+        const answer = selectedAnswers[index] || [];
+        if (!Object.hasOwn(selectedAnswers, index) && !Object.hasOwn(lastSavedAnswers, index)) continue;
+        await writeAnswer('/questions/save-answer', {
+          questionId: questions[index]._id, selectedAnswers: answer, isVerified: false,
+          examId, moduleId: examData?.moduleId,
+        });
+      }
+      await writeQueue.current.catch(() => {});
+      setLastSavedAnswers(selectedAnswers);
+      setIsSaved(true);
+      setHasUnsavedChanges(false);
+    } catch {
+      setIsSaved(false);
+      setHasUnsavedChanges(true);
+      toast.error('Sauvegarde impossible. Votre brouillon est conservé. Réessayez.');
+      return;
+    } finally {
+      verificationInFlight.current = false;
+      setIsVerifying(false);
+    }
     setShowResults(true);
     setShowConfirmSubmit(false);
 
@@ -1084,7 +1166,7 @@ const ExamSession = () => {
     const currentUserId = userProfile?._id;
     if (currentUserId) {
       const storageKey = `exam_progress_${currentUserId}_${examType}_${examId}`;
-      localStorage.removeItem(storageKey);
+      try { localStorage.removeItem(storageKey); localStorage.removeItem(`${storageKey}:time`); } catch { /* Storage may be unavailable. */ }
     }
 
     const score = calculateScore();
@@ -1099,7 +1181,7 @@ const ExamSession = () => {
     toast.success(t('dashboard:exam_completed') || 'Exam completed!', {
       icon: <Trophy className="h-4 w-4 text-yellow-500" />
     });
-  }, [examId, examType, playSound, t, calculateScore, userProfile?._id]);
+  }, [examId, examType, playSound, t, calculateScore, userProfile?._id, questions, verifiedQuestions, selectedAnswers, lastSavedAnswers, writeAnswer, examData]);
 
   // Retry exam
   const handleRetry = useCallback(async () => {
@@ -1111,7 +1193,7 @@ const ExamSession = () => {
       // cannot race. A failed reset keeps its saved result visible.
       for (let index = 0; index < questions.length; index++) {
         if (!selectedAnswers[index] && !isVerified(verifiedQuestions[index])) continue;
-        const response = await api.post('/questions/save-answer', {
+        const response = await writeAnswer('/questions/save-answer', {
           questionId: questions[index]._id, selectedAnswers: [], isVerified: false, reset: true,
           examId, moduleId: examData?.moduleId,
         });
@@ -1140,11 +1222,11 @@ const ExamSession = () => {
     const currentUserId = userProfile?._id;
     if (currentUserId) {
       const storageKey = `exam_progress_${currentUserId}_${examType}_${examId}`;
-      localStorage.removeItem(storageKey);
+      try { localStorage.removeItem(storageKey); localStorage.removeItem(`${storageKey}:time`); } catch { /* Storage may be unavailable. */ }
     }
 
     toast.info(t('dashboard:new_attempt_started') || 'New attempt started');
-  }, [examId, examType, t, userProfile, questions, selectedAnswers, verifiedQuestions, examData]);
+  }, [examId, examType, t, userProfile, questions, selectedAnswers, verifiedQuestions, examData, writeAnswer, setTimeElapsed]);
 
   const score = useMemo(() => calculateScore(), [calculateScore]);
 
@@ -1479,16 +1561,7 @@ const ExamSession = () => {
 
           {/* Center: Timer + Progress */}
           <div className="flex items-center gap-1.5 flex-1 justify-center">
-            <Badge
-              variant="outline"
-              className={cn(
-                "gap-1 font-mono text-[10px] px-1.5 py-0.5 transition-colors",
-                getTimeColor()
-              )}
-            >
-              <Timer className="h-3 w-3" />
-              <span>{formatTime(timeElapsed)}</span>
-            </Badge>
+            <ExamClock getSeconds={getElapsedSeconds} running={!showResults} className="gap-1 font-mono text-[10px] px-1.5 py-0.5 transition-colors" />
             <span className="text-[10px] text-muted-foreground">
               Q{sessionQuestionInfo.position}/{sessionQuestionInfo.total}
             </span>
@@ -1497,6 +1570,11 @@ const ExamSession = () => {
             ) : (
               <CloudOff className="h-3 w-3 text-amber-500 animate-pulse" />
             )}
+            {saveError && !isSaved && <button type="button" aria-label="Réessayer la sauvegarde"
+              disabled={isVerifying} onClick={() => setDraftRetry(value => value + 1)}
+              className="imrs-focus-ring rounded p-1 text-amber-700 dark:text-amber-300">
+              <RefreshCcw className="h-3 w-3" />
+            </button>}
 
           </div>
 
@@ -1541,16 +1619,7 @@ const ExamSession = () => {
               </Button>
 
               {/* Timer Badge */}
-              <Badge
-                variant="outline"
-                className={cn(
-                  "gap-1 font-mono text-[10px] sm:text-xs md:text-sm px-1.5 sm:px-2 md:px-3 py-0.5 sm:py-1 transition-colors",
-                  getTimeColor()
-                )}
-              >
-                <Timer className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                <span>{formatTime(timeElapsed)}</span>
-              </Badge>
+              <ExamClock getSeconds={getElapsedSeconds} running={!showResults} className="gap-1 font-mono text-[10px] sm:text-xs md:text-sm px-1.5 sm:px-2 md:px-3 py-0.5 sm:py-1 transition-colors" />
 
               {/* Save Status Indicator */}
               <Badge
@@ -1565,8 +1634,11 @@ const ExamSession = () => {
                 ) : (
                   <CloudOff className="h-3 w-3 sm:h-3.5 sm:w-3.5 animate-pulse" />
                 )}
-                <span className="hidden sm:inline">{isSaved ? 'Enregistré' : 'Enregistrement...'}</span>
+                <span className="hidden sm:inline">{isSaved ? 'Enregistré' : saveError ? 'Échec de sauvegarde' : 'Enregistrement...'}</span>
               </Badge>
+              {saveError && !isSaved && <button type="button" aria-label="Réessayer la sauvegarde"
+                disabled={isVerifying} onClick={() => setDraftRetry(value => value + 1)}
+                className="imrs-focus-ring rounded px-2 py-1 text-xs text-amber-700 underline dark:text-amber-300">Réessayer</button>}
             </div>
 
             {/* Right Section - Font controls + Verify Shortcut + Profile */}
@@ -1720,8 +1792,8 @@ const ExamSession = () => {
                           </button>
                           {!isCollapsed && (
                             <div className="pl-2 flex flex-wrap gap-2">
-                              {questions.filter(question => question.sessionLabel === sessionName).map((q) => {
-                                const globalIndex = questions.findIndex(question => question._id === q._id);
+                              {(sessionQuestions.get(sessionName) || []).map((q) => {
+                                const globalIndex = questionIndex.get(q._id) ?? -1;
                                 if (globalIndex === -1) return null;
                                 const questionData = questions[globalIndex];
                                 const { status, isFlagged } = getQuestionStatus(globalIndex);
@@ -2487,6 +2559,7 @@ const ExamSession = () => {
 
               {/* Question nav button */}
               <button
+                aria-label="Voir toutes les questions"
                 onClick={() => setShowMobileQuestionNav(true)}
                 className="p-3 rounded-xl transition-all active:scale-95"
                 style={{ backgroundColor: `${moduleColor}15`, color: moduleColor }}
@@ -2500,7 +2573,7 @@ const ExamSession = () => {
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  console.log('Next button clicked');
+                  if (import.meta.env.DEV) console.log('Next button clicked');
                   goToNext();
                 }}
                 disabled={currentQuestion === questions.length - 1}
@@ -2546,7 +2619,8 @@ const ExamSession = () => {
 
             {/* Question Nav Button */}
             <button
-              onClick={() => setShowMobileQuestionNav(true)}
+              aria-label="Voir toutes les questions"
+                onClick={() => setShowMobileQuestionNav(true)}
               className="flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-semibold text-white transition-all active:scale-98"
               style={{
                 background: `linear-gradient(135deg, ${moduleColor}, ${adjustColor(moduleColor, -30)})`
@@ -2808,8 +2882,8 @@ const ExamSession = () => {
 
                         {!isCollapsed && (
                           <div className="pl-6 space-y-0.5 lg:space-y-0 lg:grid lg:grid-cols-3 lg:gap-1">
-                            {questions.filter(question => question.sessionLabel === sessionName).map((q) => {
-                              const globalIndex = questions.findIndex(question => question._id === q._id);
+                            {(sessionQuestions.get(sessionName) || []).map((q) => {
+                              const globalIndex = questionIndex.get(q._id) ?? -1;
                               if (globalIndex === -1) return null; // Skip if question not found
                               const questionData = questions[globalIndex]; // Get the question with displayNumber
                               const { status, isFlagged } = getQuestionStatus(globalIndex);
@@ -2955,6 +3029,7 @@ const ExamSession = () => {
                   </Button>
                   <Button
                     className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600"
+                    disabled={isVerifying}
                     onClick={handleSubmit}
                   >
                     {t('dashboard:submit') || 'Submit'}
@@ -3027,6 +3102,7 @@ const ExamSession = () => {
       </AnimatePresence>
 
       {/* Modals */}
+      <Suspense fallback={<div role="status" className="fixed bottom-4 right-4 z-[100] rounded-lg border bg-background p-3">Chargement…</div>}>
       {showExplanation && currentQuestionData && (
         <ExplicationModel
           question={currentQuestionData}
@@ -3094,6 +3170,7 @@ const ExamSession = () => {
         />
       )}
 
+      </Suspense>
       {/* Vue d'ensemble Modal - Shows the question list with result status colors */}
       <AnimatePresence>
         {showVueEnsemble && (
@@ -3251,7 +3328,7 @@ const ExamSession = () => {
                   {(() => {
                     // Get all images from all questions in the entire exam
                     const allImages = questions.reduce((acc, q) => {
-                      const globalIndex = questions.findIndex(question => question._id === q._id);
+                      const globalIndex = questionIndex.get(q._id) ?? -1;
                       if (q.images && q.images.length > 0) {
                         q.images.forEach((imgUrl, imgIdx) => {
                           const imageUrl = resolveQuestionImageUrl(imgUrl);
@@ -3341,11 +3418,11 @@ const ExamSession = () => {
         )}
       </AnimatePresence>
       {/* Image Zoom Modal */}
-      <ImageViewerModal
+      {showImageZoom && zoomedImageUrl && <Suspense fallback={null}><ImageViewerModal
         isOpen={showImageZoom && !!zoomedImageUrl}
         imageUrl={zoomedImageUrl}
         onClose={() => setShowImageZoom(false)}
-      />
+      /></Suspense>}
 
     </div>
   );
@@ -3354,7 +3431,18 @@ const ExamSession = () => {
 const ExamPage = () => {
   const { examId } = useParams();
   const [searchParams] = useSearchParams();
-  return <ExamSession key={`${examId}:${searchParams.get('type') || 'exam'}`} />;
+  const [account, setAccount] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('user') || '{}')._id || ''; } catch { return ''; }
+  });
+  useEffect(() => {
+    const sync = () => {
+      try { setAccount(JSON.parse(localStorage.getItem('user') || '{}')._id || ''); } catch { setAccount(''); }
+    };
+    window.addEventListener('auth-state-changed', sync);
+    window.addEventListener('storage', sync);
+    return () => { window.removeEventListener('auth-state-changed', sync); window.removeEventListener('storage', sync); };
+  }, []);
+  return <ExamSession key={`${account}:${examId}:${searchParams.get('type') || 'exam'}`} />;
 };
 
 export default ExamPage;

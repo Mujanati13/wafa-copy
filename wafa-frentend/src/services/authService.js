@@ -10,6 +10,7 @@ import {
 import { auth } from '@/config/firebase';
 import axios from 'axios';
 import { userService } from '@/services/userService';
+import { moduleService } from '@/services/moduleService';
 import { dashboardService } from '@/services/dashboardService';
 import { clearStoredAuthToken, getStoredAuthToken, storeAuthToken } from '@/utils/authStorage';
 
@@ -43,6 +44,7 @@ const finishGoogleLogin = async (user, rememberMe) => {
 
   storeAuthToken(response.data.token, rememberMe);
   dashboardService.clearCache();
+  moduleService.clearCache();
   userService.clearProfileCache();
   return { success: true, user: response.data.user, token: response.data.token };
 };
@@ -79,6 +81,7 @@ export const registerWithEmail = async (email, password, userData, { rememberMe 
 
     storeAuthToken(response.data.token, rememberMe);
     dashboardService.clearCache();
+    moduleService.clearCache();
     userService.clearProfileCache();
 
     return {
@@ -119,6 +122,7 @@ export const loginWithEmail = async (email, password, { rememberMe = true } = {}
 
     // Ensure stale dashboard/profile caches are reset for the new session.
     dashboardService.clearCache();
+    moduleService.clearCache();
     userService.clearProfileCache();
 
     return {
@@ -287,6 +291,7 @@ export const signOut = async () => {
     localStorage.removeItem('userProfile');
     localStorage.removeItem('pendingVerificationEmail');
     dashboardService.clearCache();
+    moduleService.clearCache();
     userService.clearProfileCache();
     window.dispatchEvent(new Event('auth-state-changed'));
     
@@ -311,6 +316,7 @@ export const signOut = async () => {
     localStorage.removeItem('user');
     localStorage.removeItem('userProfile');
     dashboardService.clearCache();
+    moduleService.clearCache();
     userService.clearProfileCache();
     window.dispatchEvent(new Event('auth-state-changed'));
     throw handleAuthError(error);

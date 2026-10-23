@@ -35,6 +35,9 @@ export async function mountExam(type, data, options = {}) {
   const serverAnswers = options.serverAnswers || {};
   const events = new Map();
   const timers = new Map();
+  const intervals = new Map();
+  let clockNow = Date.now();
+  let contextRenders = 0;
   let nextTimer = 0;
   const calls = [];
   const published = [];
@@ -71,8 +74,11 @@ export async function mountExam(type, data, options = {}) {
   };
   const context = vm.createContext({
     console: silentConsole, localStorage: local, sessionStorage: sessions,
+    Date: class extends Date { static now() { return clockNow; } },
+    onContextRender: () => { contextRenders++; },
     setTimeout: (callback, delay) => { timers.set(++nextTimer, { callback, delay }); return nextTimer; },
-    clearTimeout: id => timers.delete(id), setInterval: () => 1, clearInterval() {},
+    clearTimeout: id => timers.delete(id),
+    setInterval: (callback, delay) => { intervals.set(++nextTimer, { callback, delay }); return nextTimer; }, clearInterval: id => intervals.delete(id),
     window: {
       history: { state: { idx: options.historyIndex ?? 1 } },
       addEventListener(type, handler) { if (!events.has(type)) events.set(type, new Set()); events.get(type).add(handler); },
@@ -84,7 +90,8 @@ export async function mountExam(type, data, options = {}) {
   const synthetic = exports => new vm.SyntheticModule(Object.keys(exports), function () {
     for (const [key, value] of Object.entries(exports)) this.setExport(key, value);
   }, { context });
-  const source = await readFile(new URL('../../pages/ExamPage.jsx', import.meta.url), 'utf8');
+  let source = await readFile(new URL('../../pages/ExamPage.jsx', import.meta.url), 'utf8');
+  source = source.replace(/const (\w+) = lazy\(\(\) => import\("([^"]+)"\)\);/g, 'import $1 from "$2";');
   const deps = {
     react: synthetic({ ...React, default: React }),
     'react/jsx-runtime': synthetic(jsxRuntime),
@@ -117,10 +124,10 @@ export async function mountExam(type, data, options = {}) {
     deps[`@/components/ExamsPage/${name}`] = synthetic({ default: props => name === 'NoteModal' ? React.createElement('note-modal', props) : null });
   }
   deps['@/components/shared/ImageViewerModal'] = synthetic({ default: () => null });
-  const componentSource = await readFile(new URL('../../components/ExamsPage/ExamQuestionContext.jsx', import.meta.url), 'utf8');
+  const componentSource = (await readFile(new URL('../../components/ExamsPage/ExamQuestionContext.jsx', import.meta.url), 'utf8')).replace('({ exam, question }) {', '({ exam, question }) { globalThis.onContextRender();');
   const compiledContext = await transform(componentSource, { loader: 'jsx', jsx: 'automatic', format: 'esm' });
   deps['@/components/ExamsPage/ExamQuestionContext'] = new vm.SourceTextModule(compiledContext.code, { context });
-  const compiledPage = await transform(source, { loader: 'jsx', jsx: 'automatic', format: 'esm' });
+  const compiledPage = await transform(source, { define: { 'import.meta.env.DEV': 'false' }, loader: 'jsx', jsx: 'automatic', format: 'esm' });
   const page = new vm.SourceTextModule(compiledPage.code, { context });
   await page.link(specifier => {
     assert.ok(deps[specifier], `Unmocked import: ${specifier}`);
@@ -131,6 +138,11 @@ export async function mountExam(type, data, options = {}) {
   await act(async () => { root = create(React.createElement(page.namespace.default)); });
   root.harness = {
     localStorage: local, sessionStorage: sessions, serverAnswers, calls, published, options, navigation,
+    get contextRenders() { return contextRenders; },
+    async tick(seconds) {
+      clockNow += seconds * 1000;
+      await act(async () => { for (const { callback, delay } of [...intervals.values()]) if (delay <= seconds * 1000) callback(); });
+    },
     async navigateTo(nextType, nextData, nextId = 'other-exam') {
       routeType = nextType;
       routeData = nextData;
@@ -147,6 +159,15 @@ export async function mountExam(type, data, options = {}) {
       await act(async () => {
         for (const [id, timer] of pending) { timers.delete(id); await timer.callback(); }
       });
+    },
+    async startTimers(maxDelay = 1000) {
+      const work = [];
+      await act(async () => {
+        for (const [id, timer] of [...timers]) {
+          if (timer.delay <= maxDelay) { timers.delete(id); work.push(timer.callback()); }
+        }
+      });
+      return { finish: () => act(async () => { await Promise.all(work); }) };
     },
   };
   return root;

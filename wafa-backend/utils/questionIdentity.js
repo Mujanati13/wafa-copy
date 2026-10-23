@@ -51,3 +51,33 @@ export const questionCountStages = field => [
   } } },
   { $group: { _id: "$_id.context", count: { $sum: 1 } } },
 ];
+
+// Resolve module membership in the same exam -> bank -> course order as detail views.
+// Group inside MongoDB so catalog responses never bring every question identity into Node.
+export const moduleQuestionCountStages = (exams, banks, courses) => {
+  const branches = [];
+  for (const [field, sources] of [['examId', exams], ['qcmBanqueId', banks], ['examCourseId', courses]]) {
+    const byModule = new Map();
+    for (const source of sources) {
+      const key = asId(source.moduleId);
+      if (!byModule.has(key)) byModule.set(key, { moduleId: source.moduleId, ids: [] });
+      byModule.get(key).ids.push(source._id);
+    }
+    for (const { moduleId, ids } of byModule.values()) {
+      branches.push({ case: { $in: [`$${field}`, ids] }, then: { $literal: moduleId } });
+    }
+  }
+  return [
+    { $set: { countModuleId: { $switch: { branches, default: null } } } },
+    { $group: { _id: {
+      module: '$countModuleId',
+      source: { $ifNull: ['$examId', { $ifNull: ['$qcmBanqueId', '$examCourseId'] }] },
+      session: { $trim: { input: { $ifNull: ['$sessionLabel', ''] } } },
+      number: { $cond: [
+        { $in: [{ $ifNull: ['$questionNumber', null] }, [null, '']] }, '$_id',
+        { $convert: { input: '$questionNumber', to: 'double', onError: '$_id', onNull: '$_id' } },
+      ] },
+    } } },
+    { $group: { _id: '$_id.module', count: { $sum: 1 } } },
+  ];
+};

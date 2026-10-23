@@ -52,7 +52,7 @@ async function mountDashboard({ user, moduleRequest, profileError = null, profil
   };
   const layout = await readFile(new URL('../components/layout/LearnerExperienceLayout.jsx', import.meta.url), 'utf8');
   const imports = [
-    'import { useState, useEffect, useMemo } from "react";',
+    'import { useState, useEffect, useMemo, useRef } from "react";',
     'import { useLocation, useNavigate, NavLink } from "react-router-dom";',
     'import { BookOpen, ChevronDown, Crown, Loader2 } from "lucide-react";',
     'import { useSemester } from "@/context/SemesterContext";',
@@ -71,9 +71,11 @@ async function mountDashboard({ user, moduleRequest, profileError = null, profil
   }
   const compiled = await transform(source, { loader: 'jsx', jsx: 'automatic', format: 'esm' });
   const dashboard = new vm.SourceTextModule(compiled.code, { context });
+  const cache = new vm.SourceTextModule(await readFile(new URL('../services/learnerCache.js', import.meta.url), 'utf8'), { context });
   const learnerModules = new vm.SourceTextModule(await readFile(new URL('../services/learnerModuleService.js', import.meta.url), 'utf8'), { context });
   deps['@/services/learnerModuleService'] = learnerModules;
   await dashboard.link(specifier => {
+    if (specifier === './learnerCache') return cache;
     if (specifier === './moduleService') return deps['@/services/moduleService'];
     if (specifier === './userService') return deps.userService;
     if (specifier === '../utils/subscriptionDisplay') return deps['@/utils/subscriptionDisplay'];
@@ -142,11 +144,11 @@ test('sidebar keeps loading and hides the zero count while the login profile is 
 });
 
 for (const modules of [[anatomy], []]) {
-  test('subscribed sidebar loads a fresh catalog and resolves ' + modules.length + ' modules', async () => {
+  test('subscribed sidebar reuses the shared catalog and resolves ' + modules.length + ' modules', async () => {
     const moduleRequest = deferred();
     const screen = await mountDashboard({ user: { _id: 'subscriber', plan: 'Premium', semesters: ['S3'] }, moduleRequest });
     try {
-      assert.deepEqual(screen.requests, ['fresh-catalog']);
+      assert.deepEqual(screen.requests, ['catalog']);
       assert.ok(!JSON.stringify(screen.root.toJSON()).includes('Aucun module disponible'));
       await act(async () => moduleRequest.resolve({ data: { data: modules } }));
       assert.equal(screen.root.root.findAllByProps({ 'aria-label': modules.length + ' modules' }).length, 1);

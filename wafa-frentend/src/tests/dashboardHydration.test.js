@@ -19,7 +19,8 @@ async function setup(get, post) {
   await service.link(specifier => specifier.includes('profileState') ? profile : api);
   await service.evaluate();
   const dashboard = new vm.SourceTextModule(await readFile(new URL('../services/dashboardService.js', import.meta.url), 'utf8'), { context });
-  await dashboard.link(specifier => specifier.includes('userService') ? service : api);
+  const cache = new vm.SourceTextModule(await readFile(new URL('../services/learnerCache.js', import.meta.url), 'utf8'), { context });
+  await dashboard.link(specifier => specifier.includes('learnerCache') ? cache : specifier.includes('userService') ? service : api);
   await dashboard.evaluate();
   return { userService: service.namespace.userService, dashboardService: dashboard.namespace.dashboardService, profile: profile.namespace, events, localStorage };
 }
@@ -122,4 +123,14 @@ test('access resolution can notify mounted consumers even when storage already h
   state.profile.publishUserProfile(user, { notify: true });
   assert.equal(state.events.length, 1);
   assert.equal(state.events[0].detail.freeModule, 'anatomy');
+});
+
+
+test('dashboard statistics opt into the compact response', async () => {
+  const urls = [];
+  const state = await setup(async url => { urls.push(url); return { data: { data: { stats: { rank: 4 } } } }; });
+  assert.equal((await state.dashboardService.getUserStats('S1')).data.stats.rank, 4);
+  const query = new URL(urls[0], 'http://localhost').searchParams;
+  assert.equal(query.get('summary'), 'true');
+  assert.equal(query.get('semester'), 'S1');
 });

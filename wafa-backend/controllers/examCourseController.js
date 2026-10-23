@@ -242,7 +242,7 @@ export const examCourseController = {
 
         // Add total and user-specific completed question counts for each course.
         const coursesWithCount = resolvedCourses.map(course => ({
-            ...course,
+            ...Object.fromEntries(Object.entries(course).filter(([key]) => req.query?.summary !== "true" || !["linkedQuestions", "questionSources"].includes(key))),
             moduleId: course.moduleId || { _id: module._id, name: module.name },
             totalQuestions: questionCounts[String(course._id)] || 0,
             questionCount: questionCounts[String(course._id)] || 0,

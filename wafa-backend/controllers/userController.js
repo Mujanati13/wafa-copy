@@ -945,7 +945,7 @@ export const UserController = {
 
         // Get user stats for additional data
         const UserStats = (await import("../models/userStatsModel.js")).default;
-        const userStats = await UserStats.findOne({ userId: req.user._id });
+        const userStats = await UserStats.findOne({ userId: req.user._id }).select("totalPoints normalPoints bluePoints greenPoints questionsAnswered correctAnswers percentageAnswered").lean();
 
         // Merge user data with stats
         const userData = user.toObject();
@@ -998,8 +998,9 @@ export const UserController = {
         }
 
         // Convert Map to plain object for JSON serialization
+        const summaryOnly = req.query?.summary === "true";
         const answeredQuestionsObj = {};
-        if (userStats.answeredQuestions && userStats.answeredQuestions.size > 0) {
+        if (!summaryOnly && userStats.answeredQuestions && userStats.answeredQuestions.size > 0) {
             // Mongoose Map - use entries() or forEach()
             userStats.answeredQuestions.forEach((value, key) => {
                 answeredQuestionsObj[key] = {
@@ -1086,7 +1087,7 @@ export const UserController = {
             success: true,
             data: { 
                 stats,
-                answeredQuestions: answeredQuestionsObj
+                ...(!summaryOnly ? { answeredQuestions: answeredQuestionsObj } : {})
             },
         });
     }),

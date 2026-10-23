@@ -10,7 +10,6 @@ import ExamParYear from "../models/examParYearModel.js";
 import QCMBanque from "../models/qcmBanqueModel.js";
 import Module from "../models/moduleModel.js";
 import Question from "../models/questionModule.js";
-import Transaction from "../models/transactionModel.js";
 import User from "../models/userModel.js";
 import UserStats from "../models/userStatsModel.js";
 import { claimSingleSession, getSessionMetadata, refreshSingleSession, releaseSingleSession } from "../services/singleSessionService.js";
@@ -69,10 +68,10 @@ test("module summary counts questions without loading question documents", { con
         lean: async () => [{ _id: new mongoose.Types.ObjectId(), examId, text: "Q1" }],
       };
     };
-    Question.aggregate = async () => Array.from({ length: 37 }, () => ({
-      _id: new mongoose.Types.ObjectId(),
-      examId,
-    }));
+    Question.aggregate = async pipeline => {
+      assert.ok(pipeline.some(stage => stage.$group), 'counting is performed in MongoDB');
+      return [{ _id: moduleId, count: 37 }];
+    };
 
     const res = createResponse();
     await moduleController.getAll({ query: {} }, res);
@@ -245,7 +244,6 @@ test("dashboard metrics start all independent database reads concurrently", { co
   const originals = {
     userCount: User.countDocuments,
     statsAggregate: UserStats.aggregate,
-    transactionAggregate: Transaction.aggregate,
   };
   let callsStarted = 0;
   let release;
@@ -255,22 +253,16 @@ test("dashboard metrics start all independent database reads concurrently", { co
 
   const delayed = (value) => {
     callsStarted += 1;
-    if (callsStarted === 7) queueMicrotask(release);
+    if (callsStarted === 4) queueMicrotask(release);
     return gate.then(() => value);
   };
 
   try {
     let userCountCall = 0;
-    const countValues = [100, 20, 10, 5];
+    const countValues = [100, 20, 10];
     User.countDocuments = () => delayed(countValues[userCountCall++]);
 
-    let statsCall = 0;
-    UserStats.aggregate = () => delayed(
-      statsCall++ === 0
-        ? [{ totalExams: 50, avgScore: 75, totalStudyHours: 120 }]
-        : [{ count: 8 }]
-    );
-    Transaction.aggregate = () => delayed([{ total: 400 }]);
+    UserStats.aggregate = () => delayed([{ total: 50 }]);
 
     const res = createResponse();
     await Promise.race([
@@ -281,12 +273,14 @@ test("dashboard metrics start all independent database reads concurrently", { co
       )),
     ]);
 
-    assert.equal(callsStarted, 7);
+    assert.equal(callsStarted, 4);
     assert.equal(res.payload.success, true);
-    assert.equal(res.payload.data.monthlyRevenue.value, 400);
+    assert.deepEqual(res.payload.data, {
+      totalUsers: 100, activeUsers: 20, activeSubscriptions: 10,
+      conversionRate: 10, verifiedAnswers: 50,
+    });
   } finally {
     User.countDocuments = originals.userCount;
     UserStats.aggregate = originals.statsAggregate;
-    Transaction.aggregate = originals.transactionAggregate;
   }
 });

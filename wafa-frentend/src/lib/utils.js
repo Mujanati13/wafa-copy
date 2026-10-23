@@ -22,7 +22,7 @@ export const api = axios.create({
 // Request interceptor for logging
 api.interceptors.request.use(
   (config) => {
-    console.log(`API Request: ${config.method?.toUpperCase()} ${config.url}`);
+    if (import.meta.env.DEV) console.debug(`API Request: ${config.method?.toUpperCase()} ${config.url}`);
     
     // Add token to requests if available
     const token = getStoredAuthToken();
@@ -51,6 +51,7 @@ api.interceptors.response.use(
     return response;
   },
   async (error) => {
+    if (axios.isCancel(error) || error.code === "ERR_CANCELED") return Promise.reject(error);
     const config = error.config || {};
     const method = (config.method || 'get').toLowerCase();
     const status = error.response?.status;

@@ -29,10 +29,12 @@ test('Exit from a direct course link has a usable module fallback', () => {
   assert.deepEqual(calls, [['/dashboard/subjects/m1?type=course', { replace: true }]]);
 });
 
-async function mountLibrary({ plan = 'Premium Pro', entry, storageUnavailable = false, pageName = 'SubjectsPage' } = {}) {
+async function mountLibrary({ plan = 'Premium Pro', entry, storageUnavailable = false, pageName = 'SubjectsPage', listData = null, statsData = null, moduleData = {}, metadataRead = null } = {}) {
   entry ||= pageName === 'SubjectsPage' ? '/dashboard/subjects/m1?ref=bookmark'
     : pageName === 'Myplaylist' ? '/dashboard/playlist' : '/dashboard/playlists';
   const snapshots = new Map();
+  const moduleRequests = [];
+  const moduleReadOptions = [];
   const scrolls = [];
   const browser = { history: { scrollRestoration: 'auto' }, scrollX: 0, scrollY: 0,
     addEventListener() {}, removeEventListener() {},
@@ -42,8 +44,8 @@ async function mountLibrary({ plan = 'Premium Pro', entry, storageUnavailable = 
   let navigate;
   let historyIndex = 1;
   const historyEntries = new Map();
-  const moduleResponse = id => ({ data: { data: { _id: id, name: 'Endocrinologie', semester: 'S1' } } });
-  const context = vm.createContext({ console, URLSearchParams, window: browser,
+  const moduleResponse = id => ({ data: { data: { _id: id, name: 'Endocrinologie', semester: 'S1', ...moduleData } } });
+  const context = vm.createContext({ console, URLSearchParams, AbortController, window: browser,
     localStorage: { getItem: () => JSON.stringify({ _id: 'student', plan, freeModule: 'm1' }) },
     sessionStorage: {
       getItem(key) { if (storageUnavailable) throw new Error('storage denied'); return snapshots.get(key) ?? null; },
@@ -66,17 +68,21 @@ async function mountLibrary({ plan = 'Premium Pro', entry, storageUnavailable = 
     sonner: synthetic({ toast: { info() {} } }),
     '@/services/moduleService': synthetic({ moduleService: { getModuleById: async id => {
       if (nextModuleLoad) { const pending = nextModuleLoad; nextModuleLoad = null; return pending; }
-      return moduleResponse(id);
-    } } }),
+      return metadataRead ? metadataRead(id) : moduleResponse(id);
+    }, getModuleList: async (id, type, forceRefresh) => { moduleRequests.push(type); moduleReadOptions.push({ id, type, forceRefresh }); if (typeof listData === 'function') return { data: { data: await listData(id, type) } }; return ({ data: { data: listData?.[type] ?? (type === 'course' ? [
+      { _id: 'course-1', name: 'Thyroïde', category: 'Hormones', totalQuestions: 98 },
+      { _id: 'course-2', name: 'Diabète', category: 'Métabolisme', totalQuestions: 20 },
+    ] : type === 'year' ? [{ _id: 'year-1', name: '2024 normale', year: 2024, totalQuestions: 10 }]
+    : [{ _id: 'qcm-1', name: 'QCM', totalQuestions: 5 }]) } }); } } }),
     '@/lib/utils': synthetic({ cn: (...values) => values.filter(Boolean).join(' '), api: { get: async url => ({ data: { data:
       url.startsWith('/exam-courses/') ? [
         { _id: 'course-1', name: 'Thyroïde', category: 'Hormones', totalQuestions: 98 },
         { _id: 'course-2', name: 'Diabète', category: 'Métabolisme', totalQuestions: 20 },
       ] : url.startsWith('/exams/') ? [{ _id: 'year-1', name: '2024 normale', year: 2024, totalQuestions: 10 }]
         : url.startsWith('/qcm-banque/') ? [{ _id: 'qcm-1', name: 'QCM', totalQuestions: 5 }]
-          : url === '/playlists' ? playlists : null,
+          : url === '/playlists' ? playlists : url.startsWith('/modules/') ? statsData : null,
     } }) } }),
-    '@/context/SemesterContext': synthetic({ useSemester: () => ({ selectedSemester: 'S1' }) }),
+    '@/context/SemesterContext': synthetic({ useSemester: () => ({ selectedSemester: 'S1', user: { _id: 'student', plan, freeModule: 'm1' }, loading: false }) }),
     '@/utils/subscriptionDisplay': synthetic(subscriptionDisplay),
     '@/services/playlistService': synthetic({ playlistService: { getAll: async () => ({ data: playlists }) } }),
     '@/components/shared': synthetic({ PageHeader: primitive }),
@@ -122,7 +128,7 @@ async function mountLibrary({ plan = 'Premium Pro', entry, storageUnavailable = 
     React.createElement(router.Route, { path: '/exam/:examId', element: React.createElement(ExamExit) }),
     React.createElement(router.Route, { path: '*', element: React.createElement('p', null, 'Autre page') }),
   ))); });
-  return { root, browser, snapshots, scrolls,
+  return { root, browser, snapshots, scrolls, moduleRequests, moduleReadOptions,
     get location() { return currentLocation; },
     click: async label => act(async () => {
       const control = root.root.findAllByType('button').find(node => textContent(node).includes(label));
@@ -351,3 +357,65 @@ test(`both real question sidebars keep ${firstSession} visible and selectable al
   } finally { await act(async () => root.unmount()); }
 });
 }
+
+
+for (const [type, category, title] of [['year', 'Exam par years', 'Legacy annual'], ['qcm', 'QCM banque', 'Legacy bank']]) {
+  test(`an empty ${type} endpoint preserves exams from older course imports`, async () => {
+    const screen = await mountLibrary({ entry: `/dashboard/subjects/m1?type=${type}`, listData: {
+      [type]: [], course: [{ _id: 'legacy', name: title, category, totalQuestions: 5 }],
+    } });
+    try {
+      assert.ok(textContent(screen.root.root).includes(title));
+      assert.deepEqual(screen.moduleRequests, [type, 'course']);
+    } finally { await screen.unmount(); }
+  });
+}
+
+test('empty free annual lists do not request premium course fallbacks', async () => {
+  const screen = await mountLibrary({ plan: 'Free', listData: { year: [], course: [{ _id: 'legacy', name: 'Locked legacy', category: 'Exam par years' }] } });
+  try { assert.deepEqual(screen.moduleRequests, ['year']); }
+  finally { await screen.unmount(); }
+});
+
+test('module progress uses the fresh statistics denominator instead of a cached catalog count', async () => {
+  const screen = await mountLibrary({ moduleData: { totalQuestions: 10 }, statsData: { totalQuestions: 20, questionsAnswered: 3, percentage: 15 } });
+  try {
+    const labels = screen.root.root.findAllByType('span').map(textContent);
+    assert.ok(labels.includes('3 / 20 questions'));
+    assert.ok(screen.root.root.findAllByProps({ role: 'progressbar' }).some(node => node.props['aria-valuenow'] === 15));
+  } finally { await screen.unmount(); }
+});
+
+test('metadata errors remain visible when only the library tab changes', async () => {
+  const screen = await mountLibrary({ metadataRead: async () => { throw new Error('metadata unavailable'); } });
+  try {
+    assert.ok(textContent(screen.root.root).includes('Contenu indisponible'));
+    await screen.go('/dashboard/subjects/m1?type=course');
+    assert.ok(textContent(screen.root.root).includes('Contenu indisponible'));
+  } finally { await screen.unmount(); }
+});
+
+test('retrying a library request does not force every later tab request', async () => {
+  let fail = true;
+  const screen = await mountLibrary({ listData: async () => {
+    if (fail) { fail = false; throw new Error('offline'); }
+    return [{ _id: 'exam', name: 'Recovered', totalQuestions: 5 }];
+  } });
+  try {
+    await screen.click('Réessayer');
+    assert.equal(screen.moduleReadOptions.at(-1).forceRefresh, true);
+    await screen.click('Examens par cours');
+    assert.equal(screen.moduleReadOptions.at(-1).forceRefresh, false);
+  } finally { await screen.unmount(); }
+});
+
+test('a retired module request does not start a legacy fallback after navigation', async () => {
+  let release;
+  const gate = new Promise(done => { release = done; });
+  const screen = await mountLibrary({ listData: (id, type) => id === 'm1' && type === 'year' ? gate : [] });
+  try {
+    await screen.go('/dashboard/subjects/m2?type=course');
+    await act(async () => release([]));
+    assert.deepEqual(screen.moduleReadOptions.filter(request => request.id === 'm1').map(request => request.type), ['year']);
+  } finally { release([]); await screen.unmount(); }
+});

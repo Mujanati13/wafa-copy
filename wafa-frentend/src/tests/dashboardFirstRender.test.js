@@ -15,7 +15,7 @@ const deferred = () => {
 };
 const anatomy = { _id: 'anatomy', name: 'Anatomie III', semester: 'S3', totalQuestions: 10 };
 
-async function mountDashboard({ user, moduleRequest, profileError = null }) {
+async function mountDashboard({ user, moduleRequest, statsRequest = null, profileError = null }) {
   const ProfileContext = React.createContext(null);
   let updateProfile;
   let refreshes = 0;
@@ -42,7 +42,7 @@ async function mountDashboard({ user, moduleRequest, profileError = null }) {
     '@/context/SemesterContext': synthetic({ useSemester: () => React.useContext(ProfileContext) }),
     '@/services/moduleService': synthetic({ moduleService }),
     '@/services/dashboardService': synthetic({ dashboardService: {
-      getUserStats: async () => ({ data: { stats: { examsCompleted: 2, averageScore: 80 } } }),
+      getUserStats: () => statsRequest?.promise || Promise.resolve({ data: { stats: { examsCompleted: 2, averageScore: 80, rank: 3 } } }),
       getLeaderboardRank: async () => ({ rank: 3 }),
     } }),
     '@/utils/subscriptionDisplay': synthetic({ isPremiumPlan: plan => plan !== 'Free', displaySubscriptionPlanName: plan => plan }),
@@ -53,9 +53,11 @@ async function mountDashboard({ user, moduleRequest, profileError = null }) {
   const source = await readFile(process.env.DASHBOARD_TEST_SOURCE || new URL('../pages/LearnerDashboard.jsx', import.meta.url), 'utf8');
   const compiled = await transform(source, { loader: 'jsx', jsx: 'automatic', format: 'esm' });
   const dashboard = new vm.SourceTextModule(compiled.code, { context });
+  const cache = new vm.SourceTextModule(await readFile(new URL('../services/learnerCache.js', import.meta.url), 'utf8'), { context });
   const learnerModules = new vm.SourceTextModule(await readFile(new URL('../services/learnerModuleService.js', import.meta.url), 'utf8'), { context });
   deps['@/services/learnerModuleService'] = learnerModules;
   await dashboard.link(specifier => {
+    if (specifier === './learnerCache') return cache;
     if (specifier === './moduleService') return deps['@/services/moduleService'];
     if (specifier === './userService') return deps.userService;
     if (specifier === '../utils/subscriptionDisplay') return deps['@/utils/subscriptionDisplay'];
@@ -110,5 +112,18 @@ test('profile failure shows retry instead of an empty module list and retries pr
     await act(async () => retry.props.onClick());
     assert.equal(screen.refreshes, 1);
     assert.equal(screen.requests.length, 0);
+  } finally { await act(async () => screen.root.unmount()); }
+});
+
+
+test('module cards render while analytics is pending and do not need a leaderboard request', async () => {
+  const moduleRequest = deferred(), statsRequest = deferred();
+  const screen = await mountDashboard({ user: { _id: 'user', plan: 'Free', semesters: ['S3'], freeModule: 'anatomy' }, moduleRequest, statsRequest });
+  try {
+    await act(async () => moduleRequest.resolve({ data: { data: anatomy } }));
+    assert.equal(screen.root.root.findAllByProps({ 'data-module': 'anatomy' }).length, 1);
+    await act(async () => statsRequest.reject(new Error('offline')));
+    assert.equal(screen.root.root.findAllByProps({ 'data-module': 'anatomy' }).length, 1);
+    assert.equal(screen.root.root.findAllByProps({ role: 'alert' }).length, 1);
   } finally { await act(async () => screen.root.unmount()); }
 });

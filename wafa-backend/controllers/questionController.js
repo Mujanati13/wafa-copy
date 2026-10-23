@@ -1295,7 +1295,7 @@ export const questionController = {
         console.log('User ID:', userId);
 
         const UserStatsModel = (await import("../models/userStatsModel.js")).default;
-        const userStats = await UserStatsModel.findOne({ userId });
+        const userStats = await UserStatsModel.findOne({ userId }).select("answeredQuestions").lean();
 
         if (!userStats || !userStats.answeredQuestions) {
             console.log('No user stats or answered questions found');

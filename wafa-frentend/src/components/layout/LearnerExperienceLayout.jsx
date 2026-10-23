@@ -1,11 +1,11 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
   BarChart3, BookOpen, ChevronDown, ChevronLeft, CircleHelp, CreditCard, Crown,
   Home, Library, Loader2, LogOut, Menu, NotebookPen, Settings, Trophy, UserRound, X,
 } from "lucide-react";
 import { SemesterProvider } from "@/context/SemesterContext";
-import { PROFILE_UPDATED_EVENT } from "@/utils/profileState";
+import RouteBoundary from "@/components/shared/RouteBoundary";
 import { useSemester } from "@/context/SemesterContext";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -24,7 +24,6 @@ import logo from "@/assets/yourqcm-logo.jpeg";
 import { cn } from "@/lib/utils";
 import { signOut } from "@/services/authService";
 import { getLearnerModules } from "@/services/learnerModuleService";
-import { userService } from "@/services/userService";
 import { toast } from "sonner";
 import { displaySubscriptionPlanName, editableUserPlan, isPremiumPlan, isPremiumProPlan } from "@/utils/subscriptionDisplay";
 
@@ -42,10 +41,6 @@ const bottomItems = [
   { to: "/dashboard/profile", label: "Profil", icon: UserRound },
 ];
 
-const parseUser = () => {
-  try { return JSON.parse(localStorage.getItem("userProfile") || localStorage.getItem("user") || "{}"); } catch { return {}; }
-};
-
 const planAllows = (user, item) => {
   const premium = isPremiumPlan(user?.plan);
   const premiumPro = isPremiumProPlan(user?.plan);
@@ -55,55 +50,21 @@ const planAllows = (user, item) => {
 };
 
 export default function LearnerExperienceLayout() {
+  return <SemesterProvider><LearnerShell /></SemesterProvider>;
+}
+
+function LearnerShell() {
   const location = useLocation();
   const navigate = useNavigate();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
-  const [user, setUser] = useState(parseUser);
+  const { user: profile, loading: profileLoading } = useSemester();
+  const user = useMemo(() => profile || {}, [profile]);
 
   useEffect(() => {
-    const sync = () => setUser(parseUser());
-    window.addEventListener("storage", sync);
-    window.addEventListener("auth-state-changed", sync);
-    window.addEventListener(PROFILE_UPDATED_EVENT, sync);
-    return () => { window.removeEventListener("storage", sync); window.removeEventListener("auth-state-changed", sync); window.removeEventListener(PROFILE_UPDATED_EVENT, sync); };
-  }, []);
-
-  useEffect(() => {
-    let active = true;
-    const proOnlyPaths = [
-      "/dashboard/playlist",
-      "/dashboard/playlists",
-      "/dashboard/note",
-      "/dashboard/notes",
-    ];
-
-    const syncAccountAccess = async () => {
-      const latestUser = await userService.getUserProfile(true).catch(() => null);
-      if (!active || !latestUser) return;
-
-      const previousUser = parseUser();
-      const previousAccess = JSON.stringify({
-        plan: editableUserPlan(previousUser.plan),
-        semesters: previousUser.semesters || [],
-        freeModule: previousUser.freeModule || null,
-        freeExam: previousUser.freeExam || null,
-      });
-      const latestAccess = JSON.stringify({
-        plan: editableUserPlan(latestUser.plan),
-        semesters: latestUser.semesters || [],
-        freeModule: latestUser.freeModule || null,
-        freeExam: latestUser.freeExam || null,
-      });
-
-      localStorage.setItem("user", JSON.stringify(latestUser));
-      localStorage.setItem("userProfile", JSON.stringify(latestUser));
-      setUser(latestUser);
-
-      if (previousAccess !== latestAccess) {
-        window.dispatchEvent(new Event("auth-state-changed"));
-      }
-
+    if (profileLoading || !profile) return;
+    const latestUser = profile;
+    const proOnlyPaths = ["/dashboard/playlist", "/dashboard/playlists", "/dashboard/note", "/dashboard/notes"];
       const isFree = editableUserPlan(latestUser.plan) === "Free";
       const isPro = isPremiumProPlan(latestUser.plan);
 
@@ -123,24 +84,7 @@ export default function LearnerExperienceLayout() {
         navigate("/dashboard/home", { replace: true });
         return;
       }
-    };
-
-    syncAccountAccess();
-    const accessSyncInterval = window.setInterval(syncAccountAccess, 15000);
-    const handleFocus = () => syncAccountAccess();
-    const handleVisibility = () => {
-      if (document.visibilityState === "visible") syncAccountAccess();
-    };
-    window.addEventListener("focus", handleFocus);
-    document.addEventListener("visibilitychange", handleVisibility);
-
-    return () => {
-      active = false;
-      window.clearInterval(accessSyncInterval);
-      window.removeEventListener("focus", handleFocus);
-      document.removeEventListener("visibilitychange", handleVisibility);
-    };
-  }, [location.pathname, navigate]);
+  }, [location.pathname, navigate, profile, profileLoading]);
 
   useEffect(() => setDrawerOpen(false), [location.pathname]);
 
@@ -158,8 +102,7 @@ export default function LearnerExperienceLayout() {
     navigate("/");
   };
 
-  return <SemesterProvider>
-    <div className="min-h-screen bg-background text-foreground">
+  return <div className="min-h-screen bg-background text-foreground">
       <header className="sticky top-0 z-40 flex h-16 items-center justify-between border-b border-border bg-background/90 px-3 backdrop-blur-xl sm:px-5">
         <div className="flex min-w-0 items-center gap-2 sm:gap-3">
           <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setDrawerOpen(true)} aria-label="Ouvrir la navigation"><Menu className="h-5 w-5" /></Button>
@@ -255,11 +198,10 @@ export default function LearnerExperienceLayout() {
           </div>
         </aside>
 
-        <main className="min-w-0 flex-1 pb-20 lg:pb-8"><div className="mx-auto w-full max-w-[1600px] p-4 sm:p-6 lg:p-8"><Outlet /></div></main>
+        <main className="min-w-0 flex-1 pb-20 lg:pb-8"><div className="mx-auto w-full max-w-[1600px] p-4 sm:p-6 lg:p-8"><RouteBoundary routeKey={location.pathname}><Outlet /></RouteBoundary></div></main>
       </div>
       <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-4 border-t border-border bg-card/95 px-2 pb-[max(.4rem,env(safe-area-inset-bottom))] pt-2 backdrop-blur lg:hidden" aria-label="Navigation rapide">{bottomItems.map((item) => { const Icon = item.icon; const active = item.to ? isActive(item.to) : location.pathname.startsWith("/dashboard/subjects/"); return item.action === "modules" ? <button key={item.action} type="button" onClick={() => setDrawerOpen(true)} className={cn("imrs-focus-ring flex flex-col items-center gap-1 rounded-lg py-1 text-[10px] font-medium", active ? "text-primary" : "text-muted-foreground")} aria-label="Ouvrir mes modules"><Icon className="h-5 w-5" /><span>{item.label}</span></button> : <NavLink key={item.to} to={item.to} onClick={(event) => { if (item.to === "/dashboard/leaderboard" && !isPremiumPlan(user?.plan)) { event.preventDefault(); toast.info("Le classement est réservé aux abonnés."); navigate("/dashboard/subscription"); } }} className={cn("imrs-focus-ring flex flex-col items-center gap-1 rounded-lg py-1 text-[10px] font-medium", active ? "text-primary" : "text-muted-foreground")}><Icon className="h-5 w-5" /><span>{item.label}</span></NavLink>; })}</nav>
-    </div>
-  </SemesterProvider>;
+    </div>;
 }
 
 function NavigationItem({ item, active, collapsed, locked }) {
@@ -313,6 +255,8 @@ function ModuleNavigation({ collapsed, setCollapsed }) {
   const [error, setError] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
   const [loadedAccessKey, setLoadedAccessKey] = useState(null);
+  const userRef = useRef(user);
+  userRef.current = user;
   const accessKey = JSON.stringify([user?._id, user?.plan, user?.semesters || [], freeModuleId]);
   const modulesLoading = profileLoading || loading ||
     (!profileError && (!user?._id || loadedAccessKey !== accessKey));
@@ -324,7 +268,7 @@ function ModuleNavigation({ collapsed, setCollapsed }) {
 
   useEffect(() => {
     if (profileLoading) return;
-    if (profileError || !user?._id) {
+    if (profileError || !userRef.current?._id) {
       setLoading(false);
       return;
     }
@@ -333,7 +277,7 @@ function ModuleNavigation({ collapsed, setCollapsed }) {
     setLoading(true);
     setError(false);
 
-    getLearnerModules(user)
+    getLearnerModules(userRef.current, reloadKey > 0)
       .then((response) => {
         if (!active) return;
         setModules(response.data?.data || []);

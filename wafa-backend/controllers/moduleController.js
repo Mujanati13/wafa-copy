@@ -7,7 +7,7 @@ import UserStats from "../models/userStatsModel.js";
 import examCourseModel from "../models/examCourseModel.js";
 import qcmBanqueModel from "../models/qcmBanqueModel.js";
 import { buildModulePayload, ModulePayloadError } from "../utils/modulePayload.js";
-import { questionLogicalKey, uniqueQuestionsByLogicalKey } from "../utils/questionIdentity.js";
+import { questionLogicalKey, uniqueQuestionsByLogicalKey, moduleQuestionCountStages } from "../utils/questionIdentity.js";
 import { buildCompleteActivitySources, buildProgressStatistics } from "../services/progressStatisticsService.js";
 import {
     CategoryLabelsError,
@@ -24,8 +24,10 @@ const sendModulePayloadError = (res, error) => res.status(error.statusCode).json
 const MODULE_LIST_CACHE_TTL_MS = 60 * 1000;
 let moduleListCache = null;
 let moduleListCacheExpiresAt = 0;
+let moduleListCacheVersion = 0;
 
 export const invalidateModuleListCache = () => {
+    moduleListCacheVersion++;
     moduleListCache = null;
     moduleListCacheExpiresAt = 0;
 };
@@ -161,6 +163,7 @@ export const moduleController = {
             return res.status(200).json(moduleListCache);
         }
 
+        const cacheVersion = moduleListCacheVersion;
         // AI context data is only needed by the dedicated AI configuration endpoint.
         const modules = await moduleSchema.find({})
             .select('-aiContextFiles -aiPrompt')
@@ -196,7 +199,7 @@ export const moduleController = {
                 ? await questionModule.find({ $or: questionSourceFilters }).lean()
                 : await questionModule.aggregate([
                     { $match: { $or: questionSourceFilters } },
-                    { $project: { _id: 1, examId: 1, qcmBanqueId: 1, examCourseId: 1, sessionLabel: 1, questionNumber: 1 } },
+                    ...moduleQuestionCountStages(examParYears, qcmBanques, examCourses),
                 ]);
 
         // Build source ID -> module ID maps. A question is counted once, even
@@ -224,7 +227,8 @@ export const moduleController = {
 
         const moduleIdToQuestionIds = {};
         const moduleIdToQuestions = includeQuestions ? {} : null;
-        questionData.forEach(question => {
+        const aggregateCounts = includeQuestions ? {} : Object.fromEntries(questionData.map(row => [String(row._id), row.count]));
+        if (includeQuestions) questionData.forEach(question => {
             const moduleId = examIdToModuleId[question.examId?.toString()]
                 || qcmIdToModuleId[question.qcmBanqueId?.toString()]
                 || courseIdToModuleId[question.examCourseId?.toString()];
@@ -244,7 +248,7 @@ export const moduleController = {
             const moduleId = m._id.toString();
             return {
                 ...m,
-                totalQuestions: moduleIdToQuestionIds[moduleId]?.size || 0,
+                totalQuestions: (includeQuestions ? moduleIdToQuestionIds[moduleId]?.size : aggregateCounts[moduleId]) || 0,
                 exams: moduleIdToExams[moduleId] || [],
                 ...(includeQuestions ? { questions: moduleIdToQuestions[moduleId] || [] } : {})
             };
@@ -256,7 +260,7 @@ export const moduleController = {
             data: modulesWithRelations
         };
 
-        if (!includeQuestions) {
+        if (!includeQuestions && cacheVersion === moduleListCacheVersion) {
             moduleListCache = payload;
             moduleListCacheExpiresAt = Date.now() + MODULE_LIST_CACHE_TTL_MS;
         }

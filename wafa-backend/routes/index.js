@@ -1,4 +1,5 @@
 
+import { invalidateModuleListCache } from "../controllers/moduleController.js";
 import { Router } from "express";
 import examRoute from "./examRoute.js";
 import moduleRoute from "./modueRoute.js";
@@ -24,6 +25,13 @@ import courseCategoryRoute from "./courseCategoryRoute.js";
 import feedbackRoute from "./feedbackRoute.js";
 
 const router = Router();
+
+router.use((req, res, next) => {
+    const contentWrite = !['GET', 'HEAD', 'OPTIONS'].includes(req.method)
+        && /^\/(modules|exams|qcm-banque|exam-courses|course-categories)(?:\/|$)/.test(req.path);
+    if (contentWrite) res.on('finish', () => { if (res.statusCode < 400) invalidateModuleListCache(); });
+    next();
+});
 
 router.use("/exams", examRoute);
 router.use("/qcm-banque", qcmBanqueRoute);

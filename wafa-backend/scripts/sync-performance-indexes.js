@@ -1,3 +1,7 @@
+import Question from '../models/questionModule.js';
+import ExamParYear from '../models/examParYearModel.js';
+import QCMBanque from '../models/qcmBanqueModel.js';
+import UserStats from '../models/userStatsModel.js';
 import dotenv from "dotenv";
 import mongoose from "mongoose";
 import CourseCategory from "../models/courseCategoryModel.js";
@@ -12,6 +16,7 @@ import Contact from '../models/contactModel.js';
 dotenv.config();
 
 const indexedModels = [
+  Question, ExamParYear, QCMBanque, UserStats,
   Module,
   CourseCategory,
   ExamCourse,

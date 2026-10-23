@@ -1,3 +1,4 @@
+import { cachedLearnerRead, invalidateLearnerReads, learnerScope } from './learnerCache';
 import { api, safeLocalStorage } from "@/lib/utils";
 import { userService } from "@/services/userService";
 
@@ -7,8 +8,6 @@ let leaderboardCacheTime = {};
 const LEADERBOARD_CACHE_EXPIRY = 60000; // 1 minute
 
 // Cache for stats
-let statsCache = {};
-let statsCacheTime = {};
 const STATS_CACHE_EXPIRY = 30000; // 30 seconds
 
 // Helper function to get year from semester (S1-S2 = Year 1, S3-S4 = Year 2, etc.)
@@ -40,30 +39,12 @@ export const dashboardService = {
 
   // Get user stats - optionally filtered by semester with caching
   getUserStats: async (semester = null, forceRefresh = false) => {
-    try {
-      const cacheKey = semester || 'all';
-      const now = Date.now();
-
-      // Return cached if valid
-      if (!forceRefresh && statsCache[cacheKey] && statsCacheTime[cacheKey] &&
-          (now - statsCacheTime[cacheKey]) < STATS_CACHE_EXPIRY) {
-        return statsCache[cacheKey];
-      }
-
-      const url = semester
-        ? `/users/my-stats?semester=${semester}`
-        : '/users/my-stats';
-      const { data } = await api.get(url);
-      
-      // Cache the result
-      statsCache[cacheKey] = data;
-      statsCacheTime[cacheKey] = now;
-      
+    const params = new URLSearchParams({ summary: 'true' });
+    if (semester) params.set('semester', semester);
+    return cachedLearnerRead(`stats:${semester || 'all'}`, async () => {
+      const { data } = await api.get(`/users/my-stats?${params}`);
       return data;
-    } catch (error) {
-      console.error("Error fetching user stats:", error);
-      throw error;
-    }
+    }, { maxAge: STATS_CACHE_EXPIRY, forceRefresh });
   },
 
   // Get user's subscription info (for regular users)
@@ -80,7 +61,7 @@ export const dashboardService = {
   // Get leaderboard rank for current user - grouped by year (2 semesters) with caching
   getLeaderboardRank: async (semester = null, forceRefresh = false) => {
     try {
-      const cacheKey = semester || 'all';
+      const cacheKey = `${learnerScope()}:${semester || 'all'}`;
       const now = Date.now();
 
       // Return cached if valid
@@ -132,8 +113,7 @@ export const dashboardService = {
 
   // Clear all caches
   clearCache: () => {
-    statsCache = {};
-    statsCacheTime = {};
+    invalidateLearnerReads(key => key.startsWith('stats:') || key.startsWith('module-list:'));
     leaderboardCache = {};
     leaderboardCacheTime = {};
   },

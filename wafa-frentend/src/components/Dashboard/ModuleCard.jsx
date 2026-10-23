@@ -99,7 +99,7 @@ const ModuleCard = ({ course, handleCourseClick, index, isLocked = false, isFree
               </div>
             )}
             {hasValidImageUrl && !imageError && (
-              <img
+              <img loading="lazy" decoding="async"
                 src={fullImageUrl}
                 alt={course.name}
                 className={`absolute inset-0 h-full w-full bg-transparent object-contain transition-transform duration-300 group-hover:scale-105 ${imageLoaded ? "opacity-100" : "opacity-0"}`}
@@ -234,7 +234,7 @@ const ModuleCard = ({ course, handleCourseClick, index, isLocked = false, isFree
                   className="rounded-xl border-2 border-pink-200 bg-pink-50 min-h-[120px] flex items-center justify-center overflow-hidden cursor-pointer hover:border-pink-400 hover:shadow-lg transition-all"
                   onClick={() => setShowImageModal(true)}
                 >
-                  <img
+                  <img loading="lazy" decoding="async"
                     src={fullHelpImageUrl}
                     alt={`${course.name} - image d'aide`}
                     className="max-w-full max-h-48 object-contain hover:scale-105 transition-transform"
@@ -357,7 +357,7 @@ const ModuleCard = ({ course, handleCourseClick, index, isLocked = false, isFree
                 </div>
                 {/* Scrollable Image Container */}
                 <div className="min-h-0 flex-1 overflow-auto overscroll-contain bg-card p-4 sm:p-6">
-                  <img
+                  <img loading="lazy" decoding="async"
                     src={fullHelpImageUrl}
                     alt={`${course.name} - image d'aide`}
                     className="mx-auto block h-auto max-w-full rounded-lg shadow-lg"

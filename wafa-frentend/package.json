@@ -8,6 +8,7 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
+    "test:client-performance": "node --experimental-vm-modules --test src/tests/moduleServiceCache.test.js src/tests/learnerModuleAccess.test.js src/tests/learnerCache.test.js src/tests/dashboardHydration.test.js src/tests/dashboardFirstRender.test.js src/tests/sidebarModules.test.js src/tests/examPerformance.test.js src/tests/examNavigation.test.js src/tests/examQuestionContext.test.js src/tests/questionProgress.test.js src/tests/examProgress.test.js src/tests/statisticsProgress.test.js src/tests/authDeviceSession.test.js",
     "test:dashboard": "node --experimental-vm-modules --test src/tests/dashboardHydration.test.js src/tests/dashboardFirstRender.test.js src/tests/sidebarModules.test.js",
     "test:statistics": "node --experimental-vm-modules --test src/tests/statisticsProgress.test.js",
     "test:exam-context": "node --experimental-vm-modules --test src/tests/examQuestionContext.test.js",

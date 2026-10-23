@@ -1,109 +1,44 @@
 import { api } from "@/lib/utils";
+import { cachedLearnerRead, clearLearnerCache, learnerScope } from './learnerCache';
 
-// Module cache
-let moduleCache = null;
-let moduleCacheTime = null;
-const MODULE_CACHE_EXPIRY = 5 * 60 * 1000;
-const MODULE_CACHE_KEY = 'modules';
-const MODULE_CACHE_TIME_KEY = 'modulesCacheTime';
-let pendingModuleRequest = null;
+let catalogGeneration = 0;
 
 export const moduleService = {
-    // Get all modules with caching
-    getAllmodules: async (forceRefresh = false) => {
+    getAllmodules: (forceRefresh = false) => cachedLearnerRead('modules', async () => {
+        const scope = learnerScope();
+        const generation = catalogGeneration;
         try {
-            const now = Date.now();
-
-            // Return cached data if valid
-            if (!forceRefresh && 
-                moduleCache && 
-                moduleCacheTime && 
-                (now - moduleCacheTime) < MODULE_CACHE_EXPIRY) {
-                return { data: moduleCache };
+            const stored = JSON.parse(localStorage.getItem('learner-module-catalog') || 'null');
+            if (!forceRefresh && stored?.scope === scope && Date.now() - stored.at < 300000 && Array.isArray(stored.data?.data)) {
+                return { data: stored.data };
             }
-
-            // Share one network request across the sidebar, dashboard and pages.
-            if (pendingModuleRequest) {
-                return pendingModuleRequest;
-            }
-
-            // Reuse a recent persisted list after reloads and route changes.
-            if (!forceRefresh) {
-                const cached = localStorage.getItem(MODULE_CACHE_KEY);
-                const cachedAt = Number(localStorage.getItem(MODULE_CACHE_TIME_KEY));
-                if (cached && cachedAt && (now - cachedAt) < MODULE_CACHE_EXPIRY) {
-                    const parsedCache = JSON.parse(cached);
-                    moduleCache = { success: true, count: parsedCache.length, data: parsedCache };
-                    moduleCacheTime = cachedAt;
-                    return { data: moduleCache };
-                }
-            }
-
-            // Create the request
-            pendingModuleRequest = (async () => {
-                const response = await api.get("/modules");
-                moduleCache = response.data;
-                moduleCacheTime = Date.now();
-                
-                // Try to save to localStorage, but don't fail if quota exceeded
-                try {
-                    localStorage.setItem(MODULE_CACHE_KEY, JSON.stringify(response.data.data));
-                    localStorage.setItem(MODULE_CACHE_TIME_KEY, String(moduleCacheTime));
-                } catch (e) {
-                    // Quota exceeded - clear old data and try storing only essential fields
-                    console.warn('localStorage quota exceeded, clearing old cache:', e);
-                    try {
-                        localStorage.removeItem(MODULE_CACHE_KEY);
-                        // Store minimal module data (only what's needed for sidebar)
-                        const minimalModules = response.data.data.map(m => ({
-                            _id: m._id,
-                            name: m.name,
-                            semester: m.semester,
-                            icon: m.icon
-                        }));
-                        localStorage.setItem(MODULE_CACHE_KEY, JSON.stringify(minimalModules));
-                        localStorage.setItem(MODULE_CACHE_TIME_KEY, String(moduleCacheTime));
-                    } catch (e2) {
-                        console.error('Still cannot save to localStorage:', e2);
-                        // Continue without localStorage cache
-                    }
-                }
-                return response;
-            })();
-
-            const result = await pendingModuleRequest;
-            pendingModuleRequest = null;
-            return result;
-        } catch (error) {
-            pendingModuleRequest = null;
-            console.error('Error fetching all modules:', error);
-            
-            // Return cached data as fallback
-            const cached = localStorage.getItem('modules');
-            if (cached && !forceRefresh) {
-                return { data: { data: JSON.parse(cached) } };
-            }
-            throw error;
+        } catch { /* Ignore corrupt or unavailable storage. */ }
+        const response = await api.get('/modules');
+        if (generation === catalogGeneration && learnerScope() === scope) {
+            try { localStorage.setItem('learner-module-catalog', JSON.stringify({ scope, at: Date.now(), data: response.data })); } catch { /* Continue with the memory cache. */ }
         }
-    },
+        return response;
+    }, {
+        maxAge: 5 * 60 * 1000, forceRefresh,
+    }),
 
-    // Clear module cache
     clearCache: () => {
-        moduleCache = null;
-        moduleCacheTime = null;
-        localStorage.removeItem(MODULE_CACHE_KEY);
-        localStorage.removeItem(MODULE_CACHE_TIME_KEY);
+        catalogGeneration++;
+        clearLearnerCache();
+        // Retire the old unscoped persisted catalog.
+        try { localStorage.removeItem('learner-module-catalog'); localStorage.removeItem('modules'); localStorage.removeItem('modulesCacheTime'); } catch { /* Storage may be unavailable. */ }
     },
 
-    // Get module by ID
-    getModuleById: async (id) => {
-        try {
-            const response = await api.get("/modules/" + id);
-            return response;
-        } catch (error) {
-            console.error('Error fetching module by id:', error);
-            throw error;
-        }
+    getModuleById: (id, forceRefresh = false) => cachedLearnerRead(`module:${id}`, () => api.get(`/modules/${id}`), {
+        maxAge: 5 * 60 * 1000, forceRefresh,
+    }),
+
+    getModuleList: (id, type, forceRefresh = false) => {
+        const resource = { year: 'exams', course: 'exam-courses', qcm: 'qcm-banque' }[type];
+        if (!resource) return Promise.reject(new Error('Invalid module content type'));
+        return cachedLearnerRead(`module-list:${id}:${type}`, () => api.get(`/${resource}/module/${id}?summary=true`), {
+            maxAge: 60000, forceRefresh,
+        });
     },
 
     // Create a new module

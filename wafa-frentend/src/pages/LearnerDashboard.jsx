@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { BookOpen, ChevronDown, Crown, Medal, Star, TrendingUp, TriangleAlert } from "lucide-react";
 import { toast } from "sonner";
@@ -17,48 +17,60 @@ export default function LearnerDashboard() {
   const { user, selectedSemester, setSelectedSemester, userSemesters, loading: semesterLoading, error: profileError, refreshProfile } = useSemester();
   const [modules, setModules] = useState([]);
   const [stats, setStats] = useState(null);
-  const [rank, setRank] = useState(0);
+  const [statsPending, setStatsPending] = useState(true);
+  const [statsError, setStatsError] = useState(false);
+  const moduleRetry = useRef(0);
+  const statsRetry = useRef(0);
+  const moduleOwner = useRef(null);
+  const userRef = useRef(user);
+  userRef.current = user;
+  const rank = stats?.rank || 0;
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
   const accessKey = JSON.stringify([user?._id, user?.plan, user?.freeModule?._id || user?.freeModule, userSemesters]);
   const [loadedKey, setLoadedKey] = useState(null);
   const requestKey = JSON.stringify([accessKey, selectedSemester, reloadKey]);
-  const pending = semesterLoading || (!profileError && (loading || loadedKey !== requestKey));
+  const pending = semesterLoading || (!profileError && (loadedKey !== accessKey || (loading && !modules.length)));
 
   useEffect(() => {
-    if (semesterLoading || profileError) return;
+    if (semesterLoading || profileError || !userRef.current?._id) return;
     let active = true;
     setLoading(true);
     setError(false);
-    setModules([]);
-    setStats(null);
-    setRank(0);
-    Promise.allSettled([getLearnerModules(user), dashboardService.getUserStats(selectedSemester, true), dashboardService.getLeaderboardRank(selectedSemester, true)])
-      .then(([moduleResult, statsResult, rankResult]) => {
-        if (!active) return;
-        if (moduleResult.status === "fulfilled") {
-          const list = moduleResult.value?.data?.data || [];
-          setModules(list);
-        }
-        if (statsResult.status === "fulfilled") setStats(statsResult.value?.data?.stats || statsResult.value?.stats || null);
-        if (rankResult.status === "fulfilled") setRank(rankResult.value?.rank || 0);
-        setError([moduleResult, statsResult, rankResult].some(result => result.status === "rejected"));
-        setLoadedKey(requestKey);
-      })
-      .finally(() => active && setLoading(false));
+    if (moduleOwner.current !== accessKey) { moduleOwner.current = accessKey; setModules([]); }
+    const forceRefresh = moduleRetry.current !== reloadKey;
+    moduleRetry.current = reloadKey;
+    getLearnerModules(userRef.current, forceRefresh)
+      .then(response => { if (active) setModules(response?.data?.data || []); })
+      .catch(() => { if (active) setError(true); })
+      .finally(() => { if (active) { setLoadedKey(accessKey); setLoading(false); } });
     return () => { active = false; };
-  }, [selectedSemester, semesterLoading, accessKey, reloadKey, requestKey, user, profileError]);
+  }, [semesterLoading, profileError, accessKey, reloadKey, requestKey]);
+
+  useEffect(() => {
+    if (semesterLoading || profileError || !userRef.current?._id) return;
+    let active = true;
+    setStatsPending(true);
+    setStatsError(false);
+    setStats(null);
+    const forceRefresh = statsRetry.current !== reloadKey;
+    statsRetry.current = reloadKey;
+    dashboardService.getUserStats(selectedSemester, forceRefresh)
+      .then(response => { if (active) setStats(response?.data?.stats || response?.stats || null); })
+      .catch(() => { if (active) setStatsError(true); })
+      .finally(() => { if (active) setStatsPending(false); });
+    return () => { active = false; };
+  }, [semesterLoading, profileError, accessKey, selectedSemester, reloadKey]);
+
+  const progressByModule = useMemo(() => new Map((stats?.moduleProgress || []).map(item => [String(item.moduleId), item])), [stats]);
 
   const semesterModules = useMemo(() => {
-    const moduleProgress = stats?.moduleProgress || [];
 
     return modules
       .filter((module) => Boolean(selectedSemester) && module.semester === selectedSemester)
       .map((module) => {
-        const progressData = moduleProgress.find(
-          (item) => String(item.moduleId || "") === String(module._id || module.id || ""),
-        );
+        const progressData = progressByModule.get(String(module._id || module.id || ""));
         const totalQuestions = Math.max(0, Number(module.totalQuestions) || 0);
         const questionsAttempted = Math.max(0, Number(progressData?.questionsAttempted) || 0);
         const progressPercentage = totalQuestions > 0
@@ -72,7 +84,7 @@ export default function LearnerDashboard() {
           correctAnswers: Math.max(0, Number(progressData?.correctAnswers) || 0),
         };
       });
-  }, [modules, selectedSemester, stats]);
+  }, [modules, selectedSemester, progressByModule]);
   const isFreeUser = !isPremiumPlan(user?.plan);
   const freeModuleId = String(user?.freeModule?._id || user?.freeModule || "");
 
@@ -82,10 +94,7 @@ export default function LearnerDashboard() {
       return modules
         .filter((module) => String(module._id || module.id) === freeModuleId)
         .map((module) => {
-          const moduleProgress = stats?.moduleProgress || [];
-          const progressData = moduleProgress.find(
-            (item) => String(item.moduleId || "") === String(module._id || module.id || ""),
-          );
+          const progressData = progressByModule.get(String(module._id || module.id || ""));
           const totalQuestions = Math.max(0, Number(module.totalQuestions) || 0);
           const questionsAttempted = Math.max(0, Number(progressData?.questionsAttempted) || 0);
           const progressPercentage = totalQuestions > 0
@@ -101,7 +110,7 @@ export default function LearnerDashboard() {
         });
     }
     return semesterModules;
-  }, [isFreeUser, freeModuleId, modules, stats, semesterModules]);
+  }, [isFreeUser, freeModuleId, modules, progressByModule, semesterModules]);
 
   const freeModuleSemester = useMemo(() => {
     if (!isFreeUser || !freeModuleId) return null;
@@ -208,13 +217,14 @@ export default function LearnerDashboard() {
       />
     </section>
 
-    {pending ? <DashboardSkeleton /> : error || profileError ? <div role="alert" className="rounded-xl border border-amber-300 bg-amber-50 p-5 text-amber-900"><p>Impossible de charger votre tableau de bord. Vos données n’ont pas été modifiées.</p><Button variant="outline" className="mt-3" onClick={() => { refreshProfile(); setReloadKey(value => value + 1); }}>Réessayer</Button></div> : <>
+    {pending ? <DashboardSkeleton /> : profileError ? <div role="alert" className="rounded-xl border border-amber-300 bg-amber-50 p-5 text-amber-900"><p>Impossible de charger votre tableau de bord. Vos données n’ont pas été modifiées.</p><Button variant="outline" className="mt-3" onClick={() => { refreshProfile(); setReloadKey(value => value + 1); }}>Réessayer</Button></div> : <>
 
 
-      <section className="hidden gap-4 lg:grid lg:grid-cols-2 xl:grid-cols-4">
-        <StatCard label="Progression" value={`${progress}%`} description="Dans ce semestre" tone="cyan" />
-        <StatCard label="Examens terminés" value={completed} description="Toutes les questions vérifiées" tone="blue" />
-        <StatCard label="Score moyen" value={`${average}%`} description="Sur vos dernières sessions" tone="green" />
+      {statsError && <div role="alert" className="rounded-xl border p-4">Statistiques indisponibles. <Button variant="outline" onClick={() => setReloadKey(value => value + 1)}>Réessayer</Button></div>}
+      <section aria-busy={statsPending} className="hidden gap-4 lg:grid lg:grid-cols-2 xl:grid-cols-4">
+        <StatCard label="Progression" value={statsPending || statsError ? "?" : `${progress}%`} description="Dans ce semestre" tone="cyan" />
+        <StatCard label="Examens terminés" value={statsPending || statsError ? "?" : completed} description="Toutes les questions vérifiées" tone="blue" />
+        <StatCard label="Score moyen" value={statsPending || statsError ? "?" : `${average}%`} description="Sur vos dernières sessions" tone="green" />
         <StatCard label="Classement" value={rank ? `#${rank}` : "—"} description="Dans votre promotion" tone="amber" onClick={handleLeaderboardClick} />
       </section>
 
@@ -234,7 +244,7 @@ export default function LearnerDashboard() {
             disabled={semesterLoading}
           />
         </div>
-        {displayedModules.length ? (
+        {error ? <div role="alert" className="rounded-xl border p-4">Modules indisponibles. <Button variant="outline" onClick={() => setReloadKey(value => value + 1)}>Réessayer</Button></div> : displayedModules.length ? (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {displayedModules.map((module, index) => {
               const isModuleLocked = isFreeUser && (!freeModuleId || String(module._id || module.id) !== freeModuleId);

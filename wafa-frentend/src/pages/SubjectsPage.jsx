@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { openExam } from "@/utils/examNavigation";
 import { useExamReturnPosition } from "@/hooks/useExamReturnPosition";
@@ -146,7 +146,7 @@ function ExamCard({ exam, type, moduleColor, moduleName, isLocked = false, lockL
             <div className="relative -mt-0.5 grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-2xl bg-transparent text-blue-700 sm:h-[68px] sm:w-[68px] dark:text-sky-300" style={!imageUrl && !isYearExam ? { color: moduleColor } : undefined}>
               {!imageUrl && <Icon className="h-9 w-9 sm:h-10 sm:w-10" strokeWidth={1.6} aria-hidden="true" />}
               {imageUrl && (
-                <img
+                <img loading="lazy" decoding="async"
                   src={imageUrl}
                   alt={cardTitle}
                   className="absolute inset-0 h-full w-full bg-transparent object-contain"
@@ -260,7 +260,7 @@ function ExamCard({ exam, type, moduleColor, moduleName, isLocked = false, lockL
         <div className="relative -mt-0.5 grid h-13 w-13 shrink-0 place-items-center overflow-hidden rounded-xl bg-transparent" style={{ color: moduleColor }}>
           {!imageUrl && <Icon className="h-6 w-6" />}
           {imageUrl && (
-            <img
+            <img loading="lazy" decoding="async"
               src={imageUrl}
               alt={exam.name}
               className="absolute inset-0 h-full w-full bg-transparent object-contain"
@@ -321,17 +321,19 @@ function LoadingLibrary() {
   return <div className="space-y-6"><div className="flex items-center justify-between"><div className="space-y-2"><Skeleton className="h-8 w-48" /><Skeleton className="h-4 w-72" /></div><Skeleton className="h-10 w-36" /></div><div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">{Array.from({ length: 6 }, (_, index) => <Skeleton key={index} className="h-64 rounded-2xl" />)}</div></div>;
 }
 
-const getCachedUser = () => {
-  try { return JSON.parse(localStorage.getItem("userProfile") || localStorage.getItem("user") || "{}"); } catch { return {}; }
-};
-
 export default function SubjectsPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const { courseId } = useParams();
-  const { selectedSemester } = useSemester();
-  const [user, setUser] = useState(getCachedUser);
+  const { selectedSemester, user: profile, loading: profileLoading } = useSemester();
+  const user = profile || {};
+  const accessKey = JSON.stringify([user._id, user.plan, user.semesters, user.freeModule?._id || user.freeModule]);
+  const [reloadKey, setReloadKey] = useState(0);
+  const metadataRetry = useRef(0);
+  const listRetry = useRef(0);
+  const [metadataError, setMetadataError] = useState("");
+  const [statsError, setStatsError] = useState(false);
   const [module, setModule] = useState(null);
   const [examsByType, setExamsByType] = useState({ year: [], course: [], qcm: [] });
   // Keep the library view in its history entry so browser Back restores it.
@@ -354,12 +356,6 @@ export default function SubjectsPage() {
   }, [setSearchParams, location.state]);
 
   useExamReturnPosition(!loading && !error && module?.id === courseId);
-
-  useEffect(() => {
-    const syncUser = () => setUser(getCachedUser());
-    window.addEventListener("auth-state-changed", syncUser);
-    return () => window.removeEventListener("auth-state-changed", syncUser);
-  }, []);
 
   const isFreeUser = !isPremiumPlan(user?.plan);
   const hasPremiumProAccess = isPremiumProPlan(user?.plan);
@@ -419,51 +415,67 @@ export default function SubjectsPage() {
     return () => window.removeEventListener(EXAM_PROGRESS_UPDATED_EVENT, syncCompletedCount);
   }, []);
 
+  // Metadata and progress have separate lifecycles: progress never blocks the library.
   useEffect(() => {
-    let cancelled = false;
-    const loadModule = async () => {
-      if (!courseId) return;
-      setLoading(true); setError("");
-      try {
-        const [moduleResponse, coursesResponse, examsResponse, qcmResponse, statsResponse] = await Promise.all([
-          moduleService.getModuleById(courseId),
-          api.get(`/exam-courses/module/${courseId}`).catch(() => ({ data: { data: [] } })),
-          api.get(`/exams/module/${courseId}`).catch(() => ({ data: { data: [] } })),
-          api.get(`/qcm-banque/module/${courseId}`).catch(() => ({ data: { data: [] } })),
-          api.get(`/modules/${courseId}/stats`).catch(() => ({ data: { data: null } })),
-        ]);
-        if (cancelled) return;
-        const moduleStats = statsResponse.data?.data;
-        const selectedModule = normalizeModule({
-          ...moduleResponse.data?.data,
-          progress: moduleStats?.percentage,
-          questionsAnswered: moduleStats?.questionsAnswered,
-          totalQuestions: moduleStats?.totalQuestions ?? moduleResponse.data?.data?.totalQuestions,
-        });
-        setModule(selectedModule);
-        const maps = (items, type) => items.map((item) => ({
-          id: item._id || item.id, name: item.name || item.title || "Examen sans titre", questions: item.totalQuestions || item.questionCount || 0,
-          progress: item.progress || item.completionRate || 0,
-          answeredQuestions: Number(item.answeredQuestions ?? item.questionsAttempted
-            ?? getSessionExamCompletedCount(item._id || item.id)) || 0,
-          year: item.year, category: item.category || "Général", imageUrl: item.imageUrl,
-          helpText: item.infoText || item.helpText || item.description || "",
-          type,
-        }));
-        const courses = coursesResponse.data?.data || [];
-        const moduleExams = examsResponse.data?.data || [];
-        const moduleQcm = qcmResponse.data?.data || [];
-        const years = maps(moduleExams.length ? moduleExams : courses.filter((item) => item.category === "Exam par years"), "year").sort((a, b) => (b.year || 0) - (a.year || 0));
-        const qcm = maps(moduleQcm.length ? moduleQcm : courses.filter((item) => item.category === "QCM banque"), "qcm").sort((a, b) => a.name.localeCompare(b.name));
-        const course = maps(courses.filter((item) => item.category !== "Exam par years" && item.category !== "QCM banque"), "course").sort((a, b) => a.name.localeCompare(b.name));
-        setExamsByType({ year: years, course, qcm });
-      } catch {
-        if (!cancelled) setError("Ce module est indisponible pour le moment. Réessayez dans quelques instants.");
-      } finally { if (!cancelled) setLoading(false); }
-    };
-    loadModule();
-    return () => { cancelled = true; };
-  }, [courseId]);
+    if (profileLoading || !user._id || !courseId) return;
+    let active = true;
+    const controller = new AbortController();
+    setModule(null);
+    setMetadataError("");
+    setExamsByType({ year: [], course: [], qcm: [] });
+    setStatsError(false);
+    const forceRefresh = metadataRetry.current !== reloadKey;
+    metadataRetry.current = reloadKey;
+    const metadata = moduleService.getModuleById(courseId, forceRefresh);
+    metadata
+      .then(response => { if (active) setModule(normalizeModule(response.data?.data)); })
+      .catch(() => { if (active) setMetadataError("Ce module est indisponible. Réessayez."); });
+    api.get(`/modules/${courseId}/stats`, { signal: controller.signal })
+      .then(async response => { await metadata; if (active) setModule(current => current && ({ ...current,
+        progress: response.data?.data?.percentage,
+        questionsAnswered: response.data?.data?.questionsAnswered,
+        questions: response.data?.data?.totalQuestions ?? current.questions,
+      })); })
+      .catch(error => { if (active && error.code !== 'ERR_CANCELED') setStatsError(true); });
+    return () => { active = false; controller.abort(); };
+  }, [courseId, accessKey, profileLoading, reloadKey, user._id]);
+
+  useEffect(() => {
+    if (profileLoading || !user._id || !courseId) return;
+    if (isFreeUser && activeType !== 'year') return;
+    let active = true;
+    setLoading(true);
+    setError("");
+    const forceRefresh = listRetry.current !== reloadKey;
+    listRetry.current = reloadKey;
+    moduleService.getModuleList(courseId, activeType, forceRefresh)
+      .then(async response => {
+        if (!active) return;
+        let sourceItems = response.data?.data || [];
+        // Older imports kept annual exams and banks in course categories.
+        // Consult that endpoint only when needed and available to the account.
+        if (!sourceItems.length && activeType !== 'course' && !isFreeUser) {
+          const legacy = await moduleService.getModuleList(courseId, 'course', forceRefresh);
+          const legacyCategory = activeType === 'year' ? 'Exam par years' : 'QCM banque';
+          sourceItems = (legacy.data?.data || []).filter(item => item.category === legacyCategory);
+        }
+        if (!active) return;
+        const items = sourceItems
+          .filter(item => activeType !== 'course' || !['Exam par years', 'QCM banque'].includes(item.category))
+          .map(item => ({
+            id: item._id || item.id, name: item.name || item.title || "Examen sans titre",
+            questions: item.totalQuestions || item.questionCount || 0,
+            progress: item.progress || item.completionRate || 0,
+            answeredQuestions: Number(item.answeredQuestions ?? item.questionsAttempted ?? getSessionExamCompletedCount(item._id || item.id)) || 0,
+            year: item.year, category: item.category || "Général", imageUrl: item.imageUrl,
+            helpText: item.infoText || item.helpText || item.description || "", type: activeType,
+          })).sort((a, b) => activeType === 'year' ? (b.year || 0) - (a.year || 0) : a.name.localeCompare(b.name));
+        setExamsByType(current => ({ ...current, [activeType]: items }));
+      })
+      .catch(() => { if (active) setError("Impossible de charger les examens. Réessayez."); })
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, [courseId, activeType, accessKey, isFreeUser, profileLoading, reloadKey, user._id]);
 
   const categories = useMemo(() => ["all", ...new Set(visibleExamsByType.course.map((item) => item.category).filter(Boolean))], [visibleExamsByType.course]);
   const currentExams = useMemo(() => {
@@ -507,11 +519,13 @@ export default function SubjectsPage() {
     openExam(navigate, `/exam/${id}?type=${type === "year" ? "exam" : type}`, location);
   };
 
-  if (loading) return <LoadingLibrary />;
-  if (error) return <div className="imrs-surface mx-auto max-w-xl p-8 text-center"><BookOpen className="mx-auto h-10 w-10 text-destructive" /><h1 className="mt-4 text-xl font-bold">Contenu indisponible</h1><p className="mt-2 text-sm text-muted-foreground">{error}</p><Button className="mt-5" onClick={() => window.location.reload()}>Réessayer</Button></div>;
+  const pageError = metadataError || (!module ? error : "");
+  if (profileLoading || (!module && !pageError)) return <LoadingLibrary />;
+  if (pageError) return <div role="alert" className="imrs-surface mx-auto max-w-xl p-8 text-center"><BookOpen className="mx-auto h-10 w-10 text-destructive" /><h1 className="mt-4 text-xl font-bold">Contenu indisponible</h1><p className="mt-2 text-sm text-muted-foreground">{pageError}</p><Button className="mt-5" onClick={() => setReloadKey(value => value + 1)}>Réessayer</Button></div>;
 
   const TypeIcon = labels[activeType].icon;
   return <section className="space-y-6">
+    {statsError && <p role="status" className="rounded-xl border p-3">Progression indisponible. <button className="underline" onClick={() => setReloadKey(value => value + 1)}>Réessayer</button></p>}
     <div
       className="imrs-module-hero overflow-hidden rounded-3xl px-4 py-4 shadow-lg sm:px-6 sm:py-5"
       style={{ "--module-color": moduleThemeColor }}
@@ -676,12 +690,12 @@ export default function SubjectsPage() {
         />
       </div>
     )}
-    {!currentExams.length && searchQuery.trim() && (activeType === "year" || activeType === "course") && (
+    {!loading && !error && !currentExams.length && searchQuery.trim() && (activeType === "year" || activeType === "course") && (
       <p role="status" className="text-sm text-muted-foreground">
         Aucun résultat pour « {searchQuery.trim()} ».
       </p>
     )}
-    {currentExams.length ? (
+    {error ? <div role="alert" className="imrs-surface p-6">{error} <Button variant="outline" onClick={() => setReloadKey(value => value + 1)}>Réessayer</Button></div> : loading ? <div role="status" className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">{[1, 2, 3].map(item => <Skeleton key={item} className="h-56 rounded-2xl" />)}</div> : currentExams.length ? (
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {currentExams.map((exam) => {
           const isExamTpTd = isTpTd(activeType, getSectionTitle(module, activeType))

@@ -32,6 +32,7 @@ async function setup({ failLogout = false } = {}) {
     '@/utils/authStorage': authStorage };
   const service = new vm.SourceTextModule(await readFile(new URL('../services/authService.js', import.meta.url), 'utf8'),
     { context, initializeImportMeta: meta => { meta.env = { VITE_API_URL: '/api/v1' }; } });
+  deps['@/services/moduleService'] = new vm.SyntheticModule(['moduleService'], function () { this.setExport('moduleService', { clearCache() {} }); }, { context });
   await service.link(specifier => deps[specifier]);
   await service.evaluate();
   return { service: service.namespace, calls, localStorage, sessionStorage };

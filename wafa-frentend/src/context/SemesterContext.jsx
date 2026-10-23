@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
+import React, { createContext, useState, useContext, useEffect, useCallback, useMemo } from 'react';
 import { userService } from '@/services/userService';
 import { PROFILE_UPDATED_EVENT, resolveProfileSemester } from '@/utils/profileState';
 
@@ -65,16 +65,21 @@ export const SemesterProvider = ({ children }) => {
         const handleProfileUpdated = (event) => {
             if (active) applyProfile(event.detail);
         };
-        const fetchUserSemesters = async () => {
+        let confirmed = false;
+        let lastRefresh = 0;
+        const fetchUserSemesters = async (background = false) => {
+            if (background && (document.visibilityState === "hidden" || Date.now() - lastRefresh < 1000)) return;
+            lastRefresh = Date.now();
             const version = ++requestVersion;
-            setLoading(true);
+            if (!confirmed) setLoading(true);
             setError(null);
             try {
                 const userProfile = await userService.getUserProfile(true);
                 if (!active || version !== requestVersion) return;
                 applyProfile(userProfile);
+                confirmed = true;
             } catch (error) {
-                if (active && version === requestVersion) setError(error);
+                if (active && version === requestVersion && !confirmed) setError(error);
                 console.error("Error fetching user semesters:", error);
                 // Fallback to localStorage - already initialized above
             } finally {
@@ -86,18 +91,34 @@ export const SemesterProvider = ({ children }) => {
         fetchUserSemesters();
 
         const handleAuthStateChanged = () => {
+            const snapshot = getCachedUserProfile();
+            confirmed = false;
+            setLoading(true);
+            setUser(snapshot);
             fetchUserSemesters();
         };
+        const handleStorage = event => {
+            if (['user', 'userProfile', 'token'].includes(event.key)) handleAuthStateChanged();
+        };
 
+        const refreshVisible = () => fetchUserSemesters(true);
+        const interval = window.setInterval(refreshVisible, 15000);
+        window.addEventListener('focus', refreshVisible);
+        window.addEventListener('storage', handleStorage);
+        document.addEventListener('visibilitychange', refreshVisible);
         window.addEventListener('auth-state-changed', handleAuthStateChanged);
         return () => {
             active = false;
+            window.clearInterval(interval);
+            window.removeEventListener('focus', refreshVisible);
+            window.removeEventListener('storage', handleStorage);
+            document.removeEventListener('visibilitychange', refreshVisible);
             window.removeEventListener(PROFILE_UPDATED_EVENT, handleProfileUpdated);
             window.removeEventListener('auth-state-changed', handleAuthStateChanged);
         };
     }, [reloadKey]);
 
-    const value = {
+    const value = useMemo(() => ({
         user,
         error,
         refreshProfile,
@@ -105,7 +126,7 @@ export const SemesterProvider = ({ children }) => {
         setSelectedSemester,
         userSemesters,
         loading,
-    };
+    }), [user, error, refreshProfile, selectedSemester, userSemesters, loading]);
 
     return (
         <SemesterContext.Provider value={value}>
