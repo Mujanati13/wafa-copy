@@ -2,8 +2,6 @@ import { createContext, useContext, useState, useEffect } from "react";
 
 const ThemeContext = createContext();
 
-export const themeSwitchingEnabled = true;
-
 export const themes = {
   light: {
     name: "Light",
@@ -29,7 +27,6 @@ export const themes = {
 
 export const ThemeProvider = ({ children }) => {
   const [currentTheme, setCurrentTheme] = useState(() => {
-    if (!themeSwitchingEnabled) return "light";
     try {
       const savedTheme = localStorage.getItem("theme");
       if (savedTheme === "light" || savedTheme === "dark") return savedTheme;
@@ -64,7 +61,6 @@ export const ThemeProvider = ({ children }) => {
   }, [currentTheme]);
 
   const changeTheme = (themeName) => {
-    if (!themeSwitchingEnabled) return;
     setCurrentTheme(themeName);
   };
 
